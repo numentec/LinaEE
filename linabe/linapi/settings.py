@@ -130,8 +130,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-#LANGUAGE_CODE = environ.get("LOC_LG")
-LANGUAGE_CODE = 'es-pa'
+LANGUAGE_CODE = environ.get("LOC_LG").lower().replace('/', '-')
+#LANGUAGE_CODE = 'es-pa'
 
 TIME_ZONE = environ.get("LOC_TZ")
 

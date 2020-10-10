@@ -45,6 +45,8 @@ services:
       DB_PORT: "${DB_PORT}"
       DB_WAIT_TIME_OUT: "${DB_WAIT_TIME_OUT}"
       DB_WAIT_TIME_EXTRA: "${DB_WAIT_TIME_EXTRA}"
+      LOC_TZ: "${LOC_TZ}"
+      LOC_LG: "${LOC_LG}"
     command: sh -c "python manage.py wait_for_db &&
                     python manage.py makemigrations &&
                     python manage.py migrate &&
