@@ -1,0 +1,97 @@
+version: '3'
+
+services:
+  # MariaDB service
+  db:
+    container_name: linadb
+    image: mariadb/server:10.4
+    environment: 
+        MARIADB_ROOT_PASSWORD: "${DB_ROOT_PW}"
+        MARIADB_DATABASE: "${DB_NAME}"
+        MARIADB_USER: "${DB_USER}"
+        MARIADB_PASSWORD: "${DB_PW}"
+        MARIADB_TZ: "${LOC_TZ}"
+    networks: 
+      net:
+        ipv4_address: 192.168.15.5
+    ports: 
+        - 3307:3306
+    volumes: 
+        - dbdata:/var/lib/mysql/data
+     #   - ./initdb:/docker-entrypoint-initdb.d
+
+  # Django backend service
+  be:
+    container_name: linabe
+    depends_on:
+      - db
+    build:
+      context: ./linabe
+      dockerfile: Dockerfile
+    volumes:
+      - ./linabe:/linabe
+    networks: 
+      net:
+        ipv4_address: 192.168.15.4
+    ports:
+      - 8001:8001
+    environment: 
+      APP_DEBUG: '1'
+      SECRET_KEY: "${SECRET_KEY}"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PW: "${DB_PW}"
+      DB_HOST: "${DB_HOST}"
+      DB_PORT: "${DB_PORT}"
+      DB_WAIT_TIME_OUT: "${DB_WAIT_TIME_OUT}"
+      DB_WAIT_TIME_EXTRA: "${DB_WAIT_TIME_EXTRA}"
+    command: sh -c "python manage.py wait_for_db &&
+                    python manage.py makemigrations &&
+                    python manage.py migrate &&
+                    python manage.py runserver 0.0.0.0:8001"
+
+  # Nuxt frontend service
+  fe:
+    container_name: linafe
+    depends_on:
+      - be
+    build:
+      context: ./linafe
+      dockerfile: Dockerfile
+    volumes:
+      - ./linafe:/linafe
+    networks: 
+      net:
+        ipv4_address: 192.168.15.3
+    ports:
+      - 3001:3001
+    environment:
+      HOST: 0.0.0.0
+    command: 'npm run dev'
+
+  # Proxies requests to internal services Nginx Reverse Proxy (nxrp)
+  nxrp:
+    image: nginx:latest
+    container_name: nxrp
+    depends_on:
+        - fe
+        - be
+    volumes:
+      - ./nxrp/nginx.conf:/etc/nginx/nginx.conf
+      - ./linabe/static:/static
+    networks: 
+      net:
+        ipv4_address: 192.168.15.6
+    ports:
+      - 80:80
+
+volumes: 
+  dbdata:
+
+networks:
+  net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.15.0/29
