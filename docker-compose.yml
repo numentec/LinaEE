@@ -5,6 +5,7 @@ services:
   db:
     container_name: linadb
     image: mariadb/server:10.4
+    restart: on-failure:1
     environment: 
         MARIADB_ROOT_PASSWORD: "${DB_ROOT_PW}"
         MARIADB_DATABASE: "${DB_NAME}"
@@ -25,6 +26,7 @@ services:
     container_name: linabe
     depends_on:
       - db
+    restart: on-failure:2
     build:
       context: ./linabe
       dockerfile: Dockerfile
@@ -50,6 +52,7 @@ services:
     command: sh -c "python manage.py wait_for_db &&
                     python manage.py makemigrations &&
                     python manage.py migrate &&
+                    python manage.py init_root &&
                     python manage.py runserver 0.0.0.0:8001"
 
   # Nuxt frontend service
@@ -57,6 +60,7 @@ services:
     container_name: linafe
     depends_on:
       - be
+    restart: on-failure:2
     build:
       context: ./linafe
       dockerfile: Dockerfile
@@ -75,6 +79,7 @@ services:
   nxrp:
     image: nginx:latest
     container_name: nxrp
+    restart: on-failure:3
     depends_on:
         - fe
         - be
