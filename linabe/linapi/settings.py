@@ -147,3 +147,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = '/linabe/static'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = '/linabe/media'

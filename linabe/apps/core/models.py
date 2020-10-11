@@ -10,15 +10,47 @@ class Common(models.Model):
     is_active   = models.BooleanField('Activo', default=True)
     created_at  = models.DateTimeField('Fecha de creación', auto_now_add=True, editable=False)
     modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
-    created_by  = models.ForeignKey('Creado por', User,
-                    null=True, db_index=True, editable=False,
-                    on_delete=models.SET_NULL, related_name="%(class)s_created")
-    modified_by = models.ForeignKey('Modificado por', User,
-                    null=True, db_index=True, editable=False,
-                    on_delete=models.SET_NULL, related_name="%(class)s_modified")
+    created_by  = models.ForeignKey(User, null=True, db_index=True, editable=False, 
+                    verbose_name='Creado por', on_delete=models.SET_NULL,
+                    related_name='%(class)s_created')
+    modified_by = models.ForeignKey(User, null=True, db_index=True, editable=False, 
+                    verbose_name='Modificado por', on_delete=models.SET_NULL,
+                    related_name='%(class)s_modified')
 
     class Meta:
         abstract = True
+
+# Modelo para información de compañías
+class Cia(models.Model):
+    
+    DEFAULT_PK = 1
+
+    codigo = models.CharField('Código', max_length=5, unique=True, help_text = 'Código único interno para la compañía')
+    nombre = models.CharField('Nombre', max_length=60, help_text = 'Nombre completo de la compañía')
+    nombre_corto = models.CharField('Nombre Corto', max_length=30, blank=True, help_text = 'Nombre abreviado de la compañía')
+    ruc = models.CharField('RUC', max_length=30, blank=True, default= '000000-0-000000', help_text = 'Registro único de contribuyente')
+    dv = models.CharField('DV', max_length=3, blank=True, default='000', help_text = 'Dígito verificador')
+    direccion = models.TextField('Dirección', blank=True)
+    email = models.EmailField('E-mail', max_length=100, blank=True)
+    website = models.URLField('URL', blank=True)
+    tel1 = models.CharField('Tel1', max_length=15, blank=True)
+    tel2 = models.CharField('Tel2', max_length=15, blank=True)
+    fax = models.CharField('Fax', max_length=15, blank=True)
+    otros_tels = models.CharField('Otros Tels', max_length=60, blank=True)
+    observacion = models.TextField('Observación', blank=True)
+    logopath = models.ImageField('Logo', upload_to='images', blank=True, default='images/no_image.png')
+    soporte_idcli = models.CharField(max_length=10, blank=True, default='numencli')
+    country     = models.CharField(max_length=64, blank=True, null=True)
+    logo_url    = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        #return '{} {} {}'.format(self.id, self.codigo, self.nombre)
+        return '{}'.format(self.nombre)
+
+    class Meta:
+        db_table = 'lina_core_cia'
+        verbose_name = 'Compañía'
+        verbose_name_plural = 'Compañías'
 
 
 # Perfil de usuarios de Lina
@@ -35,10 +67,13 @@ class Perfil(Common):
     tel1 = models.CharField('Tel1', max_length=15, blank=True)
     tel2 = models.CharField('Tel2', max_length=15, blank=True)
     tel3 = models.CharField('Tel3', max_length=15, blank=True)
-    nombre_corto = models.CharField('Nombre Corto', max_length=10, blank=True, help_text='(Screen name) Dejar en blanco para autogenerar')
-    locale = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
+    nombre_corto = models.CharField('Nombre Corto', max_length=10, blank=True, 
+                                        help_text='(Display name) Dejar en blanco para autogenerar')
+    localization = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
     foto = models.ImageField('Foto', upload_to='images/profiles', blank=True, default='images/profiles/no_image_user.png')
     birth_date = models.DateField('Fecha de Nacimiento', blank=True, null=True)
+    cia = models.ForeignKey(Cia, blank=True, null=True, verbose_name='Cia Predeterminada',
+                                 on_delete=models.SET_NULL, related_name='perfiles_x_cia')
 
     def __str__(self):
         #return '{} {} {} {}'.format(self.id, self.user.get_username(), self.user.get_full_name(), self.user.last_login)
