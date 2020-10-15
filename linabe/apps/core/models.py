@@ -39,9 +39,10 @@ class Cia(models.Model):
     otros_tels = models.CharField('Otros Tels', max_length=60, blank=True)
     observacion = models.TextField('Observación', blank=True)
     logopath = models.ImageField('Logo', upload_to='images', blank=True, default='images/no_image.png')
+    logo_url    = models.TextField(blank=True, null=True)
     soporte_idcli = models.CharField(max_length=10, blank=True, default='numencli')
     country     = models.CharField(max_length=64, blank=True, null=True)
-    logo_url    = models.TextField(blank=True, null=True)
+    
 
     def __str__(self):
         #return '{} {} {}'.format(self.id, self.codigo, self.nombre)
