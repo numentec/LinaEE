@@ -1,28 +1,12 @@
 from django.db import models
+
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-User = get_user_model()
-
-# Clase abstracta para usarla de base
-class Common(models.Model):
-    is_active   = models.BooleanField('Activo', default=True)
-    created_at  = models.DateTimeField('Fecha de creación', auto_now_add=True, editable=False)
-    modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
-    created_by  = models.ForeignKey(User, null=True, db_index=True, editable=False, 
-                    verbose_name='Creado por', on_delete=models.SET_NULL,
-                    related_name='%(class)s_created')
-    modified_by = models.ForeignKey(User, null=True, db_index=True, editable=False, 
-                    verbose_name='Modificado por', on_delete=models.SET_NULL,
-                    related_name='%(class)s_modified')
-
-    class Meta:
-        abstract = True
+from ckeditor.fields import RichTextField
 
 # Modelo para información de compañías
 class Cia(models.Model):
-    
+
     DEFAULT_PK = 1
 
     codigo = models.CharField('Código', max_length=5, unique=True, help_text = 'Código único interno para la compañía')
@@ -42,10 +26,11 @@ class Cia(models.Model):
     logo_url    = models.TextField(blank=True, null=True)
     soporte_idcli = models.CharField(max_length=10, blank=True, default='numencli')
     country     = models.CharField(max_length=64, blank=True, null=True)
-    
+    is_active   = models.BooleanField('Activo', default=True)
+    created_at  = models.DateTimeField('Fecha de creación', auto_now_add=True, editable=False)
+    modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
 
     def __str__(self):
-        #return '{} {} {}'.format(self.id, self.codigo, self.nombre)
         return '{}'.format(self.nombre)
 
     class Meta:
@@ -54,15 +39,14 @@ class Cia(models.Model):
         verbose_name_plural = 'Compañías'
 
 
-# Perfil de usuarios de Lina
-class Perfil(Common):
+# Usuarios de LinaEE
+class User(AbstractUser):
 
     LOCALE_CHOICES = [
         ('es_PA', 'Español PA'),
         ('en_US', 'Inglés EEUU'),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
     dni = models.CharField('DNI', max_length=30, blank=True, help_text='Documento Nacional de Identidad')
     direccion = models.CharField('Dirección', max_length=60, blank=True)
     tel1 = models.CharField('Tel1', max_length=15, blank=True)
@@ -74,26 +58,27 @@ class Perfil(Common):
     foto = models.ImageField('Foto', upload_to='images/profiles', blank=True, default='images/profiles/no_image_user.png')
     birth_date = models.DateField('Fecha de Nacimiento', blank=True, null=True)
     cia = models.ForeignKey(Cia, blank=True, null=True, verbose_name='Cia Predeterminada',
-                                 on_delete=models.SET_NULL, related_name='perfiles_x_cia')
+                                 on_delete=models.SET_NULL, related_name='users_x_cia')
+    bio = RichTextField(null=True, blank=True)
+    city = models.CharField(blank=True, max_length=100, default='')
+    country = models.CharField(blank=True, max_length=100, default='')
+
+    modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
 
     def __str__(self):
-        #return '{} {} {} {}'.format(self.id, self.user.get_username(), self.user.get_full_name(), self.user.last_login)
-        return '{}'.format(self.user.get_username())
+        return '{}'.format(self.get_username())
 
     def save(self, *args, **kwargs):
 
-        super(Perfil, self).save(*args, **kwargs)
+        super(User, self).save(*args, **kwargs)
 
         if not self.nombre_corto:
-            if self.user.get_short_name():
-                self.nombre_corto = self.user.get_short_name()
+            if self.get_short_name():
+                self.nombre_corto = self.get_short_name()
             else:
-                self.nombre_corto = self.user.get_username()
+                self.nombre_corto = self.get_username()
 
     class Meta:
-        db_table = 'lina_core_perfil'
-        verbose_name = 'Perfil'
-        verbose_name_plural = 'Perfiles'
 
         permissions =   (
                             ("view_crm_module", "Access to CRM Module"),
@@ -107,12 +92,19 @@ class Perfil(Common):
                             ("view_sys_module", "Access to System Module")   
                         )
 
+Usuario = get_user_model()
 
-@receiver(post_save, sender=User)
-def create_user_perfil(sender, instance, created, **kwargs):
-   if created:
-       Perfil.objects.create(user=instance)
+# Clase abstracta para usarla como base
+class Common(models.Model):
+    is_active   = models.BooleanField('Activo', default=True)
+    created_at  = models.DateTimeField('Fecha de creación', auto_now_add=True, editable=False)
+    modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
+    created_by  = models.ForeignKey(Usuario, null=True, db_index=True, editable=False, 
+                    verbose_name='Creado por', on_delete=models.SET_NULL,
+                    related_name='%(class)s_created')
+    modified_by = models.ForeignKey(Usuario, null=True, db_index=True, editable=False, 
+                    verbose_name='Modificado por', on_delete=models.SET_NULL,
+                    related_name='%(class)s_modified')
 
-@receiver(post_save, sender=User)
-def save_user_perfil(sender, instance, **kwargs):
-   instance.perfil.save()
+    class Meta:
+        abstract = True
