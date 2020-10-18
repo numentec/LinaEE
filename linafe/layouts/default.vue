@@ -2,12 +2,16 @@
   <v-app dark>
     <v-navigation-drawer
       v-model="drawer"
-      :mini-variant="miniVariant"
-      :clipped="clipped"
+      permanent
+      :mini-variant.sync="miniVariant"
+      :expand-on-hover="miniVar"
+      clipped
       fixed
       app
+      dark
+      class="primary darken-4"
     >
-      <v-list>
+      <v-list shaped>
         <v-list-item
           v-for="(item, i) in items"
           :key="i"
@@ -23,40 +27,36 @@
           </v-list-item-content>
         </v-list-item>
       </v-list>
+      <template v-slot:append>
+        <div class="pa-2">
+          <v-btn v-if="miniVariant" icon class="secondary darken-2">
+            <v-icon>mdi-logout-variant</v-icon>
+          </v-btn>
+          <v-btn v-else rounded block class="secondary darken-2">
+            Logout
+            <v-icon>mdi-logout-variant</v-icon>
+          </v-btn>
+        </div>
+      </template>
     </v-navigation-drawer>
-    <v-app-bar :clipped-left="clipped" fixed app>
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <v-btn icon @click.stop="miniVariant = !miniVariant">
-        <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
-      </v-btn>
-      <v-btn icon @click.stop="clipped = !clipped">
-        <v-icon>mdi-application</v-icon>
-      </v-btn>
-      <v-btn icon @click.stop="fixed = !fixed">
-        <v-icon>mdi-minus</v-icon>
+    <v-app-bar :clipped-left="true" fixed app color="primary" dense dark>
+      <v-btn icon @click.stop="miniVar = !miniVar">
+        <v-icon>
+          {{ `${miniVariant ? 'mdi-menu' : 'mdi-backburger'}` }}
+        </v-icon>
       </v-btn>
       <v-toolbar-title v-text="title" />
       <v-spacer />
-      <v-btn icon @click.stop="rightDrawer = !rightDrawer">
-        <v-icon>mdi-menu</v-icon>
-      </v-btn>
+      <v-avatar color="accent" size="35">
+        <v-icon dark>mdi-account-circle</v-icon>
+      </v-avatar>
     </v-app-bar>
     <v-main>
       <v-container>
         <nuxt />
       </v-container>
     </v-main>
-    <v-navigation-drawer v-model="rightDrawer" :right="right" temporary fixed>
-      <v-list>
-        <v-list-item @click.native="right = !right">
-          <v-list-item-action>
-            <v-icon light> mdi-repeat </v-icon>
-          </v-list-item-action>
-          <v-list-item-title>Switch drawer (click me)</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-    <v-footer :absolute="!fixed" app>
+    <v-footer fixed app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer>
   </v-app>
@@ -81,10 +81,11 @@ export default {
           to: '/inspire',
         },
       ],
-      miniVariant: false,
+      miniVariant: true,
+      miniVar: true,
       right: true,
       rightDrawer: false,
-      title: 'Vuetify.js',
+      title: 'LinaEE',
     }
   },
 }
