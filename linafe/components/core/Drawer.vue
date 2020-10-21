@@ -1,97 +1,59 @@
 <template>
-  <v-app dark>
-    <CoreDrawer />
-    <CoreAppBar />
-    <!-- <v-navigation-drawer
-      v-model="drawer"
-      permanent
-      :mini-variant.sync="miniVariant"
-      :expand-on-hover="miniVar"
-      clipped
-      fixed
-      app
-      dark
-      class="primary darken-4"
-    >
-      <v-list shaped>
-        <v-list-group
-          v-for="item in items"
-          :key="item.title"
-          :prepend-icon="item.icon"
-          no-action
-        >
-          <template v-slot:activator>
-            <v-list-item-content>
-              <v-list-item-title v-text="item.title" />
-            </v-list-item-content>
-          </template>
-          <v-list-item
-            v-for="subitem in item.items"
-            :key="subitem.title"
-            :to="subitem.to"
-            router
-            exact
-          >
-            <v-list-item-content>
-              <v-list-item-title v-text="subitem.title" />
-            </v-list-item-content>
-          </v-list-item>
-        </v-list-group>
-      </v-list>
-      <template v-slot:append>
-        <div class="pa-2">
-          <v-btn v-if="miniVariant" icon class="secondary darken-2">
-            <v-icon>mdi-logout-variant</v-icon>
-          </v-btn>
-          <v-btn v-else rounded block class="secondary darken-2">
-            Logout
-            <v-icon>mdi-logout-variant</v-icon>
-          </v-btn>
-        </div>
-      </template>
-    </v-navigation-drawer> -->
-    <!-- <v-app-bar :clipped-left="true" fixed app color="primary" dense dark>
-      <v-btn icon @click.stop="miniVar = !miniVar">
-        <v-icon>
-          {{ `${miniVariant ? 'mdi-menu' : 'mdi-backburger'}` }}
-        </v-icon>
-      </v-btn>
-      <v-toolbar-title v-text="title" />
-      <v-spacer />
-      <v-menu offset-y origin="center center" transition="scale-transition">
-        <template v-slot:activator="{ on, attrs }">
-          <v-avatar color="accent" size="35" v-bind="attrs" v-on="on">
-            <v-icon dark>mdi-account-circle</v-icon>
-          </v-avatar>
+  <v-navigation-drawer
+    v-model="drawer"
+    permanent
+    :mini-variant="is_mini"
+    :expand-on-hover="is_mini"
+    clipped
+    fixed
+    app
+    dark
+    class="primary darken-4"
+  >
+    <v-list shaped>
+      <v-list-group
+        v-for="item in items"
+        :key="item.title"
+        :prepend-icon="item.icon"
+        no-action
+      >
+        <template v-slot:activator>
+          <v-list-item-content>
+            <v-list-item-title v-text="item.title" />
+          </v-list-item-content>
         </template>
-        <v-list>
-          <v-list-item link class="tile">
-            <v-list-item-title>Perfil</v-list-item-title>
-          </v-list-item>
-          <v-list-item link class="tile">
-            <v-list-item-title>Cerrar Sesión</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-    </v-app-bar> -->
-    <v-main>
-      <v-container>
-        <nuxt />
-      </v-container>
-    </v-main>
-    <v-footer fixed app>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer>
-  </v-app>
+        <v-list-item
+          v-for="subitem in item.items"
+          :key="subitem.title"
+          :to="subitem.to"
+          router
+          exact
+        >
+          <v-list-item-content>
+            <v-list-item-title v-text="subitem.title" />
+          </v-list-item-content>
+        </v-list-item>
+      </v-list-group>
+    </v-list>
+    <template v-slot:append>
+      <div class="pa-2">
+        <v-btn v-if="is_mini" icon class="secondary darken-2">
+          <v-icon>mdi-logout-variant</v-icon>
+        </v-btn>
+        <v-btn v-else rounded block class="secondary darken-2">
+          Logout
+          <v-icon>mdi-logout-variant</v-icon>
+        </v-btn>
+      </div>
+    </template>
+  </v-navigation-drawer>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
-  name: 'LinaHome',
-  components: {
-    CoreAppBar: () => import('../components/core/AppBar'),
-    CoreDrawer: () => import('../components/core/Drawer'),
-  },
+  name: 'CoreDrawer',
+
   data() {
     return {
       items: [
@@ -367,6 +329,10 @@ export default {
       ],
       title: 'LinaEE',
     }
+  },
+
+  computed: {
+    ...mapState(['drawer', 'mini_variant', 'is_mini']),
   },
 }
 </script>
