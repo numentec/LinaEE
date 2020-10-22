@@ -1,56 +1,66 @@
 <template>
-  <v-navigation-drawer
-    v-model="drawer"
-    permanent
-    :mini-variant="is_mini"
-    :expand-on-hover="is_mini"
-    clipped
-    fixed
-    app
-    dark
-    class="primary darken-4"
-  >
-    <v-list shaped>
-      <v-list-group
-        v-for="item in items"
-        :key="item.title"
-        :prepend-icon="item.icon"
-        no-action
-      >
-        <template v-slot:activator>
+  <div @mouseover="setIsExpanded(true)" @mouseout="setIsExpanded(!is_mini)">
+    <v-navigation-drawer
+      v-model="drawer"
+      permanent
+      :mini-variant="is_mini"
+      :expand-on-hover="is_mini"
+      clipped
+      fixed
+      app
+      dark
+      class="primary darken-4"
+    >
+      <v-list shaped>
+        <v-list-item to="/">
+          <v-list-item-icon>
+            <v-icon>mdi-home</v-icon>
+          </v-list-item-icon>
           <v-list-item-content>
-            <v-list-item-title v-text="item.title" />
-          </v-list-item-content>
-        </template>
-        <v-list-item
-          v-for="subitem in item.items"
-          :key="subitem.title"
-          :to="subitem.to"
-          router
-          exact
-        >
-          <v-list-item-content>
-            <v-list-item-title v-text="subitem.title" />
+            <v-list-item-title class="title">Inico</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-      </v-list-group>
-    </v-list>
-    <template v-slot:append>
-      <div class="pa-2">
-        <v-btn v-if="is_mini" icon class="secondary darken-2">
-          <v-icon>mdi-logout-variant</v-icon>
-        </v-btn>
-        <v-btn v-else rounded block class="secondary darken-2">
-          Logout
-          <v-icon>mdi-logout-variant</v-icon>
-        </v-btn>
-      </div>
-    </template>
-  </v-navigation-drawer>
+        <v-list-group
+          v-for="item in items"
+          :key="item.title"
+          :prepend-icon="item.icon"
+          no-action
+        >
+          <template v-slot:activator>
+            <v-list-item-content>
+              <v-list-item-title v-text="item.title" />
+            </v-list-item-content>
+          </template>
+          <v-list-item
+            v-for="subitem in item.items"
+            :key="subitem.title"
+            :to="subitem.to"
+            router
+            exact
+          >
+            <v-list-item-content>
+              <v-list-item-title v-text="subitem.title" />
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+      </v-list>
+      <template v-slot:append>
+        <div class="pa-2">
+          <v-btn v-show="!is_expanded" icon class="secondary darken-2">
+            <v-icon>mdi-logout-variant</v-icon>
+          </v-btn>
+          <v-btn v-show="is_expanded" rounded block class="secondary darken-2">
+            Logout
+            <v-icon>mdi-logout-variant</v-icon>
+          </v-btn>
+        </div>
+      </template>
+    </v-navigation-drawer>
+  </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 export default {
   name: 'CoreDrawer',
 
@@ -327,12 +337,19 @@ export default {
           ],
         },
       ],
-      title: 'LinaEE',
     }
   },
 
   computed: {
-    ...mapState(['drawer', 'mini_variant', 'is_mini']),
+    ...mapState('core', {
+      drawer: (state) => state.drawer,
+      is_mini: (state) => state.is_mini,
+      is_expanded: (state) => state.is_expanded,
+    }),
+  },
+
+  methods: {
+    ...mapActions('core', ['SetDrawer', 'setIsExpanded']),
   },
 }
 </script>
