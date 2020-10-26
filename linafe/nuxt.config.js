@@ -44,14 +44,14 @@ export default {
     customVariables: ['~/assets/variables.scss'],
     treeShake: true,
     theme: {
-      options: {
-        customProperties: true,
-      },
+      // options: {
+      //   customProperties: true,
+      // },
       dark: false,
       themes: {
         light: {
           primary: colors.azulCerceta.base,
-          accent: colors.coral.lighten2,
+          accent: colors.coral.base,
           secondary: colors.ambarSur.base,
           info: colors.indigo.accent3,
           warning: colors.amber.base,

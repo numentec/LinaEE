@@ -1,7 +1,7 @@
 <template>
   <div @mouseover="setIsExpanded(true)" @mouseout="setIsExpanded(!is_mini)">
     <v-navigation-drawer
-      v-model="drawer"
+      v-model="drawer_mode"
       permanent
       :mini-variant="is_mini"
       :expand-on-hover="is_mini"
@@ -74,17 +74,17 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Prospectos',
-              to: '/inspire',
+              to: '/lina/crm/prospectos',
             },
             {
               icon: 'mdi-info',
               title: 'Seguimiento',
-              to: '/',
+              to: '/lina/crm/seguimiento',
             },
             {
               icon: 'mdi-info',
               title: 'Calendario',
-              to: '/',
+              to: '/lina/crm/calendario',
             },
           ],
         },
@@ -94,38 +94,43 @@ export default {
           items: [
             {
               icon: 'mdi-info',
-              title: 'Cotización',
-              to: '/inspire',
+              title: 'Cotizaciones',
+              to: '/lina/ventas/cotizaciones',
             },
             {
               icon: 'mdi-info',
-              title: 'Pedido',
-              to: '/',
+              title: 'Pedidos',
+              to: '/lina/ventas/pedidos',
             },
             {
               icon: 'mdi-info',
-              title: 'Factura',
-              to: '/inspire',
+              title: 'Facturas',
+              to: '/lina/ventas/facturas',
             },
             {
               icon: 'mdi-info',
               title: 'Notas de Crédito',
-              to: '/inspire',
+              to: '/lina/ventas/ncs',
+            },
+            {
+              icon: 'mdi-info',
+              title: 'Devoluciones',
+              to: '/lina/ventas/devoluciones',
             },
             {
               icon: 'mdi-info',
               title: 'Punto de Venta',
-              to: '/inspire',
+              to: '/lina/ventas/pos',
             },
             {
               icon: 'mdi-info',
               title: 'Clientes',
-              to: '/inspire',
+              to: '/lina/ventas/clientes',
             },
             {
               icon: 'mdi-info',
               title: 'Utilidades',
-              to: '/inspire',
+              to: '/lina/ventas/utilidades',
             },
           ],
         },
@@ -135,17 +140,17 @@ export default {
           items: [
             {
               icon: 'mdi-info',
-              title: 'Requisición',
-              to: '/inspire',
+              title: 'Requisiciones',
+              to: '/lina/inspire',
             },
             {
               icon: 'mdi-info',
-              title: 'Orden de Compra',
+              title: 'Ordenes de Compra',
               to: '/',
             },
             {
               icon: 'mdi-info',
-              title: 'Factura',
+              title: 'Facturas',
               to: '/',
             },
             {
@@ -166,12 +171,12 @@ export default {
             },
             {
               icon: 'mdi-info',
-              title: 'Entrada',
+              title: 'Entradas',
               to: '/',
             },
             {
               icon: 'mdi-info',
-              title: 'Despacho',
+              title: 'Despachos',
               to: '/',
             },
             {
@@ -181,7 +186,7 @@ export default {
             },
             {
               icon: 'mdi-info',
-              title: 'Unidad de Medida',
+              title: 'Unidades de Medida',
               to: '/',
             },
             {
@@ -191,7 +196,7 @@ export default {
             },
             {
               icon: 'mdi-info',
-              title: 'Manifiesto',
+              title: 'Manifiestos',
               to: '/',
             },
           ],
@@ -228,17 +233,17 @@ export default {
           items: [
             {
               icon: 'mdi-info',
-              title: 'Cobro a Cliente',
+              title: 'Cobros a Cliente',
               to: '/inspire',
             },
             {
               icon: 'mdi-info',
-              title: 'Pago a Proveedor',
+              title: 'Pagos a Proveedor',
               to: '/',
             },
             {
               icon: 'mdi-info',
-              title: 'Asiento',
+              title: 'Asientos',
               to: '/',
             },
             {
@@ -248,7 +253,7 @@ export default {
             },
             {
               icon: 'mdi-info',
-              title: 'Banco',
+              title: 'Bancos',
               to: '/',
             },
             {
@@ -269,7 +274,7 @@ export default {
           items: [
             {
               icon: 'mdi-info',
-              title: 'Despacho',
+              title: 'Despachos',
               to: '/inspire',
             },
             {
@@ -322,21 +327,22 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Empresas',
-              to: '/inspire',
+              to: '/lina/sistema/cias',
             },
             {
               icon: 'mdi-info',
               title: 'Usuarios',
-              to: '/',
+              to: '/lina/sistema/usuarios',
             },
             {
               icon: 'mdi-info',
               title: 'Configuración',
-              to: '/',
+              to: '/lina/sistema/config',
             },
           ],
         },
       ],
+      drawer_mode: null,
     }
   },
 

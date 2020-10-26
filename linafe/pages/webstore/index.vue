@@ -3,7 +3,7 @@
     <v-row justify="center">
       <v-col cols="12" align="center">
         <v-sheet rounded="lg" min-height="35vh">
-          <h1 class="grey--text">Bienvenido a la Intranet de NumenTec!!!</h1>
+          <h1 class="grey--text">Bienvenido a la Web Store!!!</h1>
         </v-sheet>
       </v-col>
     </v-row>
@@ -31,7 +31,7 @@
 
 <script>
 export default {
-  name: 'WebSiteHome',
+  name: 'WebStoreIndex',
   layout: 'website',
 }
 </script>

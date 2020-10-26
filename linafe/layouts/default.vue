@@ -1,7 +1,7 @@
 <template>
   <v-app dark>
-    <CoreDrawer />
     <CoreAppBar />
+    <CoreDrawer />
     <v-main>
       <v-container>
         <nuxt />

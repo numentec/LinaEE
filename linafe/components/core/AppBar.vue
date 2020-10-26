@@ -69,11 +69,7 @@ export default {
   },
 
   computed: {
-    ...mapState('core', {
-      drawer: (state) => state.drawer,
-      is_mini: (state) => state.is_mini,
-      is_expanded: (state) => state.is_expanded,
-    }),
+    ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
   },
 
   methods: {
