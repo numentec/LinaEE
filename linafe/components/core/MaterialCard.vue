@@ -21,6 +21,7 @@
         elevation="6"
         class="text-start v-card--material__heading mb-n6"
         dark
+        rounded
       >
         <slot v-if="$slots.heading" name="heading" />
 
