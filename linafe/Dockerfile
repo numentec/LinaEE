@@ -4,3 +4,4 @@ WORKDIR /linafe
 COPY package*.json ./
 RUN npm install
 COPY . .
+RUN echo "America/Panama" > /etc/timezone

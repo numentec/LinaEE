@@ -13,6 +13,7 @@ services:
         MARIADB_USER: "${DB_USER}"
         MARIADB_PASSWORD: "${DB_PW}"
         MARIADB_TZ: "${LOC_TZ}"
+        TZ: "${LOC_TZ}"
     networks: 
       net:
         ipv4_address: 192.168.15.5
@@ -20,6 +21,8 @@ services:
         - 3307:3306
     volumes: 
         - dbdata:/var/lib/mysql/data
+        # - /etc/timezone:/etc/timezone:ro
+        # - /etc/localtime:/etc/localtime:ro
      #   - ./initdb:/docker-entrypoint-initdb.d
 
   # Django backend service
@@ -34,6 +37,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./linabe:/linabe
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     networks: 
       net:
         ipv4_address: 192.168.15.4
@@ -51,6 +56,7 @@ services:
       DB_WAIT_TIME_EXTRA: "${DB_WAIT_TIME_EXTRA}"
       LOC_TZ: "${LOC_TZ}"
       LOC_LG: "${LOC_LG}"
+      TZ: "${LOC_TZ}"
     command: ['./dj.sh']
     # command: sh -c "python manage.py wait_for_db &&
     #                 python manage.py runserver 0.0.0.0:8001"
@@ -68,6 +74,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./linafe:/linafe
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     networks: 
       net:
         ipv4_address: 192.168.15.3
@@ -75,6 +83,7 @@ services:
       - 3001:3001
     environment:
       HOST: 0.0.0.0
+      TZ: "${LOC_TZ}"
     command: 'npm run dev'
 
   # Proxies requests to internal services Nginx Reverse Proxy (nxrp)
@@ -89,11 +98,15 @@ services:
     volumes:
       - ./nxrp/nginx.conf:/etc/nginx/nginx.conf
       - ./linabe/static:/static
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     networks: 
       net:
         ipv4_address: 192.168.15.6
     ports:
       - 80:80
+    environment: 
+      TZ: "${LOC_TZ}"
 
 volumes: 
   dbdata:

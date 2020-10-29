@@ -40,11 +40,11 @@
               </v-list-item>
               <v-list-group prepend-icon="mdi-export" no-action>
                 <template v-slot:activator>
-                  <v-list-tile>
-                    <v-list-tile-content>
-                      <v-list-tile-title>Exportar</v-list-tile-title>
-                    </v-list-tile-content>
-                  </v-list-tile>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Exportar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
                 </template>
                 <v-list-item link>
                   <v-list-item-content>
@@ -155,6 +155,7 @@ export default {
   data() {
     return {
       page_name: 'page',
+      menu: false,
       search: '',
       headers: [
         { text: 'ID', value: 'id' },
