@@ -34,8 +34,8 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
-# Dependency directories
-node_modules/
+# Dependency directories ******* LO CAMBIE POR NUXT EN DEV *********
+# node_modules/
 jspm_packages/
 
 # TypeScript v1 declaration files
@@ -65,8 +65,8 @@ typings/
 # next.js build output
 .next
 
-# nuxt.js build output
-.nuxt
+# nuxt.js build output ******* LO CAMBIE POR NUXT EN DEV *********
+# .nuxt
 
 # Nuxt generate
 dist

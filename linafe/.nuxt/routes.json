@@ -1,0 +1,296 @@
+[
+  {
+    "name": "directory",
+    "path": "/directory",
+    "component": "/linafe/pages/directory.vue",
+    "chunkName": "pages/directory",
+    "_name": "_0dc5685a"
+  },
+  {
+    "name": "lina",
+    "path": "/lina",
+    "component": "/linafe/pages/lina/index.vue",
+    "chunkName": "pages/lina/index",
+    "_name": "_5e9e1b7d"
+  },
+  {
+    "name": "webstore",
+    "path": "/webstore",
+    "component": "/linafe/pages/webstore/index.vue",
+    "chunkName": "pages/webstore/index",
+    "_name": "_6b22c45a"
+  },
+  {
+    "name": "lina-login",
+    "path": "/lina/login",
+    "component": "/linafe/pages/lina/login/index.vue",
+    "chunkName": "pages/lina/login/index",
+    "_name": "_ad33f3d2"
+  },
+  {
+    "name": "lina-compras-facturas",
+    "path": "/lina/compras/facturas",
+    "component": "/linafe/pages/lina/compras/facturas.vue",
+    "chunkName": "pages/lina/compras/facturas",
+    "_name": "_81c1d18c"
+  },
+  {
+    "name": "lina-compras-oc",
+    "path": "/lina/compras/oc",
+    "component": "/linafe/pages/lina/compras/oc.vue",
+    "chunkName": "pages/lina/compras/oc",
+    "_name": "_fad15c5a"
+  },
+  {
+    "name": "lina-compras-provs",
+    "path": "/lina/compras/provs",
+    "component": "/linafe/pages/lina/compras/provs.vue",
+    "chunkName": "pages/lina/compras/provs",
+    "_name": "_1ff2aefb"
+  },
+  {
+    "name": "lina-compras-requisiciones",
+    "path": "/lina/compras/requisiciones",
+    "component": "/linafe/pages/lina/compras/requisiciones.vue",
+    "chunkName": "pages/lina/compras/requisiciones",
+    "_name": "_84b6a1e8"
+  },
+  {
+    "name": "lina-crm-calendario",
+    "path": "/lina/crm/calendario",
+    "component": "/linafe/pages/lina/crm/calendario.vue",
+    "chunkName": "pages/lina/crm/calendario",
+    "_name": "_6236a61a"
+  },
+  {
+    "name": "lina-crm-prospectos",
+    "path": "/lina/crm/prospectos",
+    "component": "/linafe/pages/lina/crm/prospectos.vue",
+    "chunkName": "pages/lina/crm/prospectos",
+    "_name": "_a4c0c8b4"
+  },
+  {
+    "name": "lina-crm-seguimiento",
+    "path": "/lina/crm/seguimiento",
+    "component": "/linafe/pages/lina/crm/seguimiento.vue",
+    "chunkName": "pages/lina/crm/seguimiento",
+    "_name": "_0ab91eba"
+  },
+  {
+    "name": "lina-inventario-bodegas",
+    "path": "/lina/inventario/bodegas",
+    "component": "/linafe/pages/lina/inventario/bodegas.vue",
+    "chunkName": "pages/lina/inventario/bodegas",
+    "_name": "_8492785c"
+  },
+  {
+    "name": "lina-inventario-categorias",
+    "path": "/lina/inventario/categorias",
+    "component": "/linafe/pages/lina/inventario/categorias.vue",
+    "chunkName": "pages/lina/inventario/categorias",
+    "_name": "_4a3ef9a9"
+  },
+  {
+    "name": "lina-inventario-despachos",
+    "path": "/lina/inventario/despachos",
+    "component": "/linafe/pages/lina/inventario/despachos.vue",
+    "chunkName": "pages/lina/inventario/despachos",
+    "_name": "_729cfa13"
+  },
+  {
+    "name": "lina-inventario-entradas",
+    "path": "/lina/inventario/entradas",
+    "component": "/linafe/pages/lina/inventario/entradas.vue",
+    "chunkName": "pages/lina/inventario/entradas",
+    "_name": "_5bc2b345"
+  },
+  {
+    "name": "lina-inventario-manifiestos",
+    "path": "/lina/inventario/manifiestos",
+    "component": "/linafe/pages/lina/inventario/manifiestos.vue",
+    "chunkName": "pages/lina/inventario/manifiestos",
+    "_name": "_2a8a391f"
+  },
+  {
+    "name": "lina-inventario-productos",
+    "path": "/lina/inventario/productos",
+    "component": "/linafe/pages/lina/inventario/productos.vue",
+    "chunkName": "pages/lina/inventario/productos",
+    "_name": "_4de6089a"
+  },
+  {
+    "name": "lina-inventario-um",
+    "path": "/lina/inventario/um",
+    "component": "/linafe/pages/lina/inventario/um.vue",
+    "chunkName": "pages/lina/inventario/um",
+    "_name": "_64b787a1"
+  },
+  {
+    "name": "lina-linabi-favoritos",
+    "path": "/lina/linabi/favoritos",
+    "component": "/linafe/pages/lina/linabi/favoritos.vue",
+    "chunkName": "pages/lina/linabi/favoritos",
+    "_name": "_0fbe94da"
+  },
+  {
+    "name": "lina-linabi-genconsulta",
+    "path": "/lina/linabi/genconsulta",
+    "component": "/linafe/pages/lina/linabi/genconsulta.vue",
+    "chunkName": "pages/lina/linabi/genconsulta",
+    "_name": "_10f6d552"
+  },
+  {
+    "name": "lina-linabi-panel",
+    "path": "/lina/linabi/panel",
+    "component": "/linafe/pages/lina/linabi/panel.vue",
+    "chunkName": "pages/lina/linabi/panel",
+    "_name": "_503bfb5e"
+  },
+  {
+    "name": "lina-linabi-reportes",
+    "path": "/lina/linabi/reportes",
+    "component": "/linafe/pages/lina/linabi/reportes.vue",
+    "chunkName": "pages/lina/linabi/reportes",
+    "_name": "_652656a5"
+  },
+  {
+    "name": "lina-logistica-despachos",
+    "path": "/lina/logistica/despachos",
+    "component": "/linafe/pages/lina/logistica/despachos.vue",
+    "chunkName": "pages/lina/logistica/despachos",
+    "_name": "_095d21e9"
+  },
+  {
+    "name": "lina-logistica-reportes",
+    "path": "/lina/logistica/reportes",
+    "component": "/linafe/pages/lina/logistica/reportes.vue",
+    "chunkName": "pages/lina/logistica/reportes",
+    "_name": "_04465595"
+  },
+  {
+    "name": "lina-logistica-ubicaciones",
+    "path": "/lina/logistica/ubicaciones",
+    "component": "/linafe/pages/lina/logistica/ubicaciones.vue",
+    "chunkName": "pages/lina/logistica/ubicaciones",
+    "_name": "_a6722eac"
+  },
+  {
+    "name": "lina-logistica-vehiculos",
+    "path": "/lina/logistica/vehiculos",
+    "component": "/linafe/pages/lina/logistica/vehiculos.vue",
+    "chunkName": "pages/lina/logistica/vehiculos",
+    "_name": "_04b4c38b"
+  },
+  {
+    "name": "lina-rrhh-cargos",
+    "path": "/lina/rrhh/cargos",
+    "component": "/linafe/pages/lina/rrhh/cargos.vue",
+    "chunkName": "pages/lina/rrhh/cargos",
+    "_name": "_0f13a75e"
+  },
+  {
+    "name": "lina-rrhh-consultas",
+    "path": "/lina/rrhh/consultas",
+    "component": "/linafe/pages/lina/rrhh/consultas.vue",
+    "chunkName": "pages/lina/rrhh/consultas",
+    "_name": "_40e21c74"
+  },
+  {
+    "name": "lina-rrhh-personal",
+    "path": "/lina/rrhh/personal",
+    "component": "/linafe/pages/lina/rrhh/personal.vue",
+    "chunkName": "pages/lina/rrhh/personal",
+    "_name": "_a776454c"
+  },
+  {
+    "name": "lina-rrhh-planilla",
+    "path": "/lina/rrhh/planilla",
+    "component": "/linafe/pages/lina/rrhh/planilla.vue",
+    "chunkName": "pages/lina/rrhh/planilla",
+    "_name": "_4d3449ca"
+  },
+  {
+    "name": "lina-sistema-cias",
+    "path": "/lina/sistema/cias",
+    "component": "/linafe/pages/lina/sistema/cias.vue",
+    "chunkName": "pages/lina/sistema/cias",
+    "_name": "_5c5f968a"
+  },
+  {
+    "name": "lina-sistema-config",
+    "path": "/lina/sistema/config",
+    "component": "/linafe/pages/lina/sistema/config.vue",
+    "chunkName": "pages/lina/sistema/config",
+    "_name": "_36e78f34"
+  },
+  {
+    "name": "lina-sistema-usuarios",
+    "path": "/lina/sistema/usuarios",
+    "component": "/linafe/pages/lina/sistema/usuarios.vue",
+    "chunkName": "pages/lina/sistema/usuarios",
+    "_name": "_4154b6f7"
+  },
+  {
+    "name": "lina-ventas-clientes",
+    "path": "/lina/ventas/clientes",
+    "component": "/linafe/pages/lina/ventas/clientes.vue",
+    "chunkName": "pages/lina/ventas/clientes",
+    "_name": "_18cd9e8c"
+  },
+  {
+    "name": "lina-ventas-cotizaciones",
+    "path": "/lina/ventas/cotizaciones",
+    "component": "/linafe/pages/lina/ventas/cotizaciones.vue",
+    "chunkName": "pages/lina/ventas/cotizaciones",
+    "_name": "_5b4dbb4e"
+  },
+  {
+    "name": "lina-ventas-devoluciones",
+    "path": "/lina/ventas/devoluciones",
+    "component": "/linafe/pages/lina/ventas/devoluciones.vue",
+    "chunkName": "pages/lina/ventas/devoluciones",
+    "_name": "_4b4218c9"
+  },
+  {
+    "name": "lina-ventas-facturas",
+    "path": "/lina/ventas/facturas",
+    "component": "/linafe/pages/lina/ventas/facturas.vue",
+    "chunkName": "pages/lina/ventas/facturas",
+    "_name": "_26e11bce"
+  },
+  {
+    "name": "lina-ventas-ncs",
+    "path": "/lina/ventas/ncs",
+    "component": "/linafe/pages/lina/ventas/ncs.vue",
+    "chunkName": "pages/lina/ventas/ncs",
+    "_name": "_453a854a"
+  },
+  {
+    "name": "lina-ventas-pedidos",
+    "path": "/lina/ventas/pedidos",
+    "component": "/linafe/pages/lina/ventas/pedidos.vue",
+    "chunkName": "pages/lina/ventas/pedidos",
+    "_name": "_5a6c734b"
+  },
+  {
+    "name": "lina-ventas-pos",
+    "path": "/lina/ventas/pos",
+    "component": "/linafe/pages/lina/ventas/pos.vue",
+    "chunkName": "pages/lina/ventas/pos",
+    "_name": "_5ba95b51"
+  },
+  {
+    "name": "lina-ventas-utilidades",
+    "path": "/lina/ventas/utilidades",
+    "component": "/linafe/pages/lina/ventas/utilidades.vue",
+    "chunkName": "pages/lina/ventas/utilidades",
+    "_name": "_1ea969c1"
+  },
+  {
+    "name": "index",
+    "path": "/",
+    "component": "/linafe/pages/index.vue",
+    "chunkName": "pages/index",
+    "_name": "_ea611a90"
+  }
+]
