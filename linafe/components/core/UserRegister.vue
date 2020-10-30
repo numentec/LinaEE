@@ -17,7 +17,7 @@
       </v-toolbar>
       <v-container class="px-4">
         <v-card-text>
-          <v-form ref="registerForm" v-model="valid" lazy-validation>
+          <v-form ref="register_form" v-model="valid" lazy-validation>
             <v-row>
               <v-col cols="12">
                 <v-text-field
@@ -115,12 +115,6 @@ export default {
     email: '',
     password: '',
     verify: '',
-    loginPassword: '',
-    loginEmail: '',
-    loginEmailRules: [
-      (v) => !!v || 'Required',
-      (v) => /.+@.+\..+/.test(v) || 'E-mail must be valid',
-    ],
     emailRules: [
       (v) => !!v || 'Required',
       (v) => /.+@.+\..+/.test(v) || 'E-mail must be valid',
@@ -128,13 +122,13 @@ export default {
 
     show1: false,
     rules: {
-      required: (value) => !!value || 'Required.',
-      min: (v) => (v && v.length >= 8) || 'Min 8 characters',
+      required: (value) => !!value || 'Requerido.',
+      min: (v) => (v && v.length >= 8) || 'Min 8 caracteres',
     },
   }),
   computed: {
     passwordMatch() {
-      return () => this.password === this.verify || 'Password must match'
+      return () => this.password === this.verify || 'Contraseñas no coinciden'
     },
   },
   methods: {
@@ -147,7 +141,7 @@ export default {
       this.$refs.form.reset()
     },
     resetValidation() {
-      this.$refs.form.resetValidation()
+      this.$refs.register_form.resetValidation()
     },
     closeDialog() {
       this.$emit('closeDialog')
