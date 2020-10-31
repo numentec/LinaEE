@@ -8,14 +8,14 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-# build/
+build/
 develop-eggs/
-# dist/
+dist/
 downloads/
 eggs/
 .eggs/
-# lib/
-# lib64/
+lib/
+lib64/
 parts/
 sdist/
 var/
@@ -168,8 +168,8 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
-# Dependency directories ******* LO CAMBIE POR NUXT EN DEV *********
-# node_modules/ 
+# Dependency directories
+node_modules/ 
 jspm_packages/
 
 # TypeScript v1 declaration files
@@ -199,8 +199,8 @@ typings/
 # next.js build output
 .next
 
-# nuxt.js build output ******* LO CAMBIE POR NUXT EN DEV *********
-# .nuxt
+# nuxt.js build output
+.nuxt
 
 # Nuxt generate
 ### dist
