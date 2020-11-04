@@ -17,7 +17,8 @@
           alt="LinaEE"
           src="/lina-logo.png"
         /> -->
-        <LinaLogo :logosize="$vuetify.breakpoint.mdAndUp ? 'xltr' : 'smtr'" />
+        <!-- <LinaLogo :logosize="$vuetify.breakpoint.mdAndUp ? 'xltr' : 'smtr'" /> -->
+        <LinaLogo :logosize="is_screen_small ? 'smtr' : 'xltr'" />
       </v-col>
       <v-col cols="12" sm="6" class="text-center">
         <UserLogin />

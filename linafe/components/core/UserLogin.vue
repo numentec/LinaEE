@@ -4,12 +4,18 @@
       <v-toolbar-title>Iniciar Sesión</v-toolbar-title>
     </v-toolbar>
     <v-container class="px-4">
+      <v-alert v-if="error" type="error" dense>{{ error }}</v-alert>
       <v-card-text>
-        <v-form ref="register_form" v-model="valid" lazy-validation>
+        <v-form
+          ref="register_form"
+          v-model="valid"
+          lazy-validation
+          @submit.prevent="login"
+        >
           <v-row>
             <v-col cols="12">
               <v-text-field
-                v-model="userName"
+                v-model="username"
                 prepend-icon="mdi-account"
                 :rules="[rules.required]"
                 label="Usuario"
@@ -41,6 +47,7 @@
             <v-spacer></v-spacer>
             <v-col class="d-flex ml-auto" cols="12" sm="3" xsm="12">
               <v-btn
+                type="submit"
                 x-large
                 block
                 :disabled="!valid"
@@ -64,10 +71,11 @@ export default {
   data: () => ({
     valid: true,
 
-    userName: '',
+    username: '',
     password: '',
     database: '',
     verify: '',
+    error: null,
 
     show1: false,
     rules: {
@@ -87,6 +95,20 @@ export default {
     },
     resetValidation() {
       this.$refs.register_form.resetValidation()
+    },
+    async login() {
+      try {
+        await this.$auth.loginWith('local', {
+          data: {
+            username: this.username,
+            password: this.password,
+          },
+        })
+
+        this.$router.push('/lina')
+      } catch (e) {
+        this.error = e.response.data.message
+      }
     },
   },
 }

@@ -17,7 +17,6 @@
           {{ link.title }}
         </v-btn>
         <v-btn text to="/lina" target="_blank">LinaEE</v-btn>
-
         <v-spacer></v-spacer>
       </v-container>
       <v-avatar

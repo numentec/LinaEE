@@ -37,13 +37,30 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
+    '@nuxtjs/auth',
     // '@nuxtjs/proxy',
   ],
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {
-    // baseURL: 'http://192.168.1.46:8001/linapi',
+    // baseURL: 'http://192.168.1.46:8001/linapi/',
     baseURL: process.env.API_URL,
+  },
+
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: { url: 'login/', method: 'post', propertyName: 'token' },
+          logout: false,
+          user: { url: 'users/cur/', method: 'get', propertyName: 'user' },
+        },
+        // tokenRequired: true,
+        // tokenType: 'bearer',
+        // globalToken: true,
+        // autoFetchUser: true
+      },
+    },
   },
 
   // proxy: {

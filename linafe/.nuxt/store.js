@@ -18,6 +18,7 @@ let store = {};
   store.modules = store.modules || {}
 
   resolveStoreModules(require('../store/core.js'), 'core.js')
+  resolveStoreModules(require('../store/sistema.js'), 'sistema.js')
 
   // If the environment supports hot reloading...
 
@@ -25,6 +26,7 @@ let store = {};
     // Whenever any Vuex module is updated...
     module.hot.accept([
       '../store/core.js',
+      '../store/sistema.js',
     ], () => {
       // Update `root.modules` with the latest definitions.
       updateModules()

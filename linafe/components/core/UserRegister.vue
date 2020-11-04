@@ -17,11 +17,16 @@
       </v-toolbar>
       <v-container class="px-4">
         <v-card-text>
-          <v-form ref="register_form" v-model="valid" lazy-validation>
+          <v-form
+            ref="register_form"
+            v-model="valid"
+            lazy-validation
+            @submit.prevent="registerUser"
+          >
             <v-row>
               <v-col cols="12">
                 <v-text-field
-                  v-model="userName"
+                  v-model="username"
                   :rules="[rules.required]"
                   label="Usuario"
                   maxlength="10"
@@ -83,6 +88,7 @@
               <v-spacer></v-spacer>
               <v-col class="d-flex ml-auto" cols="12" sm="3" xsm="12">
                 <v-btn
+                  type="submit"
                   x-large
                   block
                   :disabled="!valid"
@@ -109,7 +115,7 @@ export default {
   data: () => ({
     valid: true,
 
-    userName: '',
+    username: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -145,6 +151,15 @@ export default {
     },
     closeDialog() {
       this.$emit('closeDialog')
+    },
+    registerUser() {
+      this.$store.dispatch('registerUser', {
+        user_name: this.username,
+        fistname: this.firstName,
+        lastname: this.lastName,
+        email: this.email,
+        password: this.password,
+      })
     },
   },
 }

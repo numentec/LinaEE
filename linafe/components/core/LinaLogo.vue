@@ -1,7 +1,9 @@
 <template>
-  <v-container>
-    <img :class="logosize" alt="LinaEE" src="/lina-logo.png" />
-  </v-container>
+  <client-only>
+    <v-container>
+      <img :class="logosize" alt="LinaEE" src="/lina-logo.png" />
+    </v-container>
+  </client-only>
 </template>
 
 <script>

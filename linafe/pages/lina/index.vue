@@ -40,11 +40,15 @@
 </template>
 
 <script>
+import { authComputed } from '~/store/core.js'
 import LinaLogo from '~/components/core/LinaLogo.vue'
 
 export default {
   components: {
     LinaLogo,
+  },
+  computed: {
+    ...authComputed,
   },
 }
 </script>
