@@ -37,7 +37,7 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    '@nuxtjs/auth',
+    // '@nuxtjs/auth',
     // '@nuxtjs/proxy',
   ],
 
@@ -47,21 +47,38 @@ export default {
     baseURL: process.env.API_URL,
   },
 
-  auth: {
-    strategies: {
-      local: {
-        endpoints: {
-          login: { url: 'login/', method: 'post', propertyName: 'token' },
-          logout: false,
-          user: { url: 'users/cur/', method: 'get', propertyName: 'user' },
-        },
-        // tokenRequired: true,
-        // tokenType: 'bearer',
-        // globalToken: true,
-        // autoFetchUser: true
-      },
-    },
+  router: {
+    middleware: ['auth_lina'],
   },
+
+  // auth: {
+  //   strategies: {
+  //     local: {
+  //       scheme: 'refresh',
+  //       token: {
+  //         property: 'access',
+  //         maxAge: 1800,
+  //         type: 'Bearer',
+  //       },
+  //       refreshToken: {
+  //         property: 'refresh',
+  //         data: 'refresh_token',
+  //         maxAge: 60 * 60 * 24 * 7,
+  //       },
+  //       user: {
+  //         property: false,
+  //         autoFetch: true,
+  //       },
+  //       endpoints: {
+  //         login: { url: 'login/', method: 'post' },
+  //         refresh: { url: 'login_refresh/', method: 'post' },
+  //         user: { url: 'user_perms/cur', method: 'get' },
+  //         logout: false,
+  //       },
+  //       // autoLogout: false
+  //     },
+  //   },
+  // },
 
   // proxy: {
   //   '/api': {

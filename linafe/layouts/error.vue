@@ -1,18 +1,32 @@
 <template>
-  <v-app dark>
-    <h1 v-if="error.statusCode === 404">
-      {{ pageNotFound }}
-    </h1>
-    <h1 v-else>
-      {{ otherError }}
-    </h1>
-    <NuxtLink to="/"> Home page </NuxtLink>
-  </v-app>
+  <v-row justify="center" align="center">
+    <v-col cols="12" sm="8" md="6">
+      <div class="text-center">
+        <h1 class="display-4 font-weight-black grey--text text-darken-1 mt-5">
+          ERROR {{ statusCode }}
+        </h1>
+      </div>
+      <v-alert
+        border="right"
+        colored-border
+        type="error"
+        class="title"
+        elevation="2"
+      >
+        {{ message }}
+      </v-alert>
+      <diveider />
+      <h3 v-if="statusCode === 404">
+        <NuxtLink to="/lina"> Home page </NuxtLink>
+      </h3>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
 export default {
-  layout: 'empty',
+  name: 'LinaErrorPage',
+  // layout: 'empty',
   props: {
     error: {
       type: Object,
@@ -25,11 +39,19 @@ export default {
       otherError: 'An error occurred',
     }
   },
+  computed: {
+    statusCode() {
+      return (this.error && this.error.statusCode) || 500
+    },
+    message() {
+      return this.error.message
+    },
+  },
   head() {
-    const title =
-      this.error.statusCode === 404 ? this.pageNotFound : this.otherError
+    // const title =
+    //   this.error.statusCode === 404 ? this.pageNotFound : this.otherError
     return {
-      title,
+      title: this.message,
     }
   },
 }

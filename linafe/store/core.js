@@ -7,6 +7,7 @@ export const state = () => ({
   is_mini: true,
   is_expanded: false,
 })
+
 export const mutations = {
   SET_DRAWER_IMAGE(state, payload) {
     state.drawer_image = payload
@@ -21,6 +22,7 @@ export const mutations = {
     state.is_expanded = payload
   },
 }
+
 export const actions = {
   setDrawer({ commit }, payload) {
     commit('SET_DRAWER', payload)
@@ -35,6 +37,7 @@ export const actions = {
     commit('SET_IS_EXPANDED', payload)
   },
 }
+
 export const authComputed = {
   ...mapGetters('sistema', ['loggedIn']),
 }

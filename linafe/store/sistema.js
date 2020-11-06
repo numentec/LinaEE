@@ -1,44 +1,56 @@
 export const state = () => ({
   user: null,
+  tokens: {
+    access: '',
+    refresh: '',
+  },
 })
 export const mutations = {
+  SET_TOKENS_DATA(state, payload) {
+    state.tokens = payload
+    this.$axios.defaults.headers.common.Authorization = `Bearer ${payload.access}`
+    localStorage.setItem('tokens', JSON.stringify(payload))
+  },
   SET_USER_DATA(state, payload) {
     state.user = payload
     localStorage.setItem('user', JSON.stringify(payload))
   },
+  LOGOUT_USER() {
+    localStorage.removeItem('user')
+    location.reload()
+  },
 }
 export const actions = {
-  async login({ $axios, commit, error }, credentials) {
+  async userLogin({ commit, error }, credentials) {
     try {
-      const { data } = await $axios.post('/loguin/', credentials)
-      $axios.defaults.headers.common.Authorization = `Bearer ${data.token}`
-      commit('SET_USER_DATA', data)
-      return {
-        data,
-      }
-    } catch (e) {
+      await this.$axios.post('/login/', credentials).then(({ tokensData }) => {
+        commit('SET_TOKENS_DATA', tokensData)
+      })
+
+      await this.$axios.post('/user_perms/cur').then(({ userData }) => {
+        commit('SET_USER_DATA', userData)
+      })
+    } catch (err) {
       error({
-        statusCode: 401,
-        message: 'Failed registering user',
+        statusCode: err.statusCode,
+        message: err.message,
       })
     }
   },
-  async registerUser({ $axios, commit, error }, credentials) {
+
+  async registerUser({ commit, error }, credentials) {
     try {
-      const { data } = await $axios.post('/users/register/', credentials)
-      return {
-        data,
-      }
-    } catch (e) {
+      await this.$axios.post('/users/register/', credentials)
+    } catch (err) {
       error({
-        statusCode: 401,
-        message: 'Failed registering user',
+        statusCode: err.statusCode,
+        message: err.message,
       })
     }
   },
-  setUserData({ $axios, commit, error }, userData) {
-    $axios.defaults.headers.common.Authorization = `Bearer ${userData.token}`
-    commit('SET_USER_DATA', userData)
+
+  logoutUser({ commit }) {
+    commit('LOGOUT_USER')
   },
 }
 export const getters = {

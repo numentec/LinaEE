@@ -26,7 +26,7 @@
             <v-row>
               <v-col cols="12">
                 <v-text-field
-                  v-model="username"
+                  v-model="user_to_reg.username"
                   :rules="[rules.required]"
                   label="Usuario"
                   maxlength="10"
@@ -35,7 +35,7 @@
               </v-col>
               <v-col cols="12" sm="6" md="6">
                 <v-text-field
-                  v-model="firstName"
+                  v-model="user_to_reg.firstName"
                   :rules="[rules.required]"
                   label="Nombres"
                   maxlength="20"
@@ -44,7 +44,7 @@
               </v-col>
               <v-col cols="12" sm="6" md="6">
                 <v-text-field
-                  v-model="lastName"
+                  v-model="user_to_reg.lastName"
                   :rules="[rules.required]"
                   label="Apellidos"
                   maxlength="20"
@@ -53,7 +53,7 @@
               </v-col>
               <v-col cols="12">
                 <v-text-field
-                  v-model="email"
+                  v-model="user_to_reg.email"
                   :rules="emailRules"
                   label="E-mail"
                   required
@@ -61,7 +61,7 @@
               </v-col>
               <v-col cols="12">
                 <v-text-field
-                  v-model="password"
+                  v-model="user_to_reg.password"
                   :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
                   :rules="[rules.required, rules.min]"
                   :type="show1 ? 'text' : 'password'"
@@ -115,11 +115,13 @@ export default {
   data: () => ({
     valid: true,
 
-    username: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
+    user_to_reg: {
+      username: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+    },
     verify: '',
     emailRules: [
       (v) => !!v || 'Required',
@@ -134,7 +136,8 @@ export default {
   }),
   computed: {
     passwordMatch() {
-      return () => this.password === this.verify || 'Contraseñas no coinciden'
+      return () =>
+        this.user_to_reg.password === this.verify || 'Contraseñas no coinciden'
     },
   },
   methods: {
@@ -154,11 +157,7 @@ export default {
     },
     registerUser() {
       this.$store.dispatch('registerUser', {
-        user_name: this.username,
-        fistname: this.firstName,
-        lastname: this.lastName,
-        email: this.email,
-        password: this.password,
+        user_to_reg: this.user_to_reg,
       })
     },
   },

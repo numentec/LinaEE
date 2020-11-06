@@ -20,6 +20,7 @@
         <v-spacer></v-spacer>
       </v-container>
       <v-avatar
+        v-if="!loggedIn"
         class="hidden-sm-and-down"
         color="pink accent-3 shrink"
         size="32"
@@ -37,6 +38,8 @@
 </template>
 
 <script>
+import { authComputed } from '~/store/core.js'
+
 export default {
   data: () => ({
     links: [
@@ -45,6 +48,9 @@ export default {
       { title: 'Directorio', path: '/directory' },
     ],
   }),
+  computed: {
+    ...authComputed,
+  },
 }
 </script>
 

@@ -7,6 +7,8 @@
     </v-btn>
     <v-toolbar-title v-text="title" />
     <v-spacer />
+    <v-btn @click="testAlert">Probando Alert!!!</v-btn>
+    <v-btn v-if="loggedIn" @click="userLogout">Logout</v-btn>
     <v-menu offset-y origin="center center" transition="scale-transition">
       <template v-slot:activator="{ on, attrs }">
         <v-avatar color="accent" size="35" v-bind="attrs" v-on="on">
@@ -29,6 +31,7 @@
 // Components
 import { VHover, VListItem } from 'vuetify/lib'
 import { mapState, mapActions } from 'vuex'
+import { authComputed } from '~/store/core.js'
 export default {
   name: 'CoreAppBar',
 
@@ -70,13 +73,20 @@ export default {
 
   computed: {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
+    ...authComputed,
   },
 
   methods: {
     ...mapActions('core', ['SetDrawer', 'setIsMini', 'setIsExpanded']),
+    ...mapActions('sistema', ['userLogout']),
     setMiniState(mini) {
       this.setIsMini(mini)
       this.setIsExpanded(!mini)
+    },
+    testAlert() {
+      alert(
+        'Llamando api de login por ' + this.username + ' / ' + this.password
+      )
     },
   },
 }
