@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import { authComputed } from '~/store/core.js'
+
 export default {
   layout: 'login',
   components: {
@@ -38,6 +40,7 @@ export default {
     is_screen_small() {
       return this.$vuetify.breakpoint.smAndDown
     },
+    ...authComputed,
   },
 }
 </script>

@@ -12,7 +12,7 @@
       class="primary darken-4"
     >
       <v-list shaped>
-        <v-list-item to="/lina">
+        <v-list-item to="/">
           <v-list-item-icon>
             <v-icon>mdi-home</v-icon>
           </v-list-item-icon>
@@ -46,10 +46,21 @@
       </v-list>
       <template v-slot:append>
         <div class="pa-2">
-          <v-btn v-show="!is_expanded" icon class="secondary darken-2">
+          <v-btn
+            v-show="!is_expanded"
+            icon
+            class="secondary darken-2"
+            @click="userLogout"
+          >
             <v-icon>mdi-logout-variant</v-icon>
           </v-btn>
-          <v-btn v-show="is_expanded" rounded block class="secondary darken-2">
+          <v-btn
+            v-show="is_expanded"
+            rounded
+            block
+            class="secondary darken-2"
+            @click="userLogout"
+          >
             Logout
             <v-icon>mdi-logout-variant</v-icon>
           </v-btn>
@@ -74,17 +85,17 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Prospectos',
-              to: '/lina/crm/prospectos',
+              to: '/crm/prospectos',
             },
             {
               icon: 'mdi-info',
               title: 'Seguimiento',
-              to: '/lina/crm/seguimiento',
+              to: '/crm/seguimiento',
             },
             {
               icon: 'mdi-info',
               title: 'Calendario',
-              to: '/lina/crm/calendario',
+              to: '/crm/calendario',
             },
           ],
         },
@@ -95,42 +106,42 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Cotizaciones',
-              to: '/lina/ventas/cotizaciones',
+              to: '/ventas/cotizaciones',
             },
             {
               icon: 'mdi-info',
               title: 'Pedidos',
-              to: '/lina/ventas/pedidos',
+              to: '/ventas/pedidos',
             },
             {
               icon: 'mdi-info',
               title: 'Facturas',
-              to: '/lina/ventas/facturas',
+              to: '/ventas/facturas',
             },
             {
               icon: 'mdi-info',
               title: 'Notas de Crédito',
-              to: '/lina/ventas/ncs',
+              to: '/ventas/ncs',
             },
             {
               icon: 'mdi-info',
               title: 'Devoluciones',
-              to: '/lina/ventas/devoluciones',
+              to: '/ventas/devoluciones',
             },
             {
               icon: 'mdi-info',
               title: 'Punto de Venta',
-              to: '/lina/ventas/pos',
+              to: '/ventas/pos',
             },
             {
               icon: 'mdi-info',
               title: 'Clientes',
-              to: '/lina/ventas/clientes',
+              to: '/ventas/clientes',
             },
             {
               icon: 'mdi-info',
               title: 'Utilidades',
-              to: '/lina/ventas/utilidades',
+              to: '/ventas/utilidades',
             },
           ],
         },
@@ -141,22 +152,22 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Requisiciones',
-              to: '/lina/compras/requisiciones',
+              to: '/compras/requisiciones',
             },
             {
               icon: 'mdi-info',
               title: 'Ordenes de Compra',
-              to: '/lina/compras/oc',
+              to: '/compras/oc',
             },
             {
               icon: 'mdi-info',
               title: 'Facturas',
-              to: '/lina/compras/facturas',
+              to: '/compras/facturas',
             },
             {
               icon: 'mdi-info',
               title: 'Proveedores',
-              to: '/lina/compras/provs',
+              to: '/compras/provs',
             },
           ],
         },
@@ -167,37 +178,37 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Productos',
-              to: '/lina/inventario/productos',
+              to: '/inventario/productos',
             },
             {
               icon: 'mdi-info',
               title: 'Entradas',
-              to: '/lina/inventario/entradas',
+              to: '/inventario/entradas',
             },
             {
               icon: 'mdi-info',
               title: 'Despachos',
-              to: '/lina/inventario/despachos',
+              to: '/inventario/despachos',
             },
             {
               icon: 'mdi-info',
               title: 'Categorías',
-              to: '/lina/inventario/categorias',
+              to: '/inventario/categorias',
             },
             {
               icon: 'mdi-info',
               title: 'Unidades de Medida',
-              to: '/lina/inventario/um',
+              to: '/inventario/um',
             },
             {
               icon: 'mdi-info',
               title: 'Bodegas',
-              to: '/lina/inventario/bodegas',
+              to: '/inventario/bodegas',
             },
             {
               icon: 'mdi-info',
               title: 'Manifiestos',
-              to: '/lina/inventario/manifiestos',
+              to: '/inventario/manifiestos',
             },
           ],
         },
@@ -208,22 +219,22 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Personal',
-              to: '/lina/rrhh/personal',
+              to: '/rrhh/personal',
             },
             {
               icon: 'mdi-info',
               title: 'Cargos',
-              to: '/lina/rrhh/cargos',
+              to: '/rrhh/cargos',
             },
             {
               icon: 'mdi-info',
               title: 'Planilla',
-              to: '/lina/rrhh/planilla',
+              to: '/rrhh/planilla',
             },
             {
               icon: 'mdi-info',
               title: 'Consultas',
-              to: '/lina/rrhh/consultas',
+              to: '/rrhh/consultas',
             },
           ],
         },
@@ -234,37 +245,37 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Cobros a Cliente',
-              to: '/lina/conta/cobroscli',
+              to: '/conta/cobroscli',
             },
             {
               icon: 'mdi-info',
               title: 'Pagos a Proveedor',
-              to: '/lina/conta/pagosprov',
+              to: '/conta/pagosprov',
             },
             {
               icon: 'mdi-info',
               title: 'Asientos',
-              to: '/lina/conta/asientos',
+              to: '/conta/asientos',
             },
             {
               icon: 'mdi-info',
               title: 'Caja',
-              to: '/lina/conta/caja',
+              to: '/conta/caja',
             },
             {
               icon: 'mdi-info',
               title: 'Bancos',
-              to: '/lina/conta/bancos',
+              to: '/conta/bancos',
             },
             {
               icon: 'mdi-info',
               title: 'Utilidades',
-              to: '/lina/conta/utilidades',
+              to: '/conta/utilidades',
             },
             {
               icon: 'mdi-info',
               title: 'Reportes',
-              to: '/lina/conta/reportes',
+              to: '/conta/reportes',
             },
           ],
         },
@@ -275,22 +286,22 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Despachos',
-              to: '/lina/logistica/despachos',
+              to: '/logistica/despachos',
             },
             {
               icon: 'mdi-info',
               title: 'Ubicaciones',
-              to: '/lina/logistica/ubicaciones',
+              to: '/logistica/ubicaciones',
             },
             {
               icon: 'mdi-info',
               title: 'Vehículos',
-              to: '/lina/logistica/vehiculos',
+              to: '/logistica/vehiculos',
             },
             {
               icon: 'mdi-info',
               title: 'Reportes',
-              to: '/lina/logistica/reportes',
+              to: '/logistica/reportes',
             },
           ],
         },
@@ -301,22 +312,22 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Panel',
-              to: '/lina/linabi/panel',
+              to: '/linabi/panel',
             },
             {
               icon: 'mdi-info',
               title: 'Favoritos',
-              to: '/lina/linabi/favoritos',
+              to: '/linabi/favoritos',
             },
             {
               icon: 'mdi-info',
               title: 'Generar Consulta',
-              to: '/lina/linabi/genconsulta',
+              to: '/linabi/genconsulta',
             },
             {
               icon: 'mdi-info',
               title: 'Reportes',
-              to: '/lina/linabi/reportes',
+              to: '/linabi/reportes',
             },
           ],
         },
@@ -327,17 +338,17 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Empresas',
-              to: '/lina/sistema/cias',
+              to: '/sistema/cias',
             },
             {
               icon: 'mdi-info',
               title: 'Usuarios',
-              to: '/lina/sistema/usuarios',
+              to: '/sistema/usuarios',
             },
             {
               icon: 'mdi-info',
               title: 'Configuración',
-              to: '/lina/sistema/config',
+              to: '/sistema/config',
             },
           ],
         },
@@ -356,6 +367,7 @@ export default {
 
   methods: {
     ...mapActions('core', ['SetDrawer', 'setIsExpanded']),
+    ...mapActions('sistema', ['userLogout']),
   },
 }
 </script>

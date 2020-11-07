@@ -1,37 +1,54 @@
 <template>
-  <div>
-    <v-row justify="center">
-      <v-col cols="12" align="center">
-        <v-sheet rounded="lg" min-height="35vh">
-          <h1 class="grey--text">Bienvenido a la Intranet de NumenTec!!!</h1>
-        </v-sheet>
-      </v-col>
-    </v-row>
-    <v-row justify="center">
-      <v-col cols="12" sm="2">
-        <v-sheet rounded="lg" min-height="268">
-          <!--  -->
-        </v-sheet>
-      </v-col>
-
-      <v-col cols="12" sm="8">
-        <v-sheet min-height="70vh" rounded="lg">
-          <!--  -->
-        </v-sheet>
-      </v-col>
-
-      <v-col cols="12" sm="2">
-        <v-sheet rounded="lg" min-height="268">
-          <!--  -->
-        </v-sheet>
-      </v-col>
-    </v-row>
-  </div>
+  <v-row justify="center" align="center">
+    <v-col cols="12" sm="8" md="6">
+      <div class="text-center">
+        <LinaLogo logosize="mdtr" />
+      </div>
+      <v-card>
+        <v-card-title class="headline">
+          Welcome to Lina Enterprise Edition
+        </v-card-title>
+        <v-card-text>
+          <p>
+            Gracias por elegir Lina Edición Empresarial como su ERP. Lina es más
+            que un ERP. Explore todas sus funcionalidades.
+          </p>
+          <hr class="my-3" />
+          <a
+            href="https://linaee.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            LinaEE Site
+          </a>
+          <br />
+          <a
+            href="https://github.com/nuxt/nuxt.js"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            LinaEE GitHub
+          </a>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" nuxt to="/inspire"> Continue </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
+import { authComputed } from '~/store/core.js'
+import LinaLogo from '~/components/core/LinaLogo.vue'
+
 export default {
-  name: 'WebSiteHome',
-  layout: 'website',
+  components: {
+    LinaLogo,
+  },
+  computed: {
+    ...authComputed,
+  },
 }
 </script>

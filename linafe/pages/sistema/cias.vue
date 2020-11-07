@@ -1,5 +1,30 @@
 <template>
   <div>
+    <!-- <v-card class="mx-auto mt-5">
+      <v-toolbar dense color="secondary" dark>
+        <v-btn icon>
+          <v-icon>mdi-dots-vertical</v-icon>
+        </v-btn>
+        <v-spacer />
+        <v-toolbar-title>Compañías</v-toolbar-title>
+        <v-spacer />
+        <v-btn icon>
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
+      </v-toolbar>
+      <v-card-text>
+        <div>Word of the Day</div>
+        <p class="display-1 text--primary">be•nev•o•lent</p>
+        <p>adjective</p>
+        <div class="text--primary">
+          well meaning and kindly.<br />
+          "a benevolent smile"
+        </div>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn text color="deep-purple accent-4"> Learn More </v-btn>
+      </v-card-actions>
+    </v-card> -->
     <MaterialCard class="mt-10">
       <template v-slot:heading>
         <v-toolbar dense color="secondary" dark flat>
@@ -11,9 +36,7 @@
             </template>
             <v-list>
               <v-list-item link>
-                <v-list-item-title @click="showRegister = true">
-                  Registrar Nuevo
-                </v-list-item-title>
+                <v-list-item-title>Nuevo</v-list-item-title>
               </v-list-item>
               <v-list-group prepend-icon="mdi-export" no-action>
                 <template v-slot:activator>
@@ -45,7 +68,7 @@
             </v-list>
           </v-menu>
           <v-spacer />
-          <v-toolbar-title>Usuarios</v-toolbar-title>
+          <v-toolbar-title>Compañías</v-toolbar-title>
           <v-spacer />
           <v-menu
             v-model="menu"
@@ -86,16 +109,13 @@
       <v-card-text>
         <v-data-table
           :headers="showCols"
-          :items="users"
+          :items="cias"
           :items-per-page="10"
           multi-sort
           show-select
           :search="search"
           item-key="id"
         >
-          <template #item.full_name="{ item }">
-            {{ item.first_name }} {{ item.last_name }}
-          </template>
           <template v-slot:item.is_active="{ item }">
             <v-simple-checkbox
               v-model="item.is_active"
@@ -108,7 +128,6 @@
         </v-data-table>
       </v-card-text>
     </MaterialCard>
-    <UserRegister :dialog.sync="showRegister" @closeDialog="closeDialog" />
   </div>
 </template>
 
@@ -116,20 +135,19 @@
 export default {
   components: {
     MaterialCard: () => import('~/components/core/MaterialCard'),
-    UserRegister: () => import('~/components/core/UserRegister'),
     SelCols: () => import('~/components/utilities/SelCols'),
   },
 
   async asyncData({ $axios, error }) {
     try {
-      const { data } = await $axios.get('/users/')
+      const { data } = await $axios.get('/cias/')
       return {
-        users: data,
+        cias: data,
       }
-    } catch (e) {
+    } catch (err) {
       error({
         statusCode: 503,
-        message: 'Unable to fetch users list at this time. Try later',
+        message: 'Unable to fetch cias list at this time. Try later',
       })
     }
   },
@@ -141,15 +159,13 @@ export default {
       search: '',
       headers: [
         { text: 'ID', value: 'id' },
-        { text: 'Nombre', value: 'full_name' },
-        { text: 'Usuario', value: 'username' },
+        { text: 'Nombre', value: 'nombre_corto' },
+        { text: 'RUC', value: 'ruc' },
         { text: 'Email', value: 'email' },
-        { text: 'Tel', value: 'tel1' },
-        { text: 'Activo', sortable: false, value: 'is_active' },
+        { text: 'Activa', sortable: false, value: 'is_active' },
         { text: 'Ver', value: 'actions', sortable: false },
       ],
       selected_cols: [],
-      showRegister: false,
     }
   },
 
@@ -165,14 +181,11 @@ export default {
 
   methods: {
     showItem(item) {},
-    closeDialog() {
-      this.showRegister = false
-    },
   },
 
   head() {
     return {
-      title: 'Users List',
+      title: 'Cias List',
     }
   },
 }

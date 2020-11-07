@@ -15,7 +15,6 @@
       >
         {{ message }}
       </v-alert>
-      <diveider />
       <h3 v-if="statusCode === 404">
         <NuxtLink to="/lina"> Home page </NuxtLink>
       </h3>

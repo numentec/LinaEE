@@ -94,31 +94,23 @@ export default {
         // submit form to server/API here...
       }
     },
+
     reset() {
       this.$refs.login_form.reset()
     },
+
     resetValidation() {
       this.$refs.login_form.resetValidation()
     },
-    // login(logininfo) {
-    //   alert('Probando login!!!')
-    // },
-    // async userLogin() {
-    //   try {
-    //     await this.$auth.loginWith('local', { data: this.login })
-    //     this.$router.push('/lina')
-    //   } catch (err) {
-    //     this.error = err.response.data.message
-    //   }
-    // },
+
     userLogin() {
       this.$store
         .dispatch('sistema/userLogin', this.login)
         .then(() => {
-          this.$router.push('/lina/')
+          this.$router.push('/')
         })
         .catch((err) => {
-          this.error = err.response.data.error
+          this.error = err.response.data.message
         })
     },
   },

@@ -3,47 +3,44 @@ import Router from 'vue-router'
 import { interopDefault } from './utils'
 import scrollBehavior from './router.scrollBehavior.js'
 
-const _0dc5685a = () => interopDefault(import('../pages/directory.vue' /* webpackChunkName: "pages/directory" */))
-const _5e9e1b7d = () => interopDefault(import('../pages/lina/index.vue' /* webpackChunkName: "pages/lina/index" */))
-const _6b22c45a = () => interopDefault(import('../pages/webstore/index.vue' /* webpackChunkName: "pages/webstore/index" */))
-const _ad33f3d2 = () => interopDefault(import('../pages/lina/login/index.vue' /* webpackChunkName: "pages/lina/login/index" */))
-const _81c1d18c = () => interopDefault(import('../pages/lina/compras/facturas.vue' /* webpackChunkName: "pages/lina/compras/facturas" */))
-const _fad15c5a = () => interopDefault(import('../pages/lina/compras/oc.vue' /* webpackChunkName: "pages/lina/compras/oc" */))
-const _1ff2aefb = () => interopDefault(import('../pages/lina/compras/provs.vue' /* webpackChunkName: "pages/lina/compras/provs" */))
-const _84b6a1e8 = () => interopDefault(import('../pages/lina/compras/requisiciones.vue' /* webpackChunkName: "pages/lina/compras/requisiciones" */))
-const _6236a61a = () => interopDefault(import('../pages/lina/crm/calendario.vue' /* webpackChunkName: "pages/lina/crm/calendario" */))
-const _a4c0c8b4 = () => interopDefault(import('../pages/lina/crm/prospectos.vue' /* webpackChunkName: "pages/lina/crm/prospectos" */))
-const _0ab91eba = () => interopDefault(import('../pages/lina/crm/seguimiento.vue' /* webpackChunkName: "pages/lina/crm/seguimiento" */))
-const _8492785c = () => interopDefault(import('../pages/lina/inventario/bodegas.vue' /* webpackChunkName: "pages/lina/inventario/bodegas" */))
-const _4a3ef9a9 = () => interopDefault(import('../pages/lina/inventario/categorias.vue' /* webpackChunkName: "pages/lina/inventario/categorias" */))
-const _729cfa13 = () => interopDefault(import('../pages/lina/inventario/despachos.vue' /* webpackChunkName: "pages/lina/inventario/despachos" */))
-const _5bc2b345 = () => interopDefault(import('../pages/lina/inventario/entradas.vue' /* webpackChunkName: "pages/lina/inventario/entradas" */))
-const _2a8a391f = () => interopDefault(import('../pages/lina/inventario/manifiestos.vue' /* webpackChunkName: "pages/lina/inventario/manifiestos" */))
-const _4de6089a = () => interopDefault(import('../pages/lina/inventario/productos.vue' /* webpackChunkName: "pages/lina/inventario/productos" */))
-const _64b787a1 = () => interopDefault(import('../pages/lina/inventario/um.vue' /* webpackChunkName: "pages/lina/inventario/um" */))
-const _0fbe94da = () => interopDefault(import('../pages/lina/linabi/favoritos.vue' /* webpackChunkName: "pages/lina/linabi/favoritos" */))
-const _10f6d552 = () => interopDefault(import('../pages/lina/linabi/genconsulta.vue' /* webpackChunkName: "pages/lina/linabi/genconsulta" */))
-const _503bfb5e = () => interopDefault(import('../pages/lina/linabi/panel.vue' /* webpackChunkName: "pages/lina/linabi/panel" */))
-const _652656a5 = () => interopDefault(import('../pages/lina/linabi/reportes.vue' /* webpackChunkName: "pages/lina/linabi/reportes" */))
-const _095d21e9 = () => interopDefault(import('../pages/lina/logistica/despachos.vue' /* webpackChunkName: "pages/lina/logistica/despachos" */))
-const _04465595 = () => interopDefault(import('../pages/lina/logistica/reportes.vue' /* webpackChunkName: "pages/lina/logistica/reportes" */))
-const _a6722eac = () => interopDefault(import('../pages/lina/logistica/ubicaciones.vue' /* webpackChunkName: "pages/lina/logistica/ubicaciones" */))
-const _04b4c38b = () => interopDefault(import('../pages/lina/logistica/vehiculos.vue' /* webpackChunkName: "pages/lina/logistica/vehiculos" */))
-const _0f13a75e = () => interopDefault(import('../pages/lina/rrhh/cargos.vue' /* webpackChunkName: "pages/lina/rrhh/cargos" */))
-const _40e21c74 = () => interopDefault(import('../pages/lina/rrhh/consultas.vue' /* webpackChunkName: "pages/lina/rrhh/consultas" */))
-const _a776454c = () => interopDefault(import('../pages/lina/rrhh/personal.vue' /* webpackChunkName: "pages/lina/rrhh/personal" */))
-const _4d3449ca = () => interopDefault(import('../pages/lina/rrhh/planilla.vue' /* webpackChunkName: "pages/lina/rrhh/planilla" */))
-const _5c5f968a = () => interopDefault(import('../pages/lina/sistema/cias.vue' /* webpackChunkName: "pages/lina/sistema/cias" */))
-const _36e78f34 = () => interopDefault(import('../pages/lina/sistema/config.vue' /* webpackChunkName: "pages/lina/sistema/config" */))
-const _4154b6f7 = () => interopDefault(import('../pages/lina/sistema/usuarios.vue' /* webpackChunkName: "pages/lina/sistema/usuarios" */))
-const _18cd9e8c = () => interopDefault(import('../pages/lina/ventas/clientes.vue' /* webpackChunkName: "pages/lina/ventas/clientes" */))
-const _5b4dbb4e = () => interopDefault(import('../pages/lina/ventas/cotizaciones.vue' /* webpackChunkName: "pages/lina/ventas/cotizaciones" */))
-const _4b4218c9 = () => interopDefault(import('../pages/lina/ventas/devoluciones.vue' /* webpackChunkName: "pages/lina/ventas/devoluciones" */))
-const _26e11bce = () => interopDefault(import('../pages/lina/ventas/facturas.vue' /* webpackChunkName: "pages/lina/ventas/facturas" */))
-const _453a854a = () => interopDefault(import('../pages/lina/ventas/ncs.vue' /* webpackChunkName: "pages/lina/ventas/ncs" */))
-const _5a6c734b = () => interopDefault(import('../pages/lina/ventas/pedidos.vue' /* webpackChunkName: "pages/lina/ventas/pedidos" */))
-const _5ba95b51 = () => interopDefault(import('../pages/lina/ventas/pos.vue' /* webpackChunkName: "pages/lina/ventas/pos" */))
-const _1ea969c1 = () => interopDefault(import('../pages/lina/ventas/utilidades.vue' /* webpackChunkName: "pages/lina/ventas/utilidades" */))
+const _c7ec75dc = () => interopDefault(import('../pages/login/index.vue' /* webpackChunkName: "pages/login/index" */))
+const _411b05c2 = () => interopDefault(import('../pages/compras/facturas.vue' /* webpackChunkName: "pages/compras/facturas" */))
+const _27524778 = () => interopDefault(import('../pages/compras/oc.vue' /* webpackChunkName: "pages/compras/oc" */))
+const _0ebac994 = () => interopDefault(import('../pages/compras/provs.vue' /* webpackChunkName: "pages/compras/provs" */))
+const _8d239f72 = () => interopDefault(import('../pages/compras/requisiciones.vue' /* webpackChunkName: "pages/compras/requisiciones" */))
+const _c0f77d82 = () => interopDefault(import('../pages/crm/calendario.vue' /* webpackChunkName: "pages/crm/calendario" */))
+const _2a25926a = () => interopDefault(import('../pages/crm/prospectos.vue' /* webpackChunkName: "pages/crm/prospectos" */))
+const _67093a1e = () => interopDefault(import('../pages/crm/seguimiento.vue' /* webpackChunkName: "pages/crm/seguimiento" */))
+const _16c84477 = () => interopDefault(import('../pages/inventario/bodegas.vue' /* webpackChunkName: "pages/inventario/bodegas" */))
+const _46087ae4 = () => interopDefault(import('../pages/inventario/categorias.vue' /* webpackChunkName: "pages/inventario/categorias" */))
+const _655e3510 = () => interopDefault(import('../pages/inventario/despachos.vue' /* webpackChunkName: "pages/inventario/despachos" */))
+const _24e14740 = () => interopDefault(import('../pages/inventario/entradas.vue' /* webpackChunkName: "pages/inventario/entradas" */))
+const _b01e4178 = () => interopDefault(import('../pages/inventario/manifiestos.vue' /* webpackChunkName: "pages/inventario/manifiestos" */))
+const _aecc1802 = () => interopDefault(import('../pages/inventario/productos.vue' /* webpackChunkName: "pages/inventario/productos" */))
+const _3d6773dc = () => interopDefault(import('../pages/inventario/um.vue' /* webpackChunkName: "pages/inventario/um" */))
+const _3011fabf = () => interopDefault(import('../pages/linabi/favoritos.vue' /* webpackChunkName: "pages/linabi/favoritos" */))
+const _6a0855f7 = () => interopDefault(import('../pages/linabi/genconsulta.vue' /* webpackChunkName: "pages/linabi/genconsulta" */))
+const _39b622b6 = () => interopDefault(import('../pages/linabi/panel.vue' /* webpackChunkName: "pages/linabi/panel" */))
+const _5ce7bfc0 = () => interopDefault(import('../pages/linabi/reportes.vue' /* webpackChunkName: "pages/linabi/reportes" */))
+const _5b089438 = () => interopDefault(import('../pages/logistica/despachos.vue' /* webpackChunkName: "pages/logistica/despachos" */))
+const _5d57d63a = () => interopDefault(import('../pages/logistica/reportes.vue' /* webpackChunkName: "pages/logistica/reportes" */))
+const _aedf2c36 = () => interopDefault(import('../pages/logistica/ubicaciones.vue' /* webpackChunkName: "pages/logistica/ubicaciones" */))
+const _645950f4 = () => interopDefault(import('../pages/logistica/vehiculos.vue' /* webpackChunkName: "pages/logistica/vehiculos" */))
+const _29cc2968 = () => interopDefault(import('../pages/rrhh/cargos.vue' /* webpackChunkName: "pages/rrhh/cargos" */))
+const _7e2fb799 = () => interopDefault(import('../pages/rrhh/consultas.vue' /* webpackChunkName: "pages/rrhh/consultas" */))
+const _f6166cd6 = () => interopDefault(import('../pages/rrhh/personal.vue' /* webpackChunkName: "pages/rrhh/personal" */))
+const _9bd47154 = () => interopDefault(import('../pages/rrhh/planilla.vue' /* webpackChunkName: "pages/rrhh/planilla" */))
+const _83989222 = () => interopDefault(import('../pages/sistema/cias.vue' /* webpackChunkName: "pages/sistema/cias" */))
+const _74352a59 = () => interopDefault(import('../pages/sistema/config.vue' /* webpackChunkName: "pages/sistema/config" */))
+const _61a81cdc = () => interopDefault(import('../pages/sistema/usuarios.vue' /* webpackChunkName: "pages/sistema/usuarios" */))
+const _f5992ff2 = () => interopDefault(import('../pages/ventas/clientes.vue' /* webpackChunkName: "pages/ventas/clientes" */))
+const _246c4f49 = () => interopDefault(import('../pages/ventas/cotizaciones.vue' /* webpackChunkName: "pages/ventas/cotizaciones" */))
+const _1460acc4 = () => interopDefault(import('../pages/ventas/devoluciones.vue' /* webpackChunkName: "pages/ventas/devoluciones" */))
+const _d972356e = () => interopDefault(import('../pages/ventas/facturas.vue' /* webpackChunkName: "pages/ventas/facturas" */))
+const _fbc49a00 = () => interopDefault(import('../pages/ventas/ncs.vue' /* webpackChunkName: "pages/ventas/ncs" */))
+const _d08be320 = () => interopDefault(import('../pages/ventas/pedidos.vue' /* webpackChunkName: "pages/ventas/pedidos" */))
+const _006450f6 = () => interopDefault(import('../pages/ventas/pos.vue' /* webpackChunkName: "pages/ventas/pos" */))
+const _08c2c07c = () => interopDefault(import('../pages/ventas/utilidades.vue' /* webpackChunkName: "pages/ventas/utilidades" */))
 const _ea611a90 = () => interopDefault(import('../pages/index.vue' /* webpackChunkName: "pages/index" */))
 
 // TODO: remove in Nuxt 3
@@ -63,169 +60,157 @@ export const routerOptions = {
   scrollBehavior,
 
   routes: [{
-    path: "/directory",
-    component: _0dc5685a,
-    name: "directory"
+    path: "/login",
+    component: _c7ec75dc,
+    name: "login"
   }, {
-    path: "/lina",
-    component: _5e9e1b7d,
-    name: "lina"
+    path: "/compras/facturas",
+    component: _411b05c2,
+    name: "compras-facturas"
   }, {
-    path: "/webstore",
-    component: _6b22c45a,
-    name: "webstore"
+    path: "/compras/oc",
+    component: _27524778,
+    name: "compras-oc"
   }, {
-    path: "/lina/login",
-    component: _ad33f3d2,
-    name: "lina-login"
+    path: "/compras/provs",
+    component: _0ebac994,
+    name: "compras-provs"
   }, {
-    path: "/lina/compras/facturas",
-    component: _81c1d18c,
-    name: "lina-compras-facturas"
+    path: "/compras/requisiciones",
+    component: _8d239f72,
+    name: "compras-requisiciones"
   }, {
-    path: "/lina/compras/oc",
-    component: _fad15c5a,
-    name: "lina-compras-oc"
+    path: "/crm/calendario",
+    component: _c0f77d82,
+    name: "crm-calendario"
   }, {
-    path: "/lina/compras/provs",
-    component: _1ff2aefb,
-    name: "lina-compras-provs"
+    path: "/crm/prospectos",
+    component: _2a25926a,
+    name: "crm-prospectos"
   }, {
-    path: "/lina/compras/requisiciones",
-    component: _84b6a1e8,
-    name: "lina-compras-requisiciones"
+    path: "/crm/seguimiento",
+    component: _67093a1e,
+    name: "crm-seguimiento"
   }, {
-    path: "/lina/crm/calendario",
-    component: _6236a61a,
-    name: "lina-crm-calendario"
+    path: "/inventario/bodegas",
+    component: _16c84477,
+    name: "inventario-bodegas"
   }, {
-    path: "/lina/crm/prospectos",
-    component: _a4c0c8b4,
-    name: "lina-crm-prospectos"
+    path: "/inventario/categorias",
+    component: _46087ae4,
+    name: "inventario-categorias"
   }, {
-    path: "/lina/crm/seguimiento",
-    component: _0ab91eba,
-    name: "lina-crm-seguimiento"
+    path: "/inventario/despachos",
+    component: _655e3510,
+    name: "inventario-despachos"
   }, {
-    path: "/lina/inventario/bodegas",
-    component: _8492785c,
-    name: "lina-inventario-bodegas"
+    path: "/inventario/entradas",
+    component: _24e14740,
+    name: "inventario-entradas"
   }, {
-    path: "/lina/inventario/categorias",
-    component: _4a3ef9a9,
-    name: "lina-inventario-categorias"
+    path: "/inventario/manifiestos",
+    component: _b01e4178,
+    name: "inventario-manifiestos"
   }, {
-    path: "/lina/inventario/despachos",
-    component: _729cfa13,
-    name: "lina-inventario-despachos"
+    path: "/inventario/productos",
+    component: _aecc1802,
+    name: "inventario-productos"
   }, {
-    path: "/lina/inventario/entradas",
-    component: _5bc2b345,
-    name: "lina-inventario-entradas"
+    path: "/inventario/um",
+    component: _3d6773dc,
+    name: "inventario-um"
   }, {
-    path: "/lina/inventario/manifiestos",
-    component: _2a8a391f,
-    name: "lina-inventario-manifiestos"
+    path: "/linabi/favoritos",
+    component: _3011fabf,
+    name: "linabi-favoritos"
   }, {
-    path: "/lina/inventario/productos",
-    component: _4de6089a,
-    name: "lina-inventario-productos"
+    path: "/linabi/genconsulta",
+    component: _6a0855f7,
+    name: "linabi-genconsulta"
   }, {
-    path: "/lina/inventario/um",
-    component: _64b787a1,
-    name: "lina-inventario-um"
+    path: "/linabi/panel",
+    component: _39b622b6,
+    name: "linabi-panel"
   }, {
-    path: "/lina/linabi/favoritos",
-    component: _0fbe94da,
-    name: "lina-linabi-favoritos"
+    path: "/linabi/reportes",
+    component: _5ce7bfc0,
+    name: "linabi-reportes"
   }, {
-    path: "/lina/linabi/genconsulta",
-    component: _10f6d552,
-    name: "lina-linabi-genconsulta"
+    path: "/logistica/despachos",
+    component: _5b089438,
+    name: "logistica-despachos"
   }, {
-    path: "/lina/linabi/panel",
-    component: _503bfb5e,
-    name: "lina-linabi-panel"
+    path: "/logistica/reportes",
+    component: _5d57d63a,
+    name: "logistica-reportes"
   }, {
-    path: "/lina/linabi/reportes",
-    component: _652656a5,
-    name: "lina-linabi-reportes"
+    path: "/logistica/ubicaciones",
+    component: _aedf2c36,
+    name: "logistica-ubicaciones"
   }, {
-    path: "/lina/logistica/despachos",
-    component: _095d21e9,
-    name: "lina-logistica-despachos"
+    path: "/logistica/vehiculos",
+    component: _645950f4,
+    name: "logistica-vehiculos"
   }, {
-    path: "/lina/logistica/reportes",
-    component: _04465595,
-    name: "lina-logistica-reportes"
+    path: "/rrhh/cargos",
+    component: _29cc2968,
+    name: "rrhh-cargos"
   }, {
-    path: "/lina/logistica/ubicaciones",
-    component: _a6722eac,
-    name: "lina-logistica-ubicaciones"
+    path: "/rrhh/consultas",
+    component: _7e2fb799,
+    name: "rrhh-consultas"
   }, {
-    path: "/lina/logistica/vehiculos",
-    component: _04b4c38b,
-    name: "lina-logistica-vehiculos"
+    path: "/rrhh/personal",
+    component: _f6166cd6,
+    name: "rrhh-personal"
   }, {
-    path: "/lina/rrhh/cargos",
-    component: _0f13a75e,
-    name: "lina-rrhh-cargos"
+    path: "/rrhh/planilla",
+    component: _9bd47154,
+    name: "rrhh-planilla"
   }, {
-    path: "/lina/rrhh/consultas",
-    component: _40e21c74,
-    name: "lina-rrhh-consultas"
+    path: "/sistema/cias",
+    component: _83989222,
+    name: "sistema-cias"
   }, {
-    path: "/lina/rrhh/personal",
-    component: _a776454c,
-    name: "lina-rrhh-personal"
+    path: "/sistema/config",
+    component: _74352a59,
+    name: "sistema-config"
   }, {
-    path: "/lina/rrhh/planilla",
-    component: _4d3449ca,
-    name: "lina-rrhh-planilla"
+    path: "/sistema/usuarios",
+    component: _61a81cdc,
+    name: "sistema-usuarios"
   }, {
-    path: "/lina/sistema/cias",
-    component: _5c5f968a,
-    name: "lina-sistema-cias"
+    path: "/ventas/clientes",
+    component: _f5992ff2,
+    name: "ventas-clientes"
   }, {
-    path: "/lina/sistema/config",
-    component: _36e78f34,
-    name: "lina-sistema-config"
+    path: "/ventas/cotizaciones",
+    component: _246c4f49,
+    name: "ventas-cotizaciones"
   }, {
-    path: "/lina/sistema/usuarios",
-    component: _4154b6f7,
-    name: "lina-sistema-usuarios"
+    path: "/ventas/devoluciones",
+    component: _1460acc4,
+    name: "ventas-devoluciones"
   }, {
-    path: "/lina/ventas/clientes",
-    component: _18cd9e8c,
-    name: "lina-ventas-clientes"
+    path: "/ventas/facturas",
+    component: _d972356e,
+    name: "ventas-facturas"
   }, {
-    path: "/lina/ventas/cotizaciones",
-    component: _5b4dbb4e,
-    name: "lina-ventas-cotizaciones"
+    path: "/ventas/ncs",
+    component: _fbc49a00,
+    name: "ventas-ncs"
   }, {
-    path: "/lina/ventas/devoluciones",
-    component: _4b4218c9,
-    name: "lina-ventas-devoluciones"
+    path: "/ventas/pedidos",
+    component: _d08be320,
+    name: "ventas-pedidos"
   }, {
-    path: "/lina/ventas/facturas",
-    component: _26e11bce,
-    name: "lina-ventas-facturas"
+    path: "/ventas/pos",
+    component: _006450f6,
+    name: "ventas-pos"
   }, {
-    path: "/lina/ventas/ncs",
-    component: _453a854a,
-    name: "lina-ventas-ncs"
-  }, {
-    path: "/lina/ventas/pedidos",
-    component: _5a6c734b,
-    name: "lina-ventas-pedidos"
-  }, {
-    path: "/lina/ventas/pos",
-    component: _5ba95b51,
-    name: "lina-ventas-pos"
-  }, {
-    path: "/lina/ventas/utilidades",
-    component: _1ea969c1,
-    name: "lina-ventas-utilidades"
+    path: "/ventas/utilidades",
+    component: _08c2c07c,
+    name: "ventas-utilidades"
   }, {
     path: "/",
     component: _ea611a90,

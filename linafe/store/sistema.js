@@ -1,10 +1,14 @@
+export const namespaced = true
+
 export const state = () => ({
   user: null,
   tokens: {
     access: '',
     refresh: '',
   },
+  error: null,
 })
+
 export const mutations = {
   SET_TOKENS_DATA(state, payload) {
     state.tokens = payload
@@ -15,44 +19,40 @@ export const mutations = {
     state.user = payload
     localStorage.setItem('user', JSON.stringify(payload))
   },
-  LOGOUT_USER() {
+  USER_LOGOUT() {
     localStorage.removeItem('user')
+    localStorage.removeItem('tokens')
     location.reload()
   },
 }
-export const actions = {
-  async userLogin({ commit, error }, credentials) {
-    try {
-      await this.$axios.post('/login/', credentials).then(({ tokensData }) => {
-        commit('SET_TOKENS_DATA', tokensData)
-      })
 
-      await this.$axios.post('/user_perms/cur').then(({ userData }) => {
-        commit('SET_USER_DATA', userData)
+export const actions = {
+  async userLogin({ commit }, credentials) {
+    await this.$axios
+      .post('/login/', credentials)
+      .then(({ data }) => {
+        commit('SET_TOKENS_DATA', data)
       })
-    } catch (err) {
-      error({
-        statusCode: err.statusCode,
-        message: err.message,
+      .then((response) => {
+        return this.$axios.get('/user_perms/cur').then(({ data }) => {
+          commit('SET_USER_DATA', data)
+        })
       })
-    }
   },
 
   async registerUser({ commit, error }, credentials) {
     try {
       await this.$axios.post('/users/register/', credentials)
     } catch (err) {
-      error({
-        statusCode: err.statusCode,
-        message: err.message,
-      })
+      this.error = err
     }
   },
 
-  logoutUser({ commit }) {
-    commit('LOGOUT_USER')
+  userLogout({ commit }) {
+    commit('USER_LOGOUT')
   },
 }
+
 export const getters = {
   loggedIn(state) {
     return !!state.user

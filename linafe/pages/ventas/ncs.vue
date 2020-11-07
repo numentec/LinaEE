@@ -1,9 +1,7 @@
 <template>
   <v-row>
     <v-col class="text-center">
-      <nuxt-link to="/lina/sistema/cias">
-        <img src="/uc2.jpg" alt="***** En Construcción *****" class="mb-5" />
-      </nuxt-link>
+      <img src="/uc2.jpg" alt="***** En Construcción *****" class="mb-5" />
       <blockquote class="blockquote">
         <h5>{{ page_name }}</h5>
         &#8220;En desarrollo por el equipo de NumenTec.&#8221;

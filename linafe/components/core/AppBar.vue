@@ -7,8 +7,6 @@
     </v-btn>
     <v-toolbar-title v-text="title" />
     <v-spacer />
-    <v-btn @click="testAlert">Probando Alert!!!</v-btn>
-    <v-btn v-if="loggedIn" @click="userLogout">Logout</v-btn>
     <v-menu offset-y origin="center center" transition="scale-transition">
       <template v-slot:activator="{ on, attrs }">
         <v-avatar color="accent" size="35" v-bind="attrs" v-on="on">
@@ -16,11 +14,13 @@
         </v-avatar>
       </template>
       <v-list>
-        <AppBarItem>
+        <AppBarItem to="/sistema/usuarios">
           <v-list-item-title>Perfil</v-list-item-title>
         </AppBarItem>
         <AppBarItem>
-          <v-list-item-title>Cerrar Sesión</v-list-item-title>
+          <v-list-item-title @click.stop="userLogout">
+            Cerrar Sesión
+          </v-list-item-title>
         </AppBarItem>
       </v-list>
     </v-menu>
@@ -29,9 +29,10 @@
 
 <script>
 // Components
-import { VHover, VListItem } from 'vuetify/lib'
 import { mapState, mapActions } from 'vuex'
+import { VHover, VListItem } from 'vuetify/lib'
 import { authComputed } from '~/store/core.js'
+
 export default {
   name: 'CoreAppBar',
 

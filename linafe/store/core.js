@@ -1,5 +1,7 @@
 import { mapGetters } from 'vuex'
 
+export const namespaced = true
+
 export const state = () => ({
   drawer: null,
   drawer_image:
