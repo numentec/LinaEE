@@ -1,6 +1,6 @@
 from rest_framework import serializers
-
 from .models import Cia, User
+
 
 class CiaSerializer(serializers.ModelSerializer):
 
@@ -8,11 +8,13 @@ class CiaSerializer(serializers.ModelSerializer):
         model = Cia
         fields = ('__all__')
 
+
 class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
         fields = ('__all__')
+
 
 # Devuelve el usuario actual con sus permisos
 class UserPermsSerializer(serializers.ModelSerializer):

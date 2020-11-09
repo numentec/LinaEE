@@ -9,7 +9,10 @@
 </template>
 
 <script>
+// import { sessionMixin } from '~/mixins/sessionMixin.js'
+
 export default {
+  // mixins: [sessionMixin],
   data: () => ({}),
 }
 </script>

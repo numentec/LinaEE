@@ -4,6 +4,12 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
 from ckeditor.fields import RichTextField
 
+# Imports for token signal on User model
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+
 # Modelo para información de compañías
 class Cia(models.Model):
 
@@ -92,17 +98,23 @@ class User(AbstractUser):
                             ("view_sys_module", "Access to System Module")   
                         )
 
-Usuario = get_user_model()
+LinaUserModel = get_user_model()
+
+# @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+@receiver(post_save, sender=LinaUserModel)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 # Clase abstracta para usarla como base
 class Common(models.Model):
     is_active   = models.BooleanField('Activo', default=True)
     created_at  = models.DateTimeField('Fecha de creación', auto_now_add=True, editable=False)
     modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
-    created_by  = models.ForeignKey(Usuario, null=True, db_index=True, editable=False, 
+    created_by  = models.ForeignKey(LinaUserModel, null=True, db_index=True, editable=False, 
                     verbose_name='Creado por', on_delete=models.SET_NULL,
                     related_name='%(class)s_created')
-    modified_by = models.ForeignKey(Usuario, null=True, db_index=True, editable=False, 
+    modified_by = models.ForeignKey(LinaUserModel, null=True, db_index=True, editable=False, 
                     verbose_name='Modificado por', on_delete=models.SET_NULL,
                     related_name='%(class)s_modified')
 

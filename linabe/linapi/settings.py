@@ -32,26 +32,24 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
-
-DJANGO_APPS = [
+INSTALLED_APPS = [
+    # Django Apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'corsheaders',
-    'ckeditor'
-]
 
-NUMEN_APPS = [
+    # Third-Party Apps
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+    'ckeditor',
+
+    # Numen Apps
     'apps.core',
 ]
-
-OTHER_APPS = []
-
-INSTALLED_APPS = DJANGO_APPS + NUMEN_APPS + OTHER_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -128,8 +126,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Generated token a1ffa704dc8d2922af672374447ad42c98245e1a for user root
+# Generated token ad6ec4eff12f2b7243e82b86349dd2c875b3fbb0 for user venta01
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],

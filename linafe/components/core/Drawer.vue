@@ -12,7 +12,7 @@
       class="primary darken-4"
     >
       <v-list shaped>
-        <v-list-item to="/">
+        <v-list-item nuxt to="/">
           <v-list-item-icon>
             <v-icon>mdi-home</v-icon>
           </v-list-item-icon>
@@ -34,6 +34,7 @@
           <v-list-item
             v-for="subitem in item.items"
             :key="subitem.title"
+            nuxt
             :to="subitem.to"
             router
             exact

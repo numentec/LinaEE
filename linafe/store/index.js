@@ -1,20 +1,26 @@
+export const getters = {
+  isAuthenticated(state) {
+    return state.auth.loggedIn
+  },
+
+  loggedInUser(state) {
+    return state.auth.user
+  },
+}
+
+// export const actions = {
+//   nuxtServerInit() {
+//     if (!process.server) {
+//       const userString = localStorage.getItem('curuser')
+//       if (userString) {
+//         const userData = JSON.parse(userString)
+//         this.$store.commit('sistema/SET_USER_DATA', userData)
+//       }
+//     }
+//   },
+// }
+
 // const cookieparser = process.server ? require('cookieparser') : undefined
-
-// export const state = () => {
-//   return {
-//     auth: null,
-//     counter: 0,
-//   }
-// }
-
-// export const mutations = {
-//   increment(state) {
-//     state.counter++
-//   },
-//   setAuth(state, auth) {
-//     state.auth = auth
-//   },
-// }
 
 // export const actions = {
 //   nuxtServerInit({ commit }, { req }) {

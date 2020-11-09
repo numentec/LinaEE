@@ -1,5 +1,3 @@
-import { mapGetters } from 'vuex'
-
 export const namespaced = true
 
 export const state = () => ({
@@ -38,8 +36,4 @@ export const actions = {
   setIsExpanded({ commit }, payload) {
     commit('SET_IS_EXPANDED', payload)
   },
-}
-
-export const authComputed = {
-  ...mapGetters('sistema', ['loggedIn']),
 }

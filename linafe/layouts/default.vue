@@ -14,12 +14,15 @@
 </template>
 
 <script>
+// import { sessionMixin } from '~/mixins/sessionMixin.js'
+
 export default {
   name: 'LinaHome',
   components: {
     CoreAppBar: () => import('../components/core/AppBar'),
     CoreDrawer: () => import('../components/core/Drawer'),
   },
+  // mixins: [sessionMixin],
 }
 </script>
 

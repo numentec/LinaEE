@@ -7,6 +7,7 @@
     </v-btn>
     <v-toolbar-title v-text="title" />
     <v-spacer />
+    <v-btn v-if="isAuthenticated">Logout: {{ loggedInUser.username }}</v-btn>
     <v-menu offset-y origin="center center" transition="scale-transition">
       <template v-slot:activator="{ on, attrs }">
         <v-avatar color="accent" size="35" v-bind="attrs" v-on="on">
@@ -14,7 +15,7 @@
         </v-avatar>
       </template>
       <v-list>
-        <AppBarItem to="/sistema/usuarios">
+        <AppBarItem nuxt to="/sistema/usuarios">
           <v-list-item-title>Perfil</v-list-item-title>
         </AppBarItem>
         <AppBarItem>
@@ -28,10 +29,10 @@
 </template>
 
 <script>
+import { mapState, mapActions, mapGetters } from 'vuex'
 // Components
-import { mapState, mapActions } from 'vuex'
 import { VHover, VListItem } from 'vuetify/lib'
-import { authComputed } from '~/store/core.js'
+// import { authComputed } from '~/store/core.js'
 
 export default {
   name: 'CoreAppBar',
@@ -74,7 +75,8 @@ export default {
 
   computed: {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
-    ...authComputed,
+    ...mapState('sistema', ['user']),
+    ...mapGetters(['isAuthenticated', 'loggedInUser']),
   },
 
   methods: {

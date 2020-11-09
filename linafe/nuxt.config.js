@@ -37,7 +37,7 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    // '@nuxtjs/auth',
+    '@nuxtjs/auth',
     // '@nuxtjs/proxy',
   ],
 
@@ -47,8 +47,22 @@ export default {
     baseURL: process.env.API_URL,
   },
 
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: { url: 'login/', method: 'post' },
+          user: { url: 'user_perms/cur', method: 'get' },
+          logout: false,
+        },
+        autoFetchUser: false,
+        tokenType: 'Token',
+      },
+    },
+  },
+
   router: {
-    middleware: ['auth_lina'],
+    middleware: ['auth'],
   },
 
   // Vuetify module configuration (https://go.nuxtjs.dev/config-vuetify)
