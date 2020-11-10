@@ -1,6 +1,6 @@
 <template>
   <client-only>
-    <v-container>
+    <v-container class="ma-0 pa-0">
       <img :class="logosize" alt="LinaEE" src="/lina-logo.png" />
     </v-container>
   </client-only>
@@ -19,9 +19,16 @@ export default {
 </script>
 
 <style>
+.xstr {
+  height: 150px;
+  width: 150px;
+  transform: rotateY(560deg);
+  animation: turn 3.5s ease-out forwards 1s;
+}
+
 .smtr {
-  height: 180px;
-  width: 180px;
+  height: 200px;
+  width: 200px;
   transform: rotateY(560deg);
   animation: turn 3.5s ease-out forwards 1s;
 }
