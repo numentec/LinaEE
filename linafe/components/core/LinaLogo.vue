@@ -18,10 +18,10 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .xstr {
-  height: 150px;
-  width: 150px;
+  height: 175px;
+  width: 175px;
   transform: rotateY(560deg);
   animation: turn 3.5s ease-out forwards 1s;
 }

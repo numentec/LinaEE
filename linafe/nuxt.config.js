@@ -17,7 +17,7 @@ export default {
   css: [],
 
   // Customize the progress-bar color
-  loading: { color: '#de545f' },
+  loading: { color: 'success' },
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
   plugins: [],
@@ -43,11 +43,16 @@ export default {
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {
-    // baseURL: 'http://192.168.1.46:8001/linapi/',
-    baseURL: process.env.API_URL,
+    baseURL: process.env.API_URL_SERVER,
+    browserBaseURL: process.env.API_URL_CLIENT,
   },
 
   auth: {
+    redirect: {
+      login: '/login',
+      logout: '/login',
+      home: '/',
+    },
     strategies: {
       local: {
         endpoints: {

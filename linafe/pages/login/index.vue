@@ -20,8 +20,6 @@ export default {
   mounted() {
     const curuser = localStorage.getItem('curuser')
 
-    // console.log('**********' + curuser + '**********')
-
     if (curuser) {
       this.$auth.setUser(curuser)
       this.$store.commit('sistema/SET_USER_DATA', curuser)

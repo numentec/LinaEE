@@ -3,7 +3,7 @@
     <div>
       <v-alert v-if="error" type="error" dense>{{ error }}</v-alert>
       <v-card max-width="400" class="mx-auto mt-16">
-        <LinaLogo logosize="smtr" class="text-center logo_stack" />
+        <LinaLogo logosize="xstr" class="text-center logo_stack" />
         <v-form
           ref="login_form"
           v-model="valid"
@@ -110,8 +110,8 @@ export default {
       this.$refs.login_form.resetValidation()
     },
 
-    userLogin() {
-      this.$store
+    async userLogin() {
+      await this.$store
         .dispatch('sistema/userLogin', this.login)
         .then(() => {
           this.$router.push('/')
@@ -127,7 +127,7 @@ export default {
 <style lang="sass" scoped>
 .logo_stack
     position: relative
-    top: -64px
+    top: -88px
     transition: .3s ease
     z-index: 1
 </style>

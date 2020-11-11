@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const apiClient = axios.create({
-  baseURL: `http://192.168.15.4:8001/linapi`,
+  baseURL: process.env.API_URL_SERVER,
   withCredentials: false, // This is the default
   headers: {
     Accept: 'application/json',

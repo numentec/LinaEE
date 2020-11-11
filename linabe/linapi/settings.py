@@ -143,7 +143,7 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = False
 # CORS_ORIGIN_WHITELIST = (
-#   'http://192.168.1.46:3001',
+#   'http://192.168.1.51:3001',
 #   'http://127.0.0.1:3001'
 # )
 
