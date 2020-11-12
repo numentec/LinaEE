@@ -4,66 +4,66 @@
       <v-alert v-if="error" type="error" dense>{{ error }}</v-alert>
       <v-card max-width="400" class="mx-auto mt-16">
         <LinaLogo logosize="xstr" class="text-center logo_stack" />
-        <v-form
-          ref="login_form"
-          v-model="valid"
-          lazy-validation
-          class="mt-0"
-          @submit.prevent="userLogin"
-        >
-          <v-card max-width="400" flat class="mt-n16">
-            <v-card-text>
-              <v-container class="px-4">
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="login.username"
-                      prepend-icon="mdi-account"
-                      :rules="[rules.required]"
-                      label="Usuario"
-                      maxlength="10"
-                      required
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="login.password"
-                      prepend-icon="mdi-lock"
-                      :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-                      :rules="[rules.required, rules.min]"
-                      :type="show1 ? 'text' : 'password'"
-                      name="pass"
-                      label="Contraseña"
-                      hint="Mínimo 8 caracteres"
-                      counter
-                      @click:append="show1 = !show1"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12">
-                    <v-select
-                      v-model="database"
-                      prepend-icon="mdi-database-lock-outline"
-                      label="Base de Datos"
-                    ></v-select>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn
-                type="submit"
-                rounded
-                large
-                block
-                :disabled="!valid"
-                color="success"
-                @click="validate"
-              >
-                Aceptar
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-form>
+        <v-card-text>
+          <v-form
+            id="login_form"
+            ref="login_form"
+            v-model="valid"
+            lazy-validation
+            class="mt-0"
+            @submit.prevent="userLogin"
+          >
+            <v-container class="px-4 mt-n12">
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="login.username"
+                    prepend-icon="mdi-account"
+                    :rules="[rules.required]"
+                    label="Usuario"
+                    maxlength="10"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="login.password"
+                    prepend-icon="mdi-lock"
+                    :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                    :rules="[rules.required, rules.min]"
+                    :type="show1 ? 'text' : 'password'"
+                    name="pass"
+                    label="Contraseña"
+                    hint="Mínimo 8 caracteres"
+                    counter
+                    @click:append="show1 = !show1"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12">
+                  <v-select
+                    v-model="database"
+                    prepend-icon="mdi-database-lock-outline"
+                    label="Base de Datos"
+                  ></v-select>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn
+            type="submit"
+            form="login_form"
+            rounded
+            large
+            block
+            :disabled="!valid"
+            color="success"
+            @click="validate"
+          >
+            Aceptar
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </div>
   </client-only>

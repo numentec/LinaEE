@@ -1,6 +1,8 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Cia, User
 
+LinaUserModel = get_user_model()
 
 class CiaSerializer(serializers.ModelSerializer):
 
@@ -12,7 +14,7 @@ class CiaSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = User
+        model = LinaUserModel
         fields = ('__all__')
 
 
@@ -23,7 +25,7 @@ class UserPermsSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
 
     class Meta:
-        model = User
+        model = LinaUserModel
         fields = ('id', 'username', 'email', 'first_name', 'last_name', 'fullname', 'perms')
         read_only_fields = ('id', 'username', 'email', 'first_name', 'last_name', 'fullname', 'perms')
 
@@ -51,3 +53,14 @@ class UserPermsSerializer(serializers.ModelSerializer):
 
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = LinaUserModel
+        fields = ('username', 'first_name', 'last_name', 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+
+    def create(self, validated_data):
+        return LinaUserModel.objects.create_user(**validated_data)

@@ -12,8 +12,10 @@ urlpatterns = [
     path('loginjwt/', TokenObtainPairView.as_view(), name='loginjwt'),
     path('loginjwt_refresh/', TokenRefreshView.as_view(), name='loginjwt_refresh'),
     path('cias/', views.CiaList.as_view(), name='cias'),
-    path('cias/<pk>', views.CiaDetail.as_view(), name='cia'),
+    path('cias/<pk>/', views.CiaDetail.as_view(), name='cia'),
     path('users/', views.UserList.as_view(), name='users'),
-    path('users/<pk>', views.UserDetail.as_view(), name='user'),
-    path('user_perms/<pk>', views.UserPermsDetail.as_view(), name='user_perms'),
+    path('users/<pk>/', views.UserDetail.as_view(), name='user'),
+    path('user_perms/<pk>/', views.UserPermsDetail.as_view(), name='user_perms'),
+    path('user_register/', views.UserRegister.as_view(), name='user_register'),
+    path('cia/create/', views.CiaCreate.as_view(), name='cia_create'),
 ]

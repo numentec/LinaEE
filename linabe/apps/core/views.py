@@ -1,15 +1,26 @@
 from django.shortcuts import render
+from django.contrib.auth import get_user_model
 from .models import Cia, User
-from .serializers import CiaSerializer, UserSerializer, UserPermsSerializer
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from .serializers import (
+    CiaSerializer,
+    UserSerializer,
+    UserPermsSerializer,
+    UserRegisterSerializer
+)
+
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 
 # Imports for Token Authentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
+LinaUserModel = get_user_model()
 
 class LinaAuthToken(ObtainAuthToken):
+    """Autenticación por token"""
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
@@ -54,7 +65,7 @@ class LinaAuthToken(ObtainAuthToken):
 
 
 class CiaList(ListAPIView):
-
+    """Lista de compañías"""
     serializer_class = CiaSerializer
 
     def get_queryset(self):
@@ -62,7 +73,7 @@ class CiaList(ListAPIView):
 
 
 class CiaDetail(RetrieveAPIView):
-
+    """Detalle de la compañía"""
     serializer_class = CiaSerializer
 
     def get_queryset(self):
@@ -70,15 +81,15 @@ class CiaDetail(RetrieveAPIView):
 
 
 class UserList(ListAPIView):
-
+    """Lista de usuarios"""
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        return User.objects.all()
+        return LinaUserModel.objects.all()
 
 
 class UserDetail(RetrieveAPIView):
-
+    """Detalles del usuario"""
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -95,7 +106,7 @@ class UserDetail(RetrieveAPIView):
 
 
 class UserPermsDetail(RetrieveAPIView):
-
+    """Datos y permisos del usuario"""
     serializer_class = UserPermsSerializer
 
     def get_object(self):
@@ -108,4 +119,20 @@ class UserPermsDetail(RetrieveAPIView):
         return super(UserPermsDetail, self).get_object()
 
     def get_queryset(self):
-        return User.objects.all()
+        return LinaUserModel.objects.all()
+
+
+class UserRegister(CreateAPIView):
+    """Registrar un nuevo usuario"""
+    # serializer_class = UserSerializer
+    serializer_class = UserRegisterSerializer
+
+    def get_queryset(self):
+        return LinaUserModel.objects.all()
+
+
+class CiaCreate(CreateAPIView):
+    serializer_class = CiaSerializer
+
+    def get_queryset(self):
+        return Cia.objects.all()
