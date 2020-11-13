@@ -85,7 +85,16 @@ class UserList(ListAPIView):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        return LinaUserModel.objects.all()
+        username = self.kwargs['username']
+
+        if(username == 'actives'):
+            userslist = LinaUserModel.objects.filter(is_active=True)
+        elif(username == 'all'):
+            userslist = LinaUserModel.objects.all()
+        else:
+            userslist = LinaUserModel.objects.filter(username__icontains=username)
+
+        return userslist
 
 
 class UserDetail(RetrieveAPIView):
@@ -128,10 +137,11 @@ class UserRegister(CreateAPIView):
     serializer_class = UserRegisterSerializer
 
     def get_queryset(self):
-        return LinaUserModel.objects.all()
+        return LinaUserModel.objects.filter(is_active=True)
 
 
 class CiaCreate(CreateAPIView):
+    """Crear nueva compañía"""
     serializer_class = CiaSerializer
 
     def get_queryset(self):

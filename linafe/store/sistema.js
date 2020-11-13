@@ -32,11 +32,11 @@ export const actions = {
     }
   },
 
-  async registerUser({ commit, error }, credentials) {
+  async registerUser({ commit, error }, userdata) {
     try {
-      await this.$axios.post('/users/register/', credentials)
+      await this.$axios.$post('user_register/', userdata)
     } catch (err) {
-      this.error = err
+      this.error = err.response.data.message
     }
   },
 

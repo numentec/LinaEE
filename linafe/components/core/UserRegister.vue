@@ -21,7 +21,7 @@
             ref="register_form"
             v-model="valid"
             lazy-validation
-            @submit.prevent="registerUser"
+            @submit.prevent="validate"
           >
             <v-row>
               <v-col cols="12">
@@ -35,7 +35,7 @@
               </v-col>
               <v-col cols="12" sm="6" md="6">
                 <v-text-field
-                  v-model="user_to_reg.firstName"
+                  v-model="user_to_reg.first_name"
                   :rules="[rules.required]"
                   label="Nombres"
                   maxlength="20"
@@ -44,7 +44,7 @@
               </v-col>
               <v-col cols="12" sm="6" md="6">
                 <v-text-field
-                  v-model="user_to_reg.lastName"
+                  v-model="user_to_reg.last_name"
                   :rules="[rules.required]"
                   label="Apellidos"
                   maxlength="20"
@@ -117,10 +117,10 @@ export default {
 
     user_to_reg: {
       username: '',
-      firstName: '',
-      lastName: '',
-      email: '',
       password: '',
+      first_name: '',
+      last_name: '',
+      email: '',
     },
     verify: '',
     emailRules: [
@@ -142,12 +142,14 @@ export default {
   },
   methods: {
     validate() {
-      if (this.$refs.loginForm.validate()) {
+      if (this.$refs.register_form.validate()) {
         // submit form to server/API here...
+        this.registerUser()
+        this.closeDialog()
       }
     },
     reset() {
-      this.$refs.form.reset()
+      this.$refs.register_form.reset()
     },
     resetValidation() {
       this.$refs.register_form.resetValidation()
@@ -155,10 +157,8 @@ export default {
     closeDialog() {
       this.$emit('closeDialog')
     },
-    registerUser() {
-      this.$store.dispatch('registerUser', {
-        user_to_reg: this.user_to_reg,
-      })
+    async registerUser() {
+      await this.$store.dispatch('sistema/registerUser', this.user_to_reg)
     },
   },
 }

@@ -140,7 +140,7 @@ export default {
 
   async asyncData({ $axios, error }) {
     try {
-      const { data } = await $axios.get('/cias/')
+      const { data } = await $axios.get('cias/')
       return {
         cias: data,
       }

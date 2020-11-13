@@ -75,7 +75,7 @@ export default {
 
   computed: {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
-    ...mapState('sistema', ['user']),
+    ...mapState('sistema', ['curuser']),
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
   },
 

@@ -138,10 +138,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
         'rest_framework.permissions.DjangoModelPermissions',
     ],
-    # 'DEFAULT_RENDERER_CLASSES': [
-    #     'rest_framework.renderers.JSONRenderer',
-    #     'rest_framework.renderers.BrowsableAPIRenderer',
-    # ]
 }
 
 CORS_ORIGIN_ALLOW_ALL = True

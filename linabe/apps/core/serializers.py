@@ -59,8 +59,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LinaUserModel
-        fields = ('username', 'first_name', 'last_name', 'email', 'password')
-        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
+        fields = ('username', 'password', 'first_name', 'last_name', 'email')
+        extra_kwargs = {'password': {'write_only': True, 'min_length': 8}}
 
     def create(self, validated_data):
         return LinaUserModel.objects.create_user(**validated_data)

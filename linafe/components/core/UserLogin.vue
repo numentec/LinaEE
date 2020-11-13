@@ -11,7 +11,7 @@
             v-model="valid"
             lazy-validation
             class="mt-0"
-            @submit.prevent="userLogin"
+            @submit.prevent="validate"
           >
             <v-container class="px-4 mt-n12">
               <v-row>
@@ -98,6 +98,7 @@ export default {
   methods: {
     validate() {
       if (this.$refs.login_form.validate()) {
+        this.userLogin()
         // submit form to server/API here...
       }
     },
