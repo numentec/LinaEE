@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from .models import Cia, User
 
 LinaUserModel = get_user_model()
@@ -64,3 +65,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return LinaUserModel.objects.create_user(**validated_data)
+
+
+class GroupsSerializer(serializers.ModelSerializer):
+    """Lista de Grupos del Sistema"""
+
+    class Meta:
+        model = Group
+        fields = ('id', 'name')

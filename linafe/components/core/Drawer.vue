@@ -22,6 +22,7 @@
         </v-list-item>
         <v-list-group
           v-for="item in items"
+          v-show="perms[item.perm]"
           :key="item.title"
           :prepend-icon="item.icon"
           no-action
@@ -78,10 +79,12 @@ export default {
 
   data() {
     return {
+      perms: this.$auth.user.perms,
       items: [
         {
           icon: 'mdi-handshake-outline',
           title: 'CRM',
+          perm: 'core.view_crm_module',
           items: [
             {
               icon: 'mdi-info',
@@ -103,6 +106,7 @@ export default {
         {
           icon: 'mdi-storefront',
           title: 'Ventas',
+          perm: 'core.view_sales_module',
           items: [
             {
               icon: 'mdi-info',
@@ -149,6 +153,7 @@ export default {
         {
           icon: 'mdi-cart-plus',
           title: 'Compras',
+          perm: 'core.view_purchase_module',
           items: [
             {
               icon: 'mdi-info',
@@ -175,6 +180,7 @@ export default {
         {
           icon: 'mdi-package-variant',
           title: 'Inventario',
+          perm: 'core.view_inv_module',
           items: [
             {
               icon: 'mdi-info',
@@ -216,6 +222,7 @@ export default {
         {
           icon: 'mdi-account-cog',
           title: 'RR.HH',
+          perm: 'core.view_hr_module',
           items: [
             {
               icon: 'mdi-info',
@@ -242,6 +249,7 @@ export default {
         {
           icon: 'mdi-calculator-variant',
           title: 'Contabilidad',
+          perm: 'core.view_accounting_module',
           items: [
             {
               icon: 'mdi-info',
@@ -283,6 +291,7 @@ export default {
         {
           icon: 'mdi-truck-fast',
           title: 'Logística',
+          perm: 'core.view_logistics_module',
           items: [
             {
               icon: 'mdi-info',
@@ -309,6 +318,7 @@ export default {
         {
           icon: 'mdi-finance',
           title: 'Lina Bi',
+          perm: 'core.view_linabi_module',
           items: [
             {
               icon: 'mdi-info',
@@ -335,6 +345,7 @@ export default {
         {
           icon: 'mdi-application-cog',
           title: 'Sistema',
+          perm: 'core.view_sys_module',
           items: [
             {
               icon: 'mdi-info',

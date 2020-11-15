@@ -18,4 +18,5 @@ urlpatterns = [
     path('user_perms/<pk>/', views.UserPermsDetail.as_view(), name='user_perms'),
     path('user_register/', views.UserRegister.as_view(), name='user_register'),
     path('cia/create/', views.CiaCreate.as_view(), name='cia_create'),
+    path('groups/', views.GroupsList.as_view(), name='groups'),
 ]

@@ -7,7 +7,9 @@
     </v-btn>
     <v-toolbar-title v-text="title" />
     <v-spacer />
-    <v-btn v-if="isAuthenticated">Logout: {{ loggedInUser.username }}</v-btn>
+    <v-btn v-if="isAuthenticated" @click.stop="testAlert"
+      >Logout: {{ loggedInUser.username }}</v-btn
+    >
     <v-menu offset-y origin="center center" transition="scale-transition">
       <template v-slot:activator="{ on, attrs }">
         <v-avatar color="accent" size="35" v-bind="attrs" v-on="on">
@@ -88,7 +90,7 @@ export default {
     },
     testAlert() {
       alert(
-        'Llamando api de login por ' + this.username + ' / ' + this.password
+        'Permiso módulo CRM ' + this.$auth.user.perms['core.view_hr_module']
       )
     },
   },

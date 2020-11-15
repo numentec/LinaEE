@@ -11,7 +11,7 @@
             </template>
             <v-list>
               <v-list-item link>
-                <v-list-item-title @click="showRegister = true">
+                <v-list-item-title @click.stop="showRegister = true">
                   Registrar Nuevo
                 </v-list-item-title>
               </v-list-item>
@@ -108,7 +108,11 @@
         </v-data-table>
       </v-card-text>
     </MaterialCard>
-    <UserRegister :dialog.sync="showRegister" @closeDialog="closeDialog" />
+    <UserRegister
+      :dialog.sync="showRegister"
+      :groups="groups"
+      @closeDialog="closeDialog"
+    />
   </div>
 </template>
 
@@ -121,10 +125,15 @@ export default {
   },
 
   async asyncData({ $axios, error }) {
+    // Lista de usuarios y grupos
     try {
-      const { data } = await $axios.get('users/actives/')
+      const [usersList, groupList] = await Promise.all([
+        $axios.get('users/actives/'),
+        $axios.get('groups/'),
+      ])
       return {
-        users: data,
+        users: usersList.data,
+        groups: groupList.data,
       }
     } catch (err) {
       if (err.response) {
@@ -143,6 +152,8 @@ export default {
 
   data() {
     return {
+      users: [],
+      groups: [],
       page_name: 'page',
       menu: false,
       search: '',
@@ -171,9 +182,32 @@ export default {
   },
 
   methods: {
-    showItem(item) {},
-    closeDialog() {
+    async refreshItems() {
+      try {
+        const { data } = await this.$axios.get('users/actives/')
+        this.users = data
+      } catch (err) {
+        if (err.response) {
+          this.$error({
+            statusCode: err.response.status,
+            message: err.response.data.message,
+          })
+        } else {
+          this.$error({
+            statusCode: 503,
+            message: 'No se pudo cargar la lista de usuarios. Intente luego',
+          })
+        }
+      }
+    },
+    showItem(item) {
+      alert(item.email)
+    },
+    closeDialog(refresh) {
       this.showRegister = false
+      if (refresh) {
+        this.refreshItems()
+      }
     },
   },
 

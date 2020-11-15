@@ -11,7 +11,7 @@
             v-model="valid"
             lazy-validation
             class="mt-0"
-            @submit.prevent="validate"
+            @submit.prevent="userLogin"
           >
             <v-container class="px-4 mt-n12">
               <v-row>
@@ -59,7 +59,6 @@
             block
             :disabled="!valid"
             color="success"
-            @click="validate"
           >
             Aceptar
           </v-btn>
@@ -96,13 +95,6 @@ export default {
   }),
   computed: {},
   methods: {
-    validate() {
-      if (this.$refs.login_form.validate()) {
-        this.userLogin()
-        // submit form to server/API here...
-      }
-    },
-
     reset() {
       this.$refs.login_form.reset()
     },
@@ -112,14 +104,16 @@ export default {
     },
 
     async userLogin() {
-      await this.$store
-        .dispatch('sistema/userLogin', this.login)
-        .then(() => {
-          this.$router.push('/')
-        })
-        .catch((err) => {
-          this.error = err.response.data.message
-        })
+      if (this.$refs.login_form.validate()) {
+        await this.$store
+          .dispatch('sistema/userLogin', this.login)
+          .then(() => {
+            this.$router.push('/')
+          })
+          .catch((err) => {
+            this.error = err.response.data.message
+          })
+      }
     },
   },
 }

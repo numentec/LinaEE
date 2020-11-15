@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from .models import Cia, User
 from .serializers import (
     CiaSerializer,
     UserSerializer,
     UserPermsSerializer,
-    UserRegisterSerializer
+    UserRegisterSerializer,
+    GroupsSerializer
 )
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
@@ -88,11 +90,11 @@ class UserList(ListAPIView):
         username = self.kwargs['username']
 
         if(username == 'actives'):
-            userslist = LinaUserModel.objects.filter(is_active=True)
+            userslist = LinaUserModel.objects.filter(is_active=True).order_by('-id')
         elif(username == 'all'):
-            userslist = LinaUserModel.objects.all()
+            userslist = LinaUserModel.objects.all().order_by('-id')
         else:
-            userslist = LinaUserModel.objects.filter(username__icontains=username)
+            userslist = LinaUserModel.objects.filter(username__icontains=username).order_by('-id')
 
         return userslist
 
@@ -111,7 +113,7 @@ class UserDetail(RetrieveAPIView):
         return super(UserDetail, self).get_object()
 
     def get_queryset(self):
-        return User.objects.all()
+        return User.objects.all().order_by('-id')
 
 
 class UserPermsDetail(RetrieveAPIView):
@@ -146,3 +148,11 @@ class CiaCreate(CreateAPIView):
 
     def get_queryset(self):
         return Cia.objects.all()
+
+
+class GroupsList(ListAPIView):
+    """Lista de grupos de usuarios"""
+    serializer_class = GroupsSerializer
+
+    def get_queryset(self):
+        return Group.objects.all()
