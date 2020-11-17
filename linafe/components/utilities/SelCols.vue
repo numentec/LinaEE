@@ -1,85 +1,78 @@
 <template>
   <v-card class="mx-auto" max-width="300">
-    <v-toolbar color="accent lighten-3" dark>
-      <v-toolbar-title>Columnas</v-toolbar-title>
-    </v-toolbar>
+    <v-list flat max-height="300" class="overflow-y-auto">
+      <v-list-item @click="selectAll">
+        <template v-slot:default="{ active }">
+          <v-list-item-action>
+            <v-checkbox v-model="allCols" :input-value="active"></v-checkbox>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Todo</v-list-item-title>
+          </v-list-item-content>
+        </template>
+      </v-list-item>
 
-    <v-list flat subheader three-line>
-      <v-subheader>Seleccione las columnas a ocultar</v-subheader>
-
-      <v-list-item-group v-model="settings" multiple mandatory active-class="">
-        <v-list-item>
-          <template v-slot:default="{ active }">
-            <v-list-item-action>
-              <v-checkbox :input-value="active"></v-checkbox>
-            </v-list-item-action>
-            <v-list-item-content>
-              <v-list-item-title>Todo</v-list-item-title>
-            </v-list-item-content>
-          </template>
-        </v-list-item>
-
-        <v-divider></v-divider>
-
-        <v-list-item>
-          <template v-slot:default="{ active }">
-            <v-list-item-action>
-              <v-checkbox :input-value="active"></v-checkbox>
-            </v-list-item-action>
-
-            <v-list-item-content>
-              <v-list-item-title>Notifications</v-list-item-title>
-              <v-list-item-subtitle
-                >Notify me about updates to apps or games that I
-                downloaded</v-list-item-subtitle
-              >
-            </v-list-item-content>
-          </template>
-        </v-list-item>
-
-        <v-list-item>
+      <v-divider></v-divider>
+      <v-list-item-group v-model="selected" multiple mandatory active-class="">
+        <v-list-item
+          v-for="header in colsHeaders"
+          :key="header.text"
+          :value="header"
+          @click="hideCols(true)"
+        >
           <template v-slot:default="{ active }">
             <v-list-item-action>
               <v-checkbox :input-value="active"></v-checkbox>
             </v-list-item-action>
 
             <v-list-item-content>
-              <v-list-item-title>Sound</v-list-item-title>
-              <v-list-item-subtitle
-                >Auto-update apps at any time. Data charges may
-                apply</v-list-item-subtitle
-              >
-            </v-list-item-content>
-          </template>
-        </v-list-item>
-
-        <v-list-item>
-          <template v-slot:default="{ active }">
-            <v-list-item-action>
-              <v-checkbox :input-value="active"></v-checkbox>
-            </v-list-item-action>
-
-            <v-list-item-content>
-              <v-list-item-title>Auto-add widgets</v-list-item-title>
-              <v-list-item-subtitle
-                >Automatically add home screen widgets when downloads
-                complete</v-list-item-subtitle
-              >
+              <v-list-item-title>{{ header.text }}</v-list-item-title>
             </v-list-item-content>
           </template>
         </v-list-item>
       </v-list-item-group>
     </v-list>
+    <v-divider></v-divider>
+    <v-card-actions>
+      <v-btn block color="accent lighten-4" @click="hideCols(false)">
+        Aplicar
+      </v-btn>
+    </v-card-actions>
   </v-card>
 </template>
 
 <script>
 export default {
   name: 'SelCols',
+  props: {
+    colsHeaders: {
+      type: Array,
+      required: false,
+      default() {
+        return []
+      },
+    },
+  },
   data() {
     return {
-      settings: [],
+      selected: [],
+      allCols: true,
     }
+  },
+  mounted() {
+    this.selectAll()
+  },
+  methods: {
+    hideCols(shown) {
+      this.$emit('hide-cols', { menu: shown, colssel: this.selected })
+    },
+    selectAll() {
+      if (this.allCols) {
+        this.selected = this.colsHeaders
+      } else {
+        this.selected = []
+      }
+    },
   },
 }
 </script>

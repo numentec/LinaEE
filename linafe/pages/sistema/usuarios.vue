@@ -58,7 +58,7 @@
                 <v-icon>mdi-table-column-plus-after</v-icon>
               </v-btn>
             </template>
-            <SelCols />
+            <SelCols :cols-headers="headers" @hide-cols="hideCols" />
           </v-menu>
           <div v-show="false">
             <v-select
@@ -93,9 +93,6 @@
           :search="search"
           item-key="id"
         >
-          <template #item.full_name="{ item }">
-            {{ item.first_name }} {{ item.last_name }}
-          </template>
           <template v-slot:item.is_active="{ item }">
             <v-simple-checkbox
               v-model="item.is_active"
@@ -110,7 +107,7 @@
     </MaterialCard>
     <UserRegister
       :dialog.sync="showRegister"
-      :groups="groups"
+      :user-groups="groups"
       @closeDialog="closeDialog"
     />
   </div>
@@ -159,7 +156,7 @@ export default {
       search: '',
       headers: [
         { text: 'ID', value: 'id' },
-        { text: 'Nombre', value: 'full_name' },
+        { text: 'Nombre', value: 'fullname' },
         { text: 'Usuario', value: 'username' },
         { text: 'Email', value: 'email' },
         { text: 'Tel', value: 'tel1' },
@@ -208,6 +205,10 @@ export default {
       if (refresh) {
         this.refreshItems()
       }
+    },
+    hideCols(xcols) {
+      this.selected_cols = xcols.colssel
+      this.menu = xcols.menu
     },
   },
 

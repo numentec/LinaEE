@@ -75,9 +75,9 @@ export default {
     customVariables: ['~/assets/variables.scss'],
     treeShake: true,
     theme: {
-      // options: {
-      //   customProperties: true,
-      // },
+      options: {
+        customProperties: true,
+      },
       dark: false,
       themes: {
         light: {
@@ -88,6 +88,7 @@ export default {
           warning: colors.amber.base,
           error: colors.red.base,
           success: colors.green.accent4,
+          asgray: '#9FD5D1',
         },
         dark: {
           primary: colors.azulCerceta.darken4,
@@ -97,6 +98,7 @@ export default {
           warning: colors.amber.base,
           error: colors.red.base,
           success: colors.green.accent4,
+          asgray: '#79AFAB',
         },
       },
     },

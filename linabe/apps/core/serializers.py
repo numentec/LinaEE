@@ -5,6 +5,18 @@ from .models import Cia, User
 
 LinaUserModel = get_user_model()
 
+class ListIntSerializer(serializers.ListField):
+    child = serializers.IntegerField()
+
+
+class GroupsSerializer(serializers.ModelSerializer):
+    """Lista de Grupos del Sistema"""
+
+    class Meta:
+        model = Group
+        fields = ('id', 'name')
+
+
 class CiaSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -14,10 +26,14 @@ class CiaSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     
+    fullname = serializers.SerializerMethodField()
+
     class Meta:
         model = LinaUserModel
         fields = ('__all__')
 
+    def get_fullname(self, obj):
+        return '{} {}'.format(obj.first_name, obj.last_name)
 
 # Devuelve el usuario actual con sus permisos
 class UserPermsSerializer(serializers.ModelSerializer):
@@ -55,21 +71,10 @@ class UserPermsSerializer(serializers.ModelSerializer):
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
 
-
 class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LinaUserModel
-        fields = ('username', 'password', 'first_name', 'last_name', 'email')
+        fields = ('username', 'password', 'first_name', 'last_name', 'email', 'groups')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 8}}
 
-    def create(self, validated_data):
-        return LinaUserModel.objects.create_user(**validated_data)
-
-
-class GroupsSerializer(serializers.ModelSerializer):
-    """Lista de Grupos del Sistema"""
-
-    class Meta:
-        model = Group
-        fields = ('id', 'name')

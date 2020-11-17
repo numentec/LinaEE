@@ -81,7 +81,7 @@
                 <v-icon>mdi-table-column-plus-after</v-icon>
               </v-btn>
             </template>
-            <SelCols />
+            <SelCols :cols-headers="headers" @hide-cols="hideCols" />
           </v-menu>
           <div v-show="false">
             <v-select
@@ -180,6 +180,10 @@ export default {
   },
 
   methods: {
+    hideCols(xcols) {
+      this.selected_cols = xcols.colssel
+      this.menu = xcols.menu
+    },
     showItem(item) {},
   },
 

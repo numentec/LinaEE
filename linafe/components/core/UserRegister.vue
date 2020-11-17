@@ -65,13 +65,12 @@
                 </v-col>
                 <v-col cols="12">
                   <v-select
-                    v-model="selected_groups"
-                    :items="groups"
+                    v-model="user_to_reg.groups"
+                    :items="userGroups"
                     item-text="name"
                     item-value="id"
                     prepend-icon="mdi-account-multiple-check-outline"
                     multiple
-                    return-object
                     label="Grupos"
                     chips
                     deletable-chips
@@ -125,7 +124,7 @@ export default {
   name: 'UserRegister',
   props: {
     dialog: Boolean,
-    groups: {
+    userGroups: {
       type: Array,
       required: false,
       default() {
@@ -142,9 +141,8 @@ export default {
       first_name: '',
       last_name: '',
       email: '',
+      groups: [],
     },
-    selected_groups: [],
-    // user.groups.add(groupA, groupB)
     verify: '',
     emailRules: [
       (v) => !!v || 'Required',
