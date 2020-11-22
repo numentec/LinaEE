@@ -1,0 +1,106 @@
+version: '3'
+
+services:
+  # MariaDB service
+  db:
+    container_name: linadb
+    image: mariadb/server:10.4
+    restart: always
+    environment:
+        MARIADB_ROOT_PASSWORD: "${DB_ROOT_PW}"
+        MARIADB_DATABASE: "${DB_NAME}"
+        MARIADB_USER: "${DB_USER}"
+        MARIADB_PASSWORD: "${DB_PW}"
+        MARIADB_TZ: "${LOC_TZ}"
+        TZ: "${LOC_TZ}"
+    networks:
+      net:
+        ipv4_address: 192.168.15.5
+    ports:
+        - 3307:3306
+    volumes:
+        - dbdata:/var/lib/mysql/data
+
+  # Django backend service
+  be:
+    container_name: linabe
+    depends_on:
+      - db
+    restart: always
+    build:
+      context: ./linabe
+      dockerfile: Dockerfile_prod
+    volumes:
+      - ./linabe:/linabe
+    networks:
+      net:
+        ipv4_address: 192.168.15.4
+    ports:
+      - 8001:8001
+    environment:
+      APP_DEBUG: '1'
+      SECRET_KEY: "${SECRET_KEY}"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PW: "${DB_PW}"
+      DB_HOST: "${DB_HOST}"
+      DB_PORT: "${DB_PORT}"
+      DB_WAIT_TIME_OUT: "${DB_WAIT_TIME_OUT}"
+      DB_WAIT_TIME_EXTRA: "${DB_WAIT_TIME_EXTRA}"
+      LOC_TZ: "${LOC_TZ}"
+      LOC_LG: "${LOC_LG}"
+      TZ: "${LOC_TZ}"
+    command: gunicorn linabe.wsgi --bind 0.0.0.0:8001
+    # command: sh -c "python manage.py wait_for_db &&
+    #                 python manage.py runserver 0.0.0.0:8001"
+    stop_signal: SIGINT
+
+  # Nuxt frontend service
+  fe:
+    container_name: linafe
+    depends_on:
+      - be
+    restart: always
+    build:
+      context: ./linafe
+      dockerfile: Dockerfile_prod
+    volumes:
+      - ./linafe:/linafe
+    networks:
+      net:
+        ipv4_address: 192.168.15.3
+    ports:
+      - 3001:3001
+    environment:
+      HOST: 0.0.0.0
+      TZ: "${LOC_TZ}"
+    command: 'npm run start'
+
+  # Proxies requests to internal services Nginx Reverse Proxy
+  nginx:
+    image: nginx:latest
+    container_name: linaproxy
+    restart: always
+    depends_on:
+        - fe
+        - be
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      net:
+        ipv4_address: 192.168.15.6
+    ports:
+      - 80:80
+    environment:
+      TZ: "${LOC_TZ}"
+
+volumes:
+  dbdata:
+
+networks:
+  net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.15.0/29
