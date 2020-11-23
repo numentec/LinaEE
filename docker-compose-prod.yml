@@ -50,7 +50,7 @@ services:
       LOC_TZ: "${LOC_TZ}"
       LOC_LG: "${LOC_LG}"
       TZ: "${LOC_TZ}"
-    command: gunicorn linabe.wsgi --bind 0.0.0.0:8001
+    command: gunicorn linapi.wsgi --bind 0.0.0.0:8001
     # command: sh -c "python manage.py wait_for_db &&
     #                 python manage.py runserver 0.0.0.0:8001"
     stop_signal: SIGINT
@@ -66,26 +66,26 @@ services:
       dockerfile: Dockerfile_prod
     volumes:
       - ./linafe:/linafe
+    environment:
+      HOST: 0.0.0.0
+      TZ: "${LOC_TZ}"
     networks:
       net:
         ipv4_address: 192.168.15.3
     ports:
       - 3001:3001
-    environment:
-      HOST: 0.0.0.0
-      TZ: "${LOC_TZ}"
-    command: 'npm run start'
+    command: npm run start
 
   # Proxies requests to internal services Nginx Reverse Proxy
   nginx:
     image: nginx:latest
-    container_name: linaproxy
+    container_name: linax
     restart: always
     depends_on:
         - fe
         - be
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./linax/nginx.conf:/etc/nginx/nginx.conf
     networks:
       net:
         ipv4_address: 192.168.15.6

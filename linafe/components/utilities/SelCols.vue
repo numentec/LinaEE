@@ -64,7 +64,10 @@ export default {
   },
   methods: {
     hideCols(shown) {
-      this.$emit('hide-cols', { menu: shown, colssel: this.selected })
+      // setTimeout(() => this.$vuetify.theme.dark = true, 0);
+      setTimeout(() =>
+        this.$emit('hide-cols', { menu: shown, colssel: this.selected })
+      )
     },
     selectAll() {
       if (this.allCols) {

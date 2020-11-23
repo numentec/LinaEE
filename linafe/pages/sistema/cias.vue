@@ -83,16 +83,6 @@
             </template>
             <SelCols :cols-headers="headers" @hide-cols="hideCols" />
           </v-menu>
-          <div v-show="false">
-            <v-select
-              v-model="selected_cols"
-              :items="headers"
-              prepend-icon="mdi-table-column-plus-after"
-              multiple
-              return-object
-            >
-            </v-select>
-          </div>
         </v-toolbar>
       </template>
       <v-card-title>
