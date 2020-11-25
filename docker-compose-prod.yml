@@ -91,6 +91,7 @@ services:
         ipv4_address: 192.168.15.6
     ports:
       - 80:80
+      - 443:443
     environment:
       TZ: "${LOC_TZ}"
 
