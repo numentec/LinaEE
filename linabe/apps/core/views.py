@@ -10,7 +10,9 @@ from .serializers import (
     GroupsSerializer
 )
 
+from linapi.permissions import CustomDjangoModelPermissions
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework import viewsets
 
 # Imports for Token Authentication
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -33,18 +35,18 @@ class LinaAuthToken(ObtainAuthToken):
         fullname = '{} {}'.format(user.first_name, user.last_name)
 
         min_permissions = [
-            'core.view_linabi_module',
+            'core.view_module_linabi',
             'core.view_user',
-            'core.view_accounting_module',
-            'core.view_hr_module',
+            'core.view_module_accounting',
+            'core.view_module_hr',
             'core.view_cia',
             'core.add_cia',
-            'core.view_purchase_module',
-            'core.view_sys_module',
-            'core.view_crm_module',
-            'core.view_inv_module',
-            'core.view_logistics_module',
-            'core.view_sales_module'
+            'core.view_module_purchase',
+            'core.view_module_sys',
+            'core.view_module_crm',
+            'core.view_module_inv',
+            'core.view_module_logistics',
+            'core.view_module_sales'
             ]
 
         #all_permissions = User(is_superuser=True).get_all_permissions()
@@ -66,25 +68,20 @@ class LinaAuthToken(ObtainAuthToken):
         })
 
 
-class CiaList(ListAPIView):
-    """Lista de compañías"""
+class CiaViewSet(viewsets.ModelViewSet):
+    """ViewSet de compañías"""
     serializer_class = CiaSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
 
-    def get_queryset(self):
-        return Cia.objects.all()
-
-
-class CiaDetail(RetrieveAPIView):
-    """Detalle de la compañía"""
-    serializer_class = CiaSerializer
-
-    def get_queryset(self):
-        return Cia.objects.all()
+    queryset = Cia.objects.all()
 
 
 class UserList(ListAPIView):
     """Lista de usuarios"""
     serializer_class = UserSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
+
+    queryset = User.objects.none()
 
     def get_queryset(self):
         username = self.kwargs['username']
@@ -140,14 +137,6 @@ class UserRegister(CreateAPIView):
 
     def get_queryset(self):
         return LinaUserModel.objects.filter(is_active=True)
-
-
-class CiaCreate(CreateAPIView):
-    """Crear nueva compañía"""
-    serializer_class = CiaSerializer
-
-    def get_queryset(self):
-        return Cia.objects.all()
 
 
 class GroupsList(ListAPIView):
