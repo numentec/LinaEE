@@ -9,7 +9,8 @@ from rest_framework_simplejwt.views import (
 app_name = "core"
 
 router = DefaultRouter()
-router.register('cias', views.CiaViewSet)
+router.register(r'cias', views.CiaViewSet, basename='cias')
+router.register(r'stakeholders', views.StakeHolderViewSet, basename='stakeholders')
 
 urlpatterns = [
     path('login/', views.LinaAuthToken.as_view(), name='login'),

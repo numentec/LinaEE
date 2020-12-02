@@ -88,6 +88,7 @@ export default {
           error: colors.red.base,
           success: colors.green.accent4,
           asgrey: '#9FD5D1',
+          asgrey2: '#A5C9C7',
         },
         dark: {
           primary: '#022a31',

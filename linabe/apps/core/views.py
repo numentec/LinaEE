@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from .models import Cia, User
+from .models import Cia, StakeHolder, User
 from .serializers import (
     CiaSerializer,
     UserSerializer,
     UserPermsSerializer,
     UserRegisterSerializer,
-    GroupsSerializer
+    GroupsSerializer,
+    StakeHolderSerializer,
 )
 
 from linapi.permissions import CustomDjangoModelPermissions
@@ -73,7 +74,51 @@ class CiaViewSet(viewsets.ModelViewSet):
     serializer_class = CiaSerializer
     permission_classes = (CustomDjangoModelPermissions, )
 
-    queryset = Cia.objects.all()
+    queryset = Cia.objects.none()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        action = self.action
+        
+        if (action == 'list'):
+            context['fields'] = ('id', 'codigo', 'nombre_corto', 'ruc', 'tel1', 'email', 'is_active')
+        # elif (action == 'create'):
+        #     context['fields'] = ('id',)
+        # elif (action == 'retrieve'):
+        #     context['fields'] = ('title', 'author', 'isbn', 'price', 'synopsis')
+        return context
+
+    def get_queryset(self):
+        return Cia.objects.all()
+
+
+class StakeHolderViewSet(viewsets.ModelViewSet):
+    """ViewSet de stakeholders"""
+    serializer_class = StakeHolderSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
+
+    queryset = StakeHolder.objects.all()
+
+    # def get_queryset(self):
+    #     shtype = self.request.query_params.get('shtype')
+    #     queryset = StakeHolder.objects.get_StakeHolders(shtype)()
+    #     return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        action = self.action
+        
+        if (action == 'list'):
+            context['fields'] = ('id', 'codigo', 'nombre', 'ruc', 'tel1', 'email')
+        return context
+
+    def list(self, request):
+        shtype = request.query_params.get('shtype')
+        queryset = StakeHolder.objects.get_StakeHolders(shtype)
+        serializer = self.get_serializer(queryset, many=True)
+        resultset = serializer.data
+
+        return Response(resultset)
 
 
 class UserList(ListAPIView):

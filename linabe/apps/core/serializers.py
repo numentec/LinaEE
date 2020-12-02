@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from .models import Cia, User
+from .models import Cia, StakeHolder, User
+from .utils import DynamicFieldSerializer
 
 LinaUserModel = get_user_model()
 
@@ -17,10 +18,17 @@ class GroupsSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class CiaSerializer(serializers.ModelSerializer):
+class CiaSerializer(DynamicFieldSerializer):
 
     class Meta:
         model = Cia
+        fields = ('__all__')
+
+
+class StakeHolderSerializer(DynamicFieldSerializer):
+
+    class Meta:
+        model = StakeHolder
         fields = ('__all__')
 
 
@@ -34,6 +42,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
+
 
 # Devuelve el usuario actual con sus permisos
 class UserPermsSerializer(serializers.ModelSerializer):

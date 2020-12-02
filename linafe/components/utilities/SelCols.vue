@@ -34,7 +34,7 @@
     </v-list>
     <v-divider></v-divider>
     <v-card-actions>
-      <v-btn block color="accent lighten-4" @click="hideCols(false)">
+      <v-btn block color="accent lighten-4" @click="hideCols()">
         Aplicar
       </v-btn>
     </v-card-actions>
@@ -63,8 +63,7 @@ export default {
     this.selectAll()
   },
   methods: {
-    hideCols(shown) {
-      // setTimeout(() => this.$vuetify.theme.dark = true, 0);
+    hideCols(shown = false) {
       setTimeout(() =>
         this.$emit('hide-cols', { menu: shown, colssel: this.selected })
       )
