@@ -115,10 +115,17 @@ export default {
         stakeholders: data,
       }
     } catch (err) {
-      error({
-        statusCode: 503,
-        message: 'Unable to fetch customers list at this time. Try later',
-      })
+      if (err.response) {
+        error({
+          statusCode: err.response.status,
+          message: err.response.data.detail,
+        })
+      } else {
+        error({
+          statusCode: 503,
+          message: 'No se pudo cargar la lista de proveedores. Intente luego',
+        })
+      }
     }
   },
 
@@ -159,10 +166,17 @@ export default {
         this.stakeholders = data
         // return stakeholders
       } catch (err) {
-        this.$error({
-          statusCode: 503,
-          message: 'Unable to fetch customers list at this time. Try later',
-        })
+        if (err.response) {
+          this.$error({
+            statusCode: err.response.status,
+            message: err.response.data.detail,
+          })
+        } else {
+          this.$error({
+            statusCode: 503,
+            message: 'No se pudo cargar la lista de proveedores. Intente luego',
+          })
+        }
       }
     },
     hideCols(xcols) {

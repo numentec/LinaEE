@@ -86,8 +86,6 @@
         </v-toolbar>
       </template>
       <v-card-title>
-        <v-spacer></v-spacer>
-        <v-spacer></v-spacer>
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
@@ -95,6 +93,11 @@
           single-line
           hide-details
         ></v-text-field>
+        <v-spacer></v-spacer>
+        <v-spacer></v-spacer>
+        <v-btn fab small color="grey lighten-4" @click="refreshData()">
+          <v-icon color="grey lighten-1">mdi-sync-circle</v-icon>
+        </v-btn>
       </v-card-title>
       <v-card-text>
         <v-data-table
@@ -156,6 +159,10 @@ export default {
         { text: 'Ver', value: 'actions', sortable: false },
       ],
       selected_cols: [],
+      er: {
+        type: Object,
+        default: null,
+      },
     }
   },
 
@@ -170,6 +177,26 @@ export default {
   },
 
   methods: {
+    async refreshData() {
+      try {
+        const { data } = await this.$axios.get('users/actives/')
+        this.users = data
+      } catch (err) {
+        if (err.response) {
+          this.er = {
+            statusCode: err.response.status,
+            message: err.response.data.detail,
+          }
+          alert(this.er.message)
+        } else {
+          this.er = {
+            statusCode: 503,
+            message: 'No se pudo cargar la lista de compañias. Intente luego',
+          }
+          alert(this.er.message)
+        }
+      }
+    },
     hideCols(xcols) {
       this.selected_cols = xcols.colssel
       this.menu = xcols.menu

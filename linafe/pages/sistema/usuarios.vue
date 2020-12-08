@@ -136,7 +136,7 @@ export default {
       if (err.response) {
         error({
           statusCode: err.response.status,
-          message: err.response.data.message,
+          message: err.response.data.detail,
         })
       } else {
         error({
@@ -187,7 +187,7 @@ export default {
         if (err.response) {
           this.$error({
             statusCode: err.response.status,
-            message: err.response.data.message,
+            message: err.response.data.detail,
           })
         } else {
           this.$error({
