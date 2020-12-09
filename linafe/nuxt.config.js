@@ -14,7 +14,11 @@ export default {
   },
 
   // Global CSS (https://go.nuxtjs.dev/config-css)
-  css: [],
+  css: [
+    'devextreme/dist/css/dx.common.css',
+    '~/assets/dxstyles/dx.material.linaee_cerceta.css',
+    // 'devextreme/dist/css/dx.light.css',
+  ],
 
   // Customize the progress-bar color
   loading: { color: 'success', height: '5px' },

@@ -76,6 +76,25 @@ services:
       - 3001:3001
     command: npm run start
 
+  # Nuxt frontend service for test
+  fetest:
+    container_name: linafetest
+    restart: always
+    build:
+      context: ./linafe
+      dockerfile: Dockerfile_prod
+    volumes:
+      - ./linafe:/linafe
+    environment:
+      HOST: 0.0.0.0
+      TZ: "${LOC_TZ}"
+    networks:
+      net:
+        ipv4_address: 192.168.15.2
+    ports:
+      - 3005:3005
+    command: npm run start
+
   # Proxies requests to internal services Nginx Reverse Proxy
   nginx:
     image: nginx:latest
