@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "HOST=0.0.0.0 PORT=3001 nuxt",
-    "build": "HOST=0.0.0.0 PORT=3001 nuxt build",
-    "start": "HOST=0.0.0.0 PORT=3001 nuxt start",
+    "build": "HOST=0.0.0.0 PORT=3005 nuxt build",
+    "start": "HOST=0.0.0.0 PORT=3005 nuxt start",
     "generate": "nuxt generate",
     "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "lint": "npm run lint:js"
@@ -15,7 +15,9 @@
     "@nuxtjs/axios": "^5.12.2",
     "core-js": "^3.6.5",
     "fibers": "^5.0.0",
-    "nuxt": "^2.14.6"
+    "nuxt": "^2.14.6",
+    "devextreme": "^20.2.4",
+    "devextreme-vue": "^20.2.4"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^3.1.0",
@@ -29,6 +31,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "prettier": "^2.1.2",
     "sass": "^1.27.0",
-    "sass-loader": "^8.0.2"
+    "sass-loader": "^8.0.2",
+    "devextreme-themebuilder": "^20.2.4"
   }
 }
