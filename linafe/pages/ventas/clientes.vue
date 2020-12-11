@@ -160,7 +160,8 @@ export default {
       this.menu = xcols.menu
     },
     showItem(item) {
-      alert(item.id)
+      this.$router.push({ path: 'cliente' })
+      // alert(item.id)
     },
   },
 

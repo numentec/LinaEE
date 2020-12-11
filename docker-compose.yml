@@ -1,5 +1,7 @@
 version: '3'
 
+# Comando para logs: docker inspect --format='{{.LogPath }}' linafe
+
 services:
   # MariaDB service
   db:
