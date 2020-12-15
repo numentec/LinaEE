@@ -41,8 +41,11 @@
               et neque doloremque eveniet harum? Atque error alias
               exercitationem ratione id sequi blanditiis, animi iste enim
               voluptatem aliquid?
-              {{ curCli.Name }} {{ curCli.Price }}
             </p>
+            <br />
+            <div v-if="curCli">
+              <p>*********** {{ curCli.Name }} {{ curCli.Price }} *********</p>
+            </div>
             <div><v-divider class="mx-2" vertical></v-divider></div>
           </v-card>
         </v-col>
@@ -102,13 +105,13 @@ export default {
 
   data() {
     return {
-      curCli: products[0],
+      curCli: {},
       dataSource: {
         store: new ArrayStore({
           data: products,
           key: 'ID',
         }),
-        searchExpr: ['Name', 'Category'],
+        searchExpr: ['ID', 'Name', 'Category'],
       },
       sm: 'contains',
       cols_mainbody: 9,
@@ -126,6 +129,13 @@ export default {
       },
       cardHeigt: 300,
     }
+  },
+
+  created() {
+    const prod = products.find(
+      (prod) => prod.ID === parseInt(this.$route.params.idcli)
+    )
+    this.curCli = prod
   },
 
   mounted() {
@@ -155,6 +165,12 @@ export default {
       this.window_size.width = window.innerWidth
       this.cardHeigt = window.innerHeight * 0.6
     },
+  },
+
+  head() {
+    return {
+      title: 'Cliente',
+    }
   },
 }
 </script>

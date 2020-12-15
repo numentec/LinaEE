@@ -128,5 +128,10 @@ export default {
       this.curGrid.showColumnChooser()
     },
   },
+  head() {
+    return {
+      title: 'Cotizaciones',
+    }
+  },
 }
 </script>
