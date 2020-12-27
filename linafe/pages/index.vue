@@ -47,5 +47,10 @@ export default {
     LinaLogo,
   },
   computed: {},
+  head() {
+    return {
+      title: 'Inicio',
+    }
+  },
 }
 </script>

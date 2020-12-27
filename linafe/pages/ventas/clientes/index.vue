@@ -88,7 +88,9 @@
             ></v-simple-checkbox>
           </template>
           <template v-slot:item.actions="{ item }">
-            <v-icon @click="showItem(item)">mdi-file-eye-outline</v-icon>
+            <v-btn icon @click="showItem(item)">
+              <v-icon>mdi-file-eye-outline</v-icon>
+            </v-btn>
           </template>
         </v-data-table>
       </v-card-text>
@@ -106,7 +108,7 @@ export default {
   async asyncData({ $axios, error }) {
     try {
       const { data } = await $axios.get('stakeholders/', {
-        params: { shtype: 'Cliente' },
+        params: { shtype: 'cli_short_list' },
       })
       return {
         stakeholders: data,

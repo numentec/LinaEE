@@ -145,6 +145,11 @@ export default {
             },
             {
               icon: 'mdi-info',
+              title: 'Clientex',
+              to: '/ventas/clientes/clientebk_drawer',
+            },
+            {
+              icon: 'mdi-info',
               title: 'Utilidades',
               to: '/ventas/utilidades',
             },

@@ -5,16 +5,16 @@ class StakeHolder(models.Manager):
 
     def get_StakeHolders(self, tipo):
 
-        if tipo == 'Cliente':
+        if 'cli' in tipo:
             return self.filter(is_cli=True)
 
-        if tipo == 'Proveedor':
+        if 'prov' in tipo:
             return self.filter(is_pro=True)
 
-        if tipo == 'Banco':
+        if 'banco' in tipo:
             return self.filter(is_ban=True)
 
-        if tipo == 'Socio':
+        if 'socio' in tipo:
             return self.filter(is_soc=True)
 
         return self.all()

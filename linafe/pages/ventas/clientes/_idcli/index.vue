@@ -33,76 +33,301 @@
     </v-toolbar>
     <v-row>
       <v-col class="shrink" :cols="cols_mainbody">
-        <v-form>
+        <v-form id="curform" ref="curform" @submit.prevent="submit">
           <v-tabs-items v-model="tab">
-            <v-tab-item key="1" class="pa-2" :eager="true">
-              <v-card class="mb-0" flat tile>
+            <v-tab-item key="1" class="px-2" :eager="true">
+              <v-card class="mx-auto mb-0" flat tile>
                 <v-row>
-                  <v-col cols="12" md="4">
-                    <div>ID: 507</div>
+                  <v-col align="center" justify="center" cols="12" md="4">
+                    <v-img
+                      lazy-src="https://picsum.photos/id/11/10/6"
+                      max-height="150"
+                      max-width="150"
+                      src="https://picsum.photos/id/11/500/300"
+                    ></v-img>
                   </v-col>
-                  <v-col cols="12" md="4">
-                    <v-text-field label="Código" class="mt-2"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" md="4" class="mt-2">
-                    <v-checkbox label="Activo"></v-checkbox>
+                  <v-col cols="12" md="8">
+                    <v-row>
+                      <v-col cols="8">
+                        <v-text-field
+                          v-model="curCli.nombre"
+                          name="nombre"
+                          label="Nombre"
+                          dense
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="4">
+                        <v-select
+                          v-model="curCli.tipo"
+                          name="tipo"
+                          :items="items_persona"
+                          item-text="name"
+                          item-value="id"
+                          label="Tipo de Personería"
+                          dense
+                        >
+                        </v-select>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col cols="8">
+                        <v-text-field
+                          v-model="curCli.ruc"
+                          name="ruc"
+                          label="RUC"
+                          dense
+                        ></v-text-field>
+                      </v-col>
+                      <v-col cols="4">
+                        <v-text-field
+                          v-model="curCli.dv"
+                          name="dv"
+                          label="DV"
+                          dense
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
                   </v-col>
                 </v-row>
                 <v-row>
                   <v-col cols="12" md="4">
-                    <v-text-field label="Nombre"></v-text-field>
+                    <v-text-field
+                      v-model="curCli.tel1"
+                      name="tel1"
+                      label="Tel1"
+                      dense
+                    ></v-text-field>
                   </v-col>
                   <v-col cols="12" md="4">
-                    <v-text-field label="RUC"></v-text-field>
+                    <v-text-field
+                      v-model="curCli.tel2"
+                      name="tel2"
+                      label="Tel2"
+                      dense
+                    ></v-text-field>
                   </v-col>
                   <v-col cols="12" md="4">
-                    <v-text-field label="DV"></v-text-field>
+                    <v-text-field
+                      v-model="curCli.tel3"
+                      name="tel3"
+                      label="Tel3"
+                      dense
+                    ></v-text-field>
                   </v-col>
                 </v-row>
                 <v-row>
                   <v-col cols="12" md="4">
-                    <v-text-field label="Tel1"></v-text-field>
+                    <v-text-field
+                      v-model="curCli.email"
+                      name="email"
+                      label="E-mail"
+                      dense
+                    ></v-text-field>
                   </v-col>
-                  <v-col cols="12" md="4">
-                    <v-text-field label="Tel2"></v-text-field>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <v-text-field label="Tel3"></v-text-field>
+                  <v-col cols="12" md="8">
+                    <v-textarea
+                      v-model="curCli.direccion"
+                      name="direccion"
+                      label="Dirección"
+                      rows="2"
+                      dense
+                    ></v-textarea>
                   </v-col>
                 </v-row>
               </v-card>
             </v-tab-item>
             <v-tab-item key="2" :eager="true">
-              <v-card class="mb-0" flat tile>
+              <v-card class="mx-auto mb-0" flat tile>
                 <v-card-text>
-                  <p>
-                    {{ cols_mainbody }}
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum
-                    ab similique explicabo et neque doloremque eveniet harum?
-                    Atque error alias exercitationem ratione id sequi
-                    blanditiis, animi iste enim voluptatem aliquid?
-                  </p>
-                  <br />
-                  <div v-if="curCli">
-                    <p>*********** {{ curCli.Name }} *********</p>
-                  </div>
+                  <v-row>
+                    <v-col cols="12" md="4">
+                      <v-text-field
+                        v-model="curCli.codigo"
+                        name="codigo"
+                        label="Código"
+                        dense
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="2">
+                      <v-checkbox
+                        v-model="curCli.is_cli"
+                        name="is_cli"
+                        label="Cliente"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="12" md="2">
+                      <v-checkbox
+                        v-model="curCli.is_pro"
+                        name="is_pro"
+                        label="Proveedor"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="12" md="2">
+                      <v-checkbox
+                        v-model="curCli.is_ban"
+                        name="is_ban"
+                        label="Banco"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="12" md="2">
+                      <v-checkbox
+                        v-model="curCli.is_soc"
+                        name="is_soc"
+                        label="Socio"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="12" md="4">
+                      <v-checkbox
+                        v-model="curCli.cred"
+                        name="cred"
+                        label="Cliente de Crédito"
+                        class="mt-0"
+                      >
+                      </v-checkbox>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-select
+                        v-model="curCli.diascr"
+                        :items="items_diascred"
+                        name="diascr"
+                        label="Días de Crédito"
+                        dense
+                      >
+                      </v-select>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-text-field
+                        v-model="curCli.maxcr"
+                        name="maxcr"
+                        label="Máximo crédito"
+                        dense
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="12" md="4">
+                      <v-checkbox
+                        v-model="curCli.ordencompra"
+                        name="ordencompra"
+                        label="Requerir Orden de Compra"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-checkbox
+                        v-model="curCli.exonerado"
+                        name="exonerado"
+                        label="Exonerado ITBMS"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-text-field
+                        v-model="curCli.retencion"
+                        name="retencion"
+                        label="Retención ITBMS"
+                        dense
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="12" md="4">
+                      <v-text-field
+                        v-model="curCli.descauto"
+                        name="descauto"
+                        label="Descuento Automático"
+                        dense
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-select
+                        name="idgenerico"
+                        label="ID Generico"
+                        dense
+                      ></v-select>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-checkbox
+                        v-model="curCli.is_active"
+                        name="is_active"
+                        label="Activo"
+                        class="mt-0"
+                      ></v-checkbox>
+                    </v-col>
+                  </v-row>
                 </v-card-text>
               </v-card>
             </v-tab-item>
             <v-tab-item key="3" :eager="true">
-              <v-card class="mb-0" flat tile>
+              <v-card class="mx-auto mb-0" flat tile>
                 <v-card-text>
-                  <p>
-                    {{ cols_mainbody }}
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum
-                    ab similique explicabo et neque doloremque eveniet harum?
-                    Atque error alias exercitationem ratione id sequi
-                    blanditiis, animi iste enim voluptatem aliquid?
-                  </p>
-                  <br />
-                  <div v-if="curCli">
-                    <p>*********** {{ curCli.Price }} *********</p>
-                  </div>
+                  <v-row>
+                    <v-col cols="12" md="4">
+                      <v-menu
+                        ref="bdmenu"
+                        v-model="bdmenu"
+                        :close-on-content-click="false"
+                        transition="scale-transition"
+                        offset-y
+                        min-width="290px"
+                      >
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-text-field
+                            v-model="curCli.birth_date"
+                            name="birth_date"
+                            label="Fecha Nacimiento"
+                            prepend-icon="mdi-calendar"
+                            readonly
+                            dense
+                            v-bind="attrs"
+                            v-on="on"
+                          ></v-text-field>
+                        </template>
+                        <v-date-picker
+                          ref="bdpicker"
+                          v-model="curCli.birth_date"
+                          :max="new Date().toISOString().substr(0, 10)"
+                          min="1920-01-01"
+                          @change="bdSave"
+                        ></v-date-picker>
+                      </v-menu>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-select
+                        v-model="curCli.locale"
+                        :items="items_locale"
+                        item-text="name"
+                        item-value="id"
+                        name="locale"
+                        label="Localización"
+                        dense
+                      ></v-select>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                      <v-text-field
+                        v-model="curCli.website"
+                        name="website"
+                        label="Web Site"
+                        dense
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-textarea
+                        v-model="curCli.contacto"
+                        name="contacto"
+                        label="Contacto"
+                        rows="2"
+                      ></v-textarea>
+                    </v-col>
+                  </v-row>
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -114,7 +339,7 @@
         <v-expand-x-transition>
           <v-card
             v-show="showsearch"
-            class="mx-auto pa-2 scroll"
+            class="mx-auto pa-2 scroll borderleftonly"
             flat
             tile
             outlined
@@ -126,14 +351,16 @@
               :search-editor-options="{ placeholder: 'Buscar' }"
               class="mt-2"
               selection-mode="single"
-              :selected-item-keys="[curCli.ID]"
+              :selected-item-keys="[curCli.id]"
+              :hover-state-enabled="true"
+              :disabled="modo !== 'r'"
               @selection-changed="listSelectionChanged"
             >
               <template #item="{ data: item }">
                 <div>
-                  <b>{{ item.Name }}</b>
-                  <div>{{ currency(item.Price) }}</div>
-                  <div>{{ item.Category }}</div>
+                  <b>{{ item.nombre }}</b>
+                  <div>{{ currency(item.maxcr) }}</div>
+                  <div>{{ item.codigo }}</div>
                   <v-divider></v-divider>
                 </div>
               </template>
@@ -148,7 +375,9 @@
 <script>
 import DxList from 'devextreme-vue/list'
 import ArrayStore from 'devextreme/data/array_store'
-import { products } from '~/assets/data.js'
+import { clientes } from '~/assets/data.js'
+
+// const formData = new FormData(this.$ref.curform)
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -164,13 +393,14 @@ export default {
 
   data() {
     return {
+      modo: 'r',
       curCli: {},
       dataSource: {
         store: new ArrayStore({
-          data: products,
-          key: 'ID',
+          data: clientes,
+          key: 'id',
         }),
-        searchExpr: ['ID', 'Name', 'Category'],
+        searchExpr: ['id', 'nombre', 'codigo'],
       },
       sm: 'contains',
       cols_mainbody: 9,
@@ -188,14 +418,30 @@ export default {
       },
       cardHeigt: 300,
       tab: null,
+      items_persona: [
+        { id: 'N', name: 'NATURAL' },
+        { id: 'J', name: 'JURIDICA' },
+      ],
+      items_diascred: [15, 30, 45, 60, 90],
+      items_locale: [
+        { id: 'es_PA', name: 'Español PA' },
+        { id: 'en_US', name: 'Inglés EEUU' },
+      ],
+      bdmenu: false,
     }
   },
 
+  watch: {
+    bdmenu(val) {
+      val && setTimeout(() => (this.$refs.bdpicker.activePicker = 'YEAR'))
+    },
+  },
+
   created() {
-    const prod = products.find(
-      (prod) => prod.ID === parseInt(this.$route.params.idcli)
+    const cli = clientes.find(
+      (cli) => cli.id === parseInt(this.$route.params.idcli)
     )
-    this.curCli = prod
+    this.curCli = cli
   },
 
   mounted() {
@@ -225,6 +471,9 @@ export default {
       this.window_size.width = window.innerWidth
       this.cardHeigt = window.innerHeight * 0.6
     },
+    bdSave(date) {
+      this.$refs.bdmenu.save(date)
+    },
   },
 
   head() {
@@ -239,13 +488,8 @@ export default {
 .scroll {
   overflow-y: scroll;
 }
-.test1 {
-  background-color: coral;
-}
-.test2 {
-  background-color: yellow;
-}
-.test3 {
-  background-color: blue;
+.borderleftonly {
+  border-top: solid white !important;
+  border-bottom: solid white !important;
 }
 </style>

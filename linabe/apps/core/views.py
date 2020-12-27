@@ -105,10 +105,11 @@ class StakeHolderViewSet(viewsets.ModelViewSet):
     #     return queryset
 
     def get_serializer_context(self):
+        shtype = self.request.query_params.get('shtype')
         context = super().get_serializer_context()
         action = self.action
         
-        if (action == 'list'):
+        if (action == 'list' and 'short' in shtype):
             context['fields'] = ('id', 'codigo', 'nombre', 'ruc', 'tel1', 'email')
         return context
 
