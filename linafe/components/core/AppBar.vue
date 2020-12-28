@@ -10,11 +10,22 @@
     <v-btn v-if="isAuthenticated" @click.stop="testAlert"
       >Logout: {{ loggedInUser.username }}</v-btn
     >
+
     <v-menu offset-y origin="center center" transition="scale-transition">
-      <template v-slot:activator="{ on, attrs }">
-        <v-avatar color="accent" size="35" v-bind="attrs" v-on="on">
-          <v-icon dark>mdi-account-circle</v-icon>
-        </v-avatar>
+      <template v-slot:activator="{ on: menu, attrs }">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on: tooltip }">
+            <v-avatar
+              color="accent"
+              size="35"
+              v-bind="attrs"
+              v-on="{ ...tooltip, ...menu }"
+            >
+              <v-icon dark>mdi-account-circle</v-icon>
+            </v-avatar>
+          </template>
+          <span>{{ loggedInUser.username }}</span>
+        </v-tooltip>
       </template>
       <v-list>
         <AppBarItem nuxt to="/sistema/usuarios">
