@@ -70,7 +70,9 @@ export default {
   },
 
   router: {
+    base: '/lina/',
     middleware: ['auth'],
+    prefetchLinks: false,
   },
 
   // Vuetify module configuration (https://go.nuxtjs.dev/config-vuetify)

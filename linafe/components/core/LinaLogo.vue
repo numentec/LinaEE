@@ -1,7 +1,7 @@
 <template>
   <client-only>
     <v-container class="ma-0 pa-0">
-      <img :class="logosize" alt="LinaEE" src="/lina-logo.png" />
+      <img :class="logosize" alt="LinaEE" src="/lina/lina-logo.png" />
     </v-container>
   </client-only>
 </template>
