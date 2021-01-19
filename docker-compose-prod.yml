@@ -1,32 +1,33 @@
-version: '3'
+version: '2.1'
 
 services:
   # MariaDB service
-  db:
+  mariadb:
     container_name: linadb
-    image: mariadb/server:10.4
-    restart: always
+    image: ghcr.io/linuxserver/mariadb
     environment:
-        MARIADB_ROOT_PASSWORD: "${DB_ROOT_PW}"
-        MARIADB_DATABASE: "${DB_NAME}"
-        MARIADB_USER: "${DB_USER}"
-        MARIADB_PASSWORD: "${DB_PW}"
-        MARIADB_TZ: "${LOC_TZ}"
-        TZ: "${LOC_TZ}"
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD="${DB_ROOT_PW}"
+      - MYSQL_DATABASE="${DB_NAME}"
+      - MYSQL_USER="${DB_USER}"
+      - MYSQL_PASSWORD="${DB_PW}"
+      - TZ="${LOC_TZ}"
     networks:
       net:
         ipv4_address: 192.168.15.5
     ports:
         - 3307:3306
     volumes:
-        - dbdata:/var/lib/mysql/data
+      - /home/numen/linadbsql:/docker-entrypoint-initdb.d
+      - /home/numen/linadb:/config
+    restart: unless-stopped
 
   # Django backend service
   be:
     container_name: linabe
     depends_on:
-      - db
-    restart: always
+      - mariadb
     build:
       context: ./linabe
       dockerfile: Dockerfile_prod
@@ -50,17 +51,18 @@ services:
       LOC_TZ: "${LOC_TZ}"
       LOC_LG: "${LOC_LG}"
       TZ: "${LOC_TZ}"
-    command: gunicorn linapi.wsgi --bind 0.0.0.0:8001
-    # command: sh -c "python manage.py wait_for_db &&
-    #                 python manage.py runserver 0.0.0.0:8001"
+    # command: gunicorn linapi.wsgi --bind 0.0.0.0:8001
+      command: sh -c "python manage.py wait_for_db &&
+                      python manage.py migrate --fake &&
+                      gunicorn linapi.wsgi --bind 0.0.0.0:8001"
     stop_signal: SIGINT
+    restart: unless-stopped
 
   # Nuxt frontend service
   fe:
     container_name: linafe
     depends_on:
       - be
-    restart: always
     build:
       context: ./linafe
       dockerfile: Dockerfile_prod
@@ -75,47 +77,75 @@ services:
     ports:
       - 3001:3001
     command: npm run start
+    restart: unless-stopped
 
-  # Nuxt frontend service for test
-  fetest:
-    container_name: linafetest
-    restart: always
-    build:
-      context: ./linafe
-      dockerfile: Dockerfile_prod
-    volumes:
-      - ./linafe:/linafe
+  # Odoo 14
+  odooweb:
+    image: odoo:14
+    container_name: odooweb
     environment:
-      HOST: 0.0.0.0
-      TZ: "${LOC_TZ}"
+    - HOST=odoodb
+    - USER="${ODOODB_USER}"
+    - PASSWORD="${ODOODB_PASSWORD}"
+    depends_on:
+      - odoodb
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - /home/numen/odoo14/config:/etc/odoo
+      - /home/numen/odoo14/extra-addons:/mnt/extra-addons
+      - /home/numen/odoo14/numen-addons:/mnt/numen-addons
     networks:
       net:
         ipv4_address: 192.168.15.2
-    ports:
-      - 3005:3005
-    command: npm run start
 
-  # Proxies requests to internal services Nginx Reverse Proxy
-  nginx:
-    image: nginx:latest
-    container_name: linax
-    restart: always
-    depends_on:
-        - fe
-        - be
+  # PostgresSQL for Odoo
+  odoodb:
+    image: postgres
+    container_name: odoodb
+    environment:
+      - POSTGRES_DB="${ODOODB_NAME}"
+      - POSTGRES_PASSWORD="${ODOODB_PASSWORD}"
+      - POSTGRES_USER="${ODOODB_USER}"
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - ./linax/nginx.conf:/etc/nginx/nginx.conf
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
     networks:
       net:
         ipv4_address: 192.168.15.6
-    ports:
-      - 80:80
-      - 443:443
+
+  # Proxies requests to internal services Nginx Reverse Proxy
+  swag:
+    image: ghcr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
     environment:
-      TZ: "${LOC_TZ}"
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Panama
+      - URL=vertigozl.net
+      - SUBDOMAINS=wildcard
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
+    volumes:
+      - /home/numen/swag:/config
+    ports:
+      - 443:443
+      - 80:80
+    networks:
+      net:
+        ipv4_address: 192.168.15.11
+    depends_on:
+        - be
+        - fe
+        - odooweb
+    restart: unless-stopped
 
 volumes:
-  dbdata:
+  odoo-db-data:
+  odoo-web-data:
 
 networks:
   net:
@@ -123,4 +153,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 192.168.15.0/29
+        - subnet: 192.168.15.0/28
