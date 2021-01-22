@@ -29,14 +29,23 @@ services:
 
   # Django backend service
   be:
-    container_name: linabe
-    depends_on:
-      - db
-    # restart: on-failure:2
-    restart: always
     build:
       context: ./linabe
       dockerfile: Dockerfile
+    container_name: linabe
+    environment: 
+      APP_DEBUG: '1'
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PW: ${DB_USER_PW}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_WAIT_TIME_OUT: ${DB_WAIT_TIME_OUT}
+      DB_WAIT_TIME_EXTRA: ${DB_WAIT_TIME_EXTRA}
+      LOC_TZ: ${LOC_TZ}
+      LOC_LG: ${LOC_LG}
+      TZ: ${LOC_TZ}
     volumes:
       - ./linabe:/linabe
       # - /etc/timezone:/etc/timezone:ro
@@ -46,23 +55,13 @@ services:
         ipv4_address: 192.168.15.4
     ports:
       - 8001:8001
-    environment: 
-      APP_DEBUG: '1'
-      SECRET_KEY: "${SECRET_KEY}"
-      DB_NAME: "${DB_NAME}"
-      DB_USER: "${DB_USER}"
-      DB_PW: "${DB_PW}"
-      DB_HOST: "${DB_HOST}"
-      DB_PORT: "${DB_PORT}"
-      DB_WAIT_TIME_OUT: "${DB_WAIT_TIME_OUT}"
-      DB_WAIT_TIME_EXTRA: "${DB_WAIT_TIME_EXTRA}"
-      LOC_TZ: "${LOC_TZ}"
-      LOC_LG: "${LOC_LG}"
-      TZ: "${LOC_TZ}"
-    command: python manage.py runserver 0.0.0.0:8001
+    command: ['./be.sh']
     # command: sh -c "python manage.py wait_for_db &&
     #                 python manage.py runserver 0.0.0.0:8001"
     stop_signal: SIGINT
+    depends_on:
+      - db
+    restart: always
 
   # Nuxt frontend service
   fe:
