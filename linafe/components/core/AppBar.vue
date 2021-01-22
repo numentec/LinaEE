@@ -7,9 +7,9 @@
     </v-btn>
     <v-toolbar-title v-text="title" />
     <v-spacer />
-    <v-btn v-if="isAuthenticated" @click.stop="testAlert"
+    <!-- <v-btn v-if="isAuthenticated" @click.stop="testAlert"
       >Logout: {{ loggedInUser.username }}</v-btn
-    >
+    > -->
 
     <v-menu offset-y origin="center center" transition="scale-transition">
       <template v-slot:activator="{ on: menu, attrs }">
