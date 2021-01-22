@@ -8,3 +8,6 @@ COPY requirements.txt /linabe/
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 COPY . .
+
+RUN python manage.py wait_for_db
+RUN python manage.py collectstatic --noinput

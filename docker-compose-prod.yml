@@ -1,36 +1,47 @@
-version: '2.1'
+version: '3'
 
 services:
-  # MariaDB service
-  mariadb:
-    container_name: linadb
+  # MariaDB service for LinaEE
+  linadb:
     image: ghcr.io/linuxserver/mariadb
+    container_name: linadb
     environment:
       - PUID=1000
       - PGID=1000
-      - MYSQL_ROOT_PASSWORD="${DB_ROOT_PW}"
-      - MYSQL_DATABASE="${DB_NAME}"
-      - MYSQL_USER="${DB_USER}"
-      - MYSQL_PASSWORD="${DB_PW}"
-      - TZ="${LOC_TZ}"
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PW}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_USER_PW}
+      - TZ=${LOC_TZ}
+    volumes:
+      - /home/numen/linadbsql/linaee.sql:/docker-entrypoint-initdb.d/1.sql
+      - /home/numen/linadb:/config
     networks:
       net:
         ipv4_address: 192.168.15.5
     ports:
-        - 3307:3306
-    volumes:
-      - /home/numen/linadbsql:/docker-entrypoint-initdb.d
-      - /home/numen/linadb:/config
+        - 3305:3306
     restart: unless-stopped
 
   # Django backend service
   be:
-    container_name: linabe
-    depends_on:
-      - mariadb
     build:
       context: ./linabe
       dockerfile: Dockerfile_prod
+    container_name: linabe
+    environment:
+      - APP_DEBUG=${APP_DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_USER_PW=${DB_USER_PW}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_WAIT_TIME_OUT=${DB_WAIT_TIME_OUT}
+      - DB_WAIT_TIME_EXTRA=${DB_WAIT_TIME_EXTRA}
+      - LOC_TZ=${LOC_TZ}
+      - LOC_LG=${LOC_LG}
+      - TZ=${LOC_TZ}
     volumes:
       - ./linabe:/linabe
     networks:
@@ -38,45 +49,31 @@ services:
         ipv4_address: 192.168.15.4
     ports:
       - 8001:8001
-    environment:
-      APP_DEBUG: '1'
-      SECRET_KEY: "${SECRET_KEY}"
-      DB_NAME: "${DB_NAME}"
-      DB_USER: "${DB_USER}"
-      DB_PW: "${DB_PW}"
-      DB_HOST: "${DB_HOST}"
-      DB_PORT: "${DB_PORT}"
-      DB_WAIT_TIME_OUT: "${DB_WAIT_TIME_OUT}"
-      DB_WAIT_TIME_EXTRA: "${DB_WAIT_TIME_EXTRA}"
-      LOC_TZ: "${LOC_TZ}"
-      LOC_LG: "${LOC_LG}"
-      TZ: "${LOC_TZ}"
-    # command: gunicorn linapi.wsgi --bind 0.0.0.0:8001
-      command: sh -c "python manage.py wait_for_db &&
-                      python manage.py migrate --fake &&
-                      gunicorn linapi.wsgi --bind 0.0.0.0:8001"
+    command: ['./be.sh']
     stop_signal: SIGINT
+    depends_on:
+      - linadb
     restart: unless-stopped
 
   # Nuxt frontend service
   fe:
-    container_name: linafe
-    depends_on:
-      - be
     build:
       context: ./linafe
       dockerfile: Dockerfile_prod
+    container_name: linafe
+    environment:
+      - HOST=0.0.0.0
+      - TZ=${LOC_TZ}
     volumes:
       - ./linafe:/linafe
-    environment:
-      HOST: 0.0.0.0
-      TZ: "${LOC_TZ}"
     networks:
       net:
         ipv4_address: 192.168.15.3
     ports:
-      - 3001:3001
-    command: npm run start
+      - 3005:3005
+    command: ['./fe.sh']
+    depends_on:
+      - be
     restart: unless-stopped
 
   # Odoo 14
@@ -85,12 +82,8 @@ services:
     container_name: odooweb
     environment:
     - HOST=odoodb
-    - USER="${ODOODB_USER}"
-    - PASSWORD="${ODOODB_PASSWORD}"
-    depends_on:
-      - odoodb
-    ports:
-      - "8069:8069"
+    - USER=${ODOODB_USER}
+    - PASSWORD=${ODOODB_PASSWORD}
     volumes:
       - odoo-web-data:/var/lib/odoo
       - /home/numen/odoo14/config:/etc/odoo
@@ -99,21 +92,73 @@ services:
     networks:
       net:
         ipv4_address: 192.168.15.2
+    ports:
+      - "8069:8069"
+    depends_on:
+      - odoodb
+    restart: unless-stopped
 
   # PostgresSQL for Odoo
   odoodb:
     image: postgres
     container_name: odoodb
     environment:
-      - POSTGRES_DB="${ODOODB_NAME}"
-      - POSTGRES_PASSWORD="${ODOODB_PASSWORD}"
-      - POSTGRES_USER="${ODOODB_USER}"
+      - POSTGRES_DB=${ODOODB_NAME}
+      - POSTGRES_PASSWORD=${ODOODB_PASSWORD}
+      - POSTGRES_USER=${ODOODB_USER}
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - odoo-db-data:/var/lib/postgresql/data/pgdata
     networks:
       net:
         ipv4_address: 192.168.15.6
+    ports:
+      - 5439:5439
+    restart: unless-stopped
+
+  # Nube Nextcloud 
+  nube:
+    image: ghcr.io/linuxserver/nextcloud
+    container_name: nube
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${LOC_TZ}
+      - MYSQL_HOST=${NUBE_DB_HOST}
+      - MYSQL_DATABASE=${NUBE_DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${NUBE_DB_ROOT_PW}
+      - MYSQL_USER=${NUBE_DB_USER}
+      - MYSQL_PASSWORD=${NUBE_DB_USER_PW}
+    volumes:
+      - /home/numen/nube/config:/config
+      - /home/numen/nube/data:/data
+    networks:
+      net:
+        ipv4_address: 192.168.15.10
+    depends_on:
+      - linadb
+    restart: unless-stopped
+
+  # Base de datos MariaDB para la nube
+  nubedb:
+    image: ghcr.io/linuxserver/mariadb
+    container_name: nubedb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=${NUBE_DB_ROOT_PW}
+      - TZ=${LOC_TZ}
+      - MYSQL_DATABASE=${NUBE_DB_NAME}
+      - MYSQL_USER=${NUBE_DB_USER}
+      - MYSQL_PASSWORD=${NUBE_DB_USER_PW}
+    volumes:
+      - /home/numen/nube/db:/config
+    networks:
+      net:
+        ipv4_address: 192.168.15.7
+    ports:
+        - 3307:3306
+    restart: unless-stopped
 
   # Proxies requests to internal services Nginx Reverse Proxy
   swag:
@@ -124,19 +169,20 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Panama
-      - URL=vertigozl.net
-      - SUBDOMAINS=wildcard
+      - TZ=${LOC_TZ}
+      - URL=${DOMAIN_URL}
+      - SUBDOMAINS=${SUBDOMAINS}
       - VALIDATION=dns
       - DNSPLUGIN=cloudflare
     volumes:
       - /home/numen/swag:/config
-    ports:
-      - 443:443
-      - 80:80
+      - /home/numen/nube:/var/www/html
     networks:
       net:
         ipv4_address: 192.168.15.11
+    ports:
+      - 443:443
+      - 80:80
     depends_on:
         - be
         - fe

@@ -1,7 +1,7 @@
 <template>
   <v-row>
     <v-col class="text-center">
-      <img src="/lina/uc2.jpg" alt="***** En Construcción *****" class="mb-5" />
+      <img src="/uc2.jpg" alt="***** En Construcción *****" class="mb-5" />
       <blockquote class="blockquote">
         <h5>{{ page_name }}</h5>
         &#8220;En desarrollo por el equipo de NumenTec.&#8221;

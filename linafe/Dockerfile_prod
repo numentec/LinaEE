@@ -1,7 +1,8 @@
-FROM node:latest
+FROM node:lts
 RUN mkdir linafe
 WORKDIR /linafe
 COPY package*.json ./
-RUN npm install
 COPY . .
+
+RUN npm install
 RUN npm run build
