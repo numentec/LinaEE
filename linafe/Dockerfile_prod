@@ -3,6 +3,3 @@ RUN mkdir linafe
 WORKDIR /linafe
 COPY package*.json ./
 COPY . .
-
-RUN npm install
-RUN npm run build

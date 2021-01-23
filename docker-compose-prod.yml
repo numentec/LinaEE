@@ -136,7 +136,7 @@ services:
       net:
         ipv4_address: 192.168.15.10
     depends_on:
-      - linadb
+      - nubedb
     restart: unless-stopped
 
   # Base de datos MariaDB para la nube

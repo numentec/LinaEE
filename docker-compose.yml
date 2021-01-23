@@ -13,7 +13,7 @@ services:
         MARIADB_ROOT_PASSWORD: "${DB_ROOT_PW}"
         MARIADB_DATABASE: "${DB_NAME}"
         MARIADB_USER: "${DB_USER}"
-        MARIADB_PASSWORD: "${DB_PW}"
+        MARIADB_PASSWORD: "${DB_USER_PW}"
         MARIADB_TZ: "${LOC_TZ}"
         TZ: "${LOC_TZ}"
     networks: 
@@ -38,7 +38,7 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
-      DB_PW: ${DB_USER_PW}
+      DB_USER_PW: ${DB_USER_PW}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_WAIT_TIME_OUT: ${DB_WAIT_TIME_OUT}
