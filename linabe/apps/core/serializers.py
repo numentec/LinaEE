@@ -80,6 +80,7 @@ class UserPermsSerializer(serializers.ModelSerializer):
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
 
+
 class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -87,3 +88,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         fields = ('username', 'password', 'first_name', 'last_name', 'email', 'groups')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 8}}
 
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        groups_list = validated_data.pop('groups')
+        registered_user = LinaUserModel(**validated_data)
+        registered_user.set_password(password)
+        registered_user.save()
+        registered_user.groups.set(groups_list)
+        return registered_user

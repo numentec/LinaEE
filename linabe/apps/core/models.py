@@ -79,13 +79,13 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
 
-        super(User, self).save(*args, **kwargs)
-
         if not self.nombre_corto:
             if self.get_short_name():
                 self.nombre_corto = self.get_short_name()
             else:
                 self.nombre_corto = self.get_username()
+
+        super(User, self).save(*args, **kwargs)
 
     class Meta:
 
@@ -235,7 +235,8 @@ class StakeHolder(Common, Identidad):
     locale = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
     website = models.URLField('URL', blank=True, null=True)
 
-    objects =  managers.StakeHolder()
+    objects =  models.Manager()
+    stakehoders =  managers.StakeHolder()
 
     def __str__(self):
         return '{} ({})'.format(self.nombre, self.codigo)

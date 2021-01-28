@@ -97,7 +97,7 @@ class StakeHolderViewSet(viewsets.ModelViewSet):
     serializer_class = StakeHolderSerializer
     permission_classes = (CustomDjangoModelPermissions, )
 
-    queryset = StakeHolder.objects.all()
+    queryset = StakeHolder.stakehoders.all()
 
     # def get_queryset(self):
     #     shtype = self.request.query_params.get('shtype')
@@ -115,7 +115,13 @@ class StakeHolderViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         shtype = request.query_params.get('shtype')
-        queryset = StakeHolder.objects.get_StakeHolders(shtype)
+        only_actives = request.query_params.get('only_actives')
+
+        if only_actives:
+            queryset = StakeHolder.stakehoders.get_StakeHolders(shtype, only_actives)
+        else:
+            queryset = StakeHolder.stakehoders.get_StakeHolders(shtype)
+
         serializer = self.get_serializer(queryset, many=True)
         resultset = serializer.data
 
@@ -183,6 +189,11 @@ class UserRegister(CreateAPIView):
 
     def get_queryset(self):
         return LinaUserModel.objects.filter(is_active=True)
+
+    # def perform_create(self, serializer):
+    #     instance = serializer.save()
+    #     instance.set_password(instance.password)
+    #     instance.save()
 
 
 class GroupsList(ListAPIView):
