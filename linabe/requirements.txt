@@ -8,3 +8,4 @@ django-ckeditor>=6.0.0,<6.1.0
 django-filter>=2.4.0,<2.5.0
 djangorestframework-simplejwt
 gunicorn>=20.0.4,<20.1.0
+cx-Oracle>=8.1.0,<8.2.0
