@@ -61,6 +61,9 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Oracle instant client
+instantclient_12_1/
+
 # Flask stuff:
 instance/
 .webassets-cache
