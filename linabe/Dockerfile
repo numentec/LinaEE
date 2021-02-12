@@ -2,6 +2,8 @@ FROM python:latest
 LABEL maintainer="Numentec"
 
 # Installing Oracle instant client
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN mkdir /opt/oracle
 
 ADD instantclient_12_1/* /opt/oracle/instantclient_12_1/
