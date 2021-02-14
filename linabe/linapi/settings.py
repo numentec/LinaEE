@@ -97,6 +97,8 @@ WSGI_APPLICATION = 'linapi.wsgi.application'
 #     }
 # }
 
+DATABASE_ROUTERS = ['apps.core.routers.DbRouter']
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -108,7 +110,23 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
-    }
+    },
+    'extdb1': {
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'vertigo',
+        'USER': 'pocket',
+        'PASSWORD': 'qazwsx12',
+        'HOST': '201.218.202.43',
+        'PORT': '1522',
+    },
+    # 'extdb1': {
+    #     'ENGINE': environ.get('EXTDB1_ENGINE'),
+    #     'NAME': environ.get('EXTDB1_NAME'),
+    #     'USER': environ.get('EXTDB1_USER'),
+    #     'PASSWORD': environ.get('EXTDB1_USER_PW'),
+    #     'HOST': environ.get('EXTDB1_HOST'),
+    #     'PORT': environ.get('EXTDB1_PORT'),
+    # },
 }
 
 # Password validation

@@ -1,8 +1,10 @@
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework import status
-
-from django.db import connection
+from .models import BICatalog
+from .serializers import BICatalogSerializer
+from django.db import connections
 import cx_Oracle 
 
 class TestApiView(APIView):
@@ -19,7 +21,8 @@ class TestApiView(APIView):
         query = 'SELECT * FROM DMC.LINA_DISTRO_TALLAS WHERE ROWNUM <= 1000'
         result = []
 
-        with cx_Oracle.connect('pocket/qazwsx12@201.218.202.43:1522/vertigo').cursor() as cursor:
+        with connections['extdb1'].cursor() as cursor:
+        # with cx_Oracle.connect('pocket/qazwsx12@201.218.202.43:1522/vertigo').cursor() as cursor:
             cursor.execute(query)
             descrip = cursor.description
 
@@ -28,3 +31,13 @@ class TestApiView(APIView):
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class TestApiView2(ListAPIView):
+    """Lista de distros"""
+    serializer_class = BICatalogSerializer
+
+    def get_queryset(self):
+        name_map = {'rownum': 'id', 'referencia': 'sku', 'distro': 'distro'}
+        return BICatalog.objects.raw('SELECT rownum, t.* FROM DMC.LINA_DISTRO_TALLAS t WHERE ROWNUM <= 1000', \
+            translations=name_map)
