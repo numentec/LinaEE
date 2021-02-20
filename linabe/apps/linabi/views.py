@@ -1,43 +1,57 @@
-from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets
 from .models import BICatalog
-from .serializers import BICatalogSerializer
 from django.db import connections
-import cx_Oracle 
+from .serializers import BICatalogSerializer
+from drf_dx_datagrid import DxModelViewSet
 
-class TestApiView(APIView):
-    """Test API View"""
+class ListAsQuerySet(list):
 
-    def get(self, request, format=None):
-        """Returns a list of APIView features"""
+    def __init__(self, *args, model, **kwargs):
+        self.model = model
+        super().__init__(*args, **kwargs)
 
-        # print(con.version)
-        
-        # con.close() 
+    def filter(self, *args, **kwargs):
+        return self  # filter ignoring, but you can impl custom filter
 
-        # query = 'SELECT * FROM lina_core_stakeholders WHERE is_cli'
-        query = 'SELECT * FROM DMC.LINA_DISTRO_TALLAS WHERE ROWNUM <= 1000'
-        result = []
+    def order_by(self, *args, **kwargs):
+        return self
+
+class CatalogModelViewSet(DxModelViewSet):
+# class CatalogModelViewSet(viewsets.ModelViewSet):
+    """Catálogo - Lista de productos"""
+    serializer_class = BICatalogSerializer
+    # queryset = BICatalog.objects.all()
+
+    def get_queryset(self):
+        p01 = str(self.request.query_params.get('p01', '%')).lower()
+        p02 = str(self.request.query_params.get('p02', 'camisa%')).lower()
+        p03 = str(self.request.query_params.get('p03', '%')).lower()
+        p04 = str(self.request.query_params.get('p04', '%')).lower()
+        p05 = str(self.request.query_params.get('p05', '%')).lower()
+        p06 = str(self.request.query_params.get('p06', '%')).lower()
+        p07 = str(self.request.query_params.get('p07', '%')).lower()
+        p08 = str(self.request.query_params.get('p08', '%')).lower()
+        p09 = str(self.request.query_params.get('p09', '%')).lower()
+        p10 = str(self.request.query_params.get('p10', '%')).lower()
+        p11 = str(self.request.query_params.get('p11', 0)).lower()
+        p12 = str(self.request.query_params.get('p12', '2021-01-01')).lower()
+        p13 = str(self.request.query_params.get('p13', '2021-01-01')).lower()
+        p14 = str(self.request.query_params.get('p14', '1')).lower()
+
+        params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
         with connections['extdb1'].cursor() as cursor:
-        # with cx_Oracle.connect('pocket/qazwsx12@201.218.202.43:1522/vertigo').cursor() as cursor:
-            cursor.execute(query)
-            descrip = cursor.description
 
-            rows = cursor.fetchall()
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINA_QRYCATALOGO', params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
-        return Response(result, status=status.HTTP_200_OK)
+        qs = ListAsQuerySet(result, model=BICatalog)
 
-
-class TestApiView2(ListAPIView):
-    """Lista de distros"""
-    serializer_class = BICatalogSerializer
-
-    def get_queryset(self):
-        name_map = {'rownum': 'id', 'referencia': 'sku', 'distro': 'distro'}
-        return BICatalog.objects.raw('SELECT rownum, t.* FROM DMC.LINA_DISTRO_TALLAS t WHERE ROWNUM <= 1000', \
-            translations=name_map)
+        return qs

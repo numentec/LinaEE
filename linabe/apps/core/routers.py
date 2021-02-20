@@ -3,10 +3,11 @@ from apps.linabi.models import BICatalog
 class DbRouter:
 
     route_app_labels = {'linabi'}
+    extmodels = {BICatalog}
 
     def db_for_read(self, model, **hints):
         # if model._meta.app_label in self.route_app_labels:
-        if model == BICatalog:
+        if model in self.extmodels:
             return 'extdb1'
 
         return None
@@ -14,7 +15,7 @@ class DbRouter:
 
     def db_for_write(self, model, **hints):
         # if model._meta.app_label in self.route_app_labels:
-        if model == BICatalog:
+        if model in self.extmodels:
             return 'extdb1'
 
         return None

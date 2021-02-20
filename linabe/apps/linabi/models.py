@@ -1,4 +1,5 @@
 from django.db import models
+from .attributs import attrs_catalog
 
 # Create your models here.
 class TransientModel(models.Model):
@@ -10,11 +11,4 @@ class TransientModel(models.Model):
         abstract = True  # no table for this class
         managed = False  # no database management
 
-class BICatalog(TransientModel):
-    """This is not persisted. No table linabi_catalog"""
-    #do more things here
-    sku = models.CharField('SKU', max_length=30, blank=True, null=True)
-    distro = models.CharField('Distro', max_length=20, blank=True, null=True)
-    
-    class Meta:
-        ordering = ['sku']
+BICatalog = type("BICatalog", (TransientModel,), attrs_catalog)

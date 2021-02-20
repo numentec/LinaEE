@@ -1,8 +1,12 @@
-from django.urls import path
-
+from django.urls import path, include
 from . import views
+from rest_framework.routers import DefaultRouter
+
+app_name = "linabi"
+
+router = DefaultRouter()
+router.register(r'catalog', views.CatalogModelViewSet, basename='catalog')
 
 urlpatterns = [
-    path('testapi/', views.TestApiView.as_view(), name='testapi'),
-    path('testapi2/', views.TestApiView2.as_view(), name='testapi2'),
+    path('', include(router.urls)),
 ]
