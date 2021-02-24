@@ -6,6 +6,12 @@ from .utils import DynamicFieldSerializer
 
 LinaUserModel = get_user_model()
 
+class CommonSerializer(serializers.ModelSerializer):
+    """Ensure the fields are included in the models."""
+
+    common_fields = ['is_active', 'created_by', 'created_at', 'modified_by', 'modified_at']
+
+
 class ListIntSerializer(serializers.ListField):
     child = serializers.IntegerField()
 

@@ -43,7 +43,7 @@ class Cia(models.Model):
         return '{}'.format(self.nombre)
 
     class Meta:
-        db_table = 'lina_core_cia'
+        db_table = 'core_cia'
         verbose_name = 'Compañía'
         verbose_name_plural = 'Compañías'
 
@@ -125,6 +125,7 @@ class Common(models.Model):
     class Meta:
         abstract = True
 
+
 # Datos base para la identidad de una persona Natural o Jurídica
 class Identidad(models.Model):
 
@@ -175,7 +176,7 @@ class GenSequence(models.Model):
     def __str__(self):
         return '{} {}'.format(self.nombre, self.conteo)
     class Meta:
-        db_table = 'lina_core_gensequence'
+        db_table = 'core_gensequence'
         verbose_name = 'Secuencia'
         verbose_name_plural = 'Secuencias'
 
@@ -190,10 +191,77 @@ class TipoGenerico(Common):
     def __str__(self):
         return '{}'.format(self.idgenerico)
     class Meta:
-        db_table = 'lina_core_tipo_generico'
+        db_table = 'core_tipo_generico'
         verbose_name = 'Tipo Generico'
         verbose_name_plural = 'Tipos Genericos'
         ordering = ['idgenerico']
+
+
+# Modelo del sistema. Módulos
+class Modulo(Common):
+    nombre = models.CharField('Nombre', max_length=25, unique=True)
+    descrip = models.CharField('Descripción', max_length=50, blank=True)
+    tipo = models.PositiveIntegerField('Tipo', default=0)
+
+    def __str__(self):
+        return 'Módulo {}'.format(self.nombre)
+
+    class Meta:
+        db_table = 'core_modulos'
+        verbose_name = 'Módulo'
+        verbose_name_plural = 'Módulos'
+
+
+# Modelo del sistema. Vistas o formularios por módulo
+class Vista(Common):
+    nombre = models.CharField('Nombre', max_length=25, unique=True)
+    descrip = models.CharField('Descripción', max_length=50, blank=True)
+    link = models.CharField('Enlace Interno', max_length=100, default='/')
+    tipo = models.PositiveIntegerField('Tipo', default=0)
+    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, verbose_name='Módulo', related_name='vistas_x_modulo')
+
+    def __str__(self):
+        return 'Vista {}'.format(self.nombre)
+
+    class Meta:
+        db_table = 'core_vistas'
+        verbose_name = 'Vista'
+        verbose_name_plural = 'Vistas'
+
+
+# Modelo del sistema. Configuración de la vista o formulario
+class VistaConfig(Common):
+    vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista', related_name='configs_x_vista')
+    configkey = models.CharField(max_length=20)
+    configval1 = models.CharField(max_length=20, blank=True)
+    configval2 = models.CharField(max_length=20, blank=True)
+    tipo = models.CharField(max_length=10, blank=True)
+
+    def __str__(self):
+        return 'Config vista {}'.format(self.vista.nombre)
+
+    class Meta:
+        db_table = 'core_vistaconfig'
+        verbose_name = 'Configuración por Vista'
+        verbose_name_plural = 'Configuraciones por Vista'
+
+
+# Modelo del sistema. Configuración de la vista o formulario por usuario
+class VistaConfigUser(Common):
+    user = models.ForeignKey(LinaUserModel, on_delete=models.CASCADE, verbose_name='Usuario', related_name='vistaconfigs_x_user')
+    vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista', related_name='confuser_x_vista')
+    configkey = models.CharField(max_length=20)
+    configval1 = models.CharField(max_length=20, blank=True)
+    configval2 = models.CharField(max_length=20, blank=True)
+    tipo = models.CharField(max_length=10, blank=True)
+
+    def __str__(self):
+        return 'Config vista {} usuario {}'.format(self.vista.nombre, self.user.username)
+
+    class Meta:
+        db_table = 'core_vistaconfiguser'
+        verbose_name = 'Configuración por Vista'
+        verbose_name_plural = 'Configuraciones por Vista'
 
 
 # Modelo para manejo de Clientes, Proveedores, Bancos, Socios y similares
@@ -236,13 +304,13 @@ class StakeHolder(Common, Identidad):
     website = models.URLField('URL', blank=True, null=True)
 
     objects =  models.Manager()
-    stakehoders =  managers.StakeHolder()
+    stakeholders =  managers.StakeHolder()
 
     def __str__(self):
         return '{} ({})'.format(self.nombre, self.codigo)
 
     class Meta:
-        db_table = 'lina_core_stakeholders'
+        db_table = 'core_stakeholders'
         verbose_name = 'Stakeholder'
         verbose_name_plural = 'Stakeholders'
 

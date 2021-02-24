@@ -6,6 +6,7 @@ app_name = "linabi"
 
 router = DefaultRouter()
 router.register(r'catalog', views.CatalogModelViewSet, basename='catalog')
+router.register(r'favoritos', views.FavoritoModelViewset, basename='favoritos')
 
 urlpatterns = [
     path('', include(router.urls)),

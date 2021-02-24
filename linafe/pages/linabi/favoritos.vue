@@ -1,29 +1,63 @@
 <template>
-  <v-row>
-    <v-col class="text-center">
-      <img src="/uc2.jpg" alt="***** En Construcción *****" class="mb-5" />
-      <blockquote class="blockquote">
-        <h5>{{ page_name }}</h5>
-        &#8220;En desarrollo por el equipo de NumenTec.&#8221;
-        <footer>
-          <small>
-            <em>&mdash;www.numentec.com</em>
-          </small>
-        </footer>
-      </blockquote>
-    </v-col>
-  </v-row>
+  <div>
+    <v-card
+      class="d-flex align-content-start flex-wrap"
+      flat
+      tile
+      min-height="200"
+    >
+      <FavoritoCard
+        v-for="curfav in favoritos"
+        :key="curfav.id"
+        class="pa-2"
+        :on-delete="delFavorito"
+        :fav="curfav"
+      />
+    </v-card>
+  </div>
 </template>
 
 <script>
+import FavoritoCard from '~/components/linabi/FavoritoCard.vue'
+
 export default {
-  data() {
-    return {
-      page_name: 'page',
+  components: {
+    FavoritoCard,
+  },
+  async asyncData({ $axios, error }) {
+    try {
+      const { data } = await $axios.get('linabi/favoritos/')
+      return {
+        favoritos: data,
+      }
+    } catch (err) {
+      if (err.response) {
+        error({
+          statusCode: err.response.status,
+          message: err.response.data.detail,
+        })
+      } else {
+        error({
+          statusCode: 503,
+          message: 'No se pudo cargar la lista de clientes. Intente luego',
+        })
+      }
     }
   },
-  created() {
-    this.page_name = this.$nuxt.$route.name.toUpperCase()
+  data() {
+    return {
+      favoritos: [],
+    }
+  },
+  methods: {
+    delFavorito(favid) {
+      alert(favid)
+    },
+  },
+  head() {
+    return {
+      title: 'Favoritos',
+    }
   },
 }
 </script>

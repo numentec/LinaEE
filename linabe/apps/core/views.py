@@ -69,7 +69,19 @@ class LinaAuthToken(ObtainAuthToken):
         })
 
 
-class CiaViewSet(viewsets.ModelViewSet):
+class CommonViewSet(viewsets.ModelViewSet):
+    """Ensure the models are updated with the requesting user."""
+
+    def perform_create(self, serializer):
+        """Ensure we have the authorized user for ownership."""
+        serializer.save(created_by=self.request.user, modified_by=self.request.user)
+
+    def perform_update(self, serializer):
+        """Ensure we have the authorized user for ownership."""
+        serializer.save(modified_by=self.request.user)
+
+
+class CiaViewSet(CommonViewSet):
     """ViewSet de compañías"""
     serializer_class = CiaSerializer
     permission_classes = (CustomDjangoModelPermissions, )
@@ -92,12 +104,12 @@ class CiaViewSet(viewsets.ModelViewSet):
         return Cia.objects.all()
 
 
-class StakeHolderViewSet(viewsets.ModelViewSet):
+class StakeHolderViewSet(CommonViewSet):
     """ViewSet de stakeholders"""
     serializer_class = StakeHolderSerializer
     permission_classes = (CustomDjangoModelPermissions, )
 
-    queryset = StakeHolder.stakehoders.all()
+    queryset = StakeHolder.stakeholders.all()
 
     # def get_queryset(self):
     #     shtype = self.request.query_params.get('shtype')
@@ -118,9 +130,9 @@ class StakeHolderViewSet(viewsets.ModelViewSet):
         only_actives = request.query_params.get('only_actives')
 
         if only_actives:
-            queryset = StakeHolder.stakehoders.get_StakeHolders(shtype, only_actives)
+            queryset = StakeHolder.stakeholders.get_StakeHolders(shtype, only_actives)
         else:
-            queryset = StakeHolder.stakehoders.get_StakeHolders(shtype)
+            queryset = StakeHolder.stakeholders.get_StakeHolders(shtype)
 
         serializer = self.get_serializer(queryset, many=True)
         resultset = serializer.data

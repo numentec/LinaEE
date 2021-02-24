@@ -323,7 +323,7 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Panel',
-              to: '/linabi/panel',
+              to: '/linabi/',
             },
             {
               icon: 'mdi-info',

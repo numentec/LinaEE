@@ -1,11 +1,13 @@
-from rest_framework import viewsets
-from .models import BICatalog
 from django.db import connections
-from .serializers import BICatalogSerializer
+from rest_framework import viewsets
 from drf_dx_datagrid import DxModelViewSet
+from .models import BICatalog, BIFavorito
+from .serializers import BICatalogSerializer, BIFavoritoSerializer
+from ..core.views import CommonViewSet
+
 
 class ListAsQuerySet(list):
-
+    """Convertir una lista a queryset"""
     def __init__(self, *args, model, **kwargs):
         self.model = model
         super().__init__(*args, **kwargs)
@@ -15,6 +17,7 @@ class ListAsQuerySet(list):
 
     def order_by(self, *args, **kwargs):
         return self
+
 
 class CatalogModelViewSet(DxModelViewSet):
 # class CatalogModelViewSet(viewsets.ModelViewSet):
@@ -55,3 +58,11 @@ class CatalogModelViewSet(DxModelViewSet):
         qs = ListAsQuerySet(result, model=BICatalog)
 
         return qs
+
+
+class FavoritoModelViewset(CommonViewSet):
+    """Vista para CRUD de Favoritos"""
+
+    serializer_class = BIFavoritoSerializer
+
+    queryset = BIFavorito.objects.all()

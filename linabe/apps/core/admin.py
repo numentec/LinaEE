@@ -41,6 +41,24 @@ class TipoGenAdmin(admin.ModelAdmin):
      list_display = ('id', 'idgenerico', 'descripcion')
 
 
+class ModuloAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre', 'tipo')
+
+
+class VistaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre', 'link', 'modulo')
+
+
+class VistaConfigAdmin(admin.ModelAdmin):
+    list_display = ('id', 'vista', 'configkey', 'configval1', 'configval2', 'tipo')
+    readonly_fields = ('vista',)
+
+
+class VistaConfigUserAdmin(admin.ModelAdmin):
+    llist_display = ('id', 'user.username', 'vista', 'configkey', 'configval1', 'configval2', 'tipo')
+    readonly_fields = ('user', 'vista',)
+
+
 class StakeHolderAdmin(admin.ModelAdmin):
     """StakeHolder admin"""
 
@@ -71,8 +89,13 @@ class StakeHolderAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'modified_at',)
 
 
-admin.site.register(models.Cia, CiaAdmin)
+
 admin.site.register(models.User, UserAdminx)
 admin.site.register(models.GenSequence, GenSecAdmin)
 admin.site.register(models.TipoGenerico, TipoGenAdmin)
+admin.site.register(models.Modulo, ModuloAdmin)
+admin.site.register(models.Vista, VistaAdmin)
+admin.site.register(models.VistaConfig, VistaConfigAdmin)
+admin.site.register(models.VistaConfigUser, VistaConfigUserAdmin)
+admin.site.register(models.Cia, CiaAdmin)
 admin.site.register(models.StakeHolder, StakeHolderAdmin)
