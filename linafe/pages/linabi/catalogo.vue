@@ -1,86 +1,190 @@
 <template>
-  <MaterialCard class="mt-10">
-    <template v-slot:heading>
-      <v-toolbar dense color="secondary" dark flat>
-        <v-btn dark icon>
-          <v-icon>mdi-dots-vertical</v-icon>
-        </v-btn>
-        <v-spacer />
-        <v-toolbar-title>Procesar Catalogos</v-toolbar-title>
-        <v-spacer />
-        <v-btn dark icon @click="showColumnChooser">
-          <v-icon>mdi-table-column-plus-after</v-icon>
-        </v-btn>
-      </v-toolbar>
-    </template>
-    <DxDataGrid
-      :ref="curGridRefKey"
-      class="ma-4"
-      :data-source="dataSource"
-      :remote-operations="false"
-      :allow-column-reordering="true"
-      :row-alternation-enabled="true"
-      :show-borders="true"
-      :filter-row="true"
-      @content-ready="onContentReady"
-    >
-      <DxColumn :group-index="0" data-field="Product" />
-      <DxColumn
-        data-field="Amount"
-        caption="Sale Amount"
-        data-type="number"
-        format="currency"
-        alignment="right"
-      />
-      <DxColumn
-        :allow-grouping="false"
-        data-field="Discount"
-        caption="Discount %"
-        data-type="number"
-        format="percent"
-        alignment="right"
-        cell-template="discountCellTemplate"
-        css-class="bullet"
-      />
-      <DxColumn data-field="SaleDate" data-type="date" />
-      <DxColumn data-field="Region" data-type="string" />
-      <DxColumn data-field="Sector" data-type="string" />
-      <DxColumn data-field="Channel" data-type="string" />
-      <DxColumn :width="150" data-field="Customer" data-type="string" />
-
-      <DxGroupPanel :visible="true" />
-      <DxSearchPanel :visible="true" :highlight-case-sensitive="true" />
-      <DxColumnChooser mode="select" />
-      <DxGrouping :auto-expand-all="false" />
-      <DxPager
-        :allowed-page-sizes="pageSizes"
-        :show-page-size-selector="true"
-      />
-      <DxPaging :page-size="10" />
-      <template #discountCellTemplate="{ data: cellData }">
-        <DiscountCell :cell-data="cellData" />
+  <div>
+    <MaterialCard class="mt-10">
+      <template v-slot:heading>
+        <v-toolbar dense color="secondary" dark flat>
+          <v-menu
+            v-model="menuFilter"
+            :close-on-content-click="false"
+            :nudge-width="150"
+            offset-y
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn dark icon v-bind="attrs" v-on="on">
+                <v-icon>mdi-dots-vertical</v-icon>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-cloud-download</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click.stop="showBaseFilters = true">
+                  Descargar Datos
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-table-cancel</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click.stop="clearData">
+                  Limpiar Datos
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-group prepend-icon="mdi-export" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Exportar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>Excel</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>CSV</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>PDF</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-book-open-page-variant</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title>Generar Catálogos</v-list-item-title>
+              </v-list-item>
+              <v-list-group prepend-icon="mdi-table-cog" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Consulta</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>Guardar</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>Abrir</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>Eliminar</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
+            </v-list>
+          </v-menu>
+          <v-spacer />
+          <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
+          <v-spacer />
+          <v-btn dark icon @click="showColumnChooser">
+            <v-icon>mdi-table-column-plus-after</v-icon>
+          </v-btn>
+        </v-toolbar>
       </template>
-    </DxDataGrid>
-  </MaterialCard>
+      <div ref="resizableDiv" v-resize="onResize">
+        <DxDataGrid
+          :ref="curGridRefKey"
+          class="ma-4"
+          :focused-row-enabled="true"
+          :data-source="dataSource"
+          :remote-operations="false"
+          :allow-column-reordering="true"
+          :row-alternation-enabled="true"
+          :show-borders="true"
+          :height="tableHeight"
+          @content-ready="onContentReady"
+        >
+          <DxColumn
+            width="200"
+            :allow-grouping="false"
+            name="FOTO"
+            data-field="REFERENCIA"
+            caption="Foto"
+            cell-template="imgCellTemplate"
+          />
+          <DxColumn data-field="ID" data-type="number" />
+          <DxColumn data-field="REFERENCIA" data-type="string" caption="SKU" />
+          <DxColumn
+            :allow-grouping="false"
+            data-field="DESCRIP"
+            caption="DESCRIPCION"
+          />
+          <DxColumn
+            data-field="PRECIO"
+            caption="PRECIO"
+            data-type="number"
+            format="currency"
+            alignment="right"
+          />
+          <DxColumn
+            data-field="PRECIOPUBLICO"
+            caption="PVP"
+            data-type="number"
+            format="currency"
+            alignment="right"
+          />
+          <DxColumn data-field="DISPONIBLE_REAL" caption="DISPOIBLE" />
+          <DxColumn data-field="DISTRIBUCION" data-type="string" />
+          <DxColumn data-field="PAISORIGEN" data-type="string" />
+          <DxSelection
+            select-all-mode="allPages"
+            show-check-boxes-mode="always"
+            mode="multiple"
+          />
+          <DxLoadPanel :enable="true" />
+          <DxGroupPanel :visible="true" />
+          <DxSearchPanel :visible="true" :highlight-case-sensitive="true" />
+          <DxColumnChooser mode="select" />
+          <DxGrouping :auto-expand-all="false" />
+          <DxFilterRow :visible="true" />
+          <DxHeaderFilter :visible="true" />
+          <DxScrolling mode="virtual" />
+          <DxPaging :page-size="100" />
+          <template #imgCellTemplate="{ data: cellData }">
+            <ImgForGrid :img-file="cellData" />
+          </template>
+        </DxDataGrid>
+      </div>
+    </MaterialCard>
+    <BaseFilters :dialog.sync="showBaseFilters" @closeDialog="closeDialog" />
+  </div>
 </template>
 <script>
+import { mapActions } from 'vuex'
 import {
   DxDataGrid,
   DxColumn,
   DxGrouping,
   DxGroupPanel,
-  DxPager,
-  DxPaging,
   DxSearchPanel,
   DxColumnChooser,
+  DxFilterRow,
+  DxHeaderFilter,
+  DxScrolling,
+  DxPaging,
+  DxSelection,
 } from 'devextreme-vue/data-grid'
-
-import DataSource from 'devextreme/data/data_source'
+import DxLoadPanel from 'devextreme-vue/load-panel'
+import MaterialCard from '~/components/core/MaterialCard'
+import BaseFilters from '~/components/linabi/BaseFilters'
+import ImgForGrid from '~/components/utilities/ImgForGrid'
 import 'devextreme/data/odata/store'
 
-import DiscountCell from '~/components/core/DiscountCell.vue'
-
-const curGridRefKey = 'my-cur-grid'
+const curGridRefKey = 'cur-grid'
 
 let collapsed = false
 
@@ -90,30 +194,29 @@ export default {
     DxColumn,
     DxGrouping,
     DxGroupPanel,
-    DxPager,
-    DxPaging,
     DxSearchPanel,
-    DiscountCell,
     DxColumnChooser,
-    MaterialCard: () => import('~/components/core/MaterialCard'),
+    DxFilterRow,
+    DxHeaderFilter,
+    DxScrolling,
+    DxPaging,
+    DxSelection,
+    DxLoadPanel,
+    MaterialCard,
+    BaseFilters,
+    ImgForGrid,
   },
   data() {
     return {
       curGridRefKey,
-      dataSource: new DataSource({
-        store: {
-          type: 'odata',
-          url: 'https://js.devexpress.com/Demos/SalesViewer/odata/DaySaleDtoes',
-          beforeSend(request) {
-            request.params.startDate = '2018-05-10'
-            request.params.endDate = '2018-05-15'
-          },
-        },
-      }),
-      pageSizes: [10, 25, 50, 100],
+      dataSource: null,
+      menuFilter: false,
+      radioGroup: '1',
+      showBaseFilters: false,
+      tableHeight: 0,
       onContentReady(e) {
         if (!collapsed) {
-          e.component.expandRow(['EnviroCare'])
+          e.component.expandRow(1)
           collapsed = true
         }
       },
@@ -124,14 +227,46 @@ export default {
       return this.$refs[curGridRefKey].instance
     },
   },
+  mounted() {
+    // const options = { p02: 'gorr%' }
+    // const load = (loadOptions) => {
+    //   return this.$axios
+    //     .get('linabi/catalog/', {
+    //       params: loadOptions,
+    //     })
+    //     .then((response) => response.data)
+    // }
+    // store = new CustomStore(load(options))
+    // setTimeout(() => (this.dataSource = store))
+    // this.dataSource = store
+  },
   methods: {
+    ...mapActions('linabi', ['setFilters', 'fetchCatalogData']),
+    clearData() {
+      this.dataSource = null
+      this.menuFilter = false
+    },
     showColumnChooser() {
       this.curGrid.showColumnChooser()
+    },
+    closeDialog(refresh) {
+      this.showBaseFilters = false
+      if (refresh) {
+        this.fetchCatalogData().then((store) => {
+          this.dataSource = store
+        })
+      }
+    },
+    onResize() {
+      this.tableHeight =
+        window.innerHeight -
+        this.$refs.resizableDiv.getBoundingClientRect().y -
+        82
     },
   },
   head() {
     return {
-      title: 'Cotizaciones',
+      title: 'Catálogo',
     }
   },
 }

@@ -1,5 +1,9 @@
 from django.db import connections
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework import viewsets
+from rest_framework import authentication, permissions
+from rest_framework import status
 from drf_dx_datagrid import DxModelViewSet
 from .models import BICatalog, BIFavorito
 from .serializers import BICatalogSerializer, BIFavoritoSerializer
@@ -41,6 +45,8 @@ class CatalogModelViewSet(DxModelViewSet):
         p13 = str(self.request.query_params.get('p13', '2021-01-01')).lower()
         p14 = str(self.request.query_params.get('p14', '1')).lower()
 
+        print(p02)
+
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
         with connections['extdb1'].cursor() as cursor:
@@ -58,6 +64,48 @@ class CatalogModelViewSet(DxModelViewSet):
         qs = ListAsQuerySet(result, model=BICatalog)
 
         return qs
+
+
+class CatalogAPIView(APIView):
+    """Catálogo - Lista de productos"""
+
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+
+        p01 = str(request.query_params.get('p01', '%')).lower()
+        p02 = str(request.query_params.get('p02', 'camisa%')).lower()
+        p03 = str(request.query_params.get('p03', '%')).lower()
+        p04 = str(request.query_params.get('p04', '%')).lower()
+        p05 = str(request.query_params.get('p05', '%')).lower()
+        p06 = str(request.query_params.get('p06', '%')).lower()
+        p07 = str(request.query_params.get('p07', '%')).lower()
+        p08 = str(request.query_params.get('p08', '%')).lower()
+        p09 = str(request.query_params.get('p09', '%')).lower()
+        p10 = str(request.query_params.get('p10', '%')).lower()
+        p11 = str(request.query_params.get('p11', 0)).lower()
+        p12 = str(request.query_params.get('p12', '2021-01-01')).lower()
+        p13 = str(request.query_params.get('p13', '2021-01-01')).lower()
+        p14 = str(request.query_params.get('p14', '1')).lower()
+
+        params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINA_QRYCATALOGO', params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class FavoritoModelViewset(CommonViewSet):

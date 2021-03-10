@@ -42,7 +42,7 @@ export default {
       default: () => ({}),
     },
     onDelete: {
-      type: Object,
+      type: Function,
       default: () => ({}),
     },
   },

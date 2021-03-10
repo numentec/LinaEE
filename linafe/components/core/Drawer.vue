@@ -344,7 +344,7 @@ export default {
         },
         {
           icon: 'mdi-application-cog',
-          title: 'Sistema',
+          title: 'Configuración',
           perm: 'core.view_module_sys',
           items: [
             {
@@ -359,7 +359,7 @@ export default {
             },
             {
               icon: 'mdi-info',
-              title: 'Configuración',
+              title: 'Ajustes',
               to: '/sistema/config',
             },
           ],
