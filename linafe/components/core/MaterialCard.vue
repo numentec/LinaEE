@@ -14,12 +14,12 @@
         <v-sheet
           v-else
           :class="{
-            'py-2': !$slots.image,
+            'py-0': !$slots.image,
           }"
           :color="color"
-          :max-height="icon ? 90 : undefined"
+          :height="icon ? 90 : undefined"
           :width="icon ? 'auto' : '100%'"
-          elevation="6"
+          elevation="3"
           class="text-start v-card--material__heading mb-n6"
           dark
           rounded

@@ -1,7 +1,7 @@
 <template>
   <MaterialCard class="mt-10">
     <template v-slot:heading>
-      <v-toolbar dense color="secondary" dark flat>
+      <v-toolbar dense color="secondary" class="mx-1" dark flat>
         <v-btn dark icon>
           <v-icon>mdi-dots-vertical</v-icon>
         </v-btn>

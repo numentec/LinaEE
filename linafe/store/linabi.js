@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import CustomStore from 'devextreme/data/custom_store'
 
 export const namespaced = true
@@ -6,6 +5,7 @@ export const namespaced = true
 export const state = () => ({
   filters: {},
   isLoading: false,
+  totalCount: 0,
 })
 
 export const mutations = {
@@ -14,6 +14,9 @@ export const mutations = {
   },
   SET_FILTERS(state, payload) {
     state.filters = payload
+  },
+  SET_TOTAL_COUNT(state, payload) {
+    state.totalCount = payload
   },
 }
 
@@ -28,6 +31,9 @@ export const actions = {
   },
   setIsLoading({ commit }) {
     commit('SET_LOADING_STATUS')
+  },
+  setTotalCount({ commit }, payload) {
+    commit('SET_TOTAL_COUNT', payload)
   },
   fetchCatalogData(context) {
     context.commit('SET_LOADING_STATUS')
@@ -55,7 +61,7 @@ export const getters = {
   getFilters(state) {
     return state.filters
   },
-  // getTotalRows(state) {
-  //   return state.dataSource.length
-  // },
+  getTotalCount(state) {
+    return state.totalCount
+  },
 }

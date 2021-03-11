@@ -2,7 +2,7 @@
   <div>
     <MaterialCard class="mt-10">
       <template v-slot:heading>
-        <v-toolbar dense color="secondary" dark flat>
+        <v-toolbar dense color="secondary" class="mx-1" dark flat>
           <v-menu
             v-model="menuFilter"
             :close-on-content-click="false"
@@ -85,6 +85,55 @@
                   </v-list-item-content>
                 </v-list-item>
               </v-list-group>
+              <v-list-group prepend-icon="mdi-cog" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Configuración</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item-group
+                  v-model="showPanels"
+                  multiple
+                  active-class=""
+                >
+                  <v-list-item>
+                    <template v-slot:default="{ active }">
+                      <v-list-item-action>
+                        <v-checkbox :input-value="active"></v-checkbox>
+                      </v-list-item-action>
+
+                      <v-list-item-content>
+                        <v-list-item-title>Panel Agrupar</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Agrupar y búsqueda global
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                    </template>
+                  </v-list-item>
+
+                  <v-list-item>
+                    <template v-slot:default="{ active }">
+                      <v-list-item-action>
+                        <v-checkbox :input-value="active"></v-checkbox>
+                      </v-list-item-action>
+
+                      <v-list-item-content>
+                        <v-list-item-title>Filtro avanzado</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Fila de filtros avanzados
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                    </template>
+                  </v-list-item>
+                </v-list-item-group>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title>Ajustes</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
             </v-list>
           </v-menu>
           <v-spacer />
@@ -116,7 +165,7 @@
             caption="Foto"
             cell-template="imgCellTemplate"
           />
-          <DxColumn data-field="ID" data-type="number" />
+          <DxColumn data-field="ID" data-type="number" :visible="testVisible" />
           <DxColumn data-field="REFERENCIA" data-type="string" caption="SKU" />
           <DxColumn
             :allow-grouping="false"
@@ -146,11 +195,14 @@
             mode="multiple"
           />
           <DxLoadPanel :enable="true" />
-          <DxGroupPanel :visible="true" />
-          <DxSearchPanel :visible="true" :highlight-case-sensitive="true" />
-          <DxColumnChooser mode="select" />
+          <DxGroupPanel :visible="showPanels.includes(0)" />
+          <DxSearchPanel
+            :visible="showPanels.includes(0)"
+            :highlight-case-sensitive="true"
+          />
+          <DxColumnChooser mode="select" :allow-search="true" />
           <DxGrouping :auto-expand-all="false" />
-          <DxFilterRow :visible="true" />
+          <DxFilterRow :visible="showPanels.includes(1)" />
           <DxHeaderFilter :visible="true" />
           <DxScrolling mode="virtual" />
           <DxPaging :page-size="100" />
@@ -210,6 +262,9 @@ export default {
     return {
       curGridRefKey,
       dataSource: null,
+      showPanels: [],
+      colsConfig: [],
+      testVisible: false,
       menuFilter: false,
       radioGroup: '1',
       showBaseFilters: false,
@@ -241,7 +296,11 @@ export default {
     // this.dataSource = store
   },
   methods: {
-    ...mapActions('linabi', ['setFilters', 'fetchCatalogData']),
+    ...mapActions('linabi', [
+      'setFilters',
+      'setTotalCount',
+      'fetchCatalogData',
+    ]),
     clearData() {
       this.dataSource = null
       this.menuFilter = false
@@ -254,6 +313,7 @@ export default {
       if (refresh) {
         this.fetchCatalogData().then((store) => {
           this.dataSource = store
+          this.setTotalCount(store.length)
         })
       }
     },

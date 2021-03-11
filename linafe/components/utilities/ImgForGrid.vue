@@ -1,6 +1,11 @@
 <template>
   <div>
-    <v-img :src="imgPath" alt="NO IMAGE" contain width="200">
+    <v-img
+      :src="imgPath"
+      lazy-src="http://192.168.1.48:8001/media/images/nophoto_sm.png"
+      contain
+      max-width="200"
+    >
       <template v-slot:placeholder>
         <v-row class="fill-height ma-0" align="center" justify="center">
           <v-progress-circular

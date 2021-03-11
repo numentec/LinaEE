@@ -2,7 +2,7 @@
   <div>
     <MaterialCard class="mt-10">
       <template v-slot:heading>
-        <v-toolbar dense color="secondary" dark flat>
+        <v-toolbar dense color="secondary" class="mx-1" dark flat>
           <v-menu :close-on-content-click="false" offset-y>
             <template v-slot:activator="{ on, attrs }">
               <v-btn dark icon v-bind="attrs" v-on="on">
