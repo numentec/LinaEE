@@ -11,6 +11,10 @@ app_name = "core"
 router = DefaultRouter()
 router.register(r'cias', views.CiaViewSet, basename='cias')
 router.register(r'stakeholders', views.StakeHolderViewSet, basename='stakeholders')
+router.register(r'modulos', views.ModuloViewSet, basename='modulos')
+router.register(r'vistas', views.VistaViewSet, basename='vistas')
+router.register(r'vistas-conf', views.VistaConfigViewSet, basename='vistas-conf')
+router.register(r'vistas-conf-usr', views.VistaConfigUserViewSet, basename='vistas-conf-usr')
 
 urlpatterns = [
     path('login/', views.LinaAuthToken.as_view(), name='login'),

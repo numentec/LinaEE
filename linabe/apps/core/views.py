@@ -10,7 +10,8 @@ from .serializers import (
     GroupsSerializer,
     StakeHolderSerializer,
 )
-
+from apps.core import models
+from apps.core import serializers
 from linapi.permissions import CustomDjangoModelPermissions
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework import viewsets
@@ -214,3 +215,39 @@ class GroupsList(ListAPIView):
 
     def get_queryset(self):
         return Group.objects.all()
+
+
+class ModuloViewSet(CommonViewSet):
+    """ViewSet de módulos"""
+    serializer_class = serializers.ModuloSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
+
+    def get_queryset(self):
+        return models.Modulo.objects.all()
+
+
+class VistaViewSet(CommonViewSet):
+    """ViewSet de vistas"""
+    serializer_class = serializers.VistaSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
+
+    def get_queryset(self):
+        return models.Vista.objects.all()
+
+
+class VistaConfigViewSet(CommonViewSet):
+    """ViewSet de configuraciones por vista"""
+    serializer_class = serializers.VistaConfigSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
+
+    def get_queryset(self):
+        return models.VistaConfig.objects.all()
+
+
+class VistaConfigUserViewSet(CommonViewSet):
+    """ViewSet de configuraciones por vista"""
+    serializer_class = serializers.VistaConfigUserSerializer
+    permission_classes = (CustomDjangoModelPermissions, )
+
+    def get_queryset(self):
+        return models.VistaConfigUser.objects.all()

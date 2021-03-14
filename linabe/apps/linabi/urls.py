@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 app_name = "linabi"
 
 router = DefaultRouter()
-# router.register(r'catalog', views.CatalogModelViewSet, basename='catalog')
+router.register(r'model-catalog', views.CatalogModelViewSet, basename='model-catalog')
 router.register(r'favoritos', views.FavoritoModelViewset, basename='favoritos')
 
 urlpatterns = [

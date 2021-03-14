@@ -160,35 +160,22 @@
           <DxColumn
             width="200"
             :allow-grouping="false"
-            name="FOTO"
             data-field="REFERENCIA"
+            name="FOTO"
             caption="Foto"
             cell-template="imgCellTemplate"
           />
-          <DxColumn data-field="ID" data-type="number" :visible="testVisible" />
-          <DxColumn data-field="REFERENCIA" data-type="string" caption="SKU" />
           <DxColumn
-            :allow-grouping="false"
-            data-field="DESCRIP"
-            caption="DESCRIPCION"
+            v-for="xcol in colsConfig"
+            :key="xcol.id"
+            :allow-grouping="xcol.configval7 == '1'"
+            :data-field="xcol.configkey"
+            :visible="xcol.configval2 == '1'"
+            :caption="xcol.configval3"
+            :data-type="xcol.configval4"
+            :format="xcol.configval5"
+            :alignment="xcol.configval6"
           />
-          <DxColumn
-            data-field="PRECIO"
-            caption="PRECIO"
-            data-type="number"
-            format="currency"
-            alignment="right"
-          />
-          <DxColumn
-            data-field="PRECIOPUBLICO"
-            caption="PVP"
-            data-type="number"
-            format="currency"
-            alignment="right"
-          />
-          <DxColumn data-field="DISPONIBLE_REAL" caption="DISPOIBLE" />
-          <DxColumn data-field="DISTRIBUCION" data-type="string" />
-          <DxColumn data-field="PAISORIGEN" data-type="string" />
           <DxSelection
             select-all-mode="allPages"
             show-check-boxes-mode="always"
@@ -212,7 +199,11 @@
         </DxDataGrid>
       </div>
     </MaterialCard>
-    <BaseFilters :dialog.sync="showBaseFilters" @closeDialog="closeDialog" />
+    <BaseFilters
+      :dialog.sync="showBaseFilters"
+      :config="config.filter((e) => e.tipo == 'filter')"
+      @closeDialog="closeDialog"
+    />
   </div>
 </template>
 <script>
@@ -258,6 +249,26 @@ export default {
     BaseFilters,
     ImgForGrid,
   },
+  async asyncData({ $axios, error }) {
+    try {
+      const { data } = await $axios.get('vistas/14/')
+      return {
+        config: data.configs_x_vista,
+      }
+    } catch (err) {
+      if (err.response) {
+        error({
+          statusCode: err.response.status,
+          message: err.response.data.detail,
+        })
+      } else {
+        error({
+          statusCode: 503,
+          message: 'No se pudo cargar la configuración. Intente luego',
+        })
+      }
+    }
+  },
   data() {
     return {
       curGridRefKey,
@@ -283,6 +294,7 @@ export default {
     },
   },
   mounted() {
+    this.colsConfig = this.config.filter((e) => e.tipo === 'col')
     // const options = { p02: 'gorr%' }
     // const load = (loadOptions) => {
     //   return this.$axios

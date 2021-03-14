@@ -2,7 +2,7 @@
   <div>
     <v-img
       :src="imgPath"
-      lazy-src="http://192.168.1.48:8001/media/images/nophoto_sm.png"
+      lazy-src="http://192.168.1.50:8001/media/images/nophoto_sm.png"
       contain
       max-width="200"
     >

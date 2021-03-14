@@ -235,6 +235,13 @@ class VistaConfig(Common):
     configkey = models.CharField(max_length=20)
     configval1 = models.CharField(max_length=20, blank=True)
     configval2 = models.CharField(max_length=20, blank=True)
+    configval3 = models.CharField(max_length=20, blank=True)
+    configval4 = models.CharField(max_length=20, blank=True)
+    configval5 = models.CharField(max_length=20, blank=True)
+    configval6 = models.CharField(max_length=20, blank=True)
+    configval7 = models.CharField(max_length=20, blank=True)
+    configval8 = models.CharField(max_length=20, blank=True)
+    configval9 = models.CharField(max_length=20, blank=True)
     tipo = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
@@ -253,6 +260,13 @@ class VistaConfigUser(Common):
     configkey = models.CharField(max_length=20)
     configval1 = models.CharField(max_length=20, blank=True)
     configval2 = models.CharField(max_length=20, blank=True)
+    configval3 = models.CharField(max_length=20, blank=True)
+    configval4 = models.CharField(max_length=20, blank=True)
+    configval5 = models.CharField(max_length=20, blank=True)
+    configval6 = models.CharField(max_length=20, blank=True)
+    configval7 = models.CharField(max_length=20, blank=True)
+    configval8 = models.CharField(max_length=20, blank=True)
+    configval9 = models.CharField(max_length=20, blank=True)
     tipo = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
@@ -260,8 +274,8 @@ class VistaConfigUser(Common):
 
     class Meta:
         db_table = 'core_vistaconfiguser'
-        verbose_name = 'Configuración por Vista'
-        verbose_name_plural = 'Configuraciones por Vista'
+        verbose_name = 'Configuración por Vista y Usuario'
+        verbose_name_plural = 'Configuraciones por Vista y Usuario'
 
 
 # Modelo para manejo de Clientes, Proveedores, Bancos, Socios y similares

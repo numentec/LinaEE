@@ -18,7 +18,7 @@
         </v-toolbar>
         <v-container class="px-4">
           <v-card-text>
-            <div>
+            <div v-show="config.find((obj) => obj.id == 14).configval1 == '1'">
               <v-radio-group v-model="filters_to_apply.p14" row class="my-0">
                 <v-radio key="1" label="Todos" value="1"></v-radio>
                 <v-radio key="2" label="Disponible" value="2"></v-radio>
@@ -26,87 +26,104 @@
               </v-radio-group>
               <v-divider></v-divider>
             </div>
-            <div>
+            <div v-show="config.find((obj) => obj.id == 1).configval1 == '1'">
               <v-text-field
                 v-model="filters_to_apply.p01"
-                label="SKU"
+                :label="config.find((obj) => obj.id == 1).configval2"
               ></v-text-field>
             </div>
-            <div>
+            <div v-show="config.find((obj) => obj.id == 2).configval1 == '1'">
               <v-text-field
                 v-model="filters_to_apply.p02"
-                label="Descripción"
+                :label="config.find((obj) => obj.id == 2).configval2"
                 dense
               ></v-text-field>
             </div>
-            <div>
+            <div v-show="config.find((obj) => obj.id == 3).configval1 == '1'">
               <v-text-field
                 v-model="filters_to_apply.p03"
-                label="Marca"
+                :label="config.find((obj) => obj.id == 3).configval2"
                 dense
               ></v-text-field>
             </div>
-            <div>
+            <div v-show="config.find((obj) => obj.id == 4).configval1 == '1'">
               <v-text-field
                 v-model="filters_to_apply.p04"
-                label="Categoría"
+                :label="config.find((obj) => obj.id == 4).configval2"
                 dense
               ></v-text-field>
             </div>
-            <div>
+            <div v-show="config.find((obj) => obj.id == 5).configval1 == '1'">
               <v-text-field
                 v-model="filters_to_apply.p05"
-                label="Sub linea"
+                :label="config.find((obj) => obj.id == 5).configval2"
                 dense
               ></v-text-field>
             </div>
             <v-expand-transition>
               <div v-show="morefilters">
-                <div>
+                <div
+                  v-show="config.find((obj) => obj.id == 6).configval1 == '1'"
+                >
                   <v-text-field
                     v-model="filters_to_apply.p06"
-                    label="Tipo"
+                    :label="config.find((obj) => obj.id == 6).configval2"
                     dense
                   ></v-text-field>
                 </div>
-                <div>
+                <div
+                  v-show="config.find((obj) => obj.id == 7).configval1 == '1'"
+                >
                   <v-text-field
                     v-model="filters_to_apply.p07"
-                    label="Bodega"
+                    :label="config.find((obj) => obj.id == 7).configval2"
                     dense
                   ></v-text-field>
                 </div>
-                <div>
+                <div
+                  v-show="config.find((obj) => obj.id == 8).configval1 == '1'"
+                >
                   <v-text-field
                     v-model="filters_to_apply.p08"
-                    label="Cla3"
+                    :label="config.find((obj) => obj.id == 8).configval2"
                     dense
                   ></v-text-field>
                 </div>
-                <div>
+                <div
+                  v-show="config.find((obj) => obj.id == 9).configval1 == '1'"
+                >
                   <v-text-field
                     v-model="filters_to_apply.p09"
-                    label="Cla4"
+                    :label="config.find((obj) => obj.id == 9).configval2"
                     dense
                   ></v-text-field>
                 </div>
-                <div>
+                <div
+                  v-show="config.find((obj) => obj.id == 10).configval1 == '1'"
+                >
                   <v-text-field
                     v-model="filters_to_apply.p10"
-                    label="Nº de Entrada"
+                    :label="config.find((obj) => obj.id == 10).configval2"
                     dense
                   ></v-text-field>
                 </div>
-                <div>
+                <div
+                  v-show="config.find((obj) => obj.id == 11).configval1 == '1'"
+                >
                   <v-checkbox
                     v-model="filters_to_apply.p11"
-                    label="Incluir Periodo"
+                    :label="config.find((obj) => obj.id == 11).configval2"
                     class="my-0"
                   >
                   </v-checkbox>
                 </div>
                 <v-row no-gutters>
-                  <v-col cols="6">
+                  <v-col
+                    v-show="
+                      config.find((obj) => obj.id == 12).configval1 == '1'
+                    "
+                    cols="6"
+                  >
                     <v-menu
                       v-model="menuDate1"
                       :close-on-content-click="false"
@@ -119,7 +136,7 @@
                         <v-text-field
                           v-model="filters_to_apply.p12"
                           :disabled="!filters_to_apply.p11"
-                          label="Inicio"
+                          :label="config.find((obj) => obj.id == 12).configval2"
                           prepend-icon="mdi-calendar"
                           dense
                           readonly
@@ -133,7 +150,12 @@
                       ></v-date-picker>
                     </v-menu>
                   </v-col>
-                  <v-col cols="6">
+                  <v-col
+                    v-show="
+                      config.find((obj) => obj.id == 13).configval1 == '1'
+                    "
+                    cols="6"
+                  >
                     <v-menu
                       v-model="menuDate2"
                       :close-on-content-click="false"
@@ -146,7 +168,7 @@
                         <v-text-field
                           v-model="filters_to_apply.p13"
                           :disabled="!filters_to_apply.p11"
-                          label="Fin"
+                          :label="config.find((obj) => obj.id == 13).configval2"
                           prepend-icon="mdi-calendar"
                           dense
                           readonly
@@ -202,6 +224,10 @@ export default {
   name: 'BaseFilters',
   props: {
     dialog: Boolean,
+    config: {
+      type: Array,
+      default: () => [{}],
+    },
   },
 
   data: () => ({
@@ -234,6 +260,7 @@ export default {
   computed: {
     ...mapState('linabi', ['filters']),
   },
+  mounted() {},
   methods: {
     ...mapActions('linabi', ['setFilters']),
     reset() {

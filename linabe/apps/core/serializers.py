@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from .models import Cia, StakeHolder, User
+from apps.core import models
 from .utils import DynamicFieldSerializer
 
 LinaUserModel = get_user_model()
@@ -27,14 +27,14 @@ class GroupsSerializer(serializers.ModelSerializer):
 class CiaSerializer(DynamicFieldSerializer):
 
     class Meta:
-        model = Cia
+        model = models.Cia
         fields = ('__all__')
 
 
 class StakeHolderSerializer(DynamicFieldSerializer):
 
     class Meta:
-        model = StakeHolder
+        model = models.StakeHolder
         fields = ('__all__')
 
 
@@ -78,7 +78,7 @@ class UserPermsSerializer(serializers.ModelSerializer):
             'core.view_sales_module'
             ]
 
-        all_permissions = User(is_superuser=True).get_all_permissions()
+        all_permissions = LinaUserModel(is_superuser=True).get_all_permissions()
         user_permissions = obj.get_all_permissions()
 
         return {p: p in user_permissions for p in persmin}
@@ -102,3 +102,39 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         registered_user.save()
         registered_user.groups.set(groups_list)
         return registered_user
+
+
+class VistaConfigUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.VistaConfig
+        fields = ('id', 'user', 'vista',
+        'configkey', 'configval1', 'configval2', 'configval3', 'configval4',
+        'configval5', 'configval6', 'configval7', 'configval8', 'configval9', 'tipo')
+
+
+class VistaConfigSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.VistaConfig
+        fields = ('id', 'vista', 
+        'configkey', 'configval1', 'configval2', 'configval3', 'configval4',
+        'configval5', 'configval6', 'configval7', 'configval8', 'configval9', 'tipo')
+
+
+class VistaSerializer(serializers.ModelSerializer):
+
+    configs_x_vista = VistaConfigSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = models.Vista
+        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'configs_x_vista', 'modulo')
+
+
+class ModuloSerializer(serializers.ModelSerializer):
+
+    vistas_x_modulo = VistaSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = models.Modulo
+        fields = ('id', 'nombre', 'descrip', 'tipo', 'vistas_x_modulo')

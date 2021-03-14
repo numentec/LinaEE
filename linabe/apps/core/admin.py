@@ -42,20 +42,63 @@ class TipoGenAdmin(admin.ModelAdmin):
 
 
 class ModuloAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nombre', 'tipo')
+    """Modulos admin."""
+
+    list_display = ('id', 'nombre', 'descrip', 'tipo', 'is_active')
+
+    search_fields = (
+        'id',
+        'nombre',
+    )
+
+    list_filter = (
+        'is_active',
+        'tipo',
+    )
 
 
 class VistaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nombre', 'link', 'modulo')
+    list_display = ('id', 'nombre', 'descrip', 'link', 'tipo', 'modulo', 'is_active')
 
 
 class VistaConfigAdmin(admin.ModelAdmin):
-    list_display = ('id', 'vista', 'configkey', 'configval1', 'configval2', 'tipo')
+    list_display = (
+        'id',
+        'vista',
+        'configkey',
+        'configval1',
+        'configval2',
+        'configval3',
+        'configval4',
+        'configval5',
+        'configval6',
+        'configval7',
+        'configval8',
+        'configval9',
+        'tipo',
+        'is_active'
+    )
     readonly_fields = ('vista',)
 
 
 class VistaConfigUserAdmin(admin.ModelAdmin):
-    llist_display = ('id', 'user.username', 'vista', 'configkey', 'configval1', 'configval2', 'tipo')
+    llist_display = (
+        'id',
+        'user.username',
+        'vista',
+        'configkey',
+        'configval1',
+        'configval2',
+        'configval3',
+        'configval4',
+        'configval5',
+        'configval6',
+        'configval7',
+        'configval8',
+        'configval9',
+        'tipo',
+        'is_active'
+    )
     readonly_fields = ('user', 'vista',)
 
 
@@ -87,7 +130,6 @@ class StakeHolderAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = ('created_at', 'modified_at',)
-
 
 
 admin.site.register(models.User, UserAdminx)
