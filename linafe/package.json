@@ -14,10 +14,14 @@
     "@nuxtjs/auth": "^4.9.1",
     "@nuxtjs/axios": "^5.12.2",
     "core-js": "^3.6.5",
-    "fibers": "^5.0.0",
-    "nuxt": "^2.14.6",
     "devextreme": "^20.2.4",
-    "devextreme-vue": "^20.2.4"
+    "devextreme-vue": "^20.2.4",
+    "exceljs": "^4.2.1",
+    "fibers": "^5.0.0",
+    "file-saver": "^2.0.5",
+    "jspdf": "^2.3.1",
+    "jspdf-autotable": "^3.5.14",
+    "nuxt": "^2.14.6"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^3.1.0",

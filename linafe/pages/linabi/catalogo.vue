@@ -41,7 +41,9 @@
                 </template>
                 <v-list-item link>
                   <v-list-item-content>
-                    <v-list-item-title>Excel</v-list-item-title>
+                    <v-list-item-title @click.stop="exportGrid(2)">
+                      Excel
+                    </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item link>
@@ -51,7 +53,9 @@
                 </v-list-item>
                 <v-list-item link>
                   <v-list-item-content>
-                    <v-list-item-title>PDF</v-list-item-title>
+                    <v-list-item-title @click.stop="exportGrid(1)">
+                      PDF
+                    </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
               </v-list-group>
@@ -151,11 +155,11 @@
           :focused-row-enabled="true"
           :data-source="dataSource"
           :remote-operations="false"
+          :column-auto-width="true"
           :allow-column-reordering="true"
           :row-alternation-enabled="true"
           :show-borders="true"
           :height="tableHeight"
-          @content-ready="onContentReady"
         >
           <DxColumn
             width="200"
@@ -164,6 +168,7 @@
             name="FOTO"
             caption="Foto"
             cell-template="imgCellTemplate"
+            :allow-header-filtering="false"
           />
           <DxColumn
             v-for="xcol in colsConfig"
@@ -182,12 +187,20 @@
             mode="multiple"
           />
           <DxLoadPanel :enable="true" />
-          <DxGroupPanel :visible="showPanels.includes(0)" />
+          <DxGroupPanel
+            :visible="showPanels.includes(0)"
+            empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
+          />
           <DxSearchPanel
             :visible="showPanels.includes(0)"
             :highlight-case-sensitive="true"
           />
-          <DxColumnChooser mode="select" :allow-search="true" />
+          <DxColumnChooser
+            mode="select"
+            :allow-search="true"
+            :height="360"
+            title="Ver Columna"
+          />
           <DxGrouping :auto-expand-all="false" />
           <DxFilterRow :visible="showPanels.includes(1)" />
           <DxHeaderFilter :visible="true" />
@@ -222,14 +235,74 @@ import {
   DxSelection,
 } from 'devextreme-vue/data-grid'
 import DxLoadPanel from 'devextreme-vue/load-panel'
+import saveAs from 'file-saver'
+import { jsPDF as JsPDF } from 'jspdf'
+import 'jspdf-autotable'
+import ExcelJS from 'exceljs'
+import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
+import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
+// import axios from 'axios'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
-import 'devextreme/data/odata/store'
+// import 'devextreme/data/odata/store'
+import LinaConfig from '~/linaconfig.js'
 
 const curGridRefKey = 'cur-grid'
-
 let collapsed = false
+// const fotos = []
+const fotos = {}
+
+async function getImageForPDF(imgfile, ax) {
+  return await ax
+    .get(imgfile, {
+      responseType: 'arraybuffer',
+    })
+    .then((response) => {
+      return Buffer.from(response.data, 'binary').toString('base64')
+    })
+    .catch((err) => {
+      if (err.response.status === 404) {
+        return ''
+      }
+    })
+}
+
+async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
+  // url = LinaConfig.PUBLIC_URL + url
+  // ax.onResponse((response) => {
+  //   if (response.status === 404) {
+  //       console.log('Oh no it returned a 404')
+  //   }
+  // })
+
+  await ax
+    .get(url, {
+      responseType: 'arraybuffer',
+    })
+    .then((response) => {
+      const base64Img = Buffer.from(response.data, 'binary').toString('base64')
+
+      const image = workbook.addImage({
+        base64: base64Img,
+        extension: 'JPEG',
+      })
+
+      worksheet.getRow(excelCell.row).height = 100
+      worksheet.addImage(image, {
+        tl: { col: excelCell.col - 1, row: excelCell.row - 1 },
+        br: { col: excelCell.col, row: excelCell.row },
+      })
+
+      resolve()
+    })
+    .catch((err) => {
+      if (err.response.status === 404) {
+        worksheet.getRow(excelCell.row).height = 100
+        resolve()
+      }
+    })
+}
 
 export default {
   components: {
@@ -295,17 +368,6 @@ export default {
   },
   mounted() {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
-    // const options = { p02: 'gorr%' }
-    // const load = (loadOptions) => {
-    //   return this.$axios
-    //     .get('linabi/catalog/', {
-    //       params: loadOptions,
-    //     })
-    //     .then((response) => response.data)
-    // }
-    // store = new CustomStore(load(options))
-    // setTimeout(() => (this.dataSource = store))
-    // this.dataSource = store
   },
   methods: {
     ...mapActions('linabi', [
@@ -325,7 +387,7 @@ export default {
       if (refresh) {
         this.fetchCatalogData().then((store) => {
           this.dataSource = store
-          this.setTotalCount(store.length)
+          // this.setTotalCount(store.length)
         })
       }
     },
@@ -334,6 +396,113 @@ export default {
         window.innerHeight -
         this.$refs.resizableDiv.getBoundingClientRect().y -
         82
+    },
+    exportGrid(opc) {
+      const PromiseArray = []
+
+      const ax = this.$axios.create({
+        baseURL: LinaConfig.IMGBASEPATH,
+        headers: {
+          common: {
+            Accept: 'text/plain, */*',
+          },
+        },
+      })
+
+      if (opc === 1) {
+        const selectedRows = this.curGrid.getSelectedRowKeys()
+
+        selectedRows.forEach((rowKey) => {
+          const imgfile = rowKey + LinaConfig.IMGEXT
+          getImageForPDF(imgfile, ax).then((b64Img) => {
+            const objKey = 'key' + rowKey
+            // fotos.push({ sku: objKey, img: b64Img })
+            fotos[objKey] = b64Img
+          })
+        })
+
+        const pdfDoc = new JsPDF({
+          orientation: 'landscape',
+          format: 'letter',
+        })
+
+        const options = {
+          component: this.curGrid,
+          jsPDFDocument: pdfDoc,
+          selectedRowsOnly: true,
+          customizeCell: ({ pdfCell, gridCell }) => {
+            if (gridCell.column.name === 'FOTO') {
+              if (gridCell.rowType === 'data') {
+                const rowKey = gridCell.value
+                const objKey = 'key' + rowKey
+
+                // console.log('VALOR DE fotos en options:')
+                // console.log(fotos)
+                // const imgitem = fotos.find((obj) => obj.sku === objKey).value
+                // const b64Img = imgitem.img
+                const b64Img = fotos[objKey]
+                // console.log('VALOR DE b64Img: ' + b64Img)
+
+                pdfCell.content = ''
+                pdfCell.customDrawCell = function (data) {
+                  const tPos = data.cell.getTextPos()
+                  pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+                }
+              }
+            }
+          },
+          autoTableOptions: {
+            bodyStyles: { minCellHeight: 20 },
+          },
+        }
+
+        exportDataGridToPdf(options).then(() => {
+          // console.log('CONTENIDO DE fotos:')
+          // console.log(fotos)
+          pdfDoc.save('Catalogo.pdf')
+        })
+      }
+
+      if (opc === 2) {
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet('Catalogo')
+
+        exportDataGridToExcel({
+          component: this.curGrid,
+          worksheet,
+          autoFilterEnabled: true,
+          selectedRowsOnly: true,
+          customizeCell: ({ excelCell, gridCell }) => {
+            if (gridCell.rowType === 'data') {
+              if (gridCell.column.name === 'FOTO') {
+                excelCell.value = undefined
+                const imgfile = gridCell.value + LinaConfig.IMGEXT
+                PromiseArray.push(
+                  new Promise((resolve, reject) => {
+                    addImageExcel(
+                      imgfile,
+                      workbook,
+                      worksheet,
+                      excelCell,
+                      ax,
+                      resolve
+                    )
+                  })
+                )
+              }
+            }
+          },
+        }).then(() => {
+          Promise.all(PromiseArray).then(() => {
+            workbook.xlsx.writeBuffer().then((buffer) => {
+              saveAs(
+                new Blob([buffer], { type: 'application/octet-stream' }),
+                'Catalog.xlsx'
+              )
+            })
+          })
+        })
+      }
     },
   },
   head() {

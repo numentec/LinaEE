@@ -49,7 +49,7 @@ export const actions = {
         .then((response) => response.data)
     }
 
-    const store = new CustomStore({ key: 'ID', load })
+    const store = new CustomStore({ key: 'REFERENCIA', load })
 
     context.commit('SET_LOADING_STATUS')
 

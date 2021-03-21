@@ -1,11 +1,6 @@
 <template>
   <div>
-    <v-img
-      :src="imgPath"
-      lazy-src="http://192.168.1.50:8001/media/images/nophoto_sm.png"
-      contain
-      max-width="200"
-    >
+    <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="200">
       <template v-slot:placeholder>
         <v-row class="fill-height ma-0" align="center" justify="center">
           <v-progress-circular
@@ -19,6 +14,8 @@
 </template>
 
 <script>
+import LinaConfig from '~/linaconfig.js'
+
 export default {
   name: 'ImgForGrid',
   props: {
@@ -28,11 +25,16 @@ export default {
       default: () => {},
     },
   },
+  data() {
+    return {
+      // lazySrc: process.env.SERVER_URL_CLIENT + '/media/images/nophoto_sm.png',
+      lazySrc: LinaConfig.PUBLIC_URL + 'media/images/nophoto_sm.png',
+    }
+  },
   computed: {
-    imgPath() {
-      const basePath =
-        'https://cloudadmin:WwEgk-tQowR-A2KLx-BNrCE-b7b4i@nube.vertigozl.net/remote.php/dav/files/cloudadmin/DemoFotos/'
-      return basePath + this.imgFile.value + '.jpg/'
+    imgSrc() {
+      // return process.env.IMGBASEPATH + this.imgFile.value + process.env.IMGEXT
+      return LinaConfig.IMGBASEPATH + this.imgFile.value + LinaConfig.IMGEXT
     },
   },
 }

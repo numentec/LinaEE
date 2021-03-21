@@ -88,3 +88,6 @@ sw.*
 
 # Vim swap files
 *.swp
+
+# Global linafe configuration
+linaconfig.js

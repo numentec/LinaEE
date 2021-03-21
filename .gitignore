@@ -259,3 +259,6 @@ secret.json
 #requirements.txt
 
 # End of https://www.gitignore.io/api/django,visualstudiocode
+
+# Global linafe configuration
+linaconfig.js
