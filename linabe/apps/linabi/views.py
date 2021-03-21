@@ -108,6 +108,40 @@ class CatalogAPIView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class SaleDocsAPIView(APIView):
+    """Documentos de Ventas"""
+
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+
+        p01 = str(request.query_params.get('p01', 0)).lower()
+        p02 = str(request.query_params.get('p12', '2021-01-01')).lower()
+        p03 = str(request.query_params.get('p13', '2021-01-01')).lower()
+        p04 = str(request.query_params.get('p04', '%')).lower()
+        p05 = str(request.query_params.get('p05', '%')).lower()
+        p06 = str(request.query_params.get('p06', '%')).lower()
+
+        params = [p01, p02, p03, p04, p05, p06]
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINA_QRYSALEDOCS', params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class FavoritoModelViewset(CommonViewSet):
     """Vista para CRUD de Favoritos"""
 
