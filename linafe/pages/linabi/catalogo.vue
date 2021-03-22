@@ -215,6 +215,7 @@
     <BaseFilters
       :dialog.sync="showBaseFilters"
       :config="config.filter((e) => e.tipo == 'filter')"
+      :numvista="14"
       @closeDialog="closeDialog"
     />
   </div>

@@ -55,6 +55,26 @@ export const actions = {
 
     return store
   },
+  fetchSaleDocsData(context) {
+    context.commit('SET_LOADING_STATUS')
+
+    const ctx = context
+    const ax = this.$axios
+
+    async function load() {
+      return await ax
+        .get('linabi/saledocsm/', {
+          params: ctx.state.filters,
+        })
+        .then((response) => response.data)
+    }
+
+    const store = new CustomStore({ key: 'NUMDOC', load })
+
+    context.commit('SET_LOADING_STATUS')
+
+    return store
+  },
 }
 
 export const getters = {

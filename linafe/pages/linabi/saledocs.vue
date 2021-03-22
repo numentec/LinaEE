@@ -203,6 +203,7 @@
     <BaseFilters
       :dialog.sync="showBaseFilters"
       :config="config.filter((el) => el.tipo == 'filter')"
+      :numvista="16"
       @closeDialog="closeDialog"
     />
   </div>
@@ -357,7 +358,7 @@ export default {
     ...mapActions('linabi', [
       'setFilters',
       'setTotalCount',
-      'fetchCatalogData',
+      'fetchSaleDocsData',
     ]),
     clearData() {
       this.dataSource = null
@@ -369,7 +370,7 @@ export default {
     closeDialog(refresh) {
       this.showBaseFilters = false
       if (refresh) {
-        this.fetchCatalogData().then((store) => {
+        this.fetchSaleDocsData().then((store) => {
           this.dataSource = store
           // this.setTotalCount(store.length)
         })

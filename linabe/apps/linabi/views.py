@@ -108,22 +108,36 @@ class CatalogAPIView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
-class SaleDocsAPIView(APIView):
+class SaleDocsMAPIView(APIView):
     """Documentos de Ventas"""
 
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
+        # p01 - Lista con los números de documentos a consultar
+        # p02 - Nombre del cliente
+        # p11 - Tipo de consulta: Listado por números de documentos, por periodo (0, 1)
+        # p12 - Fecha inicial del periodo a consultar
+        # p13 - Fecha final del periodo a consultar
+        # p15 - Tipo de documento: Cotización (COT), Pedido cotizado (PEDCOT), pedido confirmado (PEDCONF), factura (FAC)
+        
+        p01 = str(request.query_params.get('p01', '0')).lower()
+        p02 = str(request.query_params.get('p02', '%')).lower()
+        p11 = str(request.query_params.get('p11', '1')).lower()
+        p12 = str(request.query_params.get('p12', '2021-01-01'))
+        p13 = str(request.query_params.get('p13', '2021-01-31'))
+        p15 = str(request.query_params.get('p15', 'COT'))
 
-        p01 = str(request.query_params.get('p01', 0)).lower()
-        p02 = str(request.query_params.get('p12', '2021-01-01')).lower()
-        p03 = str(request.query_params.get('p13', '2021-01-01')).lower()
-        p04 = str(request.query_params.get('p04', '%')).lower()
-        p05 = str(request.query_params.get('p05', '%')).lower()
-        p06 = str(request.query_params.get('p06', '%')).lower()
+        # pvals = p01 + p02 + p11 + p12 + p13 + p15
 
-        params = [p01, p02, p03, p04, p05, p06]
+        # if pvals == '0%022021-01-012021-01-31COT':
+        #     return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        if p01 != '0':
+            p11 = '0'
+
+        params = [p01, p02, p11, p12, p13, p15]
 
         result = []
 
@@ -131,7 +145,7 @@ class SaleDocsAPIView(APIView):
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_QRYSALEDOCS', params + [refCursor])
+            cursor.callproc('DMC.LINA_QRYSALEDOCSM', params + [refCursor])
 
             descrip = refCursor.description
 

@@ -25,5 +25,9 @@ export default {
   created() {
     this.page_name = this.$nuxt.$route.name.toUpperCase()
   },
+  head: {
+    title: 'Fac-Compras',
+    meta: [{ breadCrumb: 'Facturitas' }],
+  },
 }
 </script>
