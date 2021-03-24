@@ -141,7 +141,7 @@
             </v-list>
           </v-menu>
           <v-spacer />
-          <v-toolbar-title>Documentos de Ventas</v-toolbar-title>
+          <v-toolbar-title>Detalle de Documentos de Ventas</v-toolbar-title>
           <v-spacer />
           <v-btn dark icon @click="showColumnChooser">
             <v-icon>mdi-table-column-plus-after</v-icon>
@@ -161,6 +161,15 @@
           :show-borders="true"
           :height="tableHeight"
         >
+          <DxColumn
+            width="200"
+            :allow-grouping="false"
+            data-field="REFERENCIA"
+            name="FOTO"
+            caption="Foto"
+            cell-template="imgCellTemplate"
+            :allow-header-filtering="false"
+          />
           <DxColumn
             v-for="xcol in colsConfig"
             :key="xcol.id"
@@ -197,13 +206,17 @@
           <DxHeaderFilter :visible="true" />
           <DxScrolling mode="virtual" />
           <DxPaging :page-size="100" />
+          <template #imgCellTemplate="{ data: cellData }">
+            <ImgForGrid :img-file="cellData" />
+          </template>
         </DxDataGrid>
       </div>
     </MaterialCard>
     <BaseFilters
       :dialog.sync="showBaseFilters"
       :config="config.filter((el) => el.tipo == 'filter')"
-      :numvista="16"
+      :numvista="17"
+      curstore="linabi/saledocsd"
       @closeDialog="closeDialog"
     />
   </div>
@@ -232,6 +245,7 @@ import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
+import ImgForGrid from '~/components/utilities/ImgForGrid'
 import LinaConfig from '~/linaconfig.js'
 
 const curGridRefKey = 'cur-grid'
@@ -306,10 +320,24 @@ export default {
     DxLoadPanel,
     MaterialCard,
     BaseFilters,
+    ImgForGrid,
   },
+  fetch() {
+    const numdocs = this.$route.params.numdocs
+    const tipodoc = this.$route.params.tipodoc
+    if (numdocs) {
+      const ndocs = numdocs.toString()
+      this.setFilters({ p01: ndocs, p15: tipodoc })
+      this.fetchData().then((store) => {
+        this.dataSource = store
+      })
+    }
+  },
+  // call fetch only on client-side
+  fetchOnServer: false,
   async asyncData({ $axios, error }) {
     try {
-      const { data } = await $axios.get('vistas/16/')
+      const { data } = await $axios.get('vistas/17/')
       return {
         config: data.configs_x_vista,
       }
@@ -355,10 +383,10 @@ export default {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi', [
+    ...mapActions('linabi/saledocsd', [
       'setFilters',
       'setTotalCount',
-      'fetchSaleDocsData',
+      'fetchData',
     ]),
     clearData() {
       this.dataSource = null
@@ -370,7 +398,7 @@ export default {
     closeDialog(refresh) {
       this.showBaseFilters = false
       if (refresh) {
-        this.fetchSaleDocsData().then((store) => {
+        this.fetchData().then((store) => {
           this.dataSource = store
           // this.setTotalCount(store.length)
         })
@@ -421,12 +449,7 @@ export default {
                 const rowKey = gridCell.value
                 const objKey = 'key' + rowKey
 
-                // console.log('VALOR DE fotos en options:')
-                // console.log(fotos)
-                // const imgitem = fotos.find((obj) => obj.sku === objKey).value
-                // const b64Img = imgitem.img
                 const b64Img = fotos[objKey]
-                // console.log('VALOR DE b64Img: ' + b64Img)
 
                 pdfCell.content = ''
                 pdfCell.customDrawCell = function (data) {
@@ -442,15 +465,13 @@ export default {
         }
 
         exportDataGridToPdf(options).then(() => {
-          // console.log('CONTENIDO DE fotos:')
-          // console.log(fotos)
-          pdfDoc.save('Catalogo.pdf')
+          pdfDoc.save('Detalle.pdf')
         })
       }
 
       if (opc === 2) {
         const workbook = new ExcelJS.Workbook()
-        const worksheet = workbook.addWorksheet('Catalogo')
+        const worksheet = workbook.addWorksheet('Detalle')
 
         exportDataGridToExcel({
           component: this.curGrid,
@@ -482,7 +503,7 @@ export default {
             workbook.xlsx.writeBuffer().then((buffer) => {
               saveAs(
                 new Blob([buffer], { type: 'application/octet-stream' }),
-                'Catalog.xlsx'
+                'Detalle.xlsx'
               )
             })
           })
@@ -492,7 +513,7 @@ export default {
   },
   head() {
     return {
-      title: 'Catálogo',
+      title: 'Detalle de Ventas',
     }
   },
 }

@@ -6,6 +6,7 @@ export const state = () => ({
   filters: {},
   isLoading: false,
   totalCount: 0,
+  breadCrumbs: [],
 })
 
 export const mutations = {
@@ -17,6 +18,9 @@ export const mutations = {
   },
   SET_TOTAL_COUNT(state, payload) {
     state.totalCount = payload
+  },
+  SET_BREAD_CRUMBS(state, payload) {
+    state.breadCrumbs = payload
   },
 }
 
@@ -35,7 +39,7 @@ export const actions = {
   setTotalCount({ commit }, payload) {
     commit('SET_TOTAL_COUNT', payload)
   },
-  fetchCatalogData(context) {
+  fetchData(context) {
     context.commit('SET_LOADING_STATUS')
 
     const ctx = context
@@ -55,25 +59,8 @@ export const actions = {
 
     return store
   },
-  fetchSaleDocsData(context) {
-    context.commit('SET_LOADING_STATUS')
-
-    const ctx = context
-    const ax = this.$axios
-
-    async function load() {
-      return await ax
-        .get('linabi/saledocsm/', {
-          params: ctx.state.filters,
-        })
-        .then((response) => response.data)
-    }
-
-    const store = new CustomStore({ key: 'NUMDOC', load })
-
-    context.commit('SET_LOADING_STATUS')
-
-    return store
+  setBreadCrumbs({ commit }, payload) {
+    commit('SET_BREAD_CRUMBS', payload)
   },
 }
 
@@ -83,5 +70,8 @@ export const getters = {
   },
   getTotalCount(state) {
     return state.totalCount
+  },
+  getBreadCrumbs(state) {
+    return state.breadCrumbs
   },
 }

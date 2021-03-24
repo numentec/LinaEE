@@ -368,7 +368,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState } from 'vuex'
 
 export default {
   name: 'BaseFilters',
@@ -382,54 +382,63 @@ export default {
       type: Array,
       default: () => [{}],
     },
+    curstore: {
+      type: String,
+      default: '',
+    },
   },
 
-  data: () => ({
-    valid: true,
-    filters_to_apply: {
-      p01: '',
-      p02: '',
-      p03: '',
-      p04: '',
-      p05: '',
-      p06: '',
-      p07: '',
-      p08: '',
-      p09: '',
-      p10: '',
-      p11: false,
-      p12: '',
-      p13: '',
-      p14: '1',
-      p15: '',
-    },
-    items: [
-      { key: 'COT', descrip: 'Cotizaciones' },
-      { key: 'PEDCOT', descrip: 'Pedidos Cotizados' },
-      { key: 'PEDCONF', descrip: 'Pedidos Confirmados' },
-      { key: 'FAC', descrip: 'Facturas' },
-    ],
-    menuDate1: false,
-    menuDate2: false,
-    morefilters: false,
-    verify: '',
-    rules: {
-      required: (value) => !!value || 'Requerido.',
-    },
-  }),
+  data() {
+    this.$options.computed = {
+      ...this.$options.computed,
+      ...mapState(this.curstore, ['filter']),
+    }
+    return {
+      valid: true,
+      filters_to_apply: {
+        p01: '',
+        p02: '',
+        p03: '',
+        p04: '',
+        p05: '',
+        p06: '',
+        p07: '',
+        p08: '',
+        p09: '',
+        p10: '',
+        p11: 0,
+        p12: '',
+        p13: '',
+        p14: '1',
+        p15: '',
+      },
+      items: [
+        { key: 'COT', descrip: 'Cotizaciones' },
+        { key: 'PEDCOT', descrip: 'Pedidos Cotizados' },
+        { key: 'PEDCONF', descrip: 'Pedidos Confirmados' },
+        { key: 'FAC', descrip: 'Facturas' },
+      ],
+      menuDate1: false,
+      menuDate2: false,
+      morefilters: false,
+      verify: '',
+      rules: {
+        required: (value) => !!value || 'Requerido.',
+      },
+    }
+  },
   computed: {
-    ...mapState('linabi', ['filters']),
     periodDisabled() {
       return !this.filters_to_apply.p11
     },
   },
   mounted() {
     if (this.numvista === 16) {
-      this.filters_to_apply.p11 = true
+      this.filters_to_apply.p11 = 1
     }
   },
   methods: {
-    ...mapActions('linabi', ['setFilters']),
+    // ...mapActions('linabi/catalogo', ['setFilters']),
     reset() {
       this.$refs.basefilters_form.reset()
     },
@@ -437,7 +446,8 @@ export default {
       this.$emit('closeDialog', refresh)
     },
     setFiltersAndClose() {
-      this.setFilters(this.filters_to_apply)
+      this.$store.dispatch(this.curstore + '/setFilters', this.filters_to_apply)
+      // this.setFilters(this.filters_to_apply)
       this.closeDialog(true)
     },
   },

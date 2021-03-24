@@ -12,4 +12,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('catalog/', views.CatalogAPIView.as_view(), name='catalog'),
     path('saledocsm/', views.SaleDocsMAPIView.as_view(), name='saledocsm'),
+    path('saledocsd/', views.SaleDocsDAPIView.as_view(), name='saledocsd'),
 ]

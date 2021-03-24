@@ -64,7 +64,9 @@
                 <v-list-item-icon>
                   <v-icon>mdi-book-open-page-variant</v-icon>
                 </v-list-item-icon>
-                <v-list-item-title>Generar Catálogos</v-list-item-title>
+                <v-list-item-title @click.stop="loadDetails"
+                  >Ver Detalles</v-list-item-title
+                >
               </v-list-item>
               <v-list-group prepend-icon="mdi-table-cog" no-action>
                 <template v-slot:activator>
@@ -142,7 +144,7 @@
             </v-list>
           </v-menu>
           <v-spacer />
-          <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
+          <v-toolbar-title>Documentos de Ventas</v-toolbar-title>
           <v-spacer />
           <v-btn dark icon @click="showColumnChooser">
             <v-icon>mdi-table-column-plus-after</v-icon>
@@ -162,15 +164,6 @@
           :show-borders="true"
           :height="tableHeight"
         >
-          <DxColumn
-            width="200"
-            :allow-grouping="false"
-            data-field="REFERENCIA"
-            name="FOTO"
-            caption="Foto"
-            cell-template="imgCellTemplate"
-            :allow-header-filtering="false"
-          />
           <DxColumn
             v-for="xcol in colsConfig"
             :key="xcol.id"
@@ -207,23 +200,20 @@
           <DxHeaderFilter :visible="true" />
           <DxScrolling mode="virtual" />
           <DxPaging :page-size="100" />
-          <template #imgCellTemplate="{ data: cellData }">
-            <ImgForGrid :img-file="cellData" />
-          </template>
         </DxDataGrid>
       </div>
     </MaterialCard>
     <BaseFilters
       :dialog.sync="showBaseFilters"
-      :config="config.filter((e) => e.tipo == 'filter')"
-      :numvista="14"
-      curstore="linabi/catalogo"
+      :config="config.filter((el) => el.tipo == 'filter')"
+      :numvista="16"
+      curstore="linabi/saledocsm"
       @closeDialog="closeDialog"
     />
   </div>
 </template>
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import {
   DxDataGrid,
   DxColumn,
@@ -244,11 +234,8 @@ import 'jspdf-autotable'
 import ExcelJS from 'exceljs'
 import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
-// import axios from 'axios'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
-import ImgForGrid from '~/components/utilities/ImgForGrid'
-// import 'devextreme/data/odata/store'
 import LinaConfig from '~/linaconfig.js'
 
 const curGridRefKey = 'cur-grid'
@@ -323,11 +310,10 @@ export default {
     DxLoadPanel,
     MaterialCard,
     BaseFilters,
-    ImgForGrid,
   },
   async asyncData({ $axios, error }) {
     try {
-      const { data } = await $axios.get('vistas/14/')
+      const { data } = await $axios.get('vistas/16/')
       return {
         config: data.configs_x_vista,
       }
@@ -365,6 +351,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters('linabi/saledocsm', ['getFilters']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
@@ -373,7 +360,7 @@ export default {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/catalogo', [
+    ...mapActions('linabi/saledocsm', [
       'setFilters',
       'setTotalCount',
       'fetchData',
@@ -393,6 +380,18 @@ export default {
           // this.setTotalCount(store.length)
         })
       }
+    },
+    loadDetails() {
+      const selectedRows = this.curGrid.getSelectedRowKeys()
+      // this.$router.push({
+      //   path: '/linabi/saledocs/details',
+      //   query: { numdocs: selectedRows, tipodoc: this.getFilters.p15 },
+      // })
+      this.$router.push({
+        name: 'linabi-saledocs-details',
+        params: { numdocs: selectedRows, tipodoc: this.getFilters.p15 },
+      })
+      // this.$router.push({ path: '/linabi/saledocs/details/' + selectedRows })
     },
     onResize() {
       this.tableHeight =
@@ -414,18 +413,13 @@ export default {
 
       if (opc === 1) {
         const selectedRows = this.curGrid.getSelectedRowKeys()
-        // let i = 0
 
         selectedRows.forEach((rowKey) => {
           const imgfile = rowKey + LinaConfig.IMGEXT
           getImageForPDF(imgfile, ax).then((b64Img) => {
             const objKey = 'key' + rowKey
-            // const xf = [{ sku: objKey, img: b64Img }]
-            // fotos.concat(xf)
             // fotos.push({ sku: objKey, img: b64Img })
             fotos[objKey] = b64Img
-            // console.log('VALOR DE fotos en getImageForPDF:')
-            // console.log(fotos)
           })
         })
 
@@ -446,8 +440,8 @@ export default {
 
                 // console.log('VALOR DE fotos en options:')
                 // console.log(fotos)
-                // const { img } = fotos.find((obj) => obj.sku === objKey)
-                // const b64Img = img
+                // const imgitem = fotos.find((obj) => obj.sku === objKey).value
+                // const b64Img = imgitem.img
                 const b64Img = fotos[objKey]
                 // console.log('VALOR DE b64Img: ' + b64Img)
 
@@ -467,13 +461,13 @@ export default {
         exportDataGridToPdf(options).then(() => {
           // console.log('CONTENIDO DE fotos:')
           // console.log(fotos)
-          pdfDoc.save('Catalogo.pdf')
+          pdfDoc.save('Ventas.pdf')
         })
       }
 
       if (opc === 2) {
         const workbook = new ExcelJS.Workbook()
-        const worksheet = workbook.addWorksheet('Catalogo')
+        const worksheet = workbook.addWorksheet('Ventas')
 
         exportDataGridToExcel({
           component: this.curGrid,
@@ -505,7 +499,7 @@ export default {
             workbook.xlsx.writeBuffer().then((buffer) => {
               saveAs(
                 new Blob([buffer], { type: 'application/octet-stream' }),
-                'Catalog.xlsx'
+                'Ventas.xlsx'
               )
             })
           })
