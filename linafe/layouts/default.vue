@@ -4,7 +4,7 @@
     <CoreDrawer />
     <v-main>
       <v-container>
-        <nuxt />
+        <nuxt keep-alive :keep-alive-props="{ exclude: ['modal'] }" />
       </v-container>
     </v-main>
     <v-footer color="asgrey lighten-3" fixed app>

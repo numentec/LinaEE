@@ -1,219 +1,224 @@
 /* eslint-disable no-console */
 <template>
   <div>
-    <MaterialCard class="mt-10">
-      <template v-slot:heading>
-        <v-toolbar dense color="secondary" class="mx-1" dark flat>
-          <v-menu
-            v-model="menuFilter"
-            :close-on-content-click="false"
-            :nudge-width="150"
-            offset-y
+    <div>
+      <v-breadcrumbs :items="localBCItems"></v-breadcrumbs>
+    </div>
+    <div>
+      <MaterialCard class="mt-10">
+        <template v-slot:heading>
+          <v-toolbar dense color="secondary" class="mx-1" dark flat>
+            <v-menu
+              v-model="menuFilter"
+              :close-on-content-click="false"
+              :nudge-width="150"
+              offset-y
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn dark icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-dots-vertical</v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-cloud-download</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click.stop="showBaseFilters = true">
+                    Descargar Datos
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-table-cancel</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click.stop="clearData">
+                    Limpiar Datos
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-group prepend-icon="mdi-export" no-action>
+                  <template v-slot:activator>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Exportar</v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title @click.stop="exportGrid(2)">
+                        Excel
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>CSV</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title @click.stop="exportGrid(1)">
+                        PDF
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-group>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-book-open-page-variant</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click.stop="loadDetails"
+                    >Ver Detalles</v-list-item-title
+                  >
+                </v-list-item>
+                <v-list-group prepend-icon="mdi-table-cog" no-action>
+                  <template v-slot:activator>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Consulta</v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Guardar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Abrir</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Eliminar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-group>
+                <v-list-group prepend-icon="mdi-cog" no-action>
+                  <template v-slot:activator>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Configuración</v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                  <v-list-item-group
+                    v-model="showPanels"
+                    multiple
+                    active-class=""
+                  >
+                    <v-list-item>
+                      <template v-slot:default="{ active }">
+                        <v-list-item-action>
+                          <v-checkbox :input-value="active"></v-checkbox>
+                        </v-list-item-action>
+
+                        <v-list-item-content>
+                          <v-list-item-title>Panel Agrupar</v-list-item-title>
+                          <v-list-item-subtitle>
+                            Agrupar y búsqueda global
+                          </v-list-item-subtitle>
+                        </v-list-item-content>
+                      </template>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <template v-slot:default="{ active }">
+                        <v-list-item-action>
+                          <v-checkbox :input-value="active"></v-checkbox>
+                        </v-list-item-action>
+
+                        <v-list-item-content>
+                          <v-list-item-title>Filtro avanzado</v-list-item-title>
+                          <v-list-item-subtitle>
+                            Fila de filtros avanzados
+                          </v-list-item-subtitle>
+                        </v-list-item-content>
+                      </template>
+                    </v-list-item>
+                  </v-list-item-group>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Ajustes</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-group>
+              </v-list>
+            </v-menu>
+            <v-spacer />
+            <v-toolbar-title>Documentos de Ventas</v-toolbar-title>
+            <v-spacer />
+            <v-btn dark icon @click="showColumnChooser">
+              <v-icon>mdi-table-column-plus-after</v-icon>
+            </v-btn>
+          </v-toolbar>
+        </template>
+        <div ref="resizableDiv" v-resize="onResize">
+          <DxDataGrid
+            :ref="curGridRefKey"
+            class="ma-4"
+            :focused-row-enabled="true"
+            :data-source="dataSource"
+            :remote-operations="false"
+            :column-auto-width="true"
+            :allow-column-reordering="true"
+            :row-alternation-enabled="true"
+            :show-borders="true"
+            :height="tableHeight"
           >
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn dark icon v-bind="attrs" v-on="on">
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item link>
-                <v-list-item-icon>
-                  <v-icon>mdi-cloud-download</v-icon>
-                </v-list-item-icon>
-                <v-list-item-title @click.stop="showBaseFilters = true">
-                  Descargar Datos
-                </v-list-item-title>
-              </v-list-item>
-              <v-list-item link>
-                <v-list-item-icon>
-                  <v-icon>mdi-table-cancel</v-icon>
-                </v-list-item-icon>
-                <v-list-item-title @click.stop="clearData">
-                  Limpiar Datos
-                </v-list-item-title>
-              </v-list-item>
-              <v-list-group prepend-icon="mdi-export" no-action>
-                <template v-slot:activator>
-                  <v-list-item>
-                    <v-list-item-content>
-                      <v-list-item-title>Exportar</v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </template>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title @click.stop="exportGrid(2)">
-                      Excel
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title>CSV</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title @click.stop="exportGrid(1)">
-                      PDF
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list-group>
-              <v-list-item link>
-                <v-list-item-icon>
-                  <v-icon>mdi-book-open-page-variant</v-icon>
-                </v-list-item-icon>
-                <v-list-item-title @click.stop="loadDetails"
-                  >Ver Detalles</v-list-item-title
-                >
-              </v-list-item>
-              <v-list-group prepend-icon="mdi-table-cog" no-action>
-                <template v-slot:activator>
-                  <v-list-item>
-                    <v-list-item-content>
-                      <v-list-item-title>Consulta</v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </template>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title>Guardar</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title>Abrir</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title>Eliminar</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list-group>
-              <v-list-group prepend-icon="mdi-cog" no-action>
-                <template v-slot:activator>
-                  <v-list-item>
-                    <v-list-item-content>
-                      <v-list-item-title>Configuración</v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </template>
-                <v-list-item-group
-                  v-model="showPanels"
-                  multiple
-                  active-class=""
-                >
-                  <v-list-item>
-                    <template v-slot:default="{ active }">
-                      <v-list-item-action>
-                        <v-checkbox :input-value="active"></v-checkbox>
-                      </v-list-item-action>
-
-                      <v-list-item-content>
-                        <v-list-item-title>Panel Agrupar</v-list-item-title>
-                        <v-list-item-subtitle>
-                          Agrupar y búsqueda global
-                        </v-list-item-subtitle>
-                      </v-list-item-content>
-                    </template>
-                  </v-list-item>
-
-                  <v-list-item>
-                    <template v-slot:default="{ active }">
-                      <v-list-item-action>
-                        <v-checkbox :input-value="active"></v-checkbox>
-                      </v-list-item-action>
-
-                      <v-list-item-content>
-                        <v-list-item-title>Filtro avanzado</v-list-item-title>
-                        <v-list-item-subtitle>
-                          Fila de filtros avanzados
-                        </v-list-item-subtitle>
-                      </v-list-item-content>
-                    </template>
-                  </v-list-item>
-                </v-list-item-group>
-                <v-list-item link>
-                  <v-list-item-content>
-                    <v-list-item-title>Ajustes</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list-group>
-            </v-list>
-          </v-menu>
-          <v-spacer />
-          <v-toolbar-title>Documentos de Ventas</v-toolbar-title>
-          <v-spacer />
-          <v-btn dark icon @click="showColumnChooser">
-            <v-icon>mdi-table-column-plus-after</v-icon>
-          </v-btn>
-        </v-toolbar>
-      </template>
-      <div ref="resizableDiv" v-resize="onResize">
-        <DxDataGrid
-          :ref="curGridRefKey"
-          class="ma-4"
-          :focused-row-enabled="true"
-          :data-source="dataSource"
-          :remote-operations="false"
-          :column-auto-width="true"
-          :allow-column-reordering="true"
-          :row-alternation-enabled="true"
-          :show-borders="true"
-          :height="tableHeight"
-        >
-          <DxColumn
-            v-for="xcol in colsConfig"
-            :key="xcol.id"
-            :allow-grouping="xcol.configval7 == '1'"
-            :data-field="xcol.configkey"
-            :visible="xcol.configval2 == '1'"
-            :caption="xcol.configval3"
-            :data-type="xcol.configval4"
-            :format="xcol.configval5"
-            :alignment="xcol.configval6"
-          />
-          <DxSelection
-            select-all-mode="allPages"
-            show-check-boxes-mode="always"
-            mode="multiple"
-          />
-          <DxLoadPanel :enable="true" />
-          <DxGroupPanel
-            :visible="showPanels.includes(0)"
-            empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
-          />
-          <DxSearchPanel
-            :visible="showPanels.includes(0)"
-            :highlight-case-sensitive="true"
-          />
-          <DxColumnChooser
-            mode="select"
-            :allow-search="true"
-            :height="360"
-            title="Ver Columna"
-          />
-          <DxGrouping :auto-expand-all="false" />
-          <DxFilterRow :visible="showPanels.includes(1)" />
-          <DxHeaderFilter :visible="true" />
-          <DxScrolling mode="virtual" />
-          <DxPaging :page-size="100" />
-        </DxDataGrid>
-      </div>
-    </MaterialCard>
-    <BaseFilters
-      :dialog.sync="showBaseFilters"
-      :config="config.filter((el) => el.tipo == 'filter')"
-      :numvista="16"
-      curstore="linabi/saledocsm"
-      @closeDialog="closeDialog"
-    />
+            <DxColumn
+              v-for="xcol in colsConfig"
+              :key="xcol.id"
+              :allow-grouping="xcol.configval7 == '1'"
+              :data-field="xcol.configkey"
+              :visible="xcol.configval2 == '1'"
+              :caption="xcol.configval3"
+              :data-type="xcol.configval4"
+              :format="xcol.configval5"
+              :alignment="xcol.configval6"
+            />
+            <DxSelection
+              select-all-mode="allPages"
+              show-check-boxes-mode="always"
+              mode="multiple"
+            />
+            <DxLoadPanel :enable="true" />
+            <DxGroupPanel
+              :visible="showPanels.includes(0)"
+              empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
+            />
+            <DxSearchPanel
+              :visible="showPanels.includes(0)"
+              :highlight-case-sensitive="true"
+            />
+            <DxColumnChooser
+              mode="select"
+              :allow-search="true"
+              :height="360"
+              title="Ver Columna"
+            />
+            <DxGrouping :auto-expand-all="false" />
+            <DxFilterRow :visible="showPanels.includes(1)" />
+            <DxHeaderFilter :visible="true" />
+            <DxScrolling mode="virtual" />
+            <DxPaging :page-size="100" />
+          </DxDataGrid>
+        </div>
+      </MaterialCard>
+      <BaseFilters
+        :dialog.sync="showBaseFilters"
+        :config="config.filter((el) => el.tipo == 'filter')"
+        :numvista="16"
+        curstore="linabi/saledocsm"
+        @closeDialog="closeDialog"
+      />
+    </div>
   </div>
 </template>
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import {
   DxDataGrid,
   DxColumn,
@@ -332,6 +337,17 @@ export default {
     }
   },
   data() {
+    const localBreadCrumbsItems = [
+      {
+        text: 'DOCS VENTAS',
+        // disabled: false,
+        exact: true,
+        append: true,
+        replace: true,
+        to: '/linabi/saledocs',
+        nuxt: true,
+      },
+    ]
     return {
       curGridRefKey,
       dataSource: null,
@@ -348,13 +364,20 @@ export default {
           collapsed = true
         }
       },
+      localBCItems: localBreadCrumbsItems,
     }
   },
   computed: {
+    ...mapState('linabi/saledocsm', ['breadCrumbsItems']),
     ...mapGetters('linabi/saledocsm', ['getFilters']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
+  },
+  created() {
+    if (this.breadCrumbsItems.length) {
+      this.localBCItems = this.breadCrumbsItems.concat(this.localBCItems)
+    }
   },
   mounted() {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
@@ -383,15 +406,32 @@ export default {
     },
     loadDetails() {
       const selectedRows = this.curGrid.getSelectedRowKeys()
-      // this.$router.push({
-      //   path: '/linabi/saledocs/details',
-      //   query: { numdocs: selectedRows, tipodoc: this.getFilters.p15 },
-      // })
-      this.$router.push({
-        name: 'linabi-saledocs-details',
-        params: { numdocs: selectedRows, tipodoc: this.getFilters.p15 },
-      })
-      // this.$router.push({ path: '/linabi/saledocs/details/' + selectedRows })
+      this.menuFilter = false
+      if (selectedRows.length) {
+        const toBreadCrumbsItems = [
+          {
+            text: 'DETALLE DE VENTAS',
+            exact: true,
+            append: true,
+            replace: true,
+            to: '/linabi/saledocs/details',
+            nuxt: true,
+          },
+        ]
+        if (
+          !this.localBCItems.find((obj) => obj.text === 'DETALLE DE VENTAS')
+        ) {
+          this.localBCItems = this.localBCItems.concat(toBreadCrumbsItems)
+        }
+        this.$store.dispatch(
+          'linabi/saledocsd/setBreadCrumbsItems',
+          this.localBCItems
+        )
+        this.$router.push({
+          name: 'linabi-saledocs-details',
+          params: { numdocs: selectedRows, tipodoc: this.getFilters.p15 },
+        })
+      }
     },
     onResize() {
       this.tableHeight =

@@ -1,8 +1,11 @@
 <template>
-  <v-card class="mx-auto my-4" max-width="300" style="height: 100%">
-    <nuxt-link :to="fav.link">
-      <v-img :src="fav.image" height="200px"></v-img>
-    </nuxt-link>
+  <v-card
+    class="mx-auto my-4"
+    max-width="300"
+    style="height: 100%"
+    @click="goView"
+  >
+    <v-img :src="fav.image" height="200px"></v-img>
 
     <v-card-title>
       <v-badge :value="!fav.todos" color="warning" icon="mdi-account-star">
@@ -14,13 +17,13 @@
 
     <v-card-actions>
       <v-btn icon color="success"> <v-icon>mdi-pencil</v-icon> </v-btn>
-      <v-btn icon color="error" @click="onDelete(fav.id)">
+      <v-btn icon color="error" @click.stop="onDelete(fav.id)">
         <v-icon>mdi-trash-can</v-icon>
       </v-btn>
 
       <v-spacer></v-spacer>
 
-      <v-btn icon @click="descrip = !descrip">
+      <v-btn icon @click.stop="descrip = !descrip">
         <v-icon>{{ descrip ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
       </v-btn>
     </v-card-actions>
@@ -45,10 +48,24 @@ export default {
       type: Function,
       default: () => ({}),
     },
+    parentBreadCrumbs: {
+      type: Array,
+      default: () => [],
+    },
   },
   data: () => ({
     descrip: false,
   }),
+  methods: {
+    goView() {
+      this.$store.dispatch(
+        this.fav.vuextore + '/setBreadCrumbsItems',
+        this.parentBreadCrumbs
+      )
+      // this.$router.push({ path: this.fav.link })
+      this.$router.push({ name: this.fav.link, params: { clear: 'clear' } })
+    },
+  },
 }
 </script>
 

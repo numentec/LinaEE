@@ -1,5 +1,9 @@
+/* eslint-disable no-console */
 <template>
   <div>
+    <div>
+      <v-breadcrumbs :items="localBCItems"></v-breadcrumbs>
+    </div>
     <v-card
       class="d-flex align-content-start flex-wrap"
       flat
@@ -12,12 +16,14 @@
         class="pa-2"
         :on-delete="delFavorito"
         :fav="curfav"
+        :parent-bread-crumbs="localBCItems"
       />
     </v-card>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import FavoritoCard from '~/components/linabi/FavoritoCard.vue'
 
 export default {
@@ -45,8 +51,28 @@ export default {
     }
   },
   data() {
+    const localBreadCrumbsItems = [
+      {
+        text: 'FAVORITOS',
+        // disabled: false,
+        exact: true,
+        append: true,
+        replace: true,
+        to: '/linabi/favoritos',
+        nuxt: true,
+      },
+    ]
     return {
       favoritos: [],
+      localBCItems: localBreadCrumbsItems,
+    }
+  },
+  computed: {
+    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
+  },
+  created() {
+    if (this.breadCrumbsItems.length) {
+      this.localBCItems = this.breadCrumbsItems.concat(this.localBCItems)
     }
   },
   methods: {

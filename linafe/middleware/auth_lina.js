@@ -1,7 +1,6 @@
 export default function ({ $auth, store, redirect, route }) {
   if (!process.server) {
     const curuser = localStorage.getItem('curuser')
-
     if (curuser) {
       $auth.setUser(curuser)
       if (route.path.includes('/login')) {

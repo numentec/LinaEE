@@ -6,7 +6,7 @@ export const state = () => ({
   filters: {},
   isLoading: false,
   totalCount: 0,
-  breadCrumbs: [],
+  breadCrumbsItems: [],
 })
 
 export const mutations = {
@@ -19,8 +19,10 @@ export const mutations = {
   SET_TOTAL_COUNT(state, payload) {
     state.totalCount = payload
   },
-  SET_BREAD_CRUMBS(state, payload) {
-    state.breadCrumbs = payload
+  SET_BREAD_CRUMBS_ITEMS(state, payload) {
+    if (payload.length) {
+      state.breadCrumbsItems = payload
+    }
   },
 }
 
@@ -59,8 +61,8 @@ export const actions = {
 
     return store
   },
-  setBreadCrumbs({ commit }, payload) {
-    commit('SET_BREAD_CRUMBS', payload)
+  setBreadCrumbsItems({ commit }, payload) {
+    commit('SET_BREAD_CRUMBS_ITEMS', payload)
   },
 }
 
@@ -71,7 +73,7 @@ export const getters = {
   getTotalCount(state) {
     return state.totalCount
   },
-  getBreadCrumbs(state) {
-    return state.breadCrumbs
+  getBreadCrumbsItems(state) {
+    return state.breadCrumbsItems
   },
 }

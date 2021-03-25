@@ -26,6 +26,7 @@ class BIFavorito(Common):
     link = models.CharField("Enlace", max_length=200, unique=True)
     descrip = models.TextField("Descripción", blank = True)
     todos = models.BooleanField("Todos", default=True)
+    vuextore = models.CharField("Vuex Store", max_length=50, blank=True)
     image = models.ImageField('Imagen', upload_to='images/bifavoritos', \
          blank=True, default='images/bifavoritos/prev1.jpg')
 

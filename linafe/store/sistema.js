@@ -13,7 +13,7 @@ export const mutations = {
   },
   USER_LOGOUT() {
     localStorage.removeItem('curuser')
-    location.reload()
+    // location.reload()
   },
 }
 
@@ -43,5 +43,9 @@ export const actions = {
   async userLogout({ commit }) {
     await this.$auth.logout()
     commit('USER_LOGOUT')
+  },
+
+  setUserData({ commit }, payload) {
+    commit('SET_USER_DATA', payload)
   },
 }

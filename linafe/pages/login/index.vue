@@ -18,15 +18,16 @@ export default {
     },
   },
   mounted() {
-    const curuser = localStorage.getItem('curuser')
-
-    if (curuser) {
-      this.$auth.setUser(curuser)
-      this.$store.commit('sistema/SET_USER_DATA', curuser)
-      if (this.$nuxt.$route.name === 'login') {
-        this.$router.push('/')
-      }
-    }
+    // const curuser = localStorage.getItem('curuser')
+    // if (curuser) {
+    //   this.$store.dispatch('sistema/setUserData', curuser).then(() => {
+    //     if (this.$nuxt.$route.name === 'login') {
+    //       this.$router.push('/')
+    //     }
+    //   })
+    //   // this.$auth.setUser(curuser)
+    //   // this.$store.commit('sistema/SET_USER_DATA', curuser)
+    // }
   },
   head() {
     return {
