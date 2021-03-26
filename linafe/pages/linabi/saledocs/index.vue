@@ -2,10 +2,10 @@
 <template>
   <div>
     <div>
-      <v-breadcrumbs :items="localBCItems"></v-breadcrumbs>
+      <v-breadcrumbs class="mt-0" :items="localBCItems"></v-breadcrumbs>
     </div>
     <div>
-      <MaterialCard class="mt-10">
+      <MaterialCard class="mt-5">
         <template v-slot:heading>
           <v-toolbar dense color="secondary" class="mx-1" dark flat>
             <v-menu
@@ -105,7 +105,44 @@
                     </v-list-item>
                   </template>
                   <v-list-item-group
-                    v-model="showPanels"
+                    v-show="tab == 0"
+                    v-model="showPanels0"
+                    multiple
+                    active-class=""
+                  >
+                    <v-list-item>
+                      <template v-slot:default="{ active }">
+                        <v-list-item-action>
+                          <v-checkbox :input-value="active"></v-checkbox>
+                        </v-list-item-action>
+
+                        <v-list-item-content>
+                          <v-list-item-title>Panel Agrupar</v-list-item-title>
+                          <v-list-item-subtitle>
+                            Agrupar y búsqueda global
+                          </v-list-item-subtitle>
+                        </v-list-item-content>
+                      </template>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <template v-slot:default="{ active }">
+                        <v-list-item-action>
+                          <v-checkbox :input-value="active"></v-checkbox>
+                        </v-list-item-action>
+
+                        <v-list-item-content>
+                          <v-list-item-title>Filtro avanzado</v-list-item-title>
+                          <v-list-item-subtitle>
+                            Fila de filtros avanzados
+                          </v-list-item-subtitle>
+                        </v-list-item-content>
+                      </template>
+                    </v-list-item>
+                  </v-list-item-group>
+                  <v-list-item-group
+                    v-show="tab == 1"
+                    v-model="showPanels1"
                     multiple
                     active-class=""
                   >
@@ -156,60 +193,138 @@
           </v-toolbar>
         </template>
         <div ref="resizableDiv" v-resize="onResize">
-          <DxDataGrid
-            :ref="curGridRefKey"
-            class="ma-4"
-            :focused-row-enabled="true"
-            :data-source="dataSource"
-            :remote-operations="false"
-            :column-auto-width="true"
-            :allow-column-reordering="true"
-            :row-alternation-enabled="true"
-            :show-borders="true"
-            :height="tableHeight"
-          >
-            <DxColumn
-              v-for="xcol in colsConfig"
-              :key="xcol.id"
-              :allow-grouping="xcol.configval7 == '1'"
-              :data-field="xcol.configkey"
-              :visible="xcol.configval2 == '1'"
-              :caption="xcol.configval3"
-              :data-type="xcol.configval4"
-              :format="xcol.configval5"
-              :alignment="xcol.configval6"
-            />
-            <DxSelection
-              select-all-mode="allPages"
-              show-check-boxes-mode="always"
-              mode="multiple"
-            />
-            <DxLoadPanel :enable="true" />
-            <DxGroupPanel
-              :visible="showPanels.includes(0)"
-              empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
-            />
-            <DxSearchPanel
-              :visible="showPanels.includes(0)"
-              :highlight-case-sensitive="true"
-            />
-            <DxColumnChooser
-              mode="select"
-              :allow-search="true"
-              :height="360"
-              title="Ver Columna"
-            />
-            <DxGrouping :auto-expand-all="false" />
-            <DxFilterRow :visible="showPanels.includes(1)" />
-            <DxHeaderFilter :visible="true" />
-            <DxScrolling mode="virtual" />
-            <DxPaging :page-size="100" />
-          </DxDataGrid>
+          <v-tabs v-model="tab" vertical icons-and-text>
+            <v-tab key="tab0">
+              Lista
+              <v-icon left> mdi-format-list-checks </v-icon>
+            </v-tab>
+            <v-tab key="tab1">
+              Detalle
+              <v-icon left> mdi-ballot-outline </v-icon>
+            </v-tab>
+            <v-tabs-items v-model="tab">
+              <v-tab-item key="tab0">
+                <DxDataGrid
+                  :ref="curGridRefKey0"
+                  class="ma-4"
+                  :focused-row-enabled="true"
+                  :data-source="dataSource0"
+                  :remote-operations="false"
+                  :column-auto-width="true"
+                  :allow-column-reordering="true"
+                  :row-alternation-enabled="true"
+                  :show-borders="true"
+                  :height="tableHeight"
+                >
+                  <DxColumn
+                    v-for="xcol in colsConfig0"
+                    :key="xcol.id"
+                    :allow-grouping="xcol.configval7 == '1'"
+                    :data-field="xcol.configkey"
+                    :visible="xcol.configval2 == '1'"
+                    :caption="xcol.configval3"
+                    :data-type="xcol.configval4"
+                    :format="xcol.configval5"
+                    :alignment="xcol.configval6"
+                  />
+                  <DxSelection
+                    select-all-mode="allPages"
+                    show-check-boxes-mode="always"
+                    mode="multiple"
+                  />
+                  <DxLoadPanel :enable="true" />
+                  <DxGroupPanel
+                    :visible="showPanels0.includes(0)"
+                    empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
+                  />
+                  <DxSearchPanel
+                    :visible="showPanels0.includes(0)"
+                    :highlight-case-sensitive="true"
+                  />
+                  <DxColumnChooser
+                    mode="select"
+                    :allow-search="true"
+                    :height="360"
+                    title="Ver Columna"
+                  />
+                  <DxGrouping :auto-expand-all="false" />
+                  <DxFilterRow :visible="showPanels0.includes(1)" />
+                  <DxHeaderFilter :visible="true" />
+                  <DxScrolling mode="virtual" />
+                  <DxPaging :page-size="100" />
+                </DxDataGrid>
+              </v-tab-item>
+              <v-tab-item key="tab1">
+                <DxDataGrid
+                  :ref="curGridRefKey1"
+                  class="ma-4"
+                  :focused-row-enabled="true"
+                  :data-source="dataSource1"
+                  :remote-operations="false"
+                  :column-auto-width="true"
+                  :allow-column-reordering="true"
+                  :row-alternation-enabled="true"
+                  :show-borders="true"
+                  :height="tableHeight"
+                >
+                  <DxColumn
+                    width="200"
+                    :allow-grouping="false"
+                    data-field="REFERENCIA"
+                    name="FOTO"
+                    caption="Foto"
+                    cell-template="imgCellTemplate"
+                    :allow-header-filtering="false"
+                  />
+                  <DxColumn
+                    v-for="xcol in colsConfig1"
+                    :key="xcol.id"
+                    :allow-grouping="xcol.configval7 == '1'"
+                    :data-field="xcol.configkey"
+                    :visible="xcol.configval2 == '1'"
+                    :caption="xcol.configval3"
+                    :data-type="xcol.configval4"
+                    :format="xcol.configval5"
+                    :alignment="xcol.configval6"
+                  />
+                  <DxSelection
+                    select-all-mode="allPages"
+                    show-check-boxes-mode="always"
+                    mode="multiple"
+                  />
+                  <DxLoadPanel :enable="true" />
+                  <DxGroupPanel
+                    :visible="showPanels1.includes(0)"
+                    empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
+                  />
+                  <DxSearchPanel
+                    :visible="showPanels1.includes(0)"
+                    :highlight-case-sensitive="true"
+                  />
+                  <DxColumnChooser
+                    ref="chooser1"
+                    mode="select"
+                    :allow-search="true"
+                    :height="360"
+                    title="Ver Columna"
+                  />
+                  <DxGrouping :auto-expand-all="false" />
+                  <DxFilterRow :visible="showPanels1.includes(1)" />
+                  <DxHeaderFilter :visible="true" />
+                  <DxScrolling mode="virtual" />
+                  <DxPaging :page-size="100" />
+                  <template #imgCellTemplate="{ data: cellData }">
+                    <ImgForGrid :img-file="cellData" />
+                  </template>
+                </DxDataGrid>
+              </v-tab-item>
+            </v-tabs-items>
+          </v-tabs>
         </div>
       </MaterialCard>
       <BaseFilters
         :dialog.sync="showBaseFilters"
-        :config="config.filter((el) => el.tipo == 'filter')"
+        :config="config0.filter((el) => el.tipo == 'filter')"
         :numvista="16"
         curstore="linabi/saledocsm"
         @closeDialog="closeDialog"
@@ -243,7 +358,8 @@ import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import LinaConfig from '~/linaconfig.js'
 
-const curGridRefKey = 'cur-grid'
+const curGridRefKey0 = 'cur-grid1'
+const curGridRefKey1 = 'cur-grid2'
 let collapsed = false
 // const fotos = []
 const fotos = {}
@@ -316,11 +432,16 @@ export default {
     MaterialCard,
     BaseFilters,
   },
+
   async asyncData({ $axios, error }) {
     try {
-      const { data } = await $axios.get('vistas/16/')
+      const [conf0, conf1] = await Promise.all([
+        $axios.get('vistas/16/'),
+        $axios.get('vistas/17/'),
+      ])
       return {
-        config: data.configs_x_vista,
+        config0: conf0.data.configs_x_vista,
+        config1: conf1.data.configs_x_vista,
       }
     } catch (err) {
       if (err.response) {
@@ -349,11 +470,15 @@ export default {
       },
     ]
     return {
-      curGridRefKey,
-      dataSource: null,
-      showPanels: [],
-      colsConfig: [],
-      testVisible: false,
+      tab: 0,
+      curGridRefKey0,
+      curGridRefKey1,
+      dataSource0: null,
+      dataSource1: null,
+      showPanels0: [],
+      showPanels1: [],
+      colsConfig0: [],
+      colsConfig1: [],
       menuFilter: false,
       radioGroup: '1',
       showBaseFilters: false,
@@ -370,8 +495,11 @@ export default {
   computed: {
     ...mapState('linabi/saledocsm', ['breadCrumbsItems']),
     ...mapGetters('linabi/saledocsm', ['getFilters']),
-    curGrid() {
-      return this.$refs[curGridRefKey].instance
+    curGrid0() {
+      return this.$refs[curGridRefKey0].instance
+    },
+    curGrid1() {
+      return this.$refs[curGridRefKey1].instance
     },
   },
   created() {
@@ -380,57 +508,52 @@ export default {
     }
   },
   mounted() {
-    this.colsConfig = this.config.filter((e) => e.tipo === 'col')
+    this.colsConfig0 = this.config0.filter((e) => e.tipo === 'col')
+    this.colsConfig1 = this.config1.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/saledocsm', [
+    ...mapActions('linabi/saledocsm/', [
       'setFilters',
       'setTotalCount',
       'fetchData',
     ]),
+    ...mapActions({
+      setFiltersDetails: 'linabi/saledocsd/setFilters',
+      fetchDataDetails: 'linabi/saledocsd/fetchData',
+    }),
     clearData() {
-      this.dataSource = null
+      this.dataSource0 = null
+      this.dataSource1 = null
       this.menuFilter = false
     },
     showColumnChooser() {
-      this.curGrid.showColumnChooser()
+      if (this.tab === 0) {
+        this.curGrid0.showColumnChooser()
+      } else {
+        this.curGrid1.showColumnChooser()
+      }
     },
     closeDialog(refresh) {
       this.showBaseFilters = false
       if (refresh) {
         this.fetchData().then((store) => {
-          this.dataSource = store
+          this.dataSource0 = store
           // this.setTotalCount(store.length)
         })
       }
     },
     loadDetails() {
-      const selectedRows = this.curGrid.getSelectedRowKeys()
+      const selectedRows = this.curGrid0.getSelectedRowKeys()
       this.menuFilter = false
       if (selectedRows.length) {
-        const toBreadCrumbsItems = [
-          {
-            text: 'DETALLE DE VENTAS',
-            exact: true,
-            append: true,
-            replace: true,
-            to: '/linabi/saledocs/details',
-            nuxt: true,
-          },
-        ]
-        if (
-          !this.localBCItems.find((obj) => obj.text === 'DETALLE DE VENTAS')
-        ) {
-          this.localBCItems = this.localBCItems.concat(toBreadCrumbsItems)
-        }
-        this.$store.dispatch(
-          'linabi/saledocsd/setBreadCrumbsItems',
-          this.localBCItems
-        )
-        this.$router.push({
-          name: 'linabi-saledocs-details',
-          params: { numdocs: selectedRows, tipodoc: this.getFilters.p15 },
+        const numdocs = selectedRows.toString()
+        const tipodoc = this.getFilters.p15
+
+        this.setFiltersDetails({ p01: numdocs, p15: tipodoc })
+        this.fetchDataDetails().then((store) => {
+          this.dataSource1 = store
         })
+        this.tab = 1
       }
     },
     onResize() {
@@ -452,7 +575,7 @@ export default {
       })
 
       if (opc === 1) {
-        const selectedRows = this.curGrid.getSelectedRowKeys()
+        const selectedRows = this.curGrid0.getSelectedRowKeys()
 
         selectedRows.forEach((rowKey) => {
           const imgfile = rowKey + LinaConfig.IMGEXT
@@ -469,7 +592,7 @@ export default {
         })
 
         const options = {
-          component: this.curGrid,
+          component: this.curGrid0,
           jsPDFDocument: pdfDoc,
           selectedRowsOnly: true,
           customizeCell: ({ pdfCell, gridCell }) => {
@@ -510,7 +633,7 @@ export default {
         const worksheet = workbook.addWorksheet('Ventas')
 
         exportDataGridToExcel({
-          component: this.curGrid,
+          component: this.curGrid0,
           worksheet,
           autoFilterEnabled: true,
           selectedRowsOnly: true,
