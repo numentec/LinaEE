@@ -2,7 +2,7 @@
 <template>
   <div>
     <div>
-      <v-breadcrumbs :items="localBCItems"></v-breadcrumbs>
+      <v-breadcrumbs :items="breadCrumbsItems"></v-breadcrumbs>
     </div>
     <div>
       <MaterialCard class="mt-10">
@@ -393,38 +393,16 @@ export default {
     }
   },
   computed: {
-    ...mapState('linabi/saledocsd', ['breadCrumbsItems']),
+    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
   },
-  created() {
-    if (this.breadCrumbsItems.length) {
-      this.localBCItems = this.breadCrumbsItems.concat(defaultBCItem)
-    }
-  },
+  created() {},
   mounted() {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
   },
-  activated() {
-    const clear = this.$route.params.clear
-
-    if (clear) {
-      this.localBCItems = this.breadCrumbsItems
-      this.clearData()
-    } else {
-      if (this.breadCrumbsItems.length) {
-        if (
-          this.breadCrumbsItems.find((obj) => obj.text === 'DETALLE DE VENTAS')
-        ) {
-          this.localBCItems = this.breadCrumbsItems
-        } else {
-          this.localBCItems = this.breadCrumbsItems.concat(this.localBCItems)
-        }
-      }
-      this.$fetch()
-    }
-  },
+  activated() {},
   methods: {
     ...mapActions('linabi/saledocsd', [
       'setFilters',

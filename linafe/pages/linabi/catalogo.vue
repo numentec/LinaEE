@@ -2,7 +2,7 @@
 <template>
   <div>
     <div>
-      <v-breadcrumbs :items="localBCItems"></v-breadcrumbs>
+      <v-breadcrumbs :items="breadCrumbsItems"></v-breadcrumbs>
     </div>
     <div>
       <MaterialCard class="mt-5">
@@ -351,14 +351,6 @@ export default {
     }
   },
   data() {
-    const localBreadCrumbsItems = [
-      {
-        text: 'CATALOGO',
-        disabled: false,
-        to: '/linabi/catalogo',
-        nuxt: true,
-      },
-    ]
     return {
       curGridRefKey,
       dataSource: null,
@@ -375,22 +367,15 @@ export default {
           collapsed = true
         }
       },
-      localBCItems: localBreadCrumbsItems,
     }
   },
   computed: {
-    ...mapState('linabi/catalogo', ['breadCrumbsItems']),
+    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
   },
-  created() {
-    if (this.breadCrumbsItems.length) {
-      // console.log('ENTRO A SETEAR NUEVO BREADCRUMBS')
-      // console.log(this.breadCrumbsItems.length)
-      this.localBCItems = this.breadCrumbsItems.concat(this.localBCItems)
-    }
-  },
+  created() {},
   mounted() {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
   },

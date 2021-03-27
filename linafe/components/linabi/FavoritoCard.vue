@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <v-card
     class="mx-auto my-4"
@@ -16,7 +17,9 @@
     <v-card-subtitle>Usuario: {{ fav.created_by }}</v-card-subtitle>
 
     <v-card-actions>
-      <v-btn icon color="success"> <v-icon>mdi-pencil</v-icon> </v-btn>
+      <v-btn icon color="success" @click.stop="onEdit(fav.id)">
+        <v-icon>mdi-pencil</v-icon>
+      </v-btn>
       <v-btn icon color="error" @click.stop="onDelete(fav.id)">
         <v-icon>mdi-trash-can</v-icon>
       </v-btn>
@@ -48,9 +51,9 @@ export default {
       type: Function,
       default: () => ({}),
     },
-    parentBreadCrumbs: {
-      type: Array,
-      default: () => [],
+    onEdit: {
+      type: Function,
+      default: () => ({}),
     },
   },
   data: () => ({
@@ -58,12 +61,29 @@ export default {
   }),
   methods: {
     goView() {
+      const curBreadCrumbs = [
+        {
+          text: 'FAVORITOS',
+          exact: true,
+          append: true,
+          replace: true,
+          to: '/linabi/favoritos',
+          nuxt: true,
+        },
+        {
+          text: this.fav.name.toUpperCase(),
+          exact: true,
+          append: true,
+          replace: true,
+          to: this.fav.link,
+          nuxt: true,
+        },
+      ]
       this.$store.dispatch(
-        this.fav.vuextore + '/setBreadCrumbsItems',
-        this.parentBreadCrumbs
+        'linabi/favoritos/setBreadCrumbsItems',
+        curBreadCrumbs
       )
-      // this.$router.push({ path: this.fav.link })
-      this.$router.push({ name: this.fav.link, params: { clear: 'clear' } })
+      this.$router.push(this.fav.link)
     },
   },
 }

@@ -8,6 +8,7 @@
 
 <script>
 export default {
+  name: 'Login',
   layout: 'login',
   components: {
     UserLogin: () => import('~/components/core/UserLogin.vue'),

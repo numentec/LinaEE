@@ -2,7 +2,7 @@
 <template>
   <div>
     <div>
-      <v-breadcrumbs class="mt-0" :items="localBCItems"></v-breadcrumbs>
+      <v-breadcrumbs class="mt-0" :items="breadCrumbsItems"></v-breadcrumbs>
     </div>
     <div>
       <MaterialCard class="mt-5">
@@ -416,6 +416,7 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
 }
 
 export default {
+  name: 'SaleDocs',
   components: {
     DxDataGrid,
     DxColumn,
@@ -493,8 +494,8 @@ export default {
     }
   },
   computed: {
-    ...mapState('linabi/saledocsm', ['breadCrumbsItems']),
     ...mapGetters('linabi/saledocsm', ['getFilters']),
+    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     curGrid0() {
       return this.$refs[curGridRefKey0].instance
     },
@@ -502,11 +503,7 @@ export default {
       return this.$refs[curGridRefKey1].instance
     },
   },
-  created() {
-    if (this.breadCrumbsItems.length) {
-      this.localBCItems = this.breadCrumbsItems.concat(this.localBCItems)
-    }
-  },
+  created() {},
   mounted() {
     this.colsConfig0 = this.config0.filter((e) => e.tipo === 'col')
     this.colsConfig1 = this.config1.filter((e) => e.tipo === 'col')
@@ -522,8 +519,13 @@ export default {
       fetchDataDetails: 'linabi/saledocsd/fetchData',
     }),
     clearData() {
-      this.dataSource0 = null
-      this.dataSource1 = null
+      if (this.tab === 1) {
+        this.dataSource1 = null
+      } else {
+        this.dataSource0 = null
+        this.dataSource1 = null
+      }
+
       this.menuFilter = false
     },
     showColumnChooser() {
@@ -563,6 +565,9 @@ export default {
         82
     },
     exportGrid(opc) {
+      let curComponent
+      let curNameDoc
+
       const PromiseArray = []
 
       const ax = this.$axios.create({
@@ -573,6 +578,14 @@ export default {
           },
         },
       })
+
+      if (this.tab === 0) {
+        curComponent = this.curGrid0
+        curNameDoc = 'Ventas'
+      } else {
+        curComponent = this.curGrid1
+        curNameDoc = 'Ventas_Detalle'
+      }
 
       if (opc === 1) {
         const selectedRows = this.curGrid0.getSelectedRowKeys()
@@ -592,7 +605,7 @@ export default {
         })
 
         const options = {
-          component: this.curGrid0,
+          component: curComponent,
           jsPDFDocument: pdfDoc,
           selectedRowsOnly: true,
           customizeCell: ({ pdfCell, gridCell }) => {
@@ -624,16 +637,16 @@ export default {
         exportDataGridToPdf(options).then(() => {
           // console.log('CONTENIDO DE fotos:')
           // console.log(fotos)
-          pdfDoc.save('Ventas.pdf')
+          pdfDoc.save(`${curNameDoc}.pdf`)
         })
       }
 
       if (opc === 2) {
         const workbook = new ExcelJS.Workbook()
-        const worksheet = workbook.addWorksheet('Ventas')
+        const worksheet = workbook.addWorksheet(curNameDoc)
 
         exportDataGridToExcel({
-          component: this.curGrid0,
+          component: curComponent,
           worksheet,
           autoFilterEnabled: true,
           selectedRowsOnly: true,
@@ -662,7 +675,7 @@ export default {
             workbook.xlsx.writeBuffer().then((buffer) => {
               saveAs(
                 new Blob([buffer], { type: 'application/octet-stream' }),
-                'Ventas.xlsx'
+                `${curNameDoc}.xlsx`
               )
             })
           })
@@ -672,7 +685,7 @@ export default {
   },
   head() {
     return {
-      title: 'Catálogo',
+      title: 'Docs Ventas',
     }
   },
 }

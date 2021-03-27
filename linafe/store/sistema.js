@@ -15,28 +15,31 @@ export const mutations = {
     localStorage.removeItem('curuser')
     // location.reload()
   },
+  SET_ERROR(state, payload) {
+    state.error = payload
+  },
 }
 
 export const actions = {
   async userLogin({ commit }, credentials) {
-    try {
-      await this.$auth
-        .loginWith('local', {
-          data: credentials,
-        })
-        .then(({ data }) => {
-          commit('SET_USER_DATA', data.user)
-        })
-    } catch (err) {
-      this.error = err.response.data.message
-    }
+    await this.$auth
+      .loginWith('local', {
+        data: credentials,
+      })
+      .then(({ data }) => {
+        commit('SET_USER_DATA', data.user)
+        commit('SET_ERROR', null)
+      })
+      .catch((err) => {
+        commit('SET_ERROR', err.response.data.non_field_errors[0])
+      })
   },
 
   async registerUser({ commit, error }, userdata) {
     try {
       await this.$axios.$post('user_register/', userdata)
     } catch (err) {
-      this.error = err.response.data.message
+      commit('SET_ERROR', err.response.data.message)
     }
   },
 
@@ -47,5 +50,9 @@ export const actions = {
 
   setUserData({ commit }, payload) {
     commit('SET_USER_DATA', payload)
+  },
+
+  setError({ commit }, payload) {
+    commit('SET_ERROR', payload)
   },
 }

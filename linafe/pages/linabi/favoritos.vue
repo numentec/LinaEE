@@ -2,7 +2,7 @@
 <template>
   <div>
     <div>
-      <v-breadcrumbs :items="localBCItems"></v-breadcrumbs>
+      <v-breadcrumbs :items="breadCrumbsItems"></v-breadcrumbs>
     </div>
     <v-card
       class="d-flex align-content-start flex-wrap"
@@ -15,10 +15,18 @@
         :key="curfav.id"
         class="pa-2"
         :on-delete="delFavorito"
+        :on-edit="editFavorito"
         :fav="curfav"
-        :parent-bread-crumbs="localBCItems"
       />
     </v-card>
+    <v-snackbar v-model="snackbar" timeout="2000">
+      No implementado
+      <template v-slot:action="{ attrs }">
+        <v-btn color="blue" text v-bind="attrs" @click="snackbar = false">
+          Cerrar
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -51,10 +59,18 @@ export default {
     }
   },
   data() {
-    const localBreadCrumbsItems = [
+    return {
+      favoritos: [],
+      snackbar: false,
+    }
+  },
+  computed: {
+    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
+  },
+  created() {
+    const defaultBC = [
       {
         text: 'FAVORITOS',
-        // disabled: false,
         exact: true,
         append: true,
         replace: true,
@@ -62,22 +78,14 @@ export default {
         nuxt: true,
       },
     ]
-    return {
-      favoritos: [],
-      localBCItems: localBreadCrumbsItems,
-    }
-  },
-  computed: {
-    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
-  },
-  created() {
-    if (this.breadCrumbsItems.length) {
-      this.localBCItems = this.breadCrumbsItems.concat(this.localBCItems)
-    }
+    this.$store.dispatch('linabi/favoritos/setBreadCrumbsItems', defaultBC)
   },
   methods: {
     delFavorito(favid) {
-      alert(favid)
+      this.snackbar = true
+    },
+    editFavorito(favid) {
+      this.snackbar = true
     },
   },
   head() {

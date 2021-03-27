@@ -1,7 +1,18 @@
 <template>
   <client-only>
     <div>
-      <v-alert v-if="error" type="error" dense>{{ error }}</v-alert>
+      <v-alert
+        v-show="error"
+        type="error"
+        text
+        outlined
+        border="left"
+        dismissible
+        dense
+        icon="mdi-account-alert"
+      >
+        {{ error }}
+      </v-alert>
       <v-card max-width="400" class="mx-auto mt-16">
         <LinaLogo logosize="xstr" class="text-center logo_stack" />
         <v-card-text>
@@ -69,6 +80,8 @@
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex'
+
 export default {
   name: 'UserLogin',
   components: {
@@ -78,23 +91,23 @@ export default {
 
   data: () => ({
     valid: true,
-
     login: {
       username: '',
       password: '',
     },
     database: '',
     verify: '',
-    error: null,
-
     show1: false,
     rules: {
       required: (value) => !!value || 'Requerido.',
       min: (v) => (v && v.length >= 8) || 'Min 8 caracteres',
     },
   }),
-  computed: {},
+  computed: {
+    ...mapState('sistema', ['error']),
+  },
   methods: {
+    ...mapActions('sistema', ['setError']),
     reset() {
       this.$refs.login_form.reset()
     },
@@ -105,14 +118,9 @@ export default {
 
     async userLogin() {
       if (this.$refs.login_form.validate()) {
-        await this.$store
-          .dispatch('sistema/userLogin', this.login)
-          .then(() => {
-            this.$router.push('/')
-          })
-          .catch((err) => {
-            this.error = err.response.data.message
-          })
+        await this.$store.dispatch('sistema/userLogin', this.login).then(() => {
+          this.$router.push('/')
+        })
       }
     },
   },
