@@ -377,6 +377,10 @@ export default {
     }),
   },
 
+  mounted() {
+    this.setIsExpanded(false)
+  },
+
   methods: {
     ...mapActions('core', ['SetDrawer', 'setIsExpanded']),
     ...mapActions('sistema', ['userLogout']),

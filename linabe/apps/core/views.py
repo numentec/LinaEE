@@ -56,6 +56,11 @@ class LinaAuthToken(ObtainAuthToken):
 
         perms = {p: p in user_permissions for p in min_permissions}
 
+        if user.foto and hasattr(user.foto, 'url') :
+            ufoto = user.foto.url
+        else:
+            ufoto = ''
+
         return Response({
             'token': token.key,
             'user': {
@@ -65,6 +70,7 @@ class LinaAuthToken(ObtainAuthToken):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'fullname': fullname,
+                'foto': ufoto,
                 'perms': perms
             }
         })

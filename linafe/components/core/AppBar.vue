@@ -21,7 +21,8 @@
               v-bind="attrs"
               v-on="{ ...tooltip, ...menu }"
             >
-              <v-icon dark>mdi-account-circle</v-icon>
+              <img v-if="loggedInUser.foto" :src="imgSrc" alt="U" />
+              <v-icon v-else dark>mdi-account-circle</v-icon>
             </v-avatar>
           </template>
           <span>{{ loggedInUser.username }}</span>
@@ -45,6 +46,7 @@
 import { mapState, mapActions, mapGetters } from 'vuex'
 // Components
 import { VHover, VListItem } from 'vuetify/lib'
+import LinaConfig from '~/linaconfig.js'
 // import { authComputed } from '~/store/core.js'
 
 export default {
@@ -90,6 +92,10 @@ export default {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
     ...mapState('sistema', ['curuser']),
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
+    imgSrc() {
+      // return process.env.IMGBASEURL + this.imgFile.value + process.env.IMGEXT
+      return LinaConfig.PUBLIC_URL + this.loggedInUser.foto
+    },
   },
 
   methods: {

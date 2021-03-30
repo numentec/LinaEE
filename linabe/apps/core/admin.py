@@ -13,8 +13,9 @@ class CiaAdmin(admin.ModelAdmin):
 class UserAdminx(UserAdmin):
     """User admin."""
 
-    list_display = ('pk', 'username', 'email',)
+    list_display = ('pk', 'username', 'email', 'birth_date', 'foto')
     list_display_links = ('pk', 'username', 'email',)
+    list_editable = ('birth_date', 'foto')
 
     search_fields = (
         'username',
@@ -82,9 +83,9 @@ class VistaConfigAdmin(admin.ModelAdmin):
 
 
 class VistaConfigUserAdmin(admin.ModelAdmin):
-    llist_display = (
+    list_display = (
         'id',
-        'user.username',
+        'user',
         'vista',
         'configkey',
         'configval1',

@@ -64,7 +64,7 @@ class User(AbstractUser):
     nombre_corto = models.CharField('Nombre Corto', max_length=10, blank=True, 
                                         help_text='(Display name) Dejar en blanco para autogenerar')
     localization = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
-    foto = models.ImageField('Foto', upload_to='images/profiles', blank=True, default='images/profiles/no_image_user.png')
+    foto = models.ImageField('Foto', upload_to='images/profiles', blank=True, null=True, default='images/profiles/no_image_user.png')
     birth_date = models.DateField('Fecha de Nacimiento', blank=True, null=True)
     cia = models.ForeignKey(Cia, blank=True, null=True, verbose_name='Cia Predeterminada',
                                  on_delete=models.SET_NULL, related_name='users_x_cia')

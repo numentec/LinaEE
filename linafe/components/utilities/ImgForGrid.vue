@@ -28,7 +28,7 @@ export default {
   data() {
     return {
       // lazySrc: process.env.SERVER_URL_CLIENT + '/media/images/nophoto_sm.png',
-      lazySrc: LinaConfig.PUBLIC_URL + 'media/images/nophoto_sm.png',
+      lazySrc: LinaConfig.PUBLIC_URL + '/media/images/nophoto_sm.png',
     }
   },
   computed: {
