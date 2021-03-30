@@ -17,6 +17,7 @@
 
 <script>
 export default {
+  name: 'Reportes',
   data() {
     return {
       page_name: 'page',
