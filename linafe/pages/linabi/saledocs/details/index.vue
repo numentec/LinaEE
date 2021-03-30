@@ -64,12 +64,6 @@
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
-                <v-list-item link>
-                  <v-list-item-icon>
-                    <v-icon>mdi-book-open-page-variant</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title>Generar Catálogos</v-list-item-title>
-                </v-list-item>
                 <v-list-group prepend-icon="mdi-table-cog" no-action>
                   <template v-slot:activator>
                     <v-list-item>
@@ -169,7 +163,7 @@
             <DxColumn
               width="200"
               :allow-grouping="false"
-              data-field="REFERENCIA"
+              data-field="SKU"
               name="FOTO"
               caption="Foto"
               cell-template="imgCellTemplate"
@@ -220,7 +214,7 @@
       <BaseFilters
         :dialog.sync="showBaseFilters"
         :config="config.filter((el) => el.tipo == 'filter')"
-        :numvista="17"
+        :numvista="18"
         curstore="linabi/saledocsd"
         @closeDialog="closeDialog"
       />
@@ -354,7 +348,7 @@ export default {
   fetchOnServer: false,
   async asyncData({ $axios, error }) {
     try {
-      const { data } = await $axios.get('vistas/17/')
+      const { data } = await $axios.get('vistas/18/')
       return {
         config: data.configs_x_vista,
       }
@@ -404,7 +398,7 @@ export default {
   },
   activated() {},
   methods: {
-    ...mapActions('linabi/saledocsd', [
+    ...mapActions('linabi/salesdetail', [
       'setFilters',
       'setTotalCount',
       'fetchData',
@@ -438,7 +432,7 @@ export default {
       const PromiseArray = []
 
       const ax = this.$axios.create({
-        baseURL: LinaConfig.IMGBASEPATH,
+        baseURL: LinaConfig.IMGBASEURL,
         headers: {
           common: {
             Accept: 'text/plain, */*',

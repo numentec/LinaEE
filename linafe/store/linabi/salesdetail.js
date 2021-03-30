@@ -49,13 +49,13 @@ export const actions = {
 
     async function load() {
       return await ax
-        .get('linabi/catalog/', {
+        .get('linabi/salesdetail/', {
           params: ctx.state.filters,
         })
         .then((response) => response.data)
     }
 
-    const store = new CustomStore({ key: 'SKU', load })
+    const store = new CustomStore({ key: 'ID', load })
 
     context.commit('SET_LOADING_STATUS')
 

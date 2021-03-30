@@ -85,7 +85,7 @@ services:
     - USER=${ODOODB_USER}
     - PASSWORD=${ODOODB_PASSWORD}
     volumes:
-      - odoo-web-data:/var/lib/odoo
+      - /home/numen/odoo14/webdata:/var/lib/odoo
       - /home/numen/odoo14/config:/etc/odoo
       - /home/numen/odoo14/extra-addons:/mnt/extra-addons
       - /home/numen/odoo14/numen-addons:/mnt/numen-addons
@@ -108,7 +108,7 @@ services:
       - POSTGRES_USER=${ODOODB_USER}
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - odoo-db-data:/var/lib/postgresql/data/pgdata
+      - /home/numen/odoo14/dbdata:/var/lib/postgresql/data/pgdata
     networks:
       net:
         ipv4_address: 192.168.15.6
@@ -189,9 +189,9 @@ services:
         - odooweb
     restart: unless-stopped
 
-volumes:
-  odoo-db-data:
-  odoo-web-data:
+# volumes:
+#   odoo-db-data:
+#   odoo-web-data:
 
 networks:
   net:

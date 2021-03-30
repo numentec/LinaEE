@@ -12,7 +12,7 @@ from ..core.views import CommonViewSet
 
 class ListAsQuerySet(list):
     """Convertir una lista a queryset"""
-    def __init__(self, *args, model, **kwargs):
+    def __init__(self, model, *args, **kwargs):
         self.model = model
         super().__init__(*args, **kwargs)
 
@@ -164,8 +164,45 @@ class SaleDocsDAPIView(APIView):
 
     def get(self, request, format=None):
         # p01 - Lista con los números de documentos a consultar
-        # p02 - Lista de SKUs
-        # p03 - Lista de Marcas
+        # p15 - Tipo de documento: Cotización (COT), Pedido cotizado (PEDCOT), pedido confirmado (PEDCONF), factura (FAC)
+        
+        p01 = str(request.query_params.get('p01', '0')).lower()
+        p15 = str(request.query_params.get('p15', 'COT'))
+
+        pvals = p01 + p15
+
+        if pvals == '0COT':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        params = [p01, p15]
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINA_QRYSALEDOCSD', params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class SalesDetailAPIView(APIView):
+    """Detalle de ventas"""
+
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - Lista de SKUs
+        # p02 - Lista de Marcas
+        # p03 - Categoría
         # p11 - Tipo de consulta: Listado por números de documentos, por periodo (0, 1)
         # p12 - Fecha inicial del periodo a consultar
         # p13 - Fecha final del periodo a consultar
@@ -177,19 +214,20 @@ class SaleDocsDAPIView(APIView):
         p11 = str(request.query_params.get('p11', '0')).lower()
         p12 = str(request.query_params.get('p12', '2021-01-01'))
         p13 = str(request.query_params.get('p13', '2021-01-31'))
-        p15 = str(request.query_params.get('p15', 'FAC'))
+        p15 = str(request.query_params.get('p15', 'COT'))
 
-        # pvals = p01 + p02 + p03 + p11 + p12 + p13 + p15
+        pvals = p01 + p02 + p03 + p11 + p12 + p13 + p15
+        print(pvals)
 
-        # if pvals == '0%%02021-01-012021-01-31COT':
-        #     return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+        if pvals == '0%%02021-01-012021-01-31COT':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
-        # if p01 != '0':
-        #     p11 = '0'
+        if p01 != '0':
+            p11 = '0'
+        else:
+            p11 = 1
 
-        # params = [p01, p02, p03, p11, p12, p13, p15]
-        params = ['38857 38859', p15]
-        params = [p01, p15]
+        params = [p01, p02, p03, p11, p12, p13, p15]
 
         result = []
 
@@ -197,7 +235,7 @@ class SaleDocsDAPIView(APIView):
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_QRYSALEDOCSD', params + [refCursor])
+            cursor.callproc('DMC.LINA_QRYSALESDETAIL', params + [refCursor])
 
             descrip = refCursor.description
 

@@ -241,6 +241,8 @@
                   >
                     <v-checkbox
                       v-model="filters_to_apply.p11"
+                      :true-value="1"
+                      :false-value="0"
                       :label="
                         config.find((obj) => obj.configkey == 'filter11')
                           .configval2
@@ -409,7 +411,7 @@ export default {
         p11: 0,
         p12: '',
         p13: '',
-        p14: '1',
+        p14: '',
         p15: '',
       },
       items: [

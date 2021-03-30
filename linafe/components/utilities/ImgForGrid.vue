@@ -33,8 +33,12 @@ export default {
   },
   computed: {
     imgSrc() {
-      // return process.env.IMGBASEPATH + this.imgFile.value + process.env.IMGEXT
-      return LinaConfig.IMGBASEPATH + this.imgFile.value + LinaConfig.IMGEXT
+      // return process.env.IMGBASEURL + this.imgFile.value + process.env.IMGEXT
+      return LinaConfig.IMGBASEURL + this.imgFile.value + LinaConfig.IMGEXT
+    },
+    imgID() {
+      // return process.env.IMGBASEURL + this.imgFile.value + process.env.IMGEXT
+      return this.imgFile.value
     },
   },
 }

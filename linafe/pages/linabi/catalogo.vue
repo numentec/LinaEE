@@ -64,12 +64,40 @@
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
-                <v-list-item link>
-                  <v-list-item-icon>
-                    <v-icon>mdi-book-open-page-variant</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title>Generar Catálogos</v-list-item-title>
-                </v-list-item>
+                <v-list-group
+                  prepend-icon="mdi-book-open-page-variant"
+                  no-action
+                >
+                  <template v-slot:activator>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Catálogo</v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Procesar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Agregar Selección</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title>Descargar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-content>
+                      <v-list-item-title @click.stop="savePhotos"
+                        >Guardar Fotos</v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-group>
                 <v-list-group prepend-icon="mdi-table-cog" no-action>
                   <template v-slot:activator>
                     <v-list-item>
@@ -148,6 +176,9 @@
             <v-spacer />
             <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
             <v-spacer />
+            <!-- <v-btn dark icon @click="testMethod()">
+              <v-icon>mdi-test-tube</v-icon>
+            </v-btn> -->
             <v-btn dark icon @click="showColumnChooser">
               <v-icon>mdi-table-column-plus-after</v-icon>
             </v-btn>
@@ -219,7 +250,7 @@
       </MaterialCard>
       <BaseFilters
         :dialog.sync="showBaseFilters"
-        :config="config.filter((e) => e.tipo == 'filter')"
+        :config="config.filter((el) => el.tipo == 'filter')"
         :numvista="14"
         curstore="linabi/catalogo"
         @closeDialog="closeDialog"
@@ -385,6 +416,15 @@ export default {
       'setTotalCount',
       'fetchData',
     ]),
+    savePhotos() {
+      const selectedRows = this.curGrid.getSelectedRowKeys()
+
+      selectedRows.forEach((rowKey) => {
+        const imgfile = rowKey + LinaConfig.IMGEXT
+        const imgurl = LinaConfig.IMGBASEURL + imgfile
+        saveAs(imgurl, imgfile)
+      })
+    },
     clearData() {
       this.dataSource = null
       this.menuFilter = false
@@ -411,7 +451,7 @@ export default {
       const PromiseArray = []
 
       const ax = this.$axios.create({
-        baseURL: LinaConfig.IMGBASEPATH,
+        baseURL: LinaConfig.IMGBASEURL,
         headers: {
           common: {
             Accept: 'text/plain, */*',
