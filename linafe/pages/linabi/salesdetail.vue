@@ -360,7 +360,6 @@ export default {
       dataSource: null,
       showPanels: [],
       colsConfig: [],
-      testVisible: false,
       menuFilter: false,
       radioGroup: '1',
       showBaseFilters: false,

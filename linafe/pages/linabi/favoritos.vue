@@ -35,6 +35,7 @@ import { mapState } from 'vuex'
 import FavoritoCard from '~/components/linabi/FavoritoCard.vue'
 
 export default {
+  name: 'Favoritos',
   components: {
     FavoritoCard,
   },

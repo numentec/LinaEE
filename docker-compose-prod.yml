@@ -68,8 +68,9 @@ services:
       dockerfile: Dockerfile_prod
     container_name: linafe
     environment:
-      - HOST=0.0.0.0
-      - TZ=${LOC_TZ}
+      HOST: 0.0.0.0
+      TZ: ${LOC_TZ}
+      NODE_OPTIONS: --max_old_space_size=8048
     volumes:
       - ./linafe:/linafe
     networks:

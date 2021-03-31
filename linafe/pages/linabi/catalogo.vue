@@ -344,6 +344,7 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
 }
 
 export default {
+  name: 'Catalogo',
   components: {
     DxDataGrid,
     DxColumn,
@@ -387,7 +388,6 @@ export default {
       dataSource: null,
       showPanels: [],
       colsConfig: [],
-      testVisible: false,
       menuFilter: false,
       radioGroup: '1',
       showBaseFilters: false,

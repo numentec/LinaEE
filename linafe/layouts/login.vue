@@ -10,7 +10,7 @@
 
 <script>
 export default {
-  name: 'LinaLoginPage',
+  name: 'LoginLayout',
   data: () => ({}),
 }
 </script>
