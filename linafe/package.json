@@ -37,5 +37,9 @@
     "sass": "^1.27.0",
     "sass-loader": "^8.0.2",
     "devextreme-themebuilder": "^20.2.4"
+  },
+  "engines": {
+    "node": "14.15.4",
+    "npm": "6.14.10"
   }
 }
