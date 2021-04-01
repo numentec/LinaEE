@@ -287,12 +287,7 @@
                     :format="xcol.configval5"
                     :alignment="xcol.configval6"
                   />
-                  <DxSelection
-                    select-all-mode="allPages"
-                    show-check-boxes-mode="always"
-                    mode="multiple"
-                  />
-                  <DxLoadPanel :enable="true" />
+                  <DxGrouping :auto-expand-all="false" />
                   <DxGroupPanel
                     :visible="showPanels1.includes(0)"
                     empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
@@ -308,11 +303,16 @@
                     :height="360"
                     title="Ver Columna"
                   />
-                  <DxGrouping :auto-expand-all="false" />
                   <DxFilterRow :visible="showPanels1.includes(1)" />
                   <DxHeaderFilter :visible="true" />
                   <DxScrolling mode="virtual" />
                   <DxPaging :page-size="100" />
+                  <DxSelection
+                    select-all-mode="allPages"
+                    show-check-boxes-mode="always"
+                    mode="multiple"
+                  />
+                  <DxLoadPanel :enable="true" />
                   <template #imgCellTemplate="{ data: cellData }">
                     <ImgForGrid :img-file="cellData" />
                   </template>
@@ -459,17 +459,6 @@ export default {
     }
   },
   data() {
-    const localBreadCrumbsItems = [
-      {
-        text: 'DOCS VENTAS',
-        // disabled: false,
-        exact: true,
-        append: true,
-        replace: true,
-        to: '/linabi/saledocs',
-        nuxt: true,
-      },
-    ]
     return {
       tab: 0,
       curGridRefKey0,
@@ -490,12 +479,11 @@ export default {
           collapsed = true
         }
       },
-      localBCItems: localBreadCrumbsItems,
     }
   },
   computed: {
-    ...mapGetters('linabi/saledocsm', ['getFilters']),
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
+    ...mapGetters('linabi/saledocsm', ['getFilters']),
     curGrid0() {
       return this.$refs[curGridRefKey0].instance
     },

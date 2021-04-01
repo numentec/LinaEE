@@ -234,6 +234,7 @@ sw.*
 # Edit at https://www.gitignore.io/?templates=django,visualstudiocode
 
 media
+linabe/static/*
 
 # Mr Developer
 .mr.developer.cfg

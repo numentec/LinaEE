@@ -180,12 +180,7 @@
               :format="xcol.configval5"
               :alignment="xcol.configval6"
             />
-            <DxSelection
-              select-all-mode="allPages"
-              show-check-boxes-mode="always"
-              mode="multiple"
-            />
-            <DxLoadPanel :enable="true" />
+            <DxGrouping :auto-expand-all="false" />
             <DxGroupPanel
               :visible="showPanels.includes(0)"
               empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
@@ -200,11 +195,16 @@
               :height="360"
               title="Ver Columna"
             />
-            <DxGrouping :auto-expand-all="false" />
             <DxFilterRow :visible="showPanels.includes(1)" />
             <DxHeaderFilter :visible="true" />
             <DxScrolling mode="virtual" />
             <DxPaging :page-size="100" />
+            <DxSelection
+              select-all-mode="allPages"
+              show-check-boxes-mode="always"
+              mode="multiple"
+            />
+            <DxLoadPanel :enable="true" />
             <template #imgCellTemplate="{ data: cellData }">
               <ImgForGrid :img-file="cellData" />
             </template>

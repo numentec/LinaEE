@@ -217,12 +217,7 @@
               :format="xcol.configval5"
               :alignment="xcol.configval6"
             />
-            <DxSelection
-              select-all-mode="allPages"
-              show-check-boxes-mode="always"
-              mode="multiple"
-            />
-            <DxLoadPanel :enable="true" />
+            <DxGrouping :auto-expand-all="false" />
             <DxGroupPanel
               :visible="showPanels.includes(0)"
               empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
@@ -237,11 +232,16 @@
               :height="360"
               title="Ver Columna"
             />
-            <DxGrouping :auto-expand-all="false" />
             <DxFilterRow :visible="showPanels.includes(1)" />
             <DxHeaderFilter :visible="true" />
             <DxScrolling mode="virtual" />
             <DxPaging :page-size="100" />
+            <DxSelection
+              select-all-mode="allPages"
+              show-check-boxes-mode="always"
+              mode="multiple"
+            />
+            <DxLoadPanel :enable="true" />
             <template #imgCellTemplate="{ data: cellData }">
               <ImgForGrid :img-file="cellData" />
             </template>
@@ -280,11 +280,9 @@ import 'jspdf-autotable'
 import ExcelJS from 'exceljs'
 import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
-// import axios from 'axios'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
-// import 'devextreme/data/odata/store'
 import LinaConfig from '~/linaconfig.js'
 
 const curGridRefKey = 'cur-grid'
@@ -411,11 +409,7 @@ export default {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/catalogo', [
-      'setFilters',
-      'setTotalCount',
-      'fetchData',
-    ]),
+    ...mapActions('linabi/catalogo', ['fetchData']),
     savePhotos() {
       const selectedRows = this.curGrid.getSelectedRowKeys()
 
