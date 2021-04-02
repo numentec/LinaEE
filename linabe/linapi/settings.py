@@ -88,15 +88,6 @@ WSGI_APPLICATION = 'linapi.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASE_ROUTERS = ['apps.core.routers.DbRouter']
 
 DATABASES = {
@@ -111,22 +102,6 @@ DATABASES = {
             'charset': 'utf8mb4',
         },
     },
-    'extdb1': {
-        'ENGINE': environ.get('EXTDB1_ENGINE'),
-        'NAME': environ.get('EXTDB1_NAME'),
-        'USER': environ.get('EXTDB1_USER'),
-        'PASSWORD': environ.get('EXTDB1_USER_PW'),
-        'HOST': environ.get('EXTDB1_HOST'),
-        'PORT': environ.get('EXTDB1_PORT'),
-    },
-    # 'extdb1': {
-    #     'ENGINE': 'django.db.backends.oracle',
-    #     'NAME': 'vertigo',
-    #     'USER': 'pocket',
-    #     'PASSWORD': 'qazwsx12',
-    #     'HOST': '201.218.202.43',
-    #     'PORT': '1522',
-    # },
 }
 
 # Password validation

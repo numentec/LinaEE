@@ -62,7 +62,7 @@ db.sqlite3
 db.sqlite3-journal
 
 # Oracle instant client
-instantclient_12_1/
+# instantclient_12_1/
 
 # Flask stuff:
 instance/
