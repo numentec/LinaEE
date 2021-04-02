@@ -18,15 +18,8 @@ from .permissions import CustomDjangoModelPermissions
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'ml#s*st5fb&)h_5&&uyz^doq16*s+8yk-4mh&l*ir^esad!61n'
 SECRET_KEY = environ.get("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (environ.get("APP_DEBUG", True) == '1')
 
 ALLOWED_HOSTS = ['*']
@@ -88,15 +81,6 @@ WSGI_APPLICATION = 'linapi.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASE_ROUTERS = ['apps.core.routers.DbRouter']
 
 DATABASES = {
@@ -139,8 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Generated token a1ffa704dc8d2922af672374447ad42c98245e1a for user root
-# Generated token ad6ec4eff12f2b7243e82b86349dd2c875b3fbb0 for user venta01
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',

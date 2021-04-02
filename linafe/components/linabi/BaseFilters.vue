@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <client-only>
     <v-dialog
@@ -434,13 +435,25 @@ export default {
       return !this.filters_to_apply.p11
     },
   },
-  mounted() {
-    if (this.numvista === 16) {
-      this.filters_to_apply.p11 = 1
+  created() {
+    const objfilter14 = this.config.find((obj) => obj.configkey === 'filter14')
+    if (objfilter14) {
+      this.filters_to_apply.p14 = objfilter14.configval3
+    }
+
+    const objfilter11 = this.config.find((obj) => obj.configkey === 'filter11')
+    if (objfilter11) {
+      const valf11 = objfilter11.configval3
+      if (valf11 === '1') {
+        this.filters_to_apply.p11 = 1
+        this.morefilters = true
+      } else {
+        this.filters_to_apply.p11 = 0
+        this.morefilters = false
+      }
     }
   },
   methods: {
-    // ...mapActions('linabi/catalogo', ['setFilters']),
     reset() {
       this.$refs.basefilters_form.reset()
     },
