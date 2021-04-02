@@ -88,6 +88,15 @@ WSGI_APPLICATION = 'linapi.wsgi.application'
 
 
 # Database
+# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASE_ROUTERS = ['apps.core.routers.DbRouter']
 
 DATABASES = {
@@ -101,6 +110,14 @@ DATABASES = {
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
+    },
+    'extdb1': {
+        'ENGINE': environ.get('EXTDB1_ENGINE'),
+        'NAME': environ.get('EXTDB1_NAME'),
+        'USER': environ.get('EXTDB1_USER'),
+        'PASSWORD': environ.get('EXTDB1_USER_PW'),
+        'HOST': environ.get('EXTDB1_HOST'),
+        'PORT': environ.get('EXTDB1_PORT'),
     },
 }
 
