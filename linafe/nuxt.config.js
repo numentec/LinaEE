@@ -118,4 +118,11 @@ export default {
     analyze: process.env.ANALIZE,
     extractCSS: true,
   },
+
+  publicRuntimeConfig: {
+    publicURL: process.env.PUBLIC_URL,
+    fotosURL: process.env.FOTOS_URL,
+    fotosExt: process.env.FOTOS_EXT,
+  },
+  privateRuntimeConfig: {},
 }

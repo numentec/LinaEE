@@ -27,7 +27,7 @@ services:
   be:
     build:
       context: ./linabe
-      dockerfile: Dockerfile_prod
+      dockerfile: Dockerfile
     container_name: linabe
     environment:
       - APP_DEBUG=${APP_DEBUG}
@@ -65,7 +65,7 @@ services:
   fe:
     build:
       context: ./linafe
-      dockerfile: Dockerfile_prod
+      dockerfile: Dockerfile
     container_name: linafe
     environment:
       HOST: 0.0.0.0

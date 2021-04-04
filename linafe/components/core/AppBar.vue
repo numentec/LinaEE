@@ -46,7 +46,6 @@
 import { mapState, mapActions, mapGetters } from 'vuex'
 // Components
 import { VHover, VListItem } from 'vuetify/lib'
-import LinaConfig from '~/linaconfig.js'
 // import { authComputed } from '~/store/core.js'
 
 export default {
@@ -93,8 +92,7 @@ export default {
     ...mapState('sistema', ['curuser']),
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
     imgSrc() {
-      // return process.env.IMGBASEURL + this.imgFile.value + process.env.IMGEXT
-      return LinaConfig.PUBLIC_URL + this.loggedInUser.foto
+      return this.$config.publicURL + this.loggedInUser.foto
     },
   },
 

@@ -21,7 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = environ.get("SECRET_KEY")
 
 DEBUG = (environ.get("APP_DEBUG", True) == '1')
-
+# print('***** EL VALOR DE DEBUG ES *****')
+# print(DEBUG)
 ALLOWED_HOSTS = ['*']
 
 
@@ -47,8 +48,9 @@ INSTALLED_APPS = [
     'apps.linabi',
 ]
 
-MIDDLEWARE = [
+MIDLEAUX = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,6 +60,11 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
+
+if DEBUG == True:
+    MIDLEAUX.pop(1)
+
+MIDDLEWARE = MIDLEAUX
 
 ROOT_URLCONF = 'linapi.urls'
 
@@ -95,21 +102,13 @@ DATABASES = {
             'charset': 'utf8mb4',
         },
     },
-    # 'extdb1': {
-    #     'ENGINE': environ.get('EXTDB1_ENGINE'),
-    #     'NAME': environ.get('EXTDB1_NAME'),
-    #     'USER': environ.get('EXTDB1_USER'),
-    #     'PASSWORD': environ.get('EXTDB1_USER_PW'),
-    #     'HOST': environ.get('EXTDB1_HOST'),
-    #     'PORT': environ.get('EXTDB1_PORT'),
-    # },
     'extdb1': {
-        'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'vertigo',
-        'USER': 'pocket',
-        'PASSWORD': 'qazwsx12',
-        'HOST': '201.218.202.43',
-        'PORT': '1522',
+        'ENGINE': environ.get('EXTDB1_ENGINE'),
+        'NAME': environ.get('EXTDB1_NAME'),
+        'USER': environ.get('EXTDB1_USER'),
+        'PASSWORD': environ.get('EXTDB1_USER_PW'),
+        'HOST': environ.get('EXTDB1_HOST'),
+        'PORT': environ.get('EXTDB1_PORT'),
     },
 }
 
@@ -196,10 +195,14 @@ USE_TZ = True
 AUTH_USER_MODEL = 'core.User'
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
-
 STATIC_URL = '/static/'
 STATIC_ROOT = '/linabe/static'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/linabe/media'
+if DEBUG == True:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = '/linabe/media'
+else:
+    STATICFILES_DIRS = [
+        ("media", "/linabe/media"),
+    ]
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

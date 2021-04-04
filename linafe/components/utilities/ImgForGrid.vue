@@ -14,8 +14,6 @@
 </template>
 
 <script>
-import LinaConfig from '~/linaconfig.js'
-
 export default {
   name: 'ImgForGrid',
   props: {
@@ -27,17 +25,14 @@ export default {
   },
   data() {
     return {
-      // lazySrc: process.env.SERVER_URL_CLIENT + '/media/images/nophoto_sm.png',
-      lazySrc: LinaConfig.PUBLIC_URL + '/media/images/nophoto_sm.png',
+      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
   computed: {
     imgSrc() {
-      // return process.env.IMGBASEURL + this.imgFile.value + process.env.IMGEXT
-      return LinaConfig.IMGBASEURL + this.imgFile.value + LinaConfig.IMGEXT
+      return this.$config.fotosURL + this.imgFile.value + this.$config.fotosExt
     },
     imgID() {
-      // return process.env.IMGBASEURL + this.imgFile.value + process.env.IMGEXT
       return this.imgFile.value
     },
   },

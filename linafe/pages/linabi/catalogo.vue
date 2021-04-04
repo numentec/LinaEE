@@ -283,7 +283,6 @@ import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_export
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
-import LinaConfig from '~/linaconfig.js'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -306,7 +305,7 @@ async function getImageForPDF(imgfile, ax) {
 }
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
-  // url = LinaConfig.PUBLIC_URL + url
+  // url = this.$config.publicURL + url
   // ax.onResponse((response) => {
   //   if (response.status === 404) {
   //       console.log('Oh no it returned a 404')
@@ -414,8 +413,8 @@ export default {
       const selectedRows = this.curGrid.getSelectedRowKeys()
 
       selectedRows.forEach((rowKey) => {
-        const imgfile = rowKey + LinaConfig.IMGEXT
-        const imgurl = LinaConfig.IMGBASEURL + imgfile
+        const imgfile = rowKey + this.$config.fotosExt
+        const imgurl = this.$config.fotosURL + imgfile
         saveAs(imgurl, imgfile)
       })
     },
@@ -445,7 +444,7 @@ export default {
       const PromiseArray = []
 
       const ax = this.$axios.create({
-        baseURL: LinaConfig.IMGBASEURL,
+        baseURL: this.$config.fotosURL,
         headers: {
           common: {
             Accept: 'text/plain, */*',
@@ -458,7 +457,7 @@ export default {
         // let i = 0
 
         selectedRows.forEach((rowKey) => {
-          const imgfile = rowKey + LinaConfig.IMGEXT
+          const imgfile = rowKey + this.$config.fotosExt
           getImageForPDF(imgfile, ax).then((b64Img) => {
             const objKey = 'key' + rowKey
             // const xf = [{ sku: objKey, img: b64Img }]
@@ -525,7 +524,7 @@ export default {
             if (gridCell.rowType === 'data') {
               if (gridCell.column.name === 'FOTO') {
                 excelCell.value = undefined
-                const imgfile = gridCell.value + LinaConfig.IMGEXT
+                const imgfile = gridCell.value + this.$config.fotosExt
                 PromiseArray.push(
                   new Promise((resolve, reject) => {
                     addImageExcel(
