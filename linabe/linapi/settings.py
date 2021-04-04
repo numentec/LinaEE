@@ -196,11 +196,11 @@ AUTH_USER_MODEL = 'core.User'
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = '/linabe/static'
+STATIC_ROOT = '/linabe/static/'
 
 if DEBUG == True:
     MEDIA_URL = '/media/'
-    MEDIA_ROOT = '/linabe/media'
+    MEDIA_ROOT = '/linabe/media/'
 else:
     STATICFILES_DIRS = [
         ("media", "/linabe/media"),

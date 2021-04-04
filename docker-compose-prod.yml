@@ -184,6 +184,8 @@ services:
     volumes:
       - /home/numen/swag:/config
       - /home/numen/nube:/var/www/html
+      - ./linabe/static:/static
+      - ./linabe/media:/media
     networks:
       net:
         ipv4_address: 192.168.15.11
