@@ -21,10 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = environ.get("SECRET_KEY")
 
 DEBUG = (environ.get("APP_DEBUG", True) == '1')
-# print('***** EL VALOR DE DEBUG ES *****')
-# print(DEBUG)
-ALLOWED_HOSTS = ['*']
 
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -48,23 +46,19 @@ INSTALLED_APPS = [
     'apps.linabi',
 ]
 
-MIDLEAUX = [
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
-
-if DEBUG == True:
-    MIDLEAUX.pop(1)
-
-MIDDLEWARE = MIDLEAUX
 
 ROOT_URLCONF = 'linapi.urls'
 
@@ -85,7 +79,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'linapi.wsgi.application'
-
 
 # Database
 DATABASE_ROUTERS = ['apps.core.routers.DbRouter']
@@ -113,8 +106,6 @@ DATABASES = {
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -145,13 +136,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100,
 }
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = False
-# CORS_ORIGIN_WHITELIST = (
-#   'http://192.168.1.51:3001',
-#   'http://127.0.0.1:3001'
-# )
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=45),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -179,8 +163,6 @@ SIMPLE_JWT = {
 }
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.1/topics/i18n/
-
 LANGUAGE_CODE = environ.get("LOC_LG").lower().replace('/', '-')
 #LANGUAGE_CODE = 'es-pa'
 
@@ -198,11 +180,5 @@ AUTH_USER_MODEL = 'core.User'
 STATIC_URL = '/static/'
 STATIC_ROOT = '/linabe/static/'
 
-if DEBUG == True:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = '/linabe/media/'
-else:
-    STATICFILES_DIRS = [
-        ("media", "/linabe/media"),
-    ]
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = '/linabe/media/'

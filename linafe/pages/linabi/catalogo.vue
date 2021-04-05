@@ -332,11 +332,11 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
 
       resolve()
     })
-    .catch((err) => {
-      if (err.response.status === 404) {
-        worksheet.getRow(excelCell.row).height = 100
-        resolve()
-      }
+    .catch(() => {
+      // if (err.response.status === 404) {
+      worksheet.getRow(excelCell.row).height = 100
+      resolve()
+      // }
     })
 }
 
@@ -447,7 +447,7 @@ export default {
         baseURL: this.$config.fotosURL,
         headers: {
           common: {
-            Accept: 'text/plain, */*',
+            Accept: 'image/*, application/json, text/plain, */*',
           },
         },
       })

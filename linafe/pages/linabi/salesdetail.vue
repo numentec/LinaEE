@@ -268,7 +268,7 @@ async function getImageForPDF(imgfile, ax) {
 }
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
-  // url = process.env.PUBLIC_URL + url
+  // url = this.$config.publicURL + url
   // ax.onResponse((response) => {
   //   if (response.status === 404) {
   //       console.log('Oh no it returned a 404')
@@ -295,11 +295,11 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
 
       resolve()
     })
-    .catch((err) => {
-      if (err.response.status === 404) {
-        worksheet.getRow(excelCell.row).height = 100
-        resolve()
-      }
+    .catch(() => {
+      // if (err.response.status === 404) {
+      worksheet.getRow(excelCell.row).height = 100
+      resolve()
+      // }
     })
 }
 
@@ -418,10 +418,10 @@ export default {
       const PromiseArray = []
 
       const ax = this.$axios.create({
-        baseURL: process.env.FOTOS_URL,
+        baseURL: this.$config.fotosURL,
         headers: {
           common: {
-            Accept: 'text/plain, */*',
+            Accept: 'image/*, application/json, text/plain, */*',
           },
         },
       })
@@ -430,7 +430,7 @@ export default {
         const selectedRows = this.curGrid.getSelectedRowKeys()
 
         selectedRows.forEach((rowKey) => {
-          const imgfile = rowKey + process.env.FOTOS_EXT
+          const imgfile = rowKey + this.$config.fotosExt
           getImageForPDF(imgfile, ax).then((b64Img) => {
             const objKey = 'key' + rowKey
             // fotos.push({ sku: objKey, img: b64Img })
@@ -486,7 +486,7 @@ export default {
             if (gridCell.rowType === 'data') {
               if (gridCell.column.name === 'FOTO') {
                 excelCell.value = undefined
-                const imgfile = gridCell.value + process.env.FOTOS_EXT
+                const imgfile = gridCell.value + this.$config.fotosExt
                 PromiseArray.push(
                   new Promise((resolve, reject) => {
                     addImageExcel(
