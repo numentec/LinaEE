@@ -73,9 +73,22 @@ class CatalogAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
-
+        # p01 - SKU exacto o parcial con %
+        # p02 - Descripción parcial con %
+        # p03 - Marca 
+        # p04 - Departamento
+        # p05 - Categoría
+        # p06 - Sub categoría
+        # p07 - Cla1
+        # p08 - Cla2
+        # p09 - Cla3
+        # p10 - Número de entrada
+        # p11 - Tipo de consulta: incluir periodo (0, 1)
+        # p12 - Fecha inicial del periodo a consultar
+        # p13 - Fecha final del periodo a consultar
+        # p14 - Existencia (Todos = 1, Disponible = 2, A futuro = 3)
         p01 = str(request.query_params.get('p01', '%')).lower()
-        p02 = str(request.query_params.get('p02', 'camisa%')).lower()
+        p02 = str(request.query_params.get('p02', '%')).lower()
         p03 = str(request.query_params.get('p03', '%')).lower()
         p04 = str(request.query_params.get('p04', '%')).lower()
         p05 = str(request.query_params.get('p05', '%')).lower()
@@ -88,6 +101,11 @@ class CatalogAPIView(APIView):
         p12 = str(request.query_params.get('p12', '2021-01-01')).lower()
         p13 = str(request.query_params.get('p13', '2021-01-01')).lower()
         p14 = str(request.query_params.get('p14', '1')).lower()
+
+        pvals = p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12 + p13 + p14
+
+        if pvals == '%%%%%%%%%%022021-01-012021-01-011':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
@@ -129,10 +147,10 @@ class SaleDocsMAPIView(APIView):
         p13 = str(request.query_params.get('p13', '2021-01-31'))
         p15 = str(request.query_params.get('p15', 'COT'))
 
-        # pvals = p01 + p02 + p11 + p12 + p13 + p15
+        pvals = p01 + p02 + p11 + p12 + p13 + p15
 
-        # if pvals == '0%022021-01-012021-01-31COT':
-        #     return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+        if pvals == '0%022021-01-012021-01-31COT':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         if p01 != '0':
             p11 = '0'
