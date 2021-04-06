@@ -19,7 +19,7 @@
                   <v-icon>mdi-dots-vertical</v-icon>
                 </v-btn>
               </template>
-              <v-list>
+              <v-list nav>
                 <v-list-item link>
                   <v-list-item-icon>
                     <v-icon>mdi-cloud-download</v-icon>
@@ -98,7 +98,7 @@
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
-                <v-list-group prepend-icon="mdi-table-cog" no-action>
+                <v-list-group prepend-icon="mdi-database-search" no-action>
                   <template v-slot:activator>
                     <v-list-item>
                       <v-list-item-content>
@@ -130,41 +130,28 @@
                       </v-list-item-content>
                     </v-list-item>
                   </template>
-                  <v-list-item-group
-                    v-model="showPanels"
-                    multiple
-                    active-class=""
-                  >
-                    <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Panel Agrupar</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Agrupar y búsqueda global
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
-                    </v-list-item>
-
-                    <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Filtro avanzado</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Fila de filtros avanzados
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
-                    </v-list-item>
-                  </v-list-item-group>
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.agrupar"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Panel Agrupar</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Agrupar y búsqueda global
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.filtros"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Filtro avanzado</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Fila de filtros avanzados
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
                       <v-list-item-title>Ajustes</v-list-item-title>
@@ -179,9 +166,79 @@
             <!-- <v-btn dark icon @click="testMethod()">
               <v-icon>mdi-test-tube</v-icon>
             </v-btn> -->
-            <v-btn dark icon @click="showColumnChooser">
-              <v-icon>mdi-table-column-plus-after</v-icon>
-            </v-btn>
+            <v-menu
+              v-model="menuConf"
+              :nudge-width="200"
+              :close-on-content-click="false"
+              left
+              offset-y
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn dark icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-cog-outline</v-icon>
+                </v-btn>
+              </template>
+              <v-card>
+                <v-list nav>
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-btn icon @click="showColumnChooser">
+                        <v-icon color="primary darken-2">
+                          mdi-table-column-plus-after
+                        </v-icon>
+                      </v-btn>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        Seleccionar columnas
+                      </v-list-item-title>
+                      <!-- <v-list-item-subtitle>
+                        Muestre u oculte columnas
+                      </v-list-item-subtitle> -->
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list>
+
+                <v-divider></v-divider>
+
+                <v-list nav>
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.filtros"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-title>Filtros Avanzados</v-list-item-title>
+                  </v-list-item>
+
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.agrupar"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-title>Panel agrupar</v-list-item-title>
+                  </v-list-item>
+
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.totGlobal"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-title>Total global</v-list-item-title>
+                  </v-list-item>
+
+                  <v-list-item link>
+                    <v-list-item-icon>
+                      <v-icon>mdi-table-cog</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-title>Ajustes</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="primary" text @click="menuConf = false">
+                    Cerrar
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-menu>
           </v-toolbar>
         </template>
         <div ref="resizableDiv" v-resize="onResize">
@@ -214,25 +271,26 @@
               :visible="xcol.configval2 == '1'"
               :caption="xcol.configval3"
               :data-type="xcol.configval4"
-              :format="xcol.configval5"
+              :format="setFormat(xcol.configval5)"
               :alignment="xcol.configval6"
-            />
+            >
+            </DxColumn>
             <DxGrouping :auto-expand-all="false" />
             <DxGroupPanel
-              :visible="showPanels.includes(0)"
+              :visible="setConf.agrupar"
               empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
             />
             <DxSearchPanel
-              :visible="showPanels.includes(0)"
+              :visible="setConf.agrupar"
               :highlight-case-sensitive="true"
             />
             <DxColumnChooser
               mode="select"
               :allow-search="true"
               :height="360"
-              title="Ver Columna"
+              title="Columnas"
             />
-            <DxFilterRow :visible="showPanels.includes(1)" />
+            <DxFilterRow :visible="setConf.filtros" />
             <DxHeaderFilter :visible="true" />
             <DxScrolling mode="virtual" />
             <DxPaging :page-size="100" />
@@ -241,6 +299,19 @@
               show-check-boxes-mode="always"
               mode="multiple"
             />
+            <DxSummary :v-show="setConf.totGlobal">
+              <DxTotalItem column="REFERENCIA" summary-type="count" />
+              <DxTotalItem
+                column="PRECIO"
+                summary-type="sum"
+                value-format="currency"
+              />
+              <DxTotalItem
+                column="PRECIOPUBLICO"
+                summary-type="sum"
+                value-format="currency"
+              />
+            </DxSummary>
             <DxLoadPanel :enable="true" />
             <template #imgCellTemplate="{ data: cellData }">
               <ImgForGrid :img-file="cellData" />
@@ -250,7 +321,7 @@
       </MaterialCard>
       <BaseFilters
         :dialog.sync="showBaseFilters"
-        :config="config.filter((el) => el.tipo == 'filter')"
+        :config="viewConf.filter((el) => el.tipo == 'filter')"
         :numvista="14"
         curstore="linabi/catalogo"
         @closeDialog="closeDialog"
@@ -260,9 +331,13 @@
 </template>
 <script>
 import { mapState, mapActions } from 'vuex'
+// import config from 'devextreme/core/config'
+import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
   DxColumn,
+  DxSummary,
+  DxTotalItem,
   DxGrouping,
   DxGroupPanel,
   DxSearchPanel,
@@ -345,6 +420,8 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
+    DxSummary,
+    DxTotalItem,
     DxGrouping,
     DxGroupPanel,
     DxSearchPanel,
@@ -363,7 +440,7 @@ export default {
     try {
       const { data } = await $axios.get('vistas/14/')
       return {
-        config: data.configs_x_vista,
+        viewConf: data.configs_x_vista,
       }
     } catch (err) {
       if (err.response) {
@@ -383,7 +460,13 @@ export default {
     return {
       curGridRefKey,
       dataSource: null,
-      showPanels: [],
+      menuConf: false,
+      setConf: {
+        filtros: false,
+        agrupar: false,
+        totGrupo: false,
+        totGlobal: false,
+      },
       colsConfig: [],
       menuFilter: false,
       radioGroup: '1',
@@ -403,9 +486,12 @@ export default {
       return this.$refs[curGridRefKey].instance
     },
   },
-  created() {},
+  created() {
+    locale(navigator.language)
+    // config({ defaultCurrency: 'USD' })
+  },
   mounted() {
-    this.colsConfig = this.config.filter((e) => e.tipo === 'col')
+    this.colsConfig = this.viewConf.filter((e) => e.tipo === 'col')
   },
   methods: {
     ...mapActions('linabi/catalogo', ['fetchData']),
@@ -424,6 +510,7 @@ export default {
     },
     showColumnChooser() {
       this.curGrid.showColumnChooser()
+      this.menuConf = false
     },
     closeDialog(refresh) {
       this.showBaseFilters = false
@@ -439,6 +526,15 @@ export default {
         window.innerHeight -
         this.$refs.resizableDiv.getBoundingClientRect().y -
         82
+    },
+    setFormat(opc) {
+      if (opc === 'currency') {
+        return '#,##0.00'
+      }
+      if (opc === 'date') {
+        return 'dd/MM/yyyy'
+      }
+      return opc
     },
     exportGrid(opc) {
       const PromiseArray = []

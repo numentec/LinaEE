@@ -284,7 +284,7 @@
                     :visible="xcol.configval2 == '1'"
                     :caption="xcol.configval3"
                     :data-type="xcol.configval4"
-                    :format="xcol.configval5"
+                    :format="setFormat(xcol.configval5)"
                     :alignment="xcol.configval6"
                   />
                   <DxGrouping :auto-expand-all="false" />
@@ -334,6 +334,7 @@
 </template>
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
+import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
   DxColumn,
@@ -490,7 +491,9 @@ export default {
       return this.$refs[curGridRefKey1].instance
     },
   },
-  created() {},
+  created() {
+    locale(navigator.language)
+  },
   mounted() {
     this.colsConfig0 = this.config0.filter((e) => e.tipo === 'col')
     this.colsConfig1 = this.config1.filter((e) => e.tipo === 'col')
@@ -550,6 +553,15 @@ export default {
         window.innerHeight -
         this.$refs.resizableDiv.getBoundingClientRect().y -
         82
+    },
+    setFormat(opc) {
+      if (opc === 'currency') {
+        return '#,##0.00'
+      }
+      if (opc === 'date') {
+        return 'dd/MM/yyyy'
+      }
+      return opc
     },
     exportGrid(opc) {
       let curComponent

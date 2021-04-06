@@ -25,7 +25,7 @@
               <v-icon v-else dark>mdi-account-circle</v-icon>
             </v-avatar>
           </template>
-          <span>{{ loggedInUser.username }}</span>
+          <span>{{ capUserName }}</span>
         </v-tooltip>
       </template>
       <v-list>
@@ -93,6 +93,13 @@ export default {
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
     imgSrc() {
       return this.$config.publicURL + this.loggedInUser.foto
+    },
+    capUserName() {
+      const lu = this.loggedInUser.username
+      if (lu) {
+        return lu.charAt(0).toUpperCase() + lu.slice(1)
+      }
+      return 'User'
     },
   },
 
