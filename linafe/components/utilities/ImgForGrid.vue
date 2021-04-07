@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="200">
+    <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="120">
       <template v-slot:placeholder>
         <v-row class="fill-height ma-0" align="center" justify="center">
           <v-progress-circular
