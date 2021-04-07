@@ -96,41 +96,28 @@
                       </v-list-item-content>
                     </v-list-item>
                   </template>
-                  <v-list-item-group
-                    v-model="showPanels"
-                    multiple
-                    active-class=""
-                  >
-                    <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Panel Agrupar</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Agrupar y búsqueda global
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
-                    </v-list-item>
-
-                    <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Filtro avanzado</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Fila de filtros avanzados
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
-                    </v-list-item>
-                  </v-list-item-group>
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.agrupar"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Panel Agrupar</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Agrupar y búsqueda global
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-action>
+                      <v-switch v-model="setConf.filtros"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Filtro avanzado</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Fila de filtros avanzados
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
                       <v-list-item-title>Ajustes</v-list-item-title>
@@ -142,9 +129,27 @@
             <v-spacer />
             <v-toolbar-title>Detalle de Documentos de Ventas</v-toolbar-title>
             <v-spacer />
-            <v-btn dark icon @click="showColumnChooser">
-              <v-icon>mdi-table-column-plus-after</v-icon>
-            </v-btn>
+            <v-menu
+              v-model="menuConf"
+              :nudge-width="200"
+              :close-on-content-click="false"
+              left
+              offset-y
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn dark icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-cog-outline</v-icon>
+                </v-btn>
+              </template>
+              <TableSettings
+                :show-column-chooser="showColumnChooser"
+                :set-filtros="setConf.filtros"
+                :set-agrupar="setConf.agrupar"
+                @set-conf-filtros="setConf.filtros = !setConf.filtros"
+                @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
+                @menu-conf-close="menuConf = false"
+              />
+            </v-menu>
           </v-toolbar>
         </template>
         <div ref="resizableDiv" v-resize="onResize">
@@ -177,16 +182,16 @@
               :visible="xcol.configval2 == '1'"
               :caption="xcol.configval3"
               :data-type="xcol.configval4"
-              :format="xcol.configval5"
+              :format="setFormat(xcol.configval5)"
               :alignment="xcol.configval6"
             />
             <DxGrouping :auto-expand-all="false" />
             <DxGroupPanel
-              :visible="showPanels.includes(0)"
+              :visible="setConf.agrupar"
               empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
             />
             <DxSearchPanel
-              :visible="showPanels.includes(0)"
+              :visible="setConf.agrupar"
               :highlight-case-sensitive="true"
             />
             <DxColumnChooser
@@ -195,7 +200,7 @@
               :height="360"
               title="Ver Columna"
             />
-            <DxFilterRow :visible="showPanels.includes(1)" />
+            <DxFilterRow :visible="setConf.filtros" />
             <DxHeaderFilter :visible="true" />
             <DxScrolling mode="virtual" />
             <DxPaging :page-size="100" />
@@ -204,6 +209,24 @@
               show-check-boxes-mode="always"
               mode="multiple"
             />
+            <DxSummary :v-show="setConf.totGlobal">
+              <DxTotalItem column="SKU" summary-type="count" />
+              <DxTotalItem
+                column="PRECIO"
+                summary-type="sum"
+                :value-format="setFormat('currency')"
+              />
+              <DxTotalItem
+                column="PVP"
+                summary-type="sum"
+                :value-format="setFormat('currency')"
+              />
+              <DxTotalItem
+                column="TOTAL"
+                summary-type="sum"
+                :value-format="setFormat('currency')"
+              />
+            </DxSummary>
             <DxLoadPanel :enable="true" />
             <template #imgCellTemplate="{ data: cellData }">
               <ImgForGrid :img-file="cellData" />
@@ -223,9 +246,12 @@
 </template>
 <script>
 import { mapState, mapActions } from 'vuex'
+import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
   DxColumn,
+  DxSummary,
+  DxTotalItem,
   DxGrouping,
   DxGroupPanel,
   DxSearchPanel,
@@ -246,6 +272,7 @@ import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_export
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
+import TableSettings from '~/components/utilities/TableSettings'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -319,6 +346,8 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
+    DxSummary,
+    DxTotalItem,
     DxGrouping,
     DxGroupPanel,
     DxSearchPanel,
@@ -332,6 +361,7 @@ export default {
     MaterialCard,
     BaseFilters,
     ImgForGrid,
+    TableSettings,
   },
   async asyncData({ $axios, error }) {
     try {
@@ -357,7 +387,13 @@ export default {
     return {
       curGridRefKey,
       dataSource: null,
-      showPanels: [],
+      menuConf: false,
+      setConf: {
+        filtros: false,
+        agrupar: false,
+        totGrupo: false,
+        totGlobal: false,
+      },
       colsConfig: [],
       menuFilter: false,
       radioGroup: '1',
@@ -378,7 +414,9 @@ export default {
       return this.$refs[curGridRefKey].instance
     },
   },
-  created() {},
+  created() {
+    locale(navigator.language)
+  },
   mounted() {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
   },
@@ -398,6 +436,7 @@ export default {
     },
     showColumnChooser() {
       this.curGrid.showColumnChooser()
+      this.menuConf = false
     },
     closeDialog(refresh) {
       this.showBaseFilters = false
@@ -413,6 +452,18 @@ export default {
         window.innerHeight -
         this.$refs.resizableDiv.getBoundingClientRect().y -
         82
+    },
+    setFormat(opc) {
+      if (opc === 'currency') {
+        opc = '#,##0.00'
+      }
+      if (opc === 'decimal') {
+        opc = '#,##0.0###'
+      }
+      if (opc === 'date') {
+        opc = 'dd/MM/yyyy'
+      }
+      return opc
     },
     exportGrid(opc) {
       const PromiseArray = []

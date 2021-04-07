@@ -178,66 +178,14 @@
                   <v-icon>mdi-cog-outline</v-icon>
                 </v-btn>
               </template>
-              <v-card>
-                <v-list nav>
-                  <v-list-item>
-                    <v-list-item-action>
-                      <v-btn icon @click="showColumnChooser">
-                        <v-icon color="primary darken-2">
-                          mdi-table-column-plus-after
-                        </v-icon>
-                      </v-btn>
-                    </v-list-item-action>
-                    <v-list-item-content>
-                      <v-list-item-title>
-                        Seleccionar columnas
-                      </v-list-item-title>
-                      <!-- <v-list-item-subtitle>
-                        Muestre u oculte columnas
-                      </v-list-item-subtitle> -->
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list>
-
-                <v-divider></v-divider>
-
-                <v-list nav>
-                  <v-list-item>
-                    <v-list-item-action>
-                      <v-switch v-model="setConf.filtros"></v-switch>
-                    </v-list-item-action>
-                    <v-list-item-title>Filtros Avanzados</v-list-item-title>
-                  </v-list-item>
-
-                  <v-list-item>
-                    <v-list-item-action>
-                      <v-switch v-model="setConf.agrupar"></v-switch>
-                    </v-list-item-action>
-                    <v-list-item-title>Panel agrupar</v-list-item-title>
-                  </v-list-item>
-
-                  <v-list-item>
-                    <v-list-item-action>
-                      <v-switch v-model="setConf.totGlobal"></v-switch>
-                    </v-list-item-action>
-                    <v-list-item-title>Total global</v-list-item-title>
-                  </v-list-item>
-
-                  <v-list-item link>
-                    <v-list-item-icon>
-                      <v-icon>mdi-table-cog</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-title>Ajustes</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn color="primary" text @click="menuConf = false">
-                    Cerrar
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
+              <TableSettings
+                :show-column-chooser="showColumnChooser"
+                :set-filtros="setConf.filtros"
+                :set-agrupar="setConf.agrupar"
+                @set-conf-filtros="setConf.filtros = !setConf.filtros"
+                @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
+                @menu-conf-close="menuConf = false"
+              />
             </v-menu>
           </v-toolbar>
         </template>
@@ -300,16 +248,16 @@
               mode="multiple"
             />
             <DxSummary :v-show="setConf.totGlobal">
-              <DxTotalItem column="REFERENCIA" summary-type="count" />
+              <DxTotalItem column="SKU" summary-type="count" />
               <DxTotalItem
                 column="PRECIO"
                 summary-type="sum"
-                value-format="currency"
+                :value-format="setFormat('currency')"
               />
               <DxTotalItem
                 column="PRECIOPUBLICO"
                 summary-type="sum"
-                value-format="currency"
+                :value-format="setFormat('currency')"
               />
             </DxSummary>
             <DxLoadPanel :enable="true" />
@@ -358,6 +306,7 @@ import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_export
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
+import TableSettings from '~/components/utilities/TableSettings'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -435,6 +384,7 @@ export default {
     MaterialCard,
     BaseFilters,
     ImgForGrid,
+    TableSettings,
   },
   async asyncData({ $axios, error }) {
     try {
@@ -529,10 +479,13 @@ export default {
     },
     setFormat(opc) {
       if (opc === 'currency') {
-        return '#,##0.00'
+        opc = '#,##0.00'
+      }
+      if (opc === 'decimal') {
+        opc = '#,##0.0###'
       }
       if (opc === 'date') {
-        return 'dd/MM/yyyy'
+        opc = 'dd/MM/yyyy'
       }
       return opc
     },

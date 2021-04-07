@@ -104,78 +104,54 @@
                       </v-list-item-content>
                     </v-list-item>
                   </template>
-                  <v-list-item-group
-                    v-show="tab == 0"
-                    v-model="showPanels0"
-                    multiple
-                    active-class=""
-                  >
+                  <template v-show="tab == 0">
                     <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Panel Agrupar</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Agrupar y búsqueda global
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
+                      <v-list-item-action>
+                        <v-switch v-model="setConf0.agrupar"></v-switch>
+                      </v-list-item-action>
+                      <v-list-item-content>
+                        <v-list-item-title>Panel Agrupar</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Agrupar y búsqueda global
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
                     </v-list-item>
-
                     <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Filtro avanzado</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Fila de filtros avanzados
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
+                      <v-list-item-action>
+                        <v-switch v-model="setConf0.filtros"></v-switch>
+                      </v-list-item-action>
+                      <v-list-item-content>
+                        <v-list-item-title>Filtro avanzado</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Fila de filtros avanzados
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
                     </v-list-item>
-                  </v-list-item-group>
-                  <v-list-item-group
-                    v-show="tab == 1"
-                    v-model="showPanels1"
-                    multiple
-                    active-class=""
-                  >
+                  </template>
+                  <template v-show="tab == 1">
                     <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Panel Agrupar</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Agrupar y búsqueda global
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
+                      <v-list-item-action>
+                        <v-switch v-model="setConf1.agrupar"></v-switch>
+                      </v-list-item-action>
+                      <v-list-item-content>
+                        <v-list-item-title>Panel Agrupar</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Agrupar y búsqueda global
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
                     </v-list-item>
-
                     <v-list-item>
-                      <template v-slot:default="{ active }">
-                        <v-list-item-action>
-                          <v-checkbox :input-value="active"></v-checkbox>
-                        </v-list-item-action>
-
-                        <v-list-item-content>
-                          <v-list-item-title>Filtro avanzado</v-list-item-title>
-                          <v-list-item-subtitle>
-                            Fila de filtros avanzados
-                          </v-list-item-subtitle>
-                        </v-list-item-content>
-                      </template>
+                      <v-list-item-action>
+                        <v-switch v-model="setConf1.filtros"></v-switch>
+                      </v-list-item-action>
+                      <v-list-item-content>
+                        <v-list-item-title>Filtro avanzado</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Fila de filtros avanzados
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
                     </v-list-item>
-                  </v-list-item-group>
+                  </template>
                   <v-list-item link>
                     <v-list-item-content>
                       <v-list-item-title>Ajustes</v-list-item-title>
@@ -187,9 +163,39 @@
             <v-spacer />
             <v-toolbar-title>Documentos de Ventas</v-toolbar-title>
             <v-spacer />
-            <v-btn dark icon @click="showColumnChooser">
-              <v-icon>mdi-table-column-plus-after</v-icon>
-            </v-btn>
+            <v-menu
+              v-model="menuConf"
+              :nudge-width="200"
+              :close-on-content-click="false"
+              left
+              offset-y
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn dark icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-cog-outline</v-icon>
+                </v-btn>
+              </template>
+              <TableSettings
+                v-show="tab == 0"
+                ref="settings0"
+                :show-column-chooser="showColumnChooser"
+                :set-filtros="setConf0.filtros"
+                :set-agrupar="setConf0.agrupar"
+                @set-conf-filtros="setConf0.filtros = !setConf0.filtros"
+                @set-conf-agrupar="setConf0.agrupar = !setConf0.agrupar"
+                @menu-conf-close="menuConf = false"
+              />
+              <TableSettings
+                v-show="tab == 1"
+                ref="settings1"
+                :show-column-chooser="showColumnChooser"
+                :set-filtros="setConf1.filtros"
+                :set-agrupar="setConf1.agrupar"
+                @set-conf-filtros="setConf1.filtros = !setConf1.filtros"
+                @set-conf-agrupar="setConf1.agrupar = !setConf1.agrupar"
+                @menu-conf-close="menuConf = false"
+              />
+            </v-menu>
           </v-toolbar>
         </template>
         <div ref="resizableDiv" v-resize="onResize">
@@ -224,21 +230,16 @@
                     :visible="xcol.configval2 == '1'"
                     :caption="xcol.configval3"
                     :data-type="xcol.configval4"
-                    :format="xcol.configval5"
+                    :format="setFormat(xcol.configval5)"
                     :alignment="xcol.configval6"
                   />
-                  <DxSelection
-                    select-all-mode="allPages"
-                    show-check-boxes-mode="always"
-                    mode="multiple"
-                  />
-                  <DxLoadPanel :enable="true" />
+                  <DxGrouping :auto-expand-all="false" />
                   <DxGroupPanel
-                    :visible="showPanels0.includes(0)"
+                    :visible="setConf0.agrupar"
                     empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
                   />
                   <DxSearchPanel
-                    :visible="showPanels0.includes(0)"
+                    :visible="setConf0.agrupar"
                     :highlight-case-sensitive="true"
                   />
                   <DxColumnChooser
@@ -247,11 +248,24 @@
                     :height="360"
                     title="Ver Columna"
                   />
-                  <DxGrouping :auto-expand-all="false" />
-                  <DxFilterRow :visible="showPanels0.includes(1)" />
+                  <DxFilterRow :visible="setConf0.filtros" />
                   <DxHeaderFilter :visible="true" />
                   <DxScrolling mode="virtual" />
                   <DxPaging :page-size="100" />
+                  <DxSelection
+                    select-all-mode="allPages"
+                    show-check-boxes-mode="always"
+                    mode="multiple"
+                  />
+                  <DxSummary>
+                    <DxTotalItem column="NUMDOC" summary-type="count" />
+                    <DxTotalItem
+                      column="MONTO"
+                      summary-type="sum"
+                      :value-format="setFormat('currency')"
+                    />
+                  </DxSummary>
+                  <DxLoadPanel :enable="true" />
                 </DxDataGrid>
               </v-tab-item>
               <v-tab-item key="tab1">
@@ -289,11 +303,11 @@
                   />
                   <DxGrouping :auto-expand-all="false" />
                   <DxGroupPanel
-                    :visible="showPanels1.includes(0)"
+                    :visible="setConf1.agrupar"
                     empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
                   />
                   <DxSearchPanel
-                    :visible="showPanels1.includes(0)"
+                    :visible="setConf1.agrupar"
                     :highlight-case-sensitive="true"
                   />
                   <DxColumnChooser
@@ -303,7 +317,7 @@
                     :height="360"
                     title="Ver Columna"
                   />
-                  <DxFilterRow :visible="showPanels1.includes(1)" />
+                  <DxFilterRow :visible="setConf1.filtros" />
                   <DxHeaderFilter :visible="true" />
                   <DxScrolling mode="virtual" />
                   <DxPaging :page-size="100" />
@@ -338,6 +352,8 @@ import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
   DxColumn,
+  DxSummary,
+  DxTotalItem,
   DxGrouping,
   DxGroupPanel,
   DxSearchPanel,
@@ -357,6 +373,8 @@ import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
+import ImgForGrid from '~/components/utilities/ImgForGrid'
+import TableSettings from '~/components/utilities/TableSettings'
 
 const curGridRefKey0 = 'cur-grid1'
 const curGridRefKey1 = 'cur-grid2'
@@ -420,6 +438,8 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
+    DxSummary,
+    DxTotalItem,
     DxGrouping,
     DxGroupPanel,
     DxSearchPanel,
@@ -432,6 +452,8 @@ export default {
     DxLoadPanel,
     MaterialCard,
     BaseFilters,
+    ImgForGrid,
+    TableSettings,
   },
 
   async asyncData({ $axios, error }) {
@@ -465,8 +487,15 @@ export default {
       curGridRefKey1,
       dataSource0: null,
       dataSource1: null,
-      showPanels0: [],
-      showPanels1: [],
+      menuConf: false,
+      setConf0: {
+        filtros: false,
+        agrupar: false,
+      },
+      setConf1: {
+        filtros: false,
+        agrupar: false,
+      },
       colsConfig0: [],
       colsConfig1: [],
       menuFilter: false,
@@ -524,6 +553,7 @@ export default {
       } else {
         this.curGrid1.showColumnChooser()
       }
+      this.menuConf = false
     },
     closeDialog(refresh) {
       this.showBaseFilters = false
@@ -556,10 +586,13 @@ export default {
     },
     setFormat(opc) {
       if (opc === 'currency') {
-        return '#,##0.00'
+        opc = '#,##0.00'
+      }
+      if (opc === 'decimal') {
+        opc = '#,##0.0###'
       }
       if (opc === 'date') {
-        return 'dd/MM/yyyy'
+        opc = 'dd/MM/yyyy'
       }
       return opc
     },
