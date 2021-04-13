@@ -22,6 +22,36 @@ class ListAsQuerySet(list):
     def order_by(self, *args, **kwargs):
         return self
 
+class CommonListsAPIView(APIView):
+    """Listas de parámetros comunes (clientes, vendedores, categorías, etc."""
+
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - Tipo de lista (CLI, PROV, VEN, MAR, CLA1, CLA2, CLA3, CLAX)
+
+        p01 = str(request.query_params.get('p01', 'X'))
+
+        if p01 == 'X':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINA_LISTS', [p01, refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
+
 
 class CatalogModelViewSet(DxModelViewSet):
 # class CatalogModelViewSet(viewsets.ModelViewSet):
@@ -107,6 +137,9 @@ class CatalogAPIView(APIView):
         if pvals == '%%%%%%%%%%022021-01-012021-01-011':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
+        print('***** VALOR P03 *****')
+        print(p03)
+
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
         result = []
@@ -115,7 +148,7 @@ class CatalogAPIView(APIView):
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_QRYCATALOGO', params + [refCursor])
+            cursor.callproc('DMC.LINAEE_QRYCATALOGO', params + [refCursor])
 
             descrip = refCursor.description
 
@@ -134,7 +167,8 @@ class SaleDocsMAPIView(APIView):
 
     def get(self, request, format=None):
         # p01 - Lista con los números de documentos a consultar
-        # p02 - Nombre del cliente
+        # p02 - Código del cliente
+        # p03 - Código de vendedor
         # p11 - Tipo de consulta: Listado por números de documentos, por periodo (0, 1)
         # p12 - Fecha inicial del periodo a consultar
         # p13 - Fecha final del periodo a consultar
@@ -142,20 +176,21 @@ class SaleDocsMAPIView(APIView):
 
         p01 = str(request.query_params.get('p01', '0')).lower()
         p02 = str(request.query_params.get('p02', '%')).lower()
+        p03 = str(request.query_params.get('p03', '%')).lower()
         p11 = str(request.query_params.get('p11', '0')).lower()
         p12 = str(request.query_params.get('p12', '2021-01-01'))
         p13 = str(request.query_params.get('p13', '2021-01-31'))
         p15 = str(request.query_params.get('p15', 'COT'))
 
-        pvals = p01 + p02 + p11 + p12 + p13 + p15
+        pvals = p01 + p02 + p03 + p11 + p12 + p13 + p15
 
-        if pvals == '0%022021-01-012021-01-31COT':
+        if pvals == '0%%02021-01-012021-01-31COT':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         if p01 != '0':
             p11 = '0'
 
-        params = [p01, p02, p11, p12, p13, p15]
+        params = [p01, p02, p03, p11, p12, p13, p15]
 
         result = []
 

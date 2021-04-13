@@ -14,4 +14,5 @@ urlpatterns = [
     path('saledocsm/', views.SaleDocsMAPIView.as_view(), name='saledocsm'),
     path('saledocsd/', views.SaleDocsDAPIView.as_view(), name='saledocsd'),
     path('salesdetail/', views.SalesDetailAPIView.as_view(), name='salesdetail'),
+    path('clists/', views.CommonListsAPIView.as_view(), name='commonlists'),
 ]
