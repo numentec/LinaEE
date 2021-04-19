@@ -1,4 +1,5 @@
 import CustomStore from 'devextreme/data/custom_store'
+import { getField, updateField } from 'vuex-map-fields'
 
 export const namespaced = true
 
@@ -10,11 +11,13 @@ export const state = () => ({
 })
 
 export const mutations = {
+  updateField,
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
   },
-  SET_FILTERS(state, payload) {
-    state.filters = payload
+  SET_DATES(state, payload) {
+    state.filters.p12 = payload.p12
+    state.filters.p13 = payload.p13
   },
   SET_TOTAL_COUNT(state, payload) {
     state.totalCount = payload
@@ -27,13 +30,8 @@ export const mutations = {
 }
 
 export const actions = {
-  setFilters({ commit }, payload) {
-    // Quita los elementos que sean null, '' o undefined
-    const auxfilters = Object.entries(payload).reduce(
-      (a, [k, v]) => (v ? ((a[k] = v), a) : a),
-      {}
-    )
-    commit('SET_FILTERS', auxfilters)
+  setDates({ commit }, payload) {
+    commit('SET_DATES', payload)
   },
   setIsLoading({ commit }) {
     commit('SET_LOADING_STATUS')
@@ -47,10 +45,17 @@ export const actions = {
     const ctx = context
     const ax = this.$axios
 
+    // Quita los elementos que sean null, '' o undefined
+    // y convierte en string el valor de la propiedad de cada objeto restante
+    const curparams = Object.entries(ctx.state.filters).reduce(
+      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
+      {}
+    )
+
     async function load() {
       return await ax
         .get('linabi/salesdetail/', {
-          params: ctx.state.filters,
+          params: curparams,
         })
         .then((response) => response.data)
     }
@@ -67,9 +72,7 @@ export const actions = {
 }
 
 export const getters = {
-  getFilters(state) {
-    return state.filters
-  },
+  getField,
   getTotalCount(state) {
     return state.totalCount
   },

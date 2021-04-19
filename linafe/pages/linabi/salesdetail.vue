@@ -422,11 +422,7 @@ export default {
   },
   activated() {},
   methods: {
-    ...mapActions('linabi/salesdetail', [
-      'setFilters',
-      'setTotalCount',
-      'fetchData',
-    ]),
+    ...mapActions('linabi/salesdetail', ['fetchData']),
     goBack() {
       this.$router.back()
     },

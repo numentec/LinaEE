@@ -279,7 +279,6 @@
 </template>
 <script>
 import { mapState, mapActions } from 'vuex'
-// import config from 'devextreme/core/config'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,

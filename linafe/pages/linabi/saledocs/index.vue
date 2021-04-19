@@ -347,7 +347,8 @@
   </div>
 </template>
 <script>
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapState, mapActions } from 'vuex'
+import { mapFields } from 'vuex-map-fields'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
@@ -512,7 +513,7 @@ export default {
   },
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
-    ...mapGetters('linabi/saledocsm', ['getFilters']),
+    ...mapFields('linabi/saledocsm', ['filters']),
     curGrid0() {
       return this.$refs[curGridRefKey0].instance
     },
@@ -528,11 +529,7 @@ export default {
     this.colsConfig1 = this.config1.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/saledocsm/', [
-      'setFilters',
-      'setTotalCount',
-      'fetchData',
-    ]),
+    ...mapActions('linabi/saledocsm/', ['setTotalCount', 'fetchData']),
     ...mapActions({
       setFiltersDetails: 'linabi/saledocsd/setFilters',
       fetchDataDetails: 'linabi/saledocsd/fetchData',
@@ -569,7 +566,7 @@ export default {
       this.menuFilter = false
       if (selectedRows.length) {
         const numdocs = selectedRows.toString()
-        const tipodoc = this.getFilters.p15
+        const tipodoc = this.filters.p15
 
         this.setFiltersDetails({ p01: numdocs, p15: tipodoc })
         this.fetchDataDetails().then((store) => {

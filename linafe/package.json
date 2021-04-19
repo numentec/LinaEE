@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@nuxtjs/auth": "^4.9.1",
-    "@nuxtjs/axios": "^5.12.2",
+    "@nuxtjs/axios": "^5.13.1",
     "core-js": "^3.6.5",
     "devextreme": "^20.2.4",
     "devextreme-vue": "^20.2.4",
@@ -21,7 +21,8 @@
     "file-saver": "^2.0.5",
     "jspdf": "^2.3.1",
     "jspdf-autotable": "^3.5.14",
-    "nuxt": "^2.14.6"
+    "nuxt": "^2.15.4",
+    "vuex-map-fields": "^1.4.1"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^3.1.0",
