@@ -212,7 +212,6 @@
               <v-tab-item key="tab0">
                 <DxDataGrid
                   :ref="curGridRefKey0"
-                  class="ma-4"
                   :focused-row-enabled="true"
                   :data-source="dataSource0"
                   :remote-operations="false"
@@ -221,10 +220,11 @@
                   :row-alternation-enabled="true"
                   :show-borders="true"
                   :height="tableHeight"
+                  :width="tableWidth"
                 >
                   <DxColumn
                     v-for="xcol in colsConfig0"
-                    :key="xcol.id"
+                    :key="'tab0' + xcol.id"
                     :allow-grouping="xcol.configval7 == '1'"
                     :data-field="xcol.configkey"
                     :visible="xcol.configval2 == '1'"
@@ -258,12 +258,23 @@
                     mode="multiple"
                   />
                   <DxSummary>
-                    <DxTotalItem column="NUMDOC" summary-type="count" />
-                    <DxTotalItem
-                      column="MONTO"
-                      summary-type="sum"
-                      :value-format="setFormat('currency')"
-                    />
+                    <template v-for="gcol in colsWithSummary0">
+                      <DxGroupItem
+                        :key="'gi0' + gcol.id"
+                        :column="gcol.configkey"
+                        :align-by-column="true"
+                        :summary-type="gcol.configval8"
+                        :value-format="setFormat(gcol.configval5)"
+                        :display-format="setDFormat('gi', gcol.configval8)"
+                      />
+                      <DxTotalItem
+                        :key="'ti0' + gcol.id"
+                        :column="gcol.configkey"
+                        :summary-type="gcol.configval8"
+                        :value-format="setFormat(gcol.configval5)"
+                        :display-format="setDFormat('ti', gcol.configval8)"
+                      />
+                    </template>
                   </DxSummary>
                   <DxLoadPanel :enable="true" />
                 </DxDataGrid>
@@ -271,7 +282,6 @@
               <v-tab-item key="tab1">
                 <DxDataGrid
                   :ref="curGridRefKey1"
-                  class="ma-4"
                   :focused-row-enabled="true"
                   :data-source="dataSource1"
                   :remote-operations="false"
@@ -280,6 +290,7 @@
                   :row-alternation-enabled="true"
                   :show-borders="true"
                   :height="tableHeight"
+                  :width="tableWidth"
                 >
                   <DxColumn
                     width="200"
@@ -292,7 +303,7 @@
                   />
                   <DxColumn
                     v-for="xcol in colsConfig1"
-                    :key="xcol.id"
+                    :key="'tab1' + xcol.id"
                     :allow-grouping="xcol.configval7 == '1'"
                     :data-field="xcol.configkey"
                     :visible="xcol.configval2 == '1'"
@@ -326,6 +337,24 @@
                     show-check-boxes-mode="always"
                     mode="multiple"
                   />
+                  <DxSummary>
+                    <template v-for="gcol in colsWithSummary1">
+                      <DxGroupItem
+                        :key="'gi1' + gcol.id"
+                        :column="gcol.configkey"
+                        :summary-type="gcol.configval8"
+                        :value-format="setFormat(gcol.configval5)"
+                        :display-format="setDFormat('gi', gcol.configval8)"
+                      />
+                      <DxTotalItem
+                        :key="'ti1' + gcol.id"
+                        :column="gcol.configkey"
+                        :summary-type="gcol.configval8"
+                        :value-format="setFormat(gcol.configval5)"
+                        :display-format="setDFormat('ti', gcol.configval8)"
+                      />
+                    </template>
+                  </DxSummary>
                   <DxLoadPanel :enable="true" />
                   <template #imgCellTemplate="{ data: cellData }">
                     <ImgForGrid :img-file="cellData" />
@@ -354,6 +383,7 @@ import {
   DxDataGrid,
   DxColumn,
   DxSummary,
+  DxGroupItem,
   DxTotalItem,
   DxGrouping,
   DxGroupPanel,
@@ -440,6 +470,7 @@ export default {
     DxDataGrid,
     DxColumn,
     DxSummary,
+    DxGroupItem,
     DxTotalItem,
     DxGrouping,
     DxGroupPanel,
@@ -503,6 +534,7 @@ export default {
       radioGroup: '1',
       showBaseFilters: false,
       tableHeight: 0,
+      tableWidth: 0,
       onContentReady(e) {
         if (!collapsed) {
           e.component.expandRow(1)
@@ -519,6 +551,12 @@ export default {
     },
     curGrid1() {
       return this.$refs[curGridRefKey1].instance
+    },
+    colsWithSummary0() {
+      return this.colsConfig0.filter((obj) => obj.configval8 !== '')
+    },
+    colsWithSummary1() {
+      return this.colsConfig1.filter((obj) => obj.configval8 !== '')
     },
   },
   created() {
@@ -580,6 +618,8 @@ export default {
         window.innerHeight -
         this.$refs.resizableDiv.getBoundingClientRect().y -
         82
+      this.tableWidth =
+        this.$refs.resizableDiv.getBoundingClientRect().width - 100
     },
     setFormat(opc) {
       if (opc === 'currency') {
@@ -592,6 +632,14 @@ export default {
         opc = 'dd/MM/yyyy'
       }
       return opc
+    },
+    setDFormat(itype, stype) {
+      const stypes = {
+        sum: (itype) => (itype === 'gi' ? 'Sub Total: {0}' : 'Total: {0}'),
+        count: (itype) => (itype === 'gi' ? 'Regs: {0}' : 'Total Regs: {0}'),
+      }
+
+      return stypes[stype]?.(itype) ?? ''
     },
     exportGrid(opc) {
       let curComponent

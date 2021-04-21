@@ -22,7 +22,7 @@
         <v-list-item>
           <v-list-item-action>
             <v-switch
-              v-model="setFiltros"
+              :value="setFiltros"
               @change="$emit('set-conf-filtros')"
             ></v-switch>
           </v-list-item-action>
@@ -32,7 +32,7 @@
         <v-list-item>
           <v-list-item-action>
             <v-switch
-              v-model="setAgrupar"
+              :value="setAgrupar"
               @change="$emit('set-conf-agrupar')"
             ></v-switch>
           </v-list-item-action>
