@@ -52,6 +52,37 @@ class CommonListsAPIView(APIView):
 
         return Response(result, status=status.HTTP_200_OK)
 
+class TallasBCAPIView(APIView):
+    """Lista de codigo de barras por talla"""
+
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+
+        sku = str(request.query_params.get('sku', 'X')).lower()
+
+        if sku == 'X':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        params = [sku]
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINA_TALLASBC', params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
+
 
 class CatalogModelViewSet(DxModelViewSet):
 # class CatalogModelViewSet(viewsets.ModelViewSet):
@@ -136,9 +167,6 @@ class CatalogAPIView(APIView):
 
         if pvals == '%%%%%%%%%%022021-01-012021-01-011':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
-
-        print('***** VALOR P03 *****')
-        print(p03)
 
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 

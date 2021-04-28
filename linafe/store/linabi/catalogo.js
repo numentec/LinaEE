@@ -1,9 +1,12 @@
+/* eslint-disable no-console */
 import CustomStore from 'devextreme/data/custom_store'
 import { getField, updateField } from 'vuex-map-fields'
 
 export const namespaced = true
 
 export const state = () => ({
+  curStore: [],
+  curVariants: [],
   filters: {},
   isLoading: false,
   totalCount: 0,
@@ -12,6 +15,12 @@ export const state = () => ({
 
 export const mutations = {
   updateField,
+  SET_CUR_STORE(state, payload) {
+    state.curStore = payload
+  },
+  SET_CUR_VARIANTS(state, payload) {
+    state.curVariants = payload
+  },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
   },
@@ -33,6 +42,23 @@ export const mutations = {
 }
 
 export const actions = {
+  setCurStore({ commit }, payload) {
+    commit('SET_CUR_STORE', payload)
+  },
+  setCurVariants({ state, commit }, payload) {
+    const auxvariants = state.curVariants
+
+    if (payload) {
+      payload.forEach((obj) => {
+        !auxvariants.includes(obj) && auxvariants.push(obj)
+      })
+    }
+
+    commit('SET_CUR_VARIANTS', auxvariants)
+  },
+  clearCurVariants({ commit }) {
+    commit('SET_CUR_VARIANTS', [])
+  },
   setDates({ commit }, payload) {
     commit('SET_DATES', payload)
   },
@@ -51,7 +77,7 @@ export const actions = {
     // Quita los elementos que sean null, '' o undefined
     // y convierte en string el valor de la propiedad de cada objeto restante
     const curparams = Object.entries(ctx.state.filters).reduce(
-      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
+      (a, [k, v]) => (v ? ((a[k] = v), a) : a),
       {}
     )
 
@@ -63,7 +89,13 @@ export const actions = {
         .then((response) => response.data)
     }
 
-    const store = new CustomStore({ key: 'SKU', load })
+    const store = new CustomStore({
+      key: 'SKU',
+      load,
+      onLoaded: (data) => {
+        context.commit('SET_CUR_STORE', data)
+      },
+    })
 
     context.commit('SET_LOADING_STATUS')
 
@@ -76,6 +108,16 @@ export const actions = {
 
 export const getters = {
   getField,
+  getCurStore(state) {
+    return state.curStore
+  },
+  getCurVariants(state) {
+    return state.curVariants
+  },
+  getProdVariants(state, sku) {
+    const prodvariants = state.curVariants
+    return prodvariants.filter((obj) => obj.SKU === sku)
+  },
   getTotalCount(state) {
     return state.totalCount
   },

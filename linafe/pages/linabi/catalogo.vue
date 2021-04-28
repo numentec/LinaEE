@@ -51,11 +51,18 @@
                       </v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
-                  <v-list-item link>
+                  <v-list-item v-show="expDetail" link>
+                    <v-list-item-content>
+                      <v-list-item-title @click.stop="exportGrid(3)">
+                        Excel BC
+                      </v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <!-- <v-list-item link>
                     <v-list-item-content>
                       <v-list-item-title>CSV</v-list-item-title>
                     </v-list-item-content>
-                  </v-list-item>
+                  </v-list-item> -->
                   <v-list-item link>
                     <v-list-item-content>
                       <v-list-item-title @click.stop="exportGrid(1)">
@@ -163,7 +170,7 @@
             <v-spacer />
             <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
             <v-spacer />
-            <!-- <v-btn dark icon @click="testMethod()">
+            <!-- <v-btn dark icon @click="testMethod">
               <v-icon>mdi-test-tube</v-icon>
             </v-btn> -->
             <v-menu
@@ -198,9 +205,12 @@
             :remote-operations="false"
             :column-auto-width="true"
             :allow-column-reordering="true"
+            :allow-column-resizing="true"
+            column-resizing-mode="widget"
             :row-alternation-enabled="true"
             :show-borders="true"
             :height="tableHeight"
+            @content-ready="onContentReady"
           >
             <DxColumn
               width="200"
@@ -223,6 +233,7 @@
               :alignment="xcol.configval6"
             >
             </DxColumn>
+            <DxMasterDetail :enabled="true" template="mdTemplate" />
             <DxGrouping :auto-expand-all="false" />
             <DxGroupPanel
               :visible="setConf.agrupar"
@@ -247,20 +258,32 @@
               show-check-boxes-mode="always"
               mode="multiple"
             />
-            <DxSummary :v-show="setConf.totGlobal">
-              <DxTotalItem column="SKU" summary-type="count" />
-              <DxTotalItem
-                column="PRECIO"
-                summary-type="sum"
-                :value-format="setFormat('currency')"
-              />
-              <DxTotalItem
-                column="PRECIOPUBLICO"
-                summary-type="sum"
-                :value-format="setFormat('currency')"
-              />
+            <DxSummary>
+              <template v-for="gcol in colsWithSummary">
+                <DxGroupItem
+                  :key="'gi' + gcol.id"
+                  :column="gcol.configkey"
+                  :align-by-column="true"
+                  :summary-type="gcol.configval8"
+                  :value-format="setFormat(gcol.configval5)"
+                  :display-format="setDFormat('gi', gcol.configval8)"
+                />
+                <DxTotalItem
+                  :key="'ti' + gcol.id"
+                  :column="gcol.configkey"
+                  :summary-type="gcol.configval8"
+                  :value-format="setFormat(gcol.configval5)"
+                  :display-format="setDFormat('ti', gcol.configval8)"
+                />
+              </template>
             </DxSummary>
             <DxLoadPanel :enable="true" />
+            <template #mdTemplate="{ data }">
+              <ProdVariants
+                :variant-data="data"
+                :variant-title="'Códigos de Barra por Talla'"
+              />
+            </template>
             <template #imgCellTemplate="{ data: cellData }">
               <ImgForGrid :img-file="cellData" />
             </template>
@@ -278,11 +301,12 @@
   </div>
 </template>
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
   DxColumn,
+  DxMasterDetail,
   DxSummary,
   DxTotalItem,
   DxGrouping,
@@ -304,28 +328,30 @@ import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
+import ProdVariants from '~/components/linabi/ProdVariants.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
+// let expDet = false
 // const fotos = []
-const fotos = {}
-
-async function getImageForPDF(imgfile, ax) {
-  return await ax
-    .get(imgfile, {
-      responseType: 'arraybuffer',
-    })
-    .then((response) => {
-      return Buffer.from(response.data, 'binary').toString('base64')
-    })
-    .catch((err) => {
-      if (err.response.status === 404) {
-        return ''
-      }
-    })
-}
+// const fotos = {}
+// async function getImageForPDF(imgfile, ax) {
+//   await ax
+//     .get(imgfile, {
+//       responseType: 'arraybuffer',
+//     })
+//     .then((response) => {
+//       const b64Img = Buffer.from(response.data, 'binary').toString('base64')
+//       const objKey = 'key' + rowKey
+//       fotos[objKey] = b64Img
+//     })
+//     .catch((err) => {
+//       if (err.response.status === 404) {
+//       }
+//     })
+// }
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -368,6 +394,7 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
+    DxMasterDetail,
     DxSummary,
     DxTotalItem,
     DxGrouping,
@@ -384,6 +411,7 @@ export default {
     BaseFilters,
     ImgForGrid,
     TableSettings,
+    ProdVariants,
   },
   async asyncData({ $axios, error }) {
     try {
@@ -409,6 +437,7 @@ export default {
     return {
       curGridRefKey,
       dataSource: null,
+      curDetail: [],
       menuConf: false,
       setConf: {
         filtros: false,
@@ -431,10 +460,32 @@ export default {
   },
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
+    ...mapState('linabi/catalogo', ['curStore', 'curVariantData']),
+    ...mapGetters('linabi/common', ['getVariants', 'getFoto']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
+    colsWithSummary() {
+      return this.colsConfig.filter((obj) => obj.configval8 !== '')
+    },
+    expDetail() {
+      let result = false
+      if (this.menuFilter) {
+        if (this.$refs[curGridRefKey]) {
+          const grd = this.$refs[curGridRefKey].instance
+          result = grd.columnOption('TALLA', 'visible')
+        }
+      }
+      return result
+    },
   },
+  // watch: {
+  //   menuFilter(val) {
+  //     if (val) {
+  //       this.expDetail = this.curGrid.columnOption('TALLA', 'visible')
+  //     }
+  //   },
+  // },
   created() {
     locale(navigator.language)
     // config({ defaultCurrency: 'USD' })
@@ -443,7 +494,8 @@ export default {
     this.colsConfig = this.viewConf.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/catalogo', ['fetchData']),
+    ...mapActions('linabi/catalogo', ['fetchData', 'setCurStore']),
+    ...mapActions('linabi/common', ['fetchVariants', 'storeImages']),
     savePhotos() {
       const selectedRows = this.curGrid.getSelectedRowKeys()
 
@@ -466,6 +518,8 @@ export default {
       if (refresh) {
         this.fetchData().then((store) => {
           this.dataSource = store
+          // this.$store.commit('linabi/catalogo/SET_CUR_STORE', store)
+          // this.setCurStore(store)
           // this.setTotalCount(store.length)
         })
       }
@@ -488,9 +542,17 @@ export default {
       }
       return opc
     },
-    exportGrid(opc) {
-      const PromiseArray = []
+    setDFormat(itype, stype) {
+      // itype = Item type (GroupItem, TotalItem)
+      // stype summary type (count, sum, etc.)
+      const stypes = {
+        sum: (itype) => (itype === 'gi' ? 'Sub Total: {0}' : 'Total: {0}'),
+        count: (itype) => (itype === 'gi' ? 'Regs: {0}' : 'Total Regs: {0}'),
+      }
 
+      return stypes[stype]?.(itype) ?? ''
+    },
+    exportGrid(opc) {
       const ax = this.$axios.create({
         baseURL: this.$config.fotosURL,
         headers: {
@@ -500,95 +562,206 @@ export default {
         },
       })
 
+      // Exportar a PDF
       if (opc === 1) {
         const selectedRows = this.curGrid.getSelectedRowKeys()
-        // let i = 0
-
-        selectedRows.forEach((rowKey) => {
-          const imgfile = rowKey + this.$config.fotosExt
-          getImageForPDF(imgfile, ax).then((b64Img) => {
-            const objKey = 'key' + rowKey
-            // const xf = [{ sku: objKey, img: b64Img }]
-            // fotos.concat(xf)
-            // fotos.push({ sku: objKey, img: b64Img })
-            fotos[objKey] = b64Img
-            // console.log('VALOR DE fotos en getImageForPDF:')
-            // console.log(fotos)
-          })
-        })
-
-        const pdfDoc = new JsPDF({
-          orientation: 'landscape',
-          format: 'letter',
-        })
-
-        const options = {
-          component: this.curGrid,
-          jsPDFDocument: pdfDoc,
-          selectedRowsOnly: true,
-          customizeCell: ({ pdfCell, gridCell }) => {
-            if (gridCell.column.name === 'FOTO') {
-              if (gridCell.rowType === 'data') {
-                const rowKey = gridCell.value
-                const objKey = 'key' + rowKey
-
-                // console.log('VALOR DE fotos en options:')
-                // console.log(fotos)
-                // const { img } = fotos.find((obj) => obj.sku === objKey)
-                // const b64Img = img
-                const b64Img = fotos[objKey]
-                // console.log('VALOR DE b64Img: ' + b64Img)
-
-                pdfCell.content = ''
-                pdfCell.customDrawCell = function (data) {
-                  const tPos = data.cell.getTextPos()
-                  pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
-                }
-              }
-            }
-          },
-          autoTableOptions: {
-            bodyStyles: { minCellHeight: 20 },
-          },
-        }
-
-        exportDataGridToPdf(options).then(() => {
-          // console.log('CONTENIDO DE fotos:')
-          // console.log(fotos)
-          pdfDoc.save('Catalogo.pdf')
+        // const fotosExt = this.$config.fotosExt
+        this.storeImages(selectedRows).then((fotos) => {
+          this.doExportPDF(fotos)
         })
       }
 
+      // Exportar a Excel
       if (opc === 2) {
-        const workbook = new ExcelJS.Workbook()
-        const worksheet = workbook.addWorksheet('Catalogo')
+        this.doExportExcel([], ax)
+      }
 
-        exportDataGridToExcel({
-          component: this.curGrid,
-          worksheet,
-          autoFilterEnabled: true,
-          selectedRowsOnly: true,
-          customizeCell: ({ excelCell, gridCell }) => {
-            if (gridCell.rowType === 'data') {
-              if (gridCell.column.name === 'FOTO') {
-                excelCell.value = undefined
-                const imgfile = gridCell.value + this.$config.fotosExt
-                PromiseArray.push(
-                  new Promise((resolve, reject) => {
-                    addImageExcel(
-                      imgfile,
-                      workbook,
-                      worksheet,
-                      excelCell,
-                      ax,
-                      resolve
-                    )
-                  })
-                )
+      // Exportar a Excel con detalle de códigos de barra
+      if (opc === 3) {
+        const selectedRows = this.curGrid.getSelectedRowKeys()
+        this.fetchVariants({ sku: selectedRows }).then((vv) => {
+          this.doExportExcel(vv, ax)
+        })
+      }
+    },
+    doExportPDF(fotos) {
+      const pdfDoc = new JsPDF({
+        orientation: 'landscape',
+        format: 'letter',
+      })
+
+      // console.log('CONTENIDO DE FOTOS', fotos)
+
+      // const options = {
+      //   component: this.curGrid,
+      //   jsPDFDocument: pdfDoc,
+      //   selectedRowsOnly: true,
+      //   customizeCell: ({ pdfCell, gridCell }) => {
+      //     if (gridCell.rowType === 'data') {
+      //       if (gridCell.column.name === 'FOTO') {
+      //         const rowKey = gridCell.value
+      //         const objKey = 'key' + rowKey
+
+      //         const b64Img = fotos[objKey]
+
+      //         pdfCell.content = ''
+      //         pdfCell.customDrawCell = function (data) {
+      //           const tPos = data.cell.getTextPos()
+      //           pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+      //         }
+      //       }
+      //     }
+      //   },
+      //   autoTableOptions: {
+      //     bodyStyles: { minCellHeight: 20 },
+      //   },
+      // }
+
+      exportDataGridToPdf({
+        component: this.curGrid,
+        jsPDFDocument: pdfDoc,
+        selectedRowsOnly: true,
+        customizeCell: ({ pdfCell, gridCell }) => {
+          if (gridCell.rowType === 'data') {
+            if (gridCell.column.name === 'FOTO') {
+              const rowKey = gridCell.value
+              const objKey = 'key' + rowKey
+
+              const b64Img = fotos[objKey]
+
+              pdfCell.content = ''
+              pdfCell.customDrawCell = function (data) {
+                const tPos = data.cell.getTextPos()
+                pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
               }
             }
-          },
-        }).then(() => {
+          }
+        },
+        autoTableOptions: {
+          bodyStyles: { minCellHeight: 20 },
+        },
+      }).then(() => {
+        pdfDoc.save('Catalogo.pdf')
+      })
+    },
+    doExportExcel(vv, ax) {
+      const PromiseArray = []
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Catalogo')
+
+      const masterRows = []
+
+      exportDataGridToExcel({
+        component: this.curGrid,
+        worksheet,
+        autoFilterEnabled: true,
+        selectedRowsOnly: true,
+        customizeCell: ({ excelCell, gridCell }) => {
+          if (gridCell.rowType === 'data') {
+            if (gridCell.column.name === 'FOTO') {
+              excelCell.value = undefined
+              const imgfile = gridCell.value + this.$config.fotosExt
+              PromiseArray.push(
+                new Promise((resolve, reject) => {
+                  addImageExcel(
+                    imgfile,
+                    workbook,
+                    worksheet,
+                    excelCell,
+                    ax,
+                    resolve
+                  )
+                })
+              )
+            }
+
+            if (gridCell.column.dataField === 'TALLA' && vv.length > 0) {
+              masterRows.push({
+                rowIndex: excelCell.fullAddress.row + 1,
+                data: gridCell.data,
+              })
+            }
+          }
+        },
+      })
+        .then((cellRange) => {
+          if (vv.length > 0) {
+            const borderStyle = {
+              style: 'thin',
+              color: { argb: 'FF7E7E7E' },
+            }
+            let offset = 0
+
+            const insertRow = (index, offset, outlineLevel) => {
+              const currentIndex = index + offset
+              const row = worksheet.insertRow(currentIndex, [], 'n')
+
+              for (let j = worksheet.rowCount + 1; j > currentIndex; j--) {
+                worksheet.getRow(j).outlineLevel = worksheet.getRow(
+                  j - 1
+                ).outlineLevel
+              }
+
+              row.outlineLevel = outlineLevel
+
+              return row
+            }
+
+            for (let i = 0; i < masterRows.length; i++) {
+              // const columnIndex = cellRange.from.column + 1
+              const columnIndex =
+                this.curGrid.columnOption('TALLA', 'visibleIndex') - 1
+
+              const prodData = this.curStore.find(
+                (item) => item.SKU === masterRows[i].data.SKU
+              )
+
+              const columns = ['TALLA', 'BARCODE']
+
+              const row = insertRow(masterRows[i].rowIndex + i, offset++, 2)
+              columns.forEach((columnName, currentColumnIndex) => {
+                Object.assign(row.getCell(columnIndex + currentColumnIndex), {
+                  value: columnName,
+                  fill: {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'BEDFE6' },
+                  },
+                  font: { bold: true },
+                  border: {
+                    bottom: borderStyle,
+                    left: borderStyle,
+                    right: borderStyle,
+                    top: borderStyle,
+                  },
+                })
+              })
+
+              getProdVariants(vv, prodData.SKU).forEach((variant, index) => {
+                const row = insertRow(masterRows[i].rowIndex + i, offset++, 2)
+
+                columns.forEach((columnName, currentColumnIndex) => {
+                  Object.assign(row.getCell(columnIndex + currentColumnIndex), {
+                    value: variant[columnName],
+                    fill: {
+                      type: 'pattern',
+                      pattern: 'solid',
+                      fgColor: { argb: 'EAFFFF' },
+                    },
+                    border: {
+                      bottom: borderStyle,
+                      left: borderStyle,
+                      right: borderStyle,
+                      top: borderStyle,
+                    },
+                  })
+                })
+              })
+              offset--
+            }
+          }
+        })
+        .then(() => {
           Promise.all(PromiseArray).then(() => {
             workbook.xlsx.writeBuffer().then((buffer) => {
               saveAs(
@@ -598,13 +771,23 @@ export default {
             })
           })
         })
-      }
     },
+    // testMethod() {
+    //   if (this.curGrid.columnOption('TALLA', 'visible')) {
+    //     alert('La columna talla está visible')
+    //   } else {
+    //     alert('La columna talla no está visible')
+    //   }
+    // },
   },
   head() {
     return {
       title: 'Catálogo',
     }
   },
+}
+
+const getProdVariants = (variants, sku) => {
+  return variants.filter((v) => v.SKU === sku)
 }
 </script>

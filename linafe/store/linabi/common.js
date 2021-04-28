@@ -11,6 +11,7 @@ export const state = () => ({
   listClax: [], // Categorías extra
   listed: false,
   error: null,
+  variants: [],
 })
 
 export const mutations = {
@@ -40,6 +41,9 @@ export const mutations = {
   },
   SET_ERROR(state, payload) {
     state.error = payload
+  },
+  SET_VARIANTS(state, payload) {
+    state.variants = payload
   },
 }
 
@@ -103,6 +107,51 @@ export const actions = {
       })
   },
 
+  setVariants({ commit }, payload) {
+    commit('SET_VARIANTS', payload)
+  },
+
+  async fetchVariants({ commit }, payload) {
+    const sku = payload.sku.toString()
+    return await this.$axios
+      .get('linabi/tallasbc', {
+        params: { sku },
+      })
+      .then((response) => {
+        commit('SET_VARIANTS', response.data)
+        return response.data
+      })
+  },
+
+  async storeImages({ commit }, payload) {
+    const ax = this.$axios.create({
+      baseURL: this.$config.fotosURL,
+      headers: {
+        common: {
+          Accept: 'image/*, application/json, text/plain, */*',
+        },
+      },
+    })
+    const fotos = {}
+    await payload.forEach(async (rowKey) => {
+      const imgfile = rowKey + this.$config.fotosExt
+      await ax
+        .get(imgfile, {
+          responseType: 'arraybuffer',
+        })
+        .then((response) => {
+          const b64Img = Buffer.from(response.data, 'binary').toString('base64')
+          const objKey = 'key' + rowKey
+          fotos[objKey] = b64Img
+        })
+        .catch((err) => {
+          if (err.response.status === 404) {
+          }
+        })
+    })
+    return fotos
+  },
+
   setError({ commit }, payload) {
     commit('SET_ERROR', payload)
   },
@@ -135,5 +184,17 @@ export const getters = {
   },
   getListClx3(state) {
     return state.listClax.filter((obj) => obj.TIPO === 'C3')
+  },
+  getAllVariants(state) {
+    return async (sku) => {
+      return await this.$axios
+        .get('linabi/tallasbc', {
+          params: { sku },
+        })
+        .then((response) => response.data)
+    }
+  },
+  getVariants(state) {
+    return state.variants
   },
 }

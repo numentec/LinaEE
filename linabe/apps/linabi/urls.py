@@ -15,4 +15,5 @@ urlpatterns = [
     path('saledocsd/', views.SaleDocsDAPIView.as_view(), name='saledocsd'),
     path('salesdetail/', views.SalesDetailAPIView.as_view(), name='salesdetail'),
     path('clists/', views.CommonListsAPIView.as_view(), name='commonlists'),
+    path('tallasbc/', views.TallasBCAPIView.as_view(), name='tallasbc'),
 ]

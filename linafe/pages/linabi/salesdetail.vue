@@ -209,23 +209,24 @@
               show-check-boxes-mode="always"
               mode="multiple"
             />
-            <DxSummary :v-show="setConf.totGlobal">
-              <DxTotalItem column="SKU" summary-type="count" />
-              <DxTotalItem
-                column="PRECIO"
-                summary-type="sum"
-                :value-format="setFormat('currency')"
-              />
-              <DxTotalItem
-                column="PVP"
-                summary-type="sum"
-                :value-format="setFormat('currency')"
-              />
-              <DxTotalItem
-                column="TOTAL"
-                summary-type="sum"
-                :value-format="setFormat('currency')"
-              />
+            <DxSummary>
+              <template v-for="gcol in colsWithSummary">
+                <DxGroupItem
+                  :key="'gi' + gcol.id"
+                  :column="gcol.configkey"
+                  :align-by-column="true"
+                  :summary-type="gcol.configval8"
+                  :value-format="setFormat(gcol.configval5)"
+                  :display-format="setDFormat('gi', gcol.configval8)"
+                />
+                <DxTotalItem
+                  :key="'ti' + gcol.id"
+                  :column="gcol.configkey"
+                  :summary-type="gcol.configval8"
+                  :value-format="setFormat(gcol.configval5)"
+                  :display-format="setDFormat('ti', gcol.configval8)"
+                />
+              </template>
             </DxSummary>
             <DxLoadPanel :enable="true" />
             <template #imgCellTemplate="{ data: cellData }">
@@ -330,6 +331,7 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
     })
 }
 
+// Default Breadcrumb item
 const defaultBCItem = [
   {
     text: 'DETALLE DE VENTAS',
@@ -460,6 +462,16 @@ export default {
         opc = 'dd/MM/yyyy'
       }
       return opc
+    },
+    setDFormat(itype, stype) {
+      // itype = Item type (GroupItem, TotalItem)
+      // stype summary type (count, sum, etc.)
+      const stypes = {
+        sum: (itype) => (itype === 'gi' ? 'Sub Total: {0}' : 'Total: {0}'),
+        count: (itype) => (itype === 'gi' ? 'Regs: {0}' : 'Total Regs: {0}'),
+      }
+
+      return stypes[stype]?.(itype) ?? ''
     },
     exportGrid(opc) {
       const PromiseArray = []
