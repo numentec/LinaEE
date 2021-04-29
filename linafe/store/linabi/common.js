@@ -12,6 +12,7 @@ export const state = () => ({
   listed: false,
   error: null,
   variants: [],
+  fotos: {},
 })
 
 export const mutations = {
@@ -44,6 +45,9 @@ export const mutations = {
   },
   SET_VARIANTS(state, payload) {
     state.variants = payload
+  },
+  SET_FOTOS(state, payload) {
+    state.fotos = payload
   },
 }
 
@@ -111,6 +115,10 @@ export const actions = {
     commit('SET_VARIANTS', payload)
   },
 
+  setFotos({ commit }, payload) {
+    commit('SET_FOTOS', payload)
+  },
+
   async fetchVariants({ commit }, payload) {
     const sku = payload.sku.toString()
     return await this.$axios
@@ -132,7 +140,7 @@ export const actions = {
         },
       },
     })
-    const fotos = {}
+    const ff = {}
     await payload.forEach(async (rowKey) => {
       const imgfile = rowKey + this.$config.fotosExt
       await ax
@@ -142,14 +150,40 @@ export const actions = {
         .then((response) => {
           const b64Img = Buffer.from(response.data, 'binary').toString('base64')
           const objKey = 'key' + rowKey
-          fotos[objKey] = b64Img
+          ff[objKey] = b64Img
         })
         .catch((err) => {
           if (err.response.status === 404) {
           }
         })
     })
-    return fotos
+
+    commit('SET_FOTOS', ff)
+    return ff
+  },
+
+  async imgDownload({ commit }, payload) {
+    const ax = this.$axios.create({
+      baseURL: this.$config.fotosURL,
+      headers: {
+        common: {
+          Accept: 'image/*, application/json, text/plain, */*',
+        },
+      },
+    })
+    const imgfile = payload + this.$config.fotosExt
+    return await ax
+      .get(imgfile, {
+        responseType: 'arraybuffer',
+      })
+      .then((response) => {
+        return Buffer.from(response.data, 'binary').toString('base64')
+      })
+      .catch((err) => {
+        if (err.response.status === 404) {
+          return null
+        }
+      })
   },
 
   setError({ commit }, payload) {
@@ -196,5 +230,8 @@ export const getters = {
   },
   getVariants(state) {
     return state.variants
+  },
+  getFotos(state) {
+    return state.fotos
   },
 }

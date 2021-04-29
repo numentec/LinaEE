@@ -53,11 +53,6 @@
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>CSV</v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item link>
-                    <v-list-item-content>
                       <v-list-item-title @click.stop="exportGrid(1)">
                         PDF
                       </v-list-item-title>
@@ -277,23 +272,6 @@ import TableSettings from '~/components/utilities/TableSettings'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
-// const fotos = []
-const fotos = {}
-
-async function getImageForPDF(imgfile, ax) {
-  return await ax
-    .get(imgfile, {
-      responseType: 'arraybuffer',
-    })
-    .then((response) => {
-      return Buffer.from(response.data, 'binary').toString('base64')
-    })
-    .catch((err) => {
-      if (err.response.status === 404) {
-        return ''
-      }
-    })
-}
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -474,8 +452,6 @@ export default {
       return stypes[stype]?.(itype) ?? ''
     },
     exportGrid(opc) {
-      const PromiseArray = []
-
       const ax = this.$axios.create({
         baseURL: this.$config.fotosURL,
         headers: {
@@ -486,92 +462,87 @@ export default {
       })
 
       if (opc === 1) {
-        const selectedRows = this.curGrid.getSelectedRowKeys()
-
-        selectedRows.forEach((rowKey) => {
-          const imgfile = rowKey + this.$config.fotosExt
-          getImageForPDF(imgfile, ax).then((b64Img) => {
-            const objKey = 'key' + rowKey
-            // fotos.push({ sku: objKey, img: b64Img })
-            fotos[objKey] = b64Img
-          })
-        })
-
-        const pdfDoc = new JsPDF({
-          orientation: 'landscape',
-          format: 'letter',
-        })
-
-        const options = {
-          component: this.curGrid,
-          jsPDFDocument: pdfDoc,
-          selectedRowsOnly: true,
-          customizeCell: ({ pdfCell, gridCell }) => {
-            if (gridCell.column.name === 'FOTO') {
-              if (gridCell.rowType === 'data') {
-                const rowKey = gridCell.value
-                const objKey = 'key' + rowKey
-
-                const b64Img = fotos[objKey]
-
-                pdfCell.content = ''
-                pdfCell.customDrawCell = function (data) {
-                  const tPos = data.cell.getTextPos()
-                  pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
-                }
-              }
-            }
-          },
-          autoTableOptions: {
-            bodyStyles: { minCellHeight: 20 },
-          },
-        }
-
-        exportDataGridToPdf(options).then(() => {
-          pdfDoc.save('Detalle.pdf')
-        })
+        this.doExportExcel(ax)
       }
 
       if (opc === 2) {
-        const workbook = new ExcelJS.Workbook()
-        const worksheet = workbook.addWorksheet('Detalle')
+        this.doExportPDF()
+      }
+    },
+    doExportPDF() {
+      const pdfDoc = new JsPDF({
+        orientation: 'landscape',
+        format: 'letter',
+      })
 
-        exportDataGridToExcel({
-          component: this.curGrid,
-          worksheet,
-          autoFilterEnabled: true,
-          selectedRowsOnly: true,
-          customizeCell: ({ excelCell, gridCell }) => {
-            if (gridCell.rowType === 'data') {
-              if (gridCell.column.name === 'FOTO') {
-                excelCell.value = undefined
-                const imgfile = gridCell.value + this.$config.fotosExt
-                PromiseArray.push(
-                  new Promise((resolve, reject) => {
-                    addImageExcel(
-                      imgfile,
-                      workbook,
-                      worksheet,
-                      excelCell,
-                      ax,
-                      resolve
-                    )
-                  })
-                )
+      let mch = { minCellHeight: 5 }
+      if (this.curGrid.columnOption('FOTO', 'visible')) {
+        mch = { minCellHeight: 20 }
+      }
+
+      exportDataGridToPdf({
+        component: this.curGrid,
+        jsPDFDocument: pdfDoc,
+        selectedRowsOnly: true,
+
+        autoTableOptions: {
+          bodyStyles: mch,
+          didDrawCell: (data) => {
+            if (this.curGrid.columnOption('FOTO', 'visible')) {
+              if (data.column.index === 0 && data.cell.section === 'body') {
+                const rowKey = data.cell.raw.content
+                const imgsrc =
+                  this.$config.fotosURL + rowKey + this.$config.fotosExt
+                const tPos = data.cell.getTextPos()
+                pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
               }
             }
           },
-        }).then(() => {
-          Promise.all(PromiseArray).then(() => {
-            workbook.xlsx.writeBuffer().then((buffer) => {
-              saveAs(
-                new Blob([buffer], { type: 'application/octet-stream' }),
-                'Detalle.xlsx'
+        },
+      }).then(() => {
+        pdfDoc.save('detalle_de_ventas.pdf')
+      })
+    },
+    doExportExcel(ax) {
+      const PromiseArray = []
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('ventas_det')
+
+      exportDataGridToExcel({
+        component: this.curGrid,
+        worksheet,
+        autoFilterEnabled: true,
+        selectedRowsOnly: true,
+        customizeCell: ({ excelCell, gridCell }) => {
+          if (gridCell.rowType === 'data') {
+            if (gridCell.column.name === 'FOTO') {
+              excelCell.value = undefined
+              const imgfile = gridCell.value + this.$config.fotosExt
+              PromiseArray.push(
+                new Promise((resolve, reject) => {
+                  addImageExcel(
+                    imgfile,
+                    workbook,
+                    worksheet,
+                    excelCell,
+                    ax,
+                    resolve
+                  )
+                })
               )
-            })
+            }
+          }
+        },
+      }).then(() => {
+        Promise.all(PromiseArray).then(() => {
+          workbook.xlsx.writeBuffer().then((buffer) => {
+            saveAs(
+              new Blob([buffer], { type: 'application/octet-stream' }),
+              'detalle_de_ventas.xlsx'
+            )
           })
         })
-      }
+      })
     },
   },
   head() {

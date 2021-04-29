@@ -46,14 +46,14 @@
                   </template>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(2)">
+                      <v-list-item-title @click.stop="exportGrid(1)">
                         Excel
                       </v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item v-show="expDetail" link>
                     <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(3)">
+                      <v-list-item-title @click.stop="exportGrid(2)">
                         Excel BC
                       </v-list-item-title>
                     </v-list-item-content>
@@ -65,7 +65,7 @@
                   </v-list-item> -->
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(1)">
+                      <v-list-item-title @click.stop="exportGrid(3)">
                         PDF
                       </v-list-item-title>
                     </v-list-item-content>
@@ -220,6 +220,7 @@
               caption="Foto"
               cell-template="imgCellTemplate"
               :allow-header-filtering="false"
+              :allow-reordering="false"
             />
             <DxColumn
               v-for="xcol in colsConfig"
@@ -301,7 +302,7 @@
   </div>
 </template>
 <script>
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
@@ -334,24 +335,6 @@ import TableSettings from '~/components/utilities/TableSettings'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
-// let expDet = false
-// const fotos = []
-// const fotos = {}
-// async function getImageForPDF(imgfile, ax) {
-//   await ax
-//     .get(imgfile, {
-//       responseType: 'arraybuffer',
-//     })
-//     .then((response) => {
-//       const b64Img = Buffer.from(response.data, 'binary').toString('base64')
-//       const objKey = 'key' + rowKey
-//       fotos[objKey] = b64Img
-//     })
-//     .catch((err) => {
-//       if (err.response.status === 404) {
-//       }
-//     })
-// }
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -460,8 +443,7 @@ export default {
   },
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
-    ...mapState('linabi/catalogo', ['curStore', 'curVariantData']),
-    ...mapGetters('linabi/common', ['getVariants', 'getFoto']),
+    ...mapState('linabi/catalogo', ['curStore']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
@@ -494,8 +476,8 @@ export default {
     this.colsConfig = this.viewConf.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/catalogo', ['fetchData', 'setCurStore']),
-    ...mapActions('linabi/common', ['fetchVariants', 'storeImages']),
+    ...mapActions('linabi/catalogo', ['fetchData']),
+    ...mapActions('linabi/common', ['fetchVariants']),
     savePhotos() {
       const selectedRows = this.curGrid.getSelectedRowKeys()
 
@@ -518,9 +500,6 @@ export default {
       if (refresh) {
         this.fetchData().then((store) => {
           this.dataSource = store
-          // this.$store.commit('linabi/catalogo/SET_CUR_STORE', store)
-          // this.setCurStore(store)
-          // this.setTotalCount(store.length)
         })
       }
     },
@@ -562,88 +541,76 @@ export default {
         },
       })
 
-      // Exportar a PDF
-      if (opc === 1) {
-        const selectedRows = this.curGrid.getSelectedRowKeys()
-        // const fotosExt = this.$config.fotosExt
-        this.storeImages(selectedRows).then((fotos) => {
-          this.doExportPDF(fotos)
-        })
-      }
-
       // Exportar a Excel
-      if (opc === 2) {
+      if (opc === 1) {
         this.doExportExcel([], ax)
       }
 
       // Exportar a Excel con detalle de códigos de barra
-      if (opc === 3) {
+      if (opc === 2) {
         const selectedRows = this.curGrid.getSelectedRowKeys()
         this.fetchVariants({ sku: selectedRows }).then((vv) => {
           this.doExportExcel(vv, ax)
         })
       }
+
+      // Exportar a PDF
+      if (opc === 3) {
+        this.doExportPDF()
+      }
     },
-    doExportPDF(fotos) {
+
+    doExportPDF() {
       const pdfDoc = new JsPDF({
         orientation: 'landscape',
         format: 'letter',
       })
 
-      // console.log('CONTENIDO DE FOTOS', fotos)
-
-      // const options = {
-      //   component: this.curGrid,
-      //   jsPDFDocument: pdfDoc,
-      //   selectedRowsOnly: true,
-      //   customizeCell: ({ pdfCell, gridCell }) => {
-      //     if (gridCell.rowType === 'data') {
-      //       if (gridCell.column.name === 'FOTO') {
-      //         const rowKey = gridCell.value
-      //         const objKey = 'key' + rowKey
-
-      //         const b64Img = fotos[objKey]
-
-      //         pdfCell.content = ''
-      //         pdfCell.customDrawCell = function (data) {
-      //           const tPos = data.cell.getTextPos()
-      //           pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
-      //         }
-      //       }
-      //     }
-      //   },
-      //   autoTableOptions: {
-      //     bodyStyles: { minCellHeight: 20 },
-      //   },
-      // }
+      let mch = { minCellHeight: 5 }
+      if (this.curGrid.columnOption('FOTO', 'visible')) {
+        mch = { minCellHeight: 20 }
+      }
 
       exportDataGridToPdf({
         component: this.curGrid,
         jsPDFDocument: pdfDoc,
         selectedRowsOnly: true,
-        customizeCell: ({ pdfCell, gridCell }) => {
-          if (gridCell.rowType === 'data') {
-            if (gridCell.column.name === 'FOTO') {
-              const rowKey = gridCell.value
-              const objKey = 'key' + rowKey
+        // customizeCell: ({ pdfCell, gridCell }) => {
+        //   if (gridCell.rowType === 'data') {
+        //     if (gridCell.column.name === 'FOTO') {
+        //       const rowKey = gridCell.value
 
-              const b64Img = fotos[objKey]
+        //       pdfCell.content = ''
 
-              pdfCell.content = ''
-              pdfCell.customDrawCell = function (data) {
+        //       const imgsrc =
+        //         this.$config.fotosURL + rowKey + this.$config.fotosExt
+
+        //       pdfCell.customDrawCell = function (data) {
+        //         const tPos = data.cell.getTextPos()
+        //         pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+        //       }
+        //     }
+        //   }
+        // },
+        autoTableOptions: {
+          bodyStyles: mch,
+          didDrawCell: (data) => {
+            if (this.curGrid.columnOption('FOTO', 'visible')) {
+              if (data.column.index === 0 && data.cell.section === 'body') {
+                const rowKey = data.cell.raw.content
+                const imgsrc =
+                  this.$config.fotosURL + rowKey + this.$config.fotosExt
                 const tPos = data.cell.getTextPos()
-                pdfDoc.addImage(b64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+                pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
               }
             }
-          }
-        },
-        autoTableOptions: {
-          bodyStyles: { minCellHeight: 20 },
+          },
         },
       }).then(() => {
         pdfDoc.save('Catalogo.pdf')
       })
     },
+
     doExportExcel(vv, ax) {
       const PromiseArray = []
       const workbook = new ExcelJS.Workbook()
@@ -712,9 +679,10 @@ export default {
               const columnIndex =
                 this.curGrid.columnOption('TALLA', 'visibleIndex') - 1
 
-              const prodData = this.curStore.find(
-                (item) => item.SKU === masterRows[i].data.SKU
-              )
+              // const prodData = this.curStore.find(
+              //   (item) => item.SKU === masterRows[i].data.SKU
+              // )
+              const prodSKU = masterRows[i].data.SKU
 
               const columns = ['TALLA', 'BARCODE']
 
@@ -737,7 +705,7 @@ export default {
                 })
               })
 
-              getProdVariants(vv, prodData.SKU).forEach((variant, index) => {
+              getProdVariants(vv, prodSKU).forEach((variant, index) => {
                 const row = insertRow(masterRows[i].rowIndex + i, offset++, 2)
 
                 columns.forEach((columnName, currentColumnIndex) => {
@@ -773,11 +741,9 @@ export default {
         })
     },
     // testMethod() {
-    //   if (this.curGrid.columnOption('TALLA', 'visible')) {
-    //     alert('La columna talla está visible')
-    //   } else {
-    //     alert('La columna talla no está visible')
-    //   }
+    //   const selectedRows = this.curGrid.getSelectedRowKeys()
+    //   // const fotosExt = this.$config.fotosExt
+    //   this.storeImages(selectedRows)
     // },
   },
   head() {
