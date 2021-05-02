@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <div>
     <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="120">
@@ -35,6 +36,9 @@ export default {
     imgID() {
       return this.imgFile.value
     },
+  },
+  mounted() {
+    // console.log('VALOR DE IMGFILE', this.imgFile)
   },
 }
 </script>

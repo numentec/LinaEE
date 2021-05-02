@@ -11,7 +11,7 @@
     >
       <v-form>
         <v-card>
-          <v-toolbar color="accent lighten-3" dark>
+          <v-toolbar color="accent darken-3" dark>
             <v-toolbar-title>Filtros Iniciales</v-toolbar-title>
             <v-spacer />
             <v-btn icon @click="closeDialog(false)">
@@ -85,6 +85,8 @@
                               config.find((obj) => obj.configkey == 'filter01')
                                 .configval2
                             "
+                            clearable
+                            dense
                           ></v-text-field>
                         </div>
                       </template>
@@ -130,6 +132,7 @@
                               config.find((obj) => obj.configkey == 'filter02')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -176,6 +179,7 @@
                               config.find((obj) => obj.configkey == 'filter03')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -236,6 +240,7 @@
                               config.find((obj) => obj.configkey == 'filter04')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -282,6 +287,7 @@
                               config.find((obj) => obj.configkey == 'filter05')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -328,6 +334,7 @@
                               config.find((obj) => obj.configkey == 'filter06')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -385,6 +392,7 @@
                               config.find((obj) => obj.configkey == 'filter07')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -428,6 +436,7 @@
                               config.find((obj) => obj.configkey == 'filter08')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -471,6 +480,7 @@
                               config.find((obj) => obj.configkey == 'filter09')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -497,6 +507,7 @@
                               config.find((obj) => obj.configkey == 'filter10')
                                 .configval2
                             "
+                            clearable
                             dense
                           ></v-text-field>
                         </div>
@@ -556,6 +567,7 @@
                                     ).configval2
                                   "
                                   prepend-icon="mdi-calendar"
+                                  clearable
                                   dense
                                   readonly
                                   v-bind="attrs"
@@ -600,6 +612,7 @@
                                     ).configval2
                                   "
                                   prepend-icon="mdi-calendar"
+                                  clearable
                                   dense
                                   readonly
                                   v-bind="attrs"
@@ -624,7 +637,7 @@
               <v-btn
                 block
                 :disabled="!valid"
-                color="success"
+                color="success darken-1"
                 @click="closeDialog(true)"
               >
                 Aplicar

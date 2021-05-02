@@ -6,6 +6,8 @@ export const namespaced = true
 
 export const state = () => ({
   curStore: [],
+  curCatalog: [],
+  changes: [],
   curVariants: [],
   filters: {},
   isLoading: false,
@@ -20,6 +22,9 @@ export const mutations = {
   },
   SET_CUR_VARIANTS(state, payload) {
     state.curVariants = payload
+  },
+  SET_CUR_CATALOG(state, payload) {
+    state.curCatalog = payload
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
@@ -38,6 +43,9 @@ export const mutations = {
     if (payload.length) {
       state.breadCrumbsItems = payload
     }
+  },
+  SET_CHANGES(state, changes) {
+    state.changes = changes
   },
 }
 
@@ -76,8 +84,13 @@ export const actions = {
 
     // Quita los elementos que sean null, '' o undefined
     // y convierte en string el valor de la propiedad de cada objeto restante
-    const curparams = Object.entries(ctx.state.filters).reduce(
-      (a, [k, v]) => (v ? ((a[k] = v), a) : a),
+    let curparams = Object.entries(ctx.state.filters).reduce(
+      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
+      {}
+    )
+
+    curparams = Object.entries(curparams).reduce(
+      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
       {}
     )
 
@@ -104,6 +117,24 @@ export const actions = {
   setBreadCrumbsItems({ commit }, payload) {
     commit('SET_BREAD_CRUMBS_ITEMS', payload)
   },
+  addToCurCatalog({ commit, state }, payload) {
+    let cc = state.curCatalog
+    cc = cc.filter((el1) => {
+      return !payload.find((el2) => {
+        return el2.SKU === el1.SKU
+      })
+    })
+
+    cc = cc.concat(payload)
+
+    commit('SET_CUR_CATALOG', cc)
+  },
+  setCurCatalog({ commit }, payload) {
+    commit('SET_CUR_CATALOG', payload)
+  },
+  setChanges({ commit }, payload) {
+    commit('SET_CHANGES', payload)
+  },
 }
 
 export const getters = {
@@ -123,5 +154,11 @@ export const getters = {
   },
   getBreadCrumbsItems(state) {
     return state.breadCrumbsItems
+  },
+  getCurCatalog(state) {
+    return state.curCatalog
+  },
+  isLoading(state) {
+    return state.isLoading
   },
 }

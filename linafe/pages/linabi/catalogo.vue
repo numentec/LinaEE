@@ -84,12 +84,16 @@
                   </template>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Procesar</v-list-item-title>
+                      <v-list-item-title @click.stop="showCatalogBuilder = true"
+                        >Procesar</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Agregar Selección</v-list-item-title>
+                      <v-list-item-title @click.stop="addToCatalog"
+                        >Agregar Selección</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
@@ -199,7 +203,6 @@
         <div ref="resizableDiv" v-resize="onResize">
           <DxDataGrid
             :ref="curGridRefKey"
-            class="ma-4"
             :focused-row-enabled="true"
             :data-source="dataSource"
             :remote-operations="false"
@@ -208,6 +211,8 @@
             :allow-column-resizing="true"
             column-resizing-mode="widget"
             :row-alternation-enabled="true"
+            :show-column-lines="true"
+            :show-row-lines="false"
             :show-borders="true"
             :height="tableHeight"
             @content-ready="onContentReady"
@@ -296,7 +301,13 @@
         :config="viewConf.filter((el) => el.tipo == 'filter')"
         :numvista="14"
         curstore="linabi/catalogo"
-        @closeDialog="closeDialog"
+        @closeDialog="closeBaseFilters"
+      />
+      <CatalogBuilder
+        :dialog.sync="showCatalogBuilder"
+        :numvista="14"
+        curstore="linabi/catalogo"
+        @closeDialog="closeCatalogBuilder"
       />
     </div>
   </div>
@@ -309,6 +320,7 @@ import {
   DxColumn,
   DxMasterDetail,
   DxSummary,
+  DxGroupItem,
   DxTotalItem,
   DxGrouping,
   DxGroupPanel,
@@ -329,6 +341,7 @@ import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
+import CatalogBuilder from '~/components/linabi/CatalogBuilder'
 import ProdVariants from '~/components/linabi/ProdVariants.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
@@ -379,6 +392,7 @@ export default {
     DxColumn,
     DxMasterDetail,
     DxSummary,
+    DxGroupItem,
     DxTotalItem,
     DxGrouping,
     DxGroupPanel,
@@ -392,6 +406,7 @@ export default {
     DxLoadPanel,
     MaterialCard,
     BaseFilters,
+    CatalogBuilder,
     ImgForGrid,
     TableSettings,
     ProdVariants,
@@ -432,6 +447,7 @@ export default {
       menuFilter: false,
       radioGroup: '1',
       showBaseFilters: false,
+      showCatalogBuilder: false,
       tableHeight: 0,
       onContentReady(e) {
         if (!collapsed) {
@@ -476,7 +492,7 @@ export default {
     this.colsConfig = this.viewConf.filter((e) => e.tipo === 'col')
   },
   methods: {
-    ...mapActions('linabi/catalogo', ['fetchData']),
+    ...mapActions('linabi/catalogo', ['fetchData', 'addToCurCatalog']),
     ...mapActions('linabi/common', ['fetchVariants']),
     savePhotos() {
       const selectedRows = this.curGrid.getSelectedRowKeys()
@@ -495,13 +511,16 @@ export default {
       this.curGrid.showColumnChooser()
       this.menuConf = false
     },
-    closeDialog(refresh) {
+    closeBaseFilters(refresh) {
       this.showBaseFilters = false
       if (refresh) {
         this.fetchData().then((store) => {
           this.dataSource = store
         })
       }
+    },
+    closeCatalogBuilder() {
+      this.showCatalogBuilder = false
     },
     onResize() {
       this.tableHeight =
@@ -745,6 +764,12 @@ export default {
     //   // const fotosExt = this.$config.fotosExt
     //   this.storeImages(selectedRows)
     // },
+    addToCatalog() {
+      const selected = this.curGrid.getSelectedRowsData()
+      this.addToCurCatalog(selected)
+      this.menuFilter = false
+      this.showCatalogBuilder = true
+    },
   },
   head() {
     return {
