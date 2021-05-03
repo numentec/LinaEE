@@ -1,141 +1,190 @@
 /* eslint-disable no-console */
 <template>
   <client-only>
-    <v-dialog
-      :value="dialog"
-      persistent
-      max-width="800px"
-      min-width="400px"
-      max-height="750px"
-      @input="$emit('update:dialog', false)"
-      @keydown.esc="closeDialog()"
-    >
-      <v-card max-height="700px">
-        <v-toolbar color="accent darken-3" dark dense>
-          <v-menu
-            v-model="menu"
-            :close-on-content-click="false"
-            :nudge-width="150"
-            offset-y
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn dark icon v-bind="attrs" v-on="on">
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
-            </template>
-            <v-list nav>
-              <v-list-item link>
-                <v-list-item-icon>
-                  <v-icon>mdi-folder-open</v-icon>
-                </v-list-item-icon>
-                <v-list-item-title @click.stop="doAlert('Abrir')">
-                  Abrir
-                </v-list-item-title>
-              </v-list-item>
-              <v-list-item link>
-                <v-list-item-icon>
-                  <v-icon>mdi-content-save-all</v-icon>
-                </v-list-item-icon>
-                <v-list-item-title @click.stop="doExportExcel">
-                  Guardar
-                </v-list-item-title>
-              </v-list-item>
-              <v-list-item>
-                <v-list-item-content>
-                  <v-radio-group v-model="keyCatalog">
-                    <v-radio label="SKU" :value="1"></v-radio>
-                    <v-radio label="Código de barra" :value="2"></v-radio>
-                  </v-radio-group>
-                </v-list-item-content>
-              </v-list-item>
-              <v-list-item link>
-                <v-list-item-icon>
-                  <v-icon>mdi-table-cancel</v-icon>
-                </v-list-item-icon>
-                <v-list-item-title @click.stop="clearCatalog">
-                  Limpiar
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-          <v-toolbar-title>Catálogo Personalizado</v-toolbar-title>
-          <v-spacer />
-          <v-btn icon @click="closeDialog()">
-            <v-icon>mdi-window-close</v-icon>
-          </v-btn>
-        </v-toolbar>
-        <v-card-text class="mt-2">
-          <DxDataGrid
-            :ref="curGridRefKey"
-            key-expr="SKU"
-            :focused-row-enabled="true"
-            :data-source="getCurCatalog"
-            :remote-operations="false"
-            :column-auto-width="true"
-            :allow-column-resizing="true"
-            column-resizing-mode="widget"
-            :row-alternation-enabled="true"
-            :show-column-lines="true"
-            :show-row-lines="false"
-            :show-borders="true"
-            height="500px"
-            @selection-changed="showDetail"
-            @saving="onSaving"
-          >
-            <DxEditing
-              :changes="changes"
-              :allow-deleting="true"
-              mode="row"
-              :confirm-delete="false"
-            />
-            <DxColumn
-              :allow-grouping="false"
-              data-field="SKU"
-              caption="SKU"
-              :allow-header-filtering="true"
-              :allow-exporting="keyCatalog == 1 ? true : false"
-            />
-            <DxColumn
-              :allow-grouping="false"
-              data-field="BARCODE"
-              caption="BARCODE"
-              :allow-header-filtering="true"
-              :allow-exporting="keyCatalog == 2 ? true : false"
-            />
-            <DxColumn
-              :allow-grouping="false"
-              data-field="DESCRIP"
-              caption="Descripción"
-              :allow-header-filtering="true"
-              :allow-exporting="false"
-            />
-            <DxSummary>
-              <DxTotalItem
-                column="SKU"
-                summary-type="count"
-                display-format="{0}  Registros"
-              />
-            </DxSummary>
-            <DxMasterDetail :enabled="false" template="mdTemplate" />
-            <DxSearchPanel :visible="true" :highlight-case-sensitive="true" />
-            <DxHeaderFilter :visible="true" />
-            <DxScrolling mode="virtual" />
-            <DxSelection mode="single" />
-            <DxLoadPanel :enable="true" />
-            <template #mdTemplate="{ data: cellData }">
-              <v-row>
-                <v-col>
-                  <ImgForGrid :img-file="{ value: cellData.key }" />
-                </v-col>
-                <v-col>
-                  <p>{{ cellData.data.DESCRIP_EN }}</p>
-                </v-col>
-              </v-row>
-            </template>
-          </DxDataGrid>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <div>
+      <v-dialog
+        :value="dialog"
+        persistent
+        max-width="800px"
+        min-width="400px"
+        max-height="750px"
+        @input="$emit('update:dialog', false)"
+        @keydown.esc="closeDialog()"
+      >
+        <v-card max-height="700px">
+          <v-toolbar color="accent darken-3" dark dense>
+            <v-menu
+              v-model="menu"
+              :close-on-content-click="false"
+              :nudge-width="150"
+              offset-y
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn dark icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-dots-vertical</v-icon>
+                </v-btn>
+              </template>
+              <v-list nav>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-folder-open</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click.stop="doAlert('Abrir')">
+                    Abrir
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-content-save-all</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click.stop="doExportExcel">
+                    Guardar
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-radio-group v-model="keyCatalog">
+                      <v-radio label="SKU" :value="1"></v-radio>
+                      <v-radio label="Código de barra" :value="2"></v-radio>
+                    </v-radio-group>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-table-cancel</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click.stop="clearCatalog">
+                    Limpiar
+                  </v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <v-toolbar-title>Catálogo Personalizado</v-toolbar-title>
+            <v-spacer />
+            <v-btn icon @click="closeDialog()">
+              <v-icon>mdi-window-close</v-icon>
+            </v-btn>
+          </v-toolbar>
+          <v-card-text class="mt-2">
+            <v-tabs v-model="tab">
+              <v-tab key="tab0" dense> En construcción </v-tab>
+              <v-tab key="tab1" dense> Cargar archivo </v-tab>
+              <v-tabs-items v-model="tab">
+                <v-tab-item key="tab0">
+                  <DxDataGrid
+                    :ref="curGridRefKey"
+                    key-expr="SKU"
+                    :focused-row-enabled="true"
+                    :data-source="getCurCatalog"
+                    :remote-operations="false"
+                    :column-auto-width="true"
+                    :allow-column-resizing="true"
+                    column-resizing-mode="widget"
+                    :row-alternation-enabled="true"
+                    :show-column-lines="true"
+                    :show-row-lines="false"
+                    :show-borders="true"
+                    height="500px"
+                    @selection-changed="showDetail"
+                    @saving="onSaving"
+                  >
+                    <DxEditing
+                      :changes="changes"
+                      :allow-deleting="true"
+                      mode="row"
+                      :confirm-delete="false"
+                    />
+                    <DxColumn
+                      :allow-grouping="false"
+                      data-field="SKU"
+                      caption="SKU"
+                      :allow-header-filtering="true"
+                      :allow-exporting="keyCatalog == 1 ? true : false"
+                    />
+                    <DxColumn
+                      :allow-grouping="false"
+                      data-field="BARCODE"
+                      caption="BARCODE"
+                      :allow-header-filtering="true"
+                      :allow-exporting="keyCatalog == 2 ? true : false"
+                    />
+                    <DxColumn
+                      :allow-grouping="false"
+                      data-field="DESCRIP"
+                      caption="Descripción"
+                      :allow-header-filtering="true"
+                      :allow-exporting="false"
+                    />
+                    <DxSummary>
+                      <DxTotalItem
+                        column="SKU"
+                        summary-type="count"
+                        display-format="{0}  Registros"
+                      />
+                    </DxSummary>
+                    <DxMasterDetail :enabled="false" template="mdTemplate" />
+                    <DxSearchPanel
+                      :visible="true"
+                      :highlight-case-sensitive="true"
+                    />
+                    <DxHeaderFilter :visible="true" />
+                    <DxScrolling mode="virtual" />
+                    <DxSelection mode="single" />
+                    <DxLoadPanel :enable="true" />
+                    <template #mdTemplate="{ data: cellData }">
+                      <v-row>
+                        <v-col>
+                          <ImgForGrid :img-file="{ value: cellData.key }" />
+                        </v-col>
+                        <v-col>
+                          <p>{{ cellData.data.DESCRIP_EN }}</p>
+                        </v-col>
+                      </v-row>
+                    </template>
+                  </DxDataGrid>
+                </v-tab-item>
+                <v-tab-item key="tab1">
+                  <v-card flat>
+                    <v-form>
+                      <DxFileUploader
+                        select-button-text="Explorar"
+                        label-text="(Arrastre archivos aquí)"
+                        :allowed-file-extensions="['.xlsx', '.xls']"
+                        :multiple="true"
+                        upload-mode="instantly"
+                        @value-changed="(e) => (files = e.value)"
+                        @upload-started="uploadStarter"
+                      />
+                    </v-form>
+                  </v-card>
+                </v-tab-item>
+              </v-tabs-items>
+            </v-tabs>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-model="replaceDialog" max-width="300">
+        <v-card>
+          <v-card-title class="headline"> ¿Reemplazar artículos? </v-card-title>
+
+          <v-card-text>
+            El catálogo en construcción ya tiene artículos. Indique que
+            operación desea realizar.
+          </v-card-text>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="green darken-1" text @click="addFileToCatalog(true)">
+              Reemplazar
+            </v-btn>
+
+            <v-btn color="green darken-1" text @click="addFileToCatalog(false)">
+              Añadir
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </div>
   </client-only>
 </template>
 
@@ -154,6 +203,7 @@ import {
   DxSelection,
 } from 'devextreme-vue/data-grid'
 import DxLoadPanel from 'devextreme-vue/load-panel'
+import DxFileUploader from 'devextreme-vue/file-uploader'
 import saveAs from 'file-saver'
 import ExcelJS from 'exceljs'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
@@ -175,6 +225,7 @@ export default {
     DxScrolling,
     DxSelection,
     DxLoadPanel,
+    DxFileUploader,
     ImgForGrid,
   },
   props: {
@@ -193,9 +244,14 @@ export default {
     return {
       curGridRefKey,
       menu: false,
+      tab: 0,
       keyCatalog: 1,
       valid: true,
       verify: '',
+      files: [],
+      fileData: [],
+      fileCols: [],
+      replaceDialog: false,
       rules: {
         required: (value) => !!value || 'Requerido.',
       },
@@ -262,6 +318,19 @@ export default {
         })
       })
       this.menu = false
+    },
+    addFileToCatalog(opc) {
+      this.replaceDialog = false
+      if (opc) {
+        this.setCurCatalog([])
+      }
+    },
+    uploadStarter() {
+      if (this.getCurCatalog.length > 0) {
+        this.replaceDialog = true
+      } else {
+        this.addFileToCatalog(false)
+      }
     },
     doAlert(msg) {
       this.menu = false
