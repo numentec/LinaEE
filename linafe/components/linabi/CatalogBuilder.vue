@@ -27,14 +27,6 @@
               <v-list nav>
                 <v-list-item link>
                   <v-list-item-icon>
-                    <v-icon>mdi-folder-open</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title @click.stop="doAlert('Abrir')">
-                    Abrir
-                  </v-list-item-title>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-icon>
                     <v-icon>mdi-content-save-all</v-icon>
                   </v-list-item-icon>
                   <v-list-item-title @click.stop="doExportExcel">
@@ -44,8 +36,8 @@
                 <v-list-item>
                   <v-list-item-content>
                     <v-radio-group v-model="keyCatalog">
-                      <v-radio label="SKU" :value="1"></v-radio>
-                      <v-radio label="Código de barra" :value="2"></v-radio>
+                      <v-radio label="SKU" value="SKU"></v-radio>
+                      <v-radio label="Código de barra" value="BC"></v-radio>
                     </v-radio-group>
                   </v-list-item-content>
                 </v-list-item>
@@ -55,6 +47,14 @@
                   </v-list-item-icon>
                   <v-list-item-title @click.stop="clearCatalog">
                     Limpiar
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-table-arrow-down</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title @click="downloadCatalog()">
+                    Descargar
                   </v-list-item-title>
                 </v-list-item>
               </v-list>
@@ -99,14 +99,14 @@
                       data-field="SKU"
                       caption="SKU"
                       :allow-header-filtering="true"
-                      :allow-exporting="keyCatalog == 1 ? true : false"
+                      :allow-exporting="keyCatalog == 'SKU' ? true : false"
                     />
                     <DxColumn
                       :allow-grouping="false"
                       data-field="BARCODE"
                       caption="BARCODE"
                       :allow-header-filtering="true"
-                      :allow-exporting="keyCatalog == 2 ? true : false"
+                      :allow-exporting="keyCatalog == 'BC' ? true : false"
                     />
                     <DxColumn
                       :allow-grouping="false"
@@ -148,12 +148,12 @@
                     <v-form>
                       <DxFileUploader
                         select-button-text="Explorar"
-                        label-text="(Arrastre archivos aquí)"
+                        label-text="(Arrastre el archivo aquí)"
                         :allowed-file-extensions="['.xlsx', '.xls']"
-                        :multiple="true"
                         upload-mode="instantly"
                         @value-changed="(e) => (files = e.value)"
                         @upload-started="uploadStarter"
+                        @upload-aborted="uploadAborted"
                       />
                     </v-form>
                   </v-card>
@@ -207,9 +207,14 @@ import DxFileUploader from 'devextreme-vue/file-uploader'
 import saveAs from 'file-saver'
 import ExcelJS from 'exceljs'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
+import XLSX from 'xlsx'
 import ImgForGrid from '../utilities/ImgForGrid.vue'
 
 const curGridRefKey = 'cur-grid'
+// const makeCols = (refstr) =>
+//   Array(XLSX.utils.decode_range(refstr).e.c + 1)
+//     .fill(0)
+//     .map((x, i) => ({ name: XLSX.utils.encode_col(i), key: i }))
 
 export default {
   name: 'CatalogBuilder',
@@ -245,7 +250,7 @@ export default {
       curGridRefKey,
       menu: false,
       tab: 0,
-      keyCatalog: 1,
+      keyCatalog: 'SKU',
       valid: true,
       verify: '',
       files: [],
@@ -273,12 +278,19 @@ export default {
   },
   created() {},
   methods: {
-    ...mapActions('linabi/catalogo', ['setCurCatalog', 'setChanges']),
+    ...mapActions('linabi/catalogo', [
+      'fetchCatalogData',
+      'setCurCatalog',
+      'setChanges',
+    ]),
     reset() {
-      this.$refs.basefilters_form.reset()
+      this.$refs.catalogbuilder_form.reset()
     },
     closeDialog() {
       this.$emit('closeDialog')
+    },
+    downloadCatalog() {
+      this.$emit('downloadCatalog')
     },
     clearCatalog() {
       this.setCurCatalog([])
@@ -303,20 +315,26 @@ export default {
         worksheet,
         customizeCell: ({ excelCell, gridCell }) => {
           if (gridCell.rowType === 'totalFooter' && excelCell.value) {
-            excelCell.value = ''
+            excelCell.value = null
           }
           // if (gridCell.rowType === 'header') {
           //   excelCell.value = ''
           // }
         },
-      }).then(() => {
-        workbook.xlsx.writeBuffer().then((buffer) => {
-          saveAs(
-            new Blob([buffer], { type: 'application/octet-stream' }),
-            'catalogo.xlsx'
-          )
-        })
       })
+        .then((cellRange) => {
+          worksheet.spliceRows(cellRange.from.row, 1)
+          worksheet.spliceRows(cellRange.to.row, 1)
+        })
+        .then(() => {
+          workbook.xlsx.writeBuffer().then((buffer) => {
+            saveAs(
+              new Blob([buffer], { type: 'application/octet-stream' }),
+              'catalogo.xlsx'
+            )
+          })
+        })
+
       this.menu = false
     },
     addFileToCatalog(opc) {
@@ -324,13 +342,31 @@ export default {
       if (opc) {
         this.setCurCatalog([])
       }
+      this.readFile(this.files[0])
     },
-    uploadStarter() {
+    uploadAborted() {
       if (this.getCurCatalog.length > 0) {
         this.replaceDialog = true
       } else {
         this.addFileToCatalog(false)
       }
+    },
+    uploadStarter(e) {
+      e.request.abort()
+    },
+    readFile(file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const bstr = e.target.result
+        const wb = XLSX.read(bstr, { type: 'binary' })
+        const wsname = wb.SheetNames[0]
+        const ws = wb.Sheets[wsname]
+        const data = XLSX.utils.sheet_to_json(ws, { header: ['SKU'] })
+        const strdata = data.map(({ SKU }) => SKU)
+        const params = { p01: strdata, p02: this.keyCatalog }
+        this.fetchCatalogData(params).then(() => (this.tab = 0))
+      }
+      reader.readAsBinaryString(file)
     },
     doAlert(msg) {
       this.menu = false

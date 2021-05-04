@@ -76,15 +76,34 @@ export const actions = {
   setTotalCount({ commit }, payload) {
     commit('SET_TOTAL_COUNT', payload)
   },
-  fetchData(context) {
+  addToCurCatalog({ commit, state }, payload) {
+    let cc = state.curCatalog
+    cc = cc.filter((el1) => {
+      return !payload.find((el2) => {
+        return el2.SKU === el1.SKU
+      })
+    })
+
+    cc = cc.concat(payload)
+
+    commit('SET_CUR_CATALOG', cc)
+  },
+  fetchData(context, localFilters = null) {
     context.commit('SET_LOADING_STATUS')
 
     const ctx = context
     const ax = this.$axios
+    let usefilters
+
+    if (localFilters) {
+      usefilters = localFilters
+    } else {
+      usefilters = ctx.state.filters
+    }
 
     // Quita los elementos que sean null, '' o undefined
     // y convierte en string el valor de la propiedad de cada objeto restante
-    let curparams = Object.entries(ctx.state.filters).reduce(
+    let curparams = Object.entries(usefilters).reduce(
       (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
       {}
     )
@@ -106,7 +125,11 @@ export const actions = {
       key: 'SKU',
       load,
       onLoaded: (data) => {
-        context.commit('SET_CUR_STORE', data)
+        if (localFilters) {
+          context.commit('SET_CUR_CATALOG', data)
+        } else {
+          context.commit('SET_CUR_STORE', data)
+        }
       },
     })
 
@@ -114,20 +137,32 @@ export const actions = {
 
     return store
   },
+  async fetchCatalogData({ commit, dispatch }, filters = null) {
+    commit('SET_LOADING_STATUS')
+
+    // Quita los elementos que sean null, '' o undefined
+    // y convierte en string el valor de la propiedad de cada objeto restante
+    let curparams = Object.entries(filters).reduce(
+      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
+      {}
+    )
+
+    curparams = Object.entries(curparams).reduce(
+      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
+      {}
+    )
+
+    return await this.$axios
+      .get('linabi/catalog/', {
+        params: curparams,
+      })
+      .then((response) => {
+        dispatch('addToCurCatalog', response.data)
+        commit('SET_LOADING_STATUS')
+      })
+  },
   setBreadCrumbsItems({ commit }, payload) {
     commit('SET_BREAD_CRUMBS_ITEMS', payload)
-  },
-  addToCurCatalog({ commit, state }, payload) {
-    let cc = state.curCatalog
-    cc = cc.filter((el1) => {
-      return !payload.find((el2) => {
-        return el2.SKU === el1.SKU
-      })
-    })
-
-    cc = cc.concat(payload)
-
-    commit('SET_CUR_CATALOG', cc)
   },
   setCurCatalog({ commit }, payload) {
     commit('SET_CUR_CATALOG', payload)

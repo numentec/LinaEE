@@ -171,12 +171,28 @@ class CatalogAPIView(APIView):
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
         result = []
+        qrycalling = 'DMC.LINAEE_QRYCATALOGO'
+        skulist = False
+
+        # Preparar lista de SKUs o codigos de barra
+        if (',' in p01):
+            p01 = p01.replace(' ', '')
+            skulist = True
+        elif (' ' in p01):
+            p01 = p01.replace(' ', ',')
+            skulist = True
+
+        if skulist:
+            if (p02 not in ['sku', 'bc']):
+                p02 = 'SKU'
+            params = [p01, p02]
+            qrycalling = 'DMC.LINAEE_QRYCATALOGO_SKU'
 
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINAEE_QRYCATALOGO', params + [refCursor])
+            cursor.callproc(qrycalling, params + [refCursor])
 
             descrip = refCursor.description
 

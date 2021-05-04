@@ -98,7 +98,9 @@
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Descargar</v-list-item-title>
+                      <v-list-item-title @click.stop="downloadCatalog"
+                        >Descargar</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
@@ -307,14 +309,16 @@
         :dialog.sync="showCatalogBuilder"
         :numvista="14"
         curstore="linabi/catalogo"
+        @downloadCatalog="downloadCatalog"
         @closeDialog="closeCatalogBuilder"
       />
     </div>
   </div>
 </template>
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import { locale } from 'devextreme/localization'
+import DataSource from 'devextreme/data/data_source'
 import {
   DxDataGrid,
   DxColumn,
@@ -460,6 +464,7 @@ export default {
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     ...mapState('linabi/catalogo', ['curStore']),
+    ...mapGetters('linabi/catalogo', ['getCurCatalog']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
@@ -545,7 +550,7 @@ export default {
       // stype summary type (count, sum, etc.)
       const stypes = {
         sum: (itype) => (itype === 'gi' ? 'Sub Total: {0}' : 'Total: {0}'),
-        count: (itype) => (itype === 'gi' ? 'Regs: {0}' : 'Total Regs: {0}'),
+        count: (itype) => (itype === 'gi' ? '{0} Regs. ' : '{0} Registros'),
       }
 
       return stypes[stype]?.(itype) ?? ''
@@ -769,6 +774,17 @@ export default {
       this.addToCurCatalog(selected)
       this.menuFilter = false
       this.showCatalogBuilder = true
+    },
+    downloadCatalog() {
+      this.dataSource = new DataSource({
+        store: {
+          type: 'array',
+          key: 'SKU',
+          data: this.getCurCatalog,
+        },
+      })
+      this.showCatalogBuilder = false
+      this.menuFilter = false
     },
   },
   head() {
