@@ -69,17 +69,23 @@
                   </template>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Guardar</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Guardar</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Abrir</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Abrir</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Eliminar</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Eliminar</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
@@ -115,7 +121,9 @@
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Ajustes</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Ajustes</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
@@ -143,6 +151,7 @@
                 @set-conf-filtros="setConf.filtros = !setConf.filtros"
                 @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
                 @menu-conf-close="menuConf = false"
+                @snkb="snackbar = true"
               />
             </v-menu>
           </v-toolbar>
@@ -238,6 +247,14 @@
         @closeDialog="closeDialog"
       />
     </div>
+    <v-snackbar v-model="snackbar" timeout="2000">
+      No implementado
+      <template v-slot:action="{ attrs }">
+        <v-btn color="secondary" text v-bind="attrs" @click="snackbar = false">
+          Cerrar
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 <script>
@@ -379,6 +396,7 @@ export default {
       radioGroup: '1',
       showBaseFilters: false,
       tableHeight: 0,
+      snackbar: false,
       onContentReady(e) {
         if (!collapsed) {
           e.component.expandRow(1)

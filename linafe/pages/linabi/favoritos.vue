@@ -22,7 +22,7 @@
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
-        <v-btn color="blue" text v-bind="attrs" @click="snackbar = false">
+        <v-btn color="secondary" text v-bind="attrs" @click="snackbar = false">
           Cerrar
         </v-btn>
       </template>

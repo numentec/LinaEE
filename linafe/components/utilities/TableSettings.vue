@@ -50,7 +50,7 @@
           <v-list-item-icon>
             <v-icon>mdi-table-cog</v-icon>
           </v-list-item-icon>
-          <v-list-item-title>Ajustes</v-list-item-title>
+          <v-list-item-title @click="$emit('snkb')">Ajustes</v-list-item-title>
         </v-list-item>
       </v-list>
 

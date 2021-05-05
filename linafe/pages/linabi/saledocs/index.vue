@@ -84,17 +84,23 @@
                   </template>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Guardar</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Guardar</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Abrir</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Abrir</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Eliminar</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Eliminar</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
@@ -106,57 +112,55 @@
                       </v-list-item-content>
                     </v-list-item>
                   </template>
-                  <template v-show="tab == 0">
-                    <v-list-item>
-                      <v-list-item-action>
-                        <v-switch v-model="setConf0.agrupar"></v-switch>
-                      </v-list-item-action>
-                      <v-list-item-content>
-                        <v-list-item-title>Panel Agrupar</v-list-item-title>
-                        <v-list-item-subtitle>
-                          Agrupar y búsqueda global
-                        </v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                    <v-list-item>
-                      <v-list-item-action>
-                        <v-switch v-model="setConf0.filtros"></v-switch>
-                      </v-list-item-action>
-                      <v-list-item-content>
-                        <v-list-item-title>Filtro avanzado</v-list-item-title>
-                        <v-list-item-subtitle>
-                          Fila de filtros avanzados
-                        </v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </template>
-                  <template v-show="tab == 1">
-                    <v-list-item>
-                      <v-list-item-action>
-                        <v-switch v-model="setConf1.agrupar"></v-switch>
-                      </v-list-item-action>
-                      <v-list-item-content>
-                        <v-list-item-title>Panel Agrupar</v-list-item-title>
-                        <v-list-item-subtitle>
-                          Agrupar y búsqueda global
-                        </v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                    <v-list-item>
-                      <v-list-item-action>
-                        <v-switch v-model="setConf1.filtros"></v-switch>
-                      </v-list-item-action>
-                      <v-list-item-content>
-                        <v-list-item-title>Filtro avanzado</v-list-item-title>
-                        <v-list-item-subtitle>
-                          Fila de filtros avanzados
-                        </v-list-item-subtitle>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </template>
+                  <v-list-item v-show="tab == 0">
+                    <v-list-item-action>
+                      <v-switch v-model="setConf0.agrupar"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Panel Agrupar</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Agrupar y búsqueda global
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-show="tab == 0">
+                    <v-list-item-action>
+                      <v-switch v-model="setConf0.filtros"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Filtro avanzado</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Fila de filtros avanzados
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-show="tab == 1">
+                    <v-list-item-action>
+                      <v-switch v-model="setConf1.agrupar"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Panel Agrupar</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Agrupar y búsqueda global
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-show="tab == 1">
+                    <v-list-item-action>
+                      <v-switch v-model="setConf1.filtros"></v-switch>
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>Filtro avanzado</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Fila de filtros avanzados
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title>Ajustes</v-list-item-title>
+                      <v-list-item-title @click.stop="snackbar = true"
+                        >Ajustes</v-list-item-title
+                      >
                     </v-list-item-content>
                   </v-list-item>
                 </v-list-group>
@@ -186,6 +190,7 @@
                 @set-conf-filtros="setConf0.filtros = !setConf0.filtros"
                 @set-conf-agrupar="setConf0.agrupar = !setConf0.agrupar"
                 @menu-conf-close="menuConf = false"
+                @snkb="snackbar = true"
               />
               <TableSettings
                 v-show="tab == 1"
@@ -196,6 +201,7 @@
                 @set-conf-filtros="setConf1.filtros = !setConf1.filtros"
                 @set-conf-agrupar="setConf1.agrupar = !setConf1.agrupar"
                 @menu-conf-close="menuConf = false"
+                @snkb="snackbar = true"
               />
             </v-menu>
           </v-toolbar>
@@ -375,6 +381,14 @@
         @closeDialog="closeDialog"
       />
     </div>
+    <v-snackbar v-model="snackbar" timeout="2000">
+      No implementado
+      <template v-slot:action="{ attrs }">
+        <v-btn color="secondary" text v-bind="attrs" @click="snackbar = false">
+          Cerrar
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 <script>
@@ -520,6 +534,7 @@ export default {
       showBaseFilters: false,
       tableHeight: 0,
       tableWidth: 0,
+      snackbar: false,
       onContentReady(e) {
         if (!collapsed) {
           e.component.expandRow(1)
