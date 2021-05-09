@@ -159,13 +159,16 @@
         <div ref="resizableDiv" v-resize="onResize">
           <DxDataGrid
             :ref="curGridRefKey"
-            class="ma-4"
             :focused-row-enabled="true"
             :data-source="dataSource"
             :remote-operations="false"
             :column-auto-width="true"
             :allow-column-reordering="true"
+            :allow-column-resizing="true"
+            column-resizing-mode="widget"
             :row-alternation-enabled="true"
+            :show-column-lines="true"
+            :show-row-lines="false"
             :show-borders="true"
             :height="tableHeight"
           >
@@ -247,6 +250,7 @@
         @closeDialog="closeDialog"
       />
     </div>
+    <LoadingView :busy-with="busyWith" :message="loadingMessage" />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -286,6 +290,7 @@ import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
+import LoadingView from '~/components/utilities/LoadingView'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -359,6 +364,7 @@ export default {
     BaseFilters,
     ImgForGrid,
     TableSettings,
+    LoadingView,
   },
   async asyncData({ $axios, error }) {
     try {
@@ -404,12 +410,17 @@ export default {
         }
       },
       localBCItems: defaultBCItem,
+      busyWith: false,
+      loadingMessage: 'Exportando...',
     }
   },
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
+    },
+    colsWithSummary() {
+      return this.colsConfig.filter((obj) => obj.configval8 !== '')
     },
   },
   created() {
@@ -464,7 +475,7 @@ export default {
       // stype summary type (count, sum, etc.)
       const stypes = {
         sum: (itype) => (itype === 'gi' ? 'Sub Total: {0}' : 'Total: {0}'),
-        count: (itype) => (itype === 'gi' ? 'Regs: {0}' : 'Total Regs: {0}'),
+        count: (itype) => (itype === 'gi' ? '{0} Regs. ' : '{0} Registros'),
       }
 
       return stypes[stype]?.(itype) ?? ''
@@ -488,6 +499,7 @@ export default {
       }
     },
     doExportPDF() {
+      this.busyWith = true
       const pdfDoc = new JsPDF({
         orientation: 'landscape',
         format: 'letter',
@@ -519,12 +531,15 @@ export default {
         },
       }).then(() => {
         pdfDoc.save('detalle_de_ventas.pdf')
+        this.busyWith = false
       })
     },
     doExportExcel(ax) {
       const PromiseArray = []
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('ventas_det')
+
+      this.busyWith = true
 
       exportDataGridToExcel({
         component: this.curGrid,
@@ -558,6 +573,7 @@ export default {
               new Blob([buffer], { type: 'application/octet-stream' }),
               'detalle_de_ventas.xlsx'
             )
+            this.busyWith = false
           })
         })
       })

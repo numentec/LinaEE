@@ -225,7 +225,11 @@
                   :remote-operations="false"
                   :column-auto-width="true"
                   :allow-column-reordering="true"
+                  :allow-column-resizing="true"
+                  column-resizing-mode="widget"
                   :row-alternation-enabled="true"
+                  :show-column-lines="true"
+                  :show-row-lines="false"
                   :show-borders="true"
                   :height="tableHeight"
                   :width="tableWidth"
@@ -295,7 +299,11 @@
                   :remote-operations="false"
                   :column-auto-width="true"
                   :allow-column-reordering="true"
+                  :allow-column-resizing="true"
+                  column-resizing-mode="widget"
                   :row-alternation-enabled="true"
+                  :show-column-lines="true"
+                  :show-row-lines="false"
                   :show-borders="true"
                   :height="tableHeight"
                   :width="tableWidth"
@@ -381,6 +389,7 @@
         @closeDialog="closeDialog"
       />
     </div>
+    <LoadingView :busy-with="busyWith" :message="loadingMessage" />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -422,6 +431,7 @@ import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
+import LoadingView from '~/components/utilities/LoadingView'
 
 const curGridRefKey0 = 'cur-grid1'
 const curGridRefKey1 = 'cur-grid2'
@@ -485,6 +495,7 @@ export default {
     BaseFilters,
     ImgForGrid,
     TableSettings,
+    LoadingView,
   },
 
   async asyncData({ $axios, error }) {
@@ -541,6 +552,8 @@ export default {
           collapsed = true
         }
       },
+      busyWith: false,
+      loadingMessage: 'Exportando...',
     }
   },
   computed: {
@@ -647,7 +660,7 @@ export default {
     setDFormat(itype, stype) {
       const stypes = {
         sum: (itype) => (itype === 'gi' ? 'Sub Total: {0}' : 'Total: {0}'),
-        count: (itype) => (itype === 'gi' ? 'Regs: {0}' : 'Total Regs: {0}'),
+        count: (itype) => (itype === 'gi' ? '{0} Regs. ' : '{0} Registros'),
       }
 
       return stypes[stype]?.(itype) ?? ''
@@ -696,6 +709,7 @@ export default {
     },
 
     doExportPDF(curGrid) {
+      this.busyWith = true
       const pdfDoc = new JsPDF({
         orientation: 'landscape',
         format: 'letter',
@@ -730,6 +744,7 @@ export default {
         },
       }).then(() => {
         pdfDoc.save(curGrid.docname + '.pdf')
+        this.busyWith = false
       })
     },
 
@@ -739,6 +754,8 @@ export default {
       const worksheet = workbook.addWorksheet(curGrid.docname)
 
       const masterRows = []
+
+      this.busyWith = true
 
       exportDataGridToExcel({
         component: curGrid.component,
@@ -855,6 +872,7 @@ export default {
                 new Blob([buffer], { type: 'application/octet-stream' }),
                 curGrid.docname + '.xlsx'
               )
+              this.busyWith = false
             })
           })
         })

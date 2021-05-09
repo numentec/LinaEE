@@ -77,7 +77,6 @@
                     :focused-row-enabled="true"
                     :data-source="getCurCatalog"
                     :remote-operations="false"
-                    :column-auto-width="true"
                     :allow-column-resizing="true"
                     column-resizing-mode="widget"
                     :row-alternation-enabled="true"
@@ -98,6 +97,7 @@
                       :allow-grouping="false"
                       data-field="SKU"
                       caption="SKU"
+                      :width="150"
                       :allow-header-filtering="true"
                       :allow-exporting="keyCatalog == 'SKU' ? true : false"
                     />
@@ -105,6 +105,7 @@
                       :allow-grouping="false"
                       data-field="BARCODE"
                       caption="BARCODE"
+                      :width="150"
                       :allow-header-filtering="true"
                       :allow-exporting="keyCatalog == 'BC' ? true : false"
                     />
@@ -112,6 +113,7 @@
                       :allow-grouping="false"
                       data-field="DESCRIP"
                       caption="Descripción"
+                      :width="250"
                       :allow-header-filtering="true"
                       :allow-exporting="false"
                     />

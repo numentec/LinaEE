@@ -211,7 +211,7 @@
             </v-menu>
           </v-toolbar>
         </template>
-        <div ref="resizableDiv" v-resize="onResize">
+        <div id="tableDiv" ref="resizableDiv" v-resize="onResize">
           <DxDataGrid
             :ref="curGridRefKey"
             :focused-row-enabled="true"
@@ -294,7 +294,6 @@
                 />
               </template>
             </DxSummary>
-            <DxLoadPanel :enable="true" />
             <template #mdTemplate="{ data }">
               <ProdVariants
                 :variant-data="data"
@@ -321,6 +320,7 @@
         @downloadCatalog="downloadCatalog"
         @closeDialog="closeCatalogBuilder"
       />
+      <LoadingView :busy-with="busyWith" :message="loadingMessage" />
     </div>
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
@@ -353,7 +353,6 @@ import {
   DxPaging,
   DxSelection,
 } from 'devextreme-vue/data-grid'
-import DxLoadPanel from 'devextreme-vue/load-panel'
 import saveAs from 'file-saver'
 import { jsPDF as JsPDF } from 'jspdf'
 import 'jspdf-autotable'
@@ -366,6 +365,7 @@ import CatalogBuilder from '~/components/linabi/CatalogBuilder'
 import ProdVariants from '~/components/linabi/ProdVariants.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
+import LoadingView from '~/components/utilities/LoadingView'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -424,12 +424,12 @@ export default {
     DxScrolling,
     DxPaging,
     DxSelection,
-    DxLoadPanel,
     MaterialCard,
     BaseFilters,
     CatalogBuilder,
     ImgForGrid,
     TableSettings,
+    LoadingView,
     ProdVariants,
   },
   async asyncData({ $axios, error }) {
@@ -477,6 +477,8 @@ export default {
           collapsed = true
         }
       },
+      busyWith: false,
+      loadingMessage: 'Exportando...',
     }
   },
   computed: {
@@ -574,35 +576,41 @@ export default {
       return stypes[stype]?.(itype) ?? ''
     },
     exportGrid(opc) {
-      const ax = this.$axios.create({
-        baseURL: this.$config.fotosURL,
-        headers: {
-          common: {
-            Accept: 'image/*, application/json, text/plain, */*',
+      this.menuFilter = false
+
+      const selectedRows = this.curGrid.getSelectedRowKeys()
+
+      if (selectedRows.length > 0) {
+        const ax = this.$axios.create({
+          baseURL: this.$config.fotosURL,
+          headers: {
+            common: {
+              Accept: 'image/*, application/json, text/plain, */*',
+            },
           },
-        },
-      })
-
-      // Exportar a Excel
-      if (opc === 1) {
-        this.doExportExcel([], ax)
-      }
-
-      // Exportar a Excel con detalle de códigos de barra
-      if (opc === 2) {
-        const selectedRows = this.curGrid.getSelectedRowKeys()
-        this.fetchVariants({ sku: selectedRows }).then((vv) => {
-          this.doExportExcel(vv, ax)
         })
-      }
 
-      // Exportar a PDF
-      if (opc === 3) {
-        this.doExportPDF()
+        // Exportar a Excel
+        if (opc === 1) {
+          this.doExportExcel([], ax)
+        }
+
+        // Exportar a Excel con detalle de códigos de barra
+        if (opc === 2) {
+          this.fetchVariants({ sku: selectedRows }).then((vv) => {
+            this.doExportExcel(vv, ax)
+          })
+        }
+
+        // Exportar a PDF
+        if (opc === 3) {
+          this.doExportPDF()
+        }
       }
     },
 
     doExportPDF() {
+      this.busyWith = true
       const pdfDoc = new JsPDF({
         orientation: 'landscape',
         format: 'letter',
@@ -650,6 +658,7 @@ export default {
         },
       }).then(() => {
         pdfDoc.save('Catalogo.pdf')
+        this.busyWith = false
       })
     },
 
@@ -659,6 +668,8 @@ export default {
       const worksheet = workbook.addWorksheet('Catalogo')
 
       const masterRows = []
+
+      this.busyWith = true
 
       exportDataGridToExcel({
         component: this.curGrid,
@@ -778,14 +789,13 @@ export default {
                 new Blob([buffer], { type: 'application/octet-stream' }),
                 'Catalog.xlsx'
               )
+              this.busyWith = false
             })
           })
         })
     },
     // testMethod() {
-    //   const selectedRows = this.curGrid.getSelectedRowKeys()
-    //   // const fotosExt = this.$config.fotosExt
-    //   this.storeImages(selectedRows)
+    //   this.busyWith = !this.busyWith
     // },
     addToCatalog() {
       const selected = this.curGrid.getSelectedRowsData()
