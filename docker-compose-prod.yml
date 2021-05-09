@@ -183,7 +183,7 @@ services:
       - DNSPLUGIN=cloudflare
     volumes:
       - /home/numen/swag:/config
-      - /home/numen/nube:/var/www/html
+      - /home/numen/www/html:/var/www/html
       - ./linabe/static:/static
       - ./linabe/media:/media
     networks:
