@@ -666,16 +666,9 @@ export default {
       return stypes[stype]?.(itype) ?? ''
     },
     exportGrid(opc) {
-      let curGrid
+      this.menuFilter = false
 
-      const ax = this.$axios.create({
-        baseURL: this.$config.fotosURL,
-        headers: {
-          common: {
-            Accept: 'image/*, application/json, text/plain, */*',
-          },
-        },
-      })
+      let curGrid
 
       if (this.tab === 0) {
         curGrid = {
@@ -689,22 +682,34 @@ export default {
         }
       }
 
-      // Exportar a Excel
-      if (opc === 1) {
-        this.doExportExcel([], ax, curGrid)
-      }
+      const selectedRows = curGrid.component.getSelectedRowKeys()
 
-      // Exportar a Excel con detalle de códigos de barra
-      if (opc === 2) {
-        const selectedRows = curGrid.component.getSelectedRowKeys()
-        this.fetchVariants({ sku: selectedRows }).then((vv) => {
-          this.doExportExcel(vv, ax, curGrid)
+      if (selectedRows.length > 0) {
+        const ax = this.$axios.create({
+          baseURL: this.$config.fotosURL,
+          headers: {
+            common: {
+              Accept: 'image/*, application/json, text/plain, */*',
+            },
+          },
         })
-      }
 
-      // Exportar a PDF
-      if (opc === 3) {
-        this.doExportPDF(curGrid)
+        // Exportar a Excel
+        if (opc === 1) {
+          this.doExportExcel([], ax, curGrid)
+        }
+
+        // Exportar a Excel con detalle de códigos de barra
+        if (opc === 2) {
+          this.fetchVariants({ sku: selectedRows }).then((vv) => {
+            this.doExportExcel(vv, ax, curGrid)
+          })
+        }
+
+        // Exportar a PDF
+        if (opc === 3) {
+          this.doExportPDF(curGrid)
+        }
       }
     },
 

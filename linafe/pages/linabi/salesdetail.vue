@@ -46,14 +46,14 @@
                   </template>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(2)">
+                      <v-list-item-title @click.stop="exportGrid(1)">
                         Excel
                       </v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item link>
                     <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(1)">
+                      <v-list-item-title @click.stop="exportGrid(2)">
                         PDF
                       </v-list-item-title>
                     </v-list-item-content>
@@ -481,21 +481,27 @@ export default {
       return stypes[stype]?.(itype) ?? ''
     },
     exportGrid(opc) {
-      const ax = this.$axios.create({
-        baseURL: this.$config.fotosURL,
-        headers: {
-          common: {
-            Accept: 'image/*, application/json, text/plain, */*',
+      this.menuFilter = false
+
+      const selectedRows = this.curGrid.getSelectedRowKeys()
+
+      if (selectedRows.length > 0) {
+        const ax = this.$axios.create({
+          baseURL: this.$config.fotosURL,
+          headers: {
+            common: {
+              Accept: 'image/*, application/json, text/plain, */*',
+            },
           },
-        },
-      })
+        })
 
-      if (opc === 1) {
-        this.doExportExcel(ax)
-      }
+        if (opc === 1) {
+          this.doExportExcel(ax)
+        }
 
-      if (opc === 2) {
-        this.doExportPDF()
+        if (opc === 2) {
+          this.doExportPDF()
+        }
       }
     },
     doExportPDF() {
