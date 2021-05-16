@@ -211,7 +211,7 @@
             </v-menu>
           </v-toolbar>
         </template>
-        <div id="tableDiv" ref="resizableDiv" v-resize="onResize">
+        <div ref="resizableDiv" v-resize="onResize">
           <DxDataGrid
             :ref="curGridRefKey"
             :focused-row-enabled="true"

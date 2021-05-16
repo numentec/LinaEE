@@ -1,7 +1,11 @@
+import CustomStore from 'devextreme/data/custom_store'
+
 export const namespaced = true
 
 export const state = () => ({
   curuser: null,
+  users: [],
+  isLoading: false,
   error: null,
 })
 
@@ -17,6 +21,12 @@ export const mutations = {
   },
   SET_ERROR(state, payload) {
     state.error = payload
+  },
+  SET_USERS(state, payload) {
+    state.users = payload
+  },
+  SET_LOADING_STATUS(state) {
+    state.isLoading = !state.isLoading
   },
 }
 
@@ -54,5 +64,33 @@ export const actions = {
 
   setError({ commit }, payload) {
     commit('SET_ERROR', payload)
+  },
+
+  fetchUsers({ commit }) {
+    const ax = this.$axios
+
+    commit('SET_LOADING_STATUS')
+
+    async function load() {
+      return await ax.get('users/actives/').then((response) => response.data)
+    }
+
+    const store = new CustomStore({
+      key: 'id',
+      load,
+      onLoaded: (data) => {
+        commit('SET_USERS', data)
+      },
+    })
+
+    commit('SET_LOADING_STATUS')
+
+    return store
+  },
+}
+
+export const getters = {
+  getUsers(state) {
+    return state.users
   },
 }

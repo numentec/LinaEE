@@ -23,6 +23,10 @@ export default {
       required: true,
       default: () => {},
     },
+    fullPath: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -31,7 +35,13 @@ export default {
   },
   computed: {
     imgSrc() {
-      return this.$config.fotosURL + this.imgFile.value + this.$config.fotosExt
+      let imgsrc = this.imgFile.value
+      if (!this.fullPath) {
+        imgsrc =
+          this.$config.fotosURL + this.imgFile.value + this.$config.fotosExt
+      }
+
+      return imgsrc
     },
     imgID() {
       return this.imgFile.value

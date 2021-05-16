@@ -9,7 +9,7 @@
       @keydown.esc="closeDialog(false)"
     >
       <v-card>
-        <v-toolbar color="accent lighten-3" dark>
+        <v-toolbar color="accent darken-3" dark>
           <v-toolbar-title>Registrar Usuario</v-toolbar-title>
           <v-spacer />
           <v-btn icon @click="closeDialog(false)">
@@ -124,17 +124,32 @@ export default {
   name: 'UserRegister',
   props: {
     dialog: Boolean,
-    userGroups: {
-      type: Array,
-      required: false,
-      default() {
-        return []
-      },
-    },
+  },
+
+  async fetch() {
+    // Lista de grupos
+    try {
+      this.userGroups = await this.$axios
+        .get('groups/')
+        .then((response) => response.data)
+    } catch (err) {
+      if (err.response) {
+        this.error({
+          statusCode: err.response.status,
+          message: err.response.data.detail,
+        })
+      } else {
+        this.error({
+          statusCode: 503,
+          message: 'No se pudo cargar la lista de grupos. Intente luego',
+        })
+      }
+    }
   },
 
   data: () => ({
     valid: true,
+    userGroups: [],
     user_to_reg: {
       username: '',
       password: '',
@@ -155,12 +170,14 @@ export default {
       min: (v) => (v && v.length >= 8) || 'Min 8 caracteres',
     },
   }),
+
   computed: {
     passwordMatch() {
       return () =>
         this.user_to_reg.password === this.verify || 'Contraseñas no coinciden'
     },
   },
+
   methods: {
     reset() {
       this.$refs.register_form.reset()

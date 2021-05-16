@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card>
-      <v-list nav>
+      <v-list nav dense>
         <v-list-item>
           <v-list-item-action>
             <v-btn icon @click="showColumnChooser">
@@ -18,8 +18,8 @@
 
       <v-divider></v-divider>
 
-      <v-list nav>
-        <v-list-item>
+      <v-list nav dense>
+        <v-list-item v-show="ver.filtros">
           <v-list-item-action>
             <v-switch
               :value="setFiltros"
@@ -29,7 +29,7 @@
           <v-list-item-title>Filtros Avanzados</v-list-item-title>
         </v-list-item>
 
-        <v-list-item>
+        <v-list-item v-show="ver.agrupar">
           <v-list-item-action>
             <v-switch
               :value="setAgrupar"
@@ -81,6 +81,10 @@ export default {
     setFiltros: {
       type: Boolean,
       default: false,
+    },
+    ver: {
+      type: Object,
+      default: () => ({ agrupar: true, filtros: true }),
     },
   },
 }
