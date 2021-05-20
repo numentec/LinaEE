@@ -1,9 +1,6 @@
 /* eslint-disable no-console */
 <template>
   <div>
-    <div>
-      <v-breadcrumbs :items="breadCrumbsItems"></v-breadcrumbs>
-    </div>
     <v-card
       class="d-flex align-content-start flex-wrap"
       flat

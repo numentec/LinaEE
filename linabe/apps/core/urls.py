@@ -15,6 +15,7 @@ router.register(r'modulos', views.ModuloViewSet, basename='modulos')
 router.register(r'vistas', views.VistaViewSet, basename='vistas')
 router.register(r'vistas-conf', views.VistaConfigViewSet, basename='vistas-conf')
 router.register(r'vistas-conf-usr', views.VistaConfigUserViewSet, basename='vistas-conf-usr')
+router.register(r'profiles', views.ProfileViewSet, basename='profiles')
 
 urlpatterns = [
     path('login/', views.LinaAuthToken.as_view(), name='login'),
@@ -25,7 +26,7 @@ urlpatterns = [
     # path('cias/<pk>/', views.CiaDetail.as_view(), name='cia'),
     # path('cia/create/', views.CiaCreate.as_view(), name='cia_create'),
     path('users/<username>/', views.UserList.as_view(), name='users'),
-    path('users/<pk>/', views.UserDetail.as_view(), name='user'),
+    path('user/<pk>/', views.UserDetail.as_view(), name='user'),
     path('user_perms/<pk>/', views.UserPermsDetail.as_view(), name='user_perms'),
     path('user_register/', views.UserRegister.as_view(), name='user_register'),
     path('groups/', views.GroupsList.as_view(), name='groups'),

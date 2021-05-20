@@ -47,7 +47,15 @@ export const actions = {
 
   async registerUser({ commit, error }, userdata) {
     try {
-      await this.$axios.$post('user_register/', userdata)
+      await this.$axios.$post('profiles/', userdata)
+    } catch (err) {
+      commit('SET_ERROR', err.response.data.message)
+    }
+  },
+
+  async editUser({ commit, error }, userdata) {
+    try {
+      await this.$axios.$put('profiles/' + userdata.id + '/', userdata)
     } catch (err) {
       commit('SET_ERROR', err.response.data.message)
     }

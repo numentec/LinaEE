@@ -1,6 +1,8 @@
+from django.db.models import fields
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.contrib.auth.password_validation import validate_password
 from apps.core import models
 from .utils import DynamicFieldSerializer
 
@@ -45,9 +47,48 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = LinaUserModel
         fields = ('__all__')
+        extra_kwargs = {
+            'password': {
+                'write_only': True,
+                'style': {'input_type': 'password'}
+            }
+        }
+        read_only_fields = ('id', 'username', 'modified_at', 'groups', 'foto', 'date_joined')
 
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
+
+class ProfileSerializer(serializers.ModelSerializer):
+    
+    fullname = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LinaUserModel
+        fields = ('__all__')
+        read_only_fields = (
+            'id',
+            'username',
+            'password',
+            'modified_at',
+            'groups',
+            'foto',
+            'date_joined',
+            'last_login',
+            'user_permissions',
+            'is_superuser',
+            'is_staff',
+        )
+
+    def get_fullname(self, obj):
+        return '{} {}'.format(obj.first_name, obj.last_name)
+
+class UserFotoSerializer(serializers.ModelSerializer):
+    """Serializer para carga de foto de perfil"""
+
+    class Meta:
+        model = LinaUserModel
+        fields = ('id', 'foto')
+        read_only_fields = ('id',)
 
 
 # Devuelve el usuario actual con sus permisos
@@ -103,6 +144,34 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         registered_user.groups.set(groups_list)
         return registered_user
 
+
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
+    old_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = LinaUserModel
+        fields = ('old_password', 'password', 'password2')
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        return attrs
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError({"old_password": "Old password is not correct"})
+        return value
+
+    def update(self, instance, validated_data):
+
+        instance.set_password(validated_data['password'])
+        instance.save()
+
+        return instance
 
 class VistaConfigUserSerializer(serializers.ModelSerializer):
 

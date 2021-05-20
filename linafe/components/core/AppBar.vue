@@ -29,8 +29,8 @@
         </v-tooltip>
       </template>
       <v-list>
-        <AppBarItem nuxt to="/sistema/usuarios">
-          <v-list-item-title>Perfil</v-list-item-title>
+        <AppBarItem>
+          <v-list-item-title @click.stop="goProfile">Perfil</v-list-item-title>
         </AppBarItem>
         <AppBarItem>
           <v-list-item-title @click.stop="userLogout">
@@ -99,13 +99,17 @@ export default {
       if (lu) {
         return lu.charAt(0).toUpperCase() + lu.slice(1)
       }
-      return 'User'
+      return 'U'
     },
   },
 
   methods: {
     ...mapActions('core', ['SetDrawer', 'setIsMini', 'setIsExpanded']),
     ...mapActions('sistema', ['userLogout']),
+    goProfile() {
+      // this.$router.push({ path: '/sistema/usuarios/' + this.loggedInUser.id })
+      this.$router.push({ path: '/sistema/usuarios' })
+    },
     setMiniState(mini) {
       this.setIsMini(mini)
       this.setIsExpanded(!mini)

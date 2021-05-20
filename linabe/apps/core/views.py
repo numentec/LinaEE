@@ -5,16 +5,20 @@ from .models import Cia, StakeHolder, User
 from .serializers import (
     CiaSerializer,
     UserSerializer,
+    UserFotoSerializer,
     UserPermsSerializer,
     UserRegisterSerializer,
+    ProfileSerializer,
     GroupsSerializer,
     StakeHolderSerializer,
+    ChangePasswordSerializer,
 )
 from apps.core import models
 from apps.core import serializers
 from linapi.permissions import CustomDjangoModelPermissions
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
-from rest_framework import viewsets
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 
 # Imports for Token Authentication
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -203,16 +207,61 @@ class UserPermsDetail(RetrieveAPIView):
 
 class UserRegister(CreateAPIView):
     """Registrar un nuevo usuario"""
-    # serializer_class = UserSerializer
     serializer_class = UserRegisterSerializer
 
     def get_queryset(self):
         return LinaUserModel.objects.filter(is_active=True)
 
-    # def perform_create(self, serializer):
-    #     instance = serializer.save()
-    #     instance.set_password(instance.password)
-    #     instance.save()
+
+class ProfileViewSet(viewsets.ModelViewSet):
+    """Administrar perfil de usuarios"""
+    serializer_class = ProfileSerializer
+
+    def get_queryset(self):
+        return LinaUserModel.objects.filter(is_active=True).order_by('-id')
+    
+    def get_serializer_class(self):
+        """Retornar serializer requerido"""
+        if self.action == 'create':
+            return UserRegisterSerializer
+        elif self.action == 'upload_foto':
+            return UserFotoSerializer
+        elif self.action == 'change_pass':
+            return ChangePasswordSerializer
+
+        return self.serializer_class
+
+    @action(methods=['POST',], detail=True, url_path='upload-foto')
+    def upload_foto(self, request, pk=None):
+        """Subir foto de perfil"""
+        perfil = self.get_object()
+        serializer = self.get_serializer(perfil, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['PUT',], detail=True, url_path='change-pass')
+    def change_pass(self, request, pk=None):
+        """Cambiar contraseña"""
+        perfil = self.get_object()
+        serializer = self.get_serializer(perfil, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(UpdateAPIView):
+
+    serializer_class = ChangePasswordSerializer
+    
+    def get_queryset(self):
+        return LinaUserModel.objects.filter(is_active=True).order_by('-id')
 
 
 class GroupsList(ListAPIView):

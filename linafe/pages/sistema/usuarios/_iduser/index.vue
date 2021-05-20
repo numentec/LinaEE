@@ -1,31 +1,15 @@
 <template>
   <div>
-    <v-card class="mx-auto mt-10">
+    <v-card class="mx-auto mt-5">
       <v-toolbar color="secondary" dense dark fixed>
-        <v-menu offset-y>
+        <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn icon v-bind="attrs" v-on="on">
-              <v-icon>mdi-dots-vertical</v-icon>
+            <v-btn icon v-bind="attrs" v-on="on" @click="$router.back()">
+              <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
           </template>
-
-          <v-list nav dense>
-            <v-list-item
-              v-for="(item, i) in menu_items"
-              :key="i"
-              :disabled="item.disabled"
-              link
-              @click="item.method"
-            >
-              <v-list-item-icon>
-                <v-icon>{{ item.icon }}</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+          <span>Volver a vista anterior</span>
+        </v-tooltip>
 
         <v-toolbar-title>{{ toolbar_title }}</v-toolbar-title>
 
@@ -53,6 +37,30 @@
           <v-icon v-if="showsearch">mdi-arrow-collapse-horizontal</v-icon>
           <v-icon v-else>mdi-magnify</v-icon>
         </v-app-bar-nav-icon>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+
+          <v-list nav dense>
+            <v-list-item
+              v-for="(item, i) in menu_items"
+              :key="i"
+              :disabled="item.disabled"
+              link
+              @click="item.method"
+            >
+              <v-list-item-icon>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-menu>
         <template v-slot:extension>
           <v-tabs v-model="tab" grow dense dark>
             <v-tab key="1">General</v-tab>
@@ -80,11 +88,7 @@
                       <div id="dropzone-frame">
                         <v-hover v-slot="{ hover }">
                           <v-card
-                            :elevation="
-                              (hover || isDropZoneActive) && modo != 'r'
-                                ? 12
-                                : 0
-                            "
+                            :elevation="hover || isDropZoneActive ? 12 : 0"
                             :class="{ 'on-hover': hover }"
                             max-width="200"
                           >
@@ -98,10 +102,7 @@
                                 <v-row class="flex-column" justify="center">
                                   <v-col class="align-self-center">
                                     <v-btn
-                                      v-show="
-                                        (hover || isDropZoneActive) &&
-                                        modo != 'r'
-                                      "
+                                      v-show="hover || isDropZoneActive"
                                       fab
                                       dark
                                       large
@@ -388,7 +389,6 @@
     </v-card>
     <DxFileUploader
       id="file-uploader"
-      :disabled="modo == 'r'"
       dialog-trigger="#dropzone-frame"
       drop-zone="#dropzone-frame"
       :multiple="false"
@@ -402,6 +402,21 @@
       @progress="onProgress"
       @upload-started="onUploadStarted"
     />
+    <v-dialog v-model="stillEditing" persistent max-width="300">
+      <v-card>
+        <v-card-title class="headline"> Editando Perfil </v-card-title>
+        <v-card-text>¿Desea continuar editando el perfil?</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green darken-1" text @click="stillEditing = false">
+            Si
+          </v-btn>
+          <v-btn color="green darken-1" text @click.stop="cancelEdit">
+            No
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -461,7 +476,7 @@ export default {
       modo: 'r',
       searchList,
       curUser: {},
-      dataSource: null,
+      xdataSource: null,
       listSelectedKeys: [],
       userGroups: [],
       toolbar_title: 'Perfil - Consultar',
@@ -481,9 +496,12 @@ export default {
       ],
       bdmenu: false,
       imageSource: '',
+      uploadPhoto: null,
+      photoRefreshPending: false,
       isDropZoneActive: false,
       progressVisible: false,
       progressValue: 0,
+      stillEditing: false,
       allowedFileExtensions: ['.jpg', '.jpeg', '.gif', '.png'],
       valid: true,
       rules: {
@@ -509,6 +527,17 @@ export default {
 
   computed: {
     ...mapGetters('sistema', ['getUsers']),
+    dataSource() {
+      const ds = new DataSource({
+        store: {
+          type: 'array',
+          key: 'id',
+          data: this.getUsers,
+        },
+        searchExpr: ['id', 'fullname', 'username'],
+      })
+      return ds
+    },
     menu_items() {
       return [
         {
@@ -529,6 +558,12 @@ export default {
           disabled: this.modo === 'r',
           method: () => this.cancelEdit(),
         },
+        {
+          title: 'Actualizar',
+          icon: 'mdi-autorenew',
+          disabled: this.modo !== 'r',
+          method: () => this.refreshProfile(),
+        },
       ]
     },
     sList() {
@@ -542,16 +577,16 @@ export default {
     },
   },
 
-  created() {
-    this.dataSource = new DataSource({
-      store: {
-        type: 'array',
-        key: 'id',
-        data: this.getUsers,
-      },
-      searchExpr: ['id', 'fullname', 'username'],
-    })
-  },
+  // created() {
+  //   this.dataSource = new DataSource({
+  //     store: {
+  //       type: 'array',
+  //       key: 'id',
+  //       data: this.getUsers,
+  //     },
+  //     searchExpr: ['id', 'fullname', 'username'],
+  //   })
+  // },
 
   mounted() {
     window.addEventListener('resize', this.windowSize)
@@ -606,9 +641,23 @@ export default {
         this.imageSource = fileReader.result
       }
       fileReader.readAsDataURL(file)
-      this.textVisible = false
-      this.progressVisible = false
-      this.progressValue = 0
+      // this.uploadPhoto = file
+      // console.log('PHOTO NAME', this.uploadPhoto.name)
+
+      const fd = new FormData()
+
+      fd.append('foto', file, file.name)
+      this.$axios
+        .post(`profiles/${this.curUser.id}/upload-foto/`, fd, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((resp) => {
+          this.textVisible = false
+          this.progressVisible = false
+          this.progressValue = 0
+        })
     },
     onProgress(e) {
       this.progressValue = (e.bytesLoaded / e.bytesTotal) * 100
@@ -630,14 +679,36 @@ export default {
     editProfile() {
       this.modo = 'e'
     },
-    saveProfile() {
-      this.modo = 'r'
+    refreshProfile() {
+      this.cancelEdit()
+    },
+    async saveProfile() {
+      try {
+        await this.$store
+          .dispatch('sistema/editUser', this.curUser)
+          .then(() => {
+            this.cancelEdit()
+          })
+      } catch (err) {
+        if (err.response) {
+          this.$error({
+            statusCode: err.response.status,
+            message: err.response.data.message,
+          })
+        } else {
+          this.$error({
+            statusCode: 503,
+            message: 'No se pudo actualizar el perfil. Intente luego',
+          })
+        }
+      }
     },
     cancelEdit() {
       const selitems = this.sList.option('selectedItems')
       setTimeout(() => (this.listSelectedKeys = [this.getUsers[0].id]), 100)
       setTimeout(() => (this.listSelectedKeys = [selitems[0].id]), 150)
       this.modo = 'r'
+      this.stillEditing = false
     },
   },
 

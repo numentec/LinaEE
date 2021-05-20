@@ -4,11 +4,48 @@
     <MaterialCard class="mt-10">
       <template v-slot:heading>
         <v-toolbar dense color="secondary" class="mx-1" dark flat>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon v-bind="attrs" v-on="on" @click="$router.back()">
+                <v-icon>mdi-chevron-left</v-icon>
+              </v-btn>
+            </template>
+            <span>Volver a vista anterior</span>
+          </v-tooltip>
+          <v-toolbar-title>Usuarios</v-toolbar-title>
+          <v-spacer />
+          <!-- <v-btn dark icon @click="testMethod">
+            <v-icon>mdi-test-tube</v-icon>
+          </v-btn> -->
+          <v-menu
+            v-model="menuConf"
+            :nudge-width="200"
+            :close-on-content-click="false"
+            left
+            offset-y
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn dark icon v-bind="attrs" v-on="on">
+                <v-icon>mdi-cog-outline</v-icon>
+              </v-btn>
+            </template>
+            <TableSettings
+              :show-column-chooser="showColumnChooser"
+              :set-filtros="setConf.filtros"
+              :set-agrupar="setConf.agrupar"
+              :ver="{ filtros: true, agrupar: false }"
+              @set-conf-filtros="setConf.filtros = !setConf.filtros"
+              @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
+              @menu-conf-close="menuConf = false"
+              @snkb="snackbar = true"
+            />
+          </v-menu>
           <v-menu
             v-model="menuMain"
             :close-on-content-click="false"
             :nudge-width="150"
             offset-y
+            offset-x
           >
             <template v-slot:activator="{ on, attrs }">
               <v-btn dark icon v-bind="attrs" v-on="on">
@@ -71,9 +108,6 @@
                   </v-list-item-action>
                   <v-list-item-content>
                     <v-list-item-title>Panel Agrupar</v-list-item-title>
-                    <v-list-item-subtitle>
-                      Agrupar y búsqueda global
-                    </v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item>
@@ -82,9 +116,6 @@
                   </v-list-item-action>
                   <v-list-item-content>
                     <v-list-item-title>Filtro avanzado</v-list-item-title>
-                    <v-list-item-subtitle>
-                      Fila de filtros avanzados
-                    </v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item link>
@@ -96,35 +127,6 @@
                 </v-list-item>
               </v-list-group>
             </v-list>
-          </v-menu>
-          <v-spacer />
-          <v-toolbar-title>Usuarios</v-toolbar-title>
-          <v-spacer />
-          <!-- <v-btn dark icon @click="testMethod">
-            <v-icon>mdi-test-tube</v-icon>
-          </v-btn> -->
-          <v-menu
-            v-model="menuConf"
-            :nudge-width="200"
-            :close-on-content-click="false"
-            left
-            offset-y
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn dark icon v-bind="attrs" v-on="on">
-                <v-icon>mdi-cog-outline</v-icon>
-              </v-btn>
-            </template>
-            <TableSettings
-              :show-column-chooser="showColumnChooser"
-              :set-filtros="setConf.filtros"
-              :set-agrupar="setConf.agrupar"
-              :ver="{ filtros: true, agrupar: false }"
-              @set-conf-filtros="setConf.filtros = !setConf.filtros"
-              @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
-              @menu-conf-close="menuConf = false"
-              @snkb="snackbar = true"
-            />
           </v-menu>
         </v-toolbar>
       </template>

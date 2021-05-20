@@ -1,3 +1,4 @@
+import os
 from django.db import models, transaction, OperationalError
 
 from django.contrib.auth.models import AbstractUser
@@ -11,6 +12,14 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 from . import managers
+
+def img_profile_path(instance, filename):
+    """Guarda foto de perfil con nombre de usuario"""
+    ext = filename.split('.')[-1]
+    imgname = getattr(instance, 'username')
+    filename = f'{imgname}.{ext}'
+
+    return os.path.join('images/profiles/', filename)
 
 # Modelo para información de compañías
 class Cia(models.Model):
@@ -64,7 +73,7 @@ class User(AbstractUser):
     nombre_corto = models.CharField('Nombre Corto', max_length=10, blank=True, 
                                         help_text='(Display name) Dejar en blanco para autogenerar')
     localization = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
-    foto = models.ImageField('Foto', upload_to='images/profiles', blank=True, null=True, default='images/profiles/no_image_user.png')
+    foto = models.ImageField('Foto', upload_to=img_profile_path, blank=True, null=True, default='images/profiles/no_image_user.png')
     birth_date = models.DateField('Fecha de Nacimiento', blank=True, null=True)
     cia = models.ForeignKey(Cia, blank=True, null=True, verbose_name='Cia Predeterminada',
                                  on_delete=models.SET_NULL, related_name='users_x_cia')
@@ -202,6 +211,7 @@ class Modulo(Common):
     nombre = models.CharField('Nombre', max_length=25, unique=True)
     descrip = models.CharField('Descripción', max_length=50, blank=True)
     tipo = models.PositiveIntegerField('Tipo', default=0)
+    disponible = models.BooleanField('Disponible', default=False)
 
     def __str__(self):
         return 'Módulo {}'.format(self.nombre)

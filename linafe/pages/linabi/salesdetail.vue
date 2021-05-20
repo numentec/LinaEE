@@ -1,255 +1,251 @@
 /* eslint-disable no-console */
 <template>
   <div>
-    <div>
-      <v-breadcrumbs :items="breadCrumbsItems"></v-breadcrumbs>
-    </div>
-    <div>
-      <MaterialCard class="mt-10">
-        <template v-slot:heading>
-          <v-toolbar dense color="secondary" class="mx-1" dark flat>
-            <v-menu
-              v-model="menuFilter"
-              :close-on-content-click="false"
-              :nudge-width="150"
-              offset-y
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn dark icon v-bind="attrs" v-on="on">
-                  <v-icon>mdi-dots-vertical</v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item link>
-                  <v-list-item-icon>
-                    <v-icon>mdi-cloud-download</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title @click.stop="showBaseFilters = true">
-                    Descargar Datos
-                  </v-list-item-title>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-icon>
-                    <v-icon>mdi-table-cancel</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title @click.stop="clearData">
-                    Limpiar Datos
-                  </v-list-item-title>
-                </v-list-item>
-                <v-list-group prepend-icon="mdi-export" no-action>
-                  <template v-slot:activator>
-                    <v-list-item>
-                      <v-list-item-content>
-                        <v-list-item-title>Exportar</v-list-item-title>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </template>
-                  <v-list-item link>
-                    <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(1)">
-                        Excel
-                      </v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item link>
-                    <v-list-item-content>
-                      <v-list-item-title @click.stop="exportGrid(2)">
-                        PDF
-                      </v-list-item-title>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-group>
-                <v-list-group prepend-icon="mdi-table-cog" no-action>
-                  <template v-slot:activator>
-                    <v-list-item>
-                      <v-list-item-content>
-                        <v-list-item-title>Consulta</v-list-item-title>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </template>
-                  <v-list-item link>
-                    <v-list-item-content>
-                      <v-list-item-title @click.stop="snackbar = true"
-                        >Guardar</v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item link>
-                    <v-list-item-content>
-                      <v-list-item-title @click.stop="snackbar = true"
-                        >Abrir</v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item link>
-                    <v-list-item-content>
-                      <v-list-item-title @click.stop="snackbar = true"
-                        >Eliminar</v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-group>
-                <v-list-group prepend-icon="mdi-cog" no-action>
-                  <template v-slot:activator>
-                    <v-list-item>
-                      <v-list-item-content>
-                        <v-list-item-title>Configuración</v-list-item-title>
-                      </v-list-item-content>
-                    </v-list-item>
-                  </template>
-                  <v-list-item>
-                    <v-list-item-action>
-                      <v-switch v-model="setConf.agrupar"></v-switch>
-                    </v-list-item-action>
-                    <v-list-item-content>
-                      <v-list-item-title>Panel Agrupar</v-list-item-title>
-                      <v-list-item-subtitle>
-                        Agrupar y búsqueda global
-                      </v-list-item-subtitle>
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-list-item-action>
-                      <v-switch v-model="setConf.filtros"></v-switch>
-                    </v-list-item-action>
-                    <v-list-item-content>
-                      <v-list-item-title>Filtro avanzado</v-list-item-title>
-                      <v-list-item-subtitle>
-                        Fila de filtros avanzados
-                      </v-list-item-subtitle>
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item link>
-                    <v-list-item-content>
-                      <v-list-item-title @click.stop="snackbar = true"
-                        >Ajustes</v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list-group>
-              </v-list>
-            </v-menu>
-            <v-spacer />
-            <v-toolbar-title>Detalle de Documentos de Ventas</v-toolbar-title>
-            <v-spacer />
-            <v-menu
-              v-model="menuConf"
-              :nudge-width="200"
-              :close-on-content-click="false"
-              left
-              offset-y
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn dark icon v-bind="attrs" v-on="on">
-                  <v-icon>mdi-cog-outline</v-icon>
-                </v-btn>
-              </template>
-              <TableSettings
-                :show-column-chooser="showColumnChooser"
-                :set-filtros="setConf.filtros"
-                :set-agrupar="setConf.agrupar"
-                @set-conf-filtros="setConf.filtros = !setConf.filtros"
-                @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
-                @menu-conf-close="menuConf = false"
-                @snkb="snackbar = true"
-              />
-            </v-menu>
-          </v-toolbar>
-        </template>
-        <div ref="resizableDiv" v-resize="onResize">
-          <DxDataGrid
-            :ref="curGridRefKey"
-            :focused-row-enabled="true"
-            :data-source="dataSource"
-            :remote-operations="false"
-            :column-auto-width="true"
-            :allow-column-reordering="true"
-            :allow-column-resizing="true"
-            column-resizing-mode="widget"
-            :row-alternation-enabled="true"
-            :show-column-lines="true"
-            :show-row-lines="false"
-            :show-borders="true"
-            :height="tableHeight"
-          >
-            <DxColumn
-              width="200"
-              :allow-grouping="false"
-              data-field="SKU"
-              name="FOTO"
-              caption="Foto"
-              cell-template="imgCellTemplate"
-              :allow-header-filtering="false"
-            />
-            <DxColumn
-              v-for="xcol in colsConfig"
-              :key="xcol.id"
-              :allow-grouping="xcol.configval7 == '1'"
-              :data-field="xcol.configkey"
-              :visible="xcol.configval2 == '1'"
-              :caption="xcol.configval3"
-              :data-type="xcol.configval4"
-              :format="setFormat(xcol.configval5)"
-              :alignment="xcol.configval6"
-            />
-            <DxGrouping :auto-expand-all="false" />
-            <DxGroupPanel
-              :visible="setConf.agrupar"
-              empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
-            />
-            <DxSearchPanel
-              :visible="setConf.agrupar"
-              :highlight-case-sensitive="true"
-            />
-            <DxColumnChooser
-              mode="select"
-              :allow-search="true"
-              :height="360"
-              title="Ver Columna"
-            />
-            <DxFilterRow :visible="setConf.filtros" />
-            <DxHeaderFilter :visible="true" />
-            <DxScrolling mode="virtual" />
-            <DxPaging :page-size="100" />
-            <DxSelection
-              select-all-mode="allPages"
-              show-check-boxes-mode="always"
-              mode="multiple"
-            />
-            <DxSummary>
-              <template v-for="gcol in colsWithSummary">
-                <DxGroupItem
-                  :key="'gi' + gcol.id"
-                  :column="gcol.configkey"
-                  :align-by-column="true"
-                  :summary-type="gcol.configval8"
-                  :value-format="setFormat(gcol.configval5)"
-                  :display-format="setDFormat('gi', gcol.configval8)"
-                />
-                <DxTotalItem
-                  :key="'ti' + gcol.id"
-                  :column="gcol.configkey"
-                  :summary-type="gcol.configval8"
-                  :value-format="setFormat(gcol.configval5)"
-                  :display-format="setDFormat('ti', gcol.configval8)"
-                />
-              </template>
-            </DxSummary>
-            <DxLoadPanel :enable="true" />
-            <template #imgCellTemplate="{ data: cellData }">
-              <ImgForGrid :img-file="cellData" />
+    <MaterialCard class="mt-10">
+      <template v-slot:heading>
+        <v-toolbar dense color="secondary" class="mx-1" dark flat>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon v-bind="attrs" v-on="on" @click="$router.back()">
+                <v-icon>mdi-chevron-left</v-icon>
+              </v-btn>
             </template>
-          </DxDataGrid>
-        </div>
-      </MaterialCard>
-      <BaseFilters
-        :dialog.sync="showBaseFilters"
-        :config="config.filter((el) => el.tipo == 'filter')"
-        :numvista="18"
-        curstore="linabi/salesdetail"
-        @closeDialog="closeDialog"
-      />
-    </div>
+            <span>Volver a vista anterior</span>
+          </v-tooltip>
+          <v-toolbar-title>Análisis de Ventas</v-toolbar-title>
+          <v-spacer />
+          <v-menu
+            v-model="menuConf"
+            :nudge-width="200"
+            :close-on-content-click="false"
+            left
+            offset-y
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn dark icon v-bind="attrs" v-on="on">
+                <v-icon>mdi-cog-outline</v-icon>
+              </v-btn>
+            </template>
+            <TableSettings
+              :show-column-chooser="showColumnChooser"
+              :set-filtros="setConf.filtros"
+              :set-agrupar="setConf.agrupar"
+              @set-conf-filtros="setConf.filtros = !setConf.filtros"
+              @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
+              @menu-conf-close="menuConf = false"
+              @snkb="snackbar = true"
+            />
+          </v-menu>
+          <v-menu
+            v-model="menuFilter"
+            :close-on-content-click="false"
+            :nudge-width="150"
+            offset-y
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn dark icon v-bind="attrs" v-on="on">
+                <v-icon>mdi-dots-vertical</v-icon>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-cloud-download</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click.stop="showBaseFilters = true">
+                  Descargar Datos
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-table-cancel</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click.stop="clearData">
+                  Limpiar Datos
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-group prepend-icon="mdi-export" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Exportar</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="exportGrid(1)">
+                      Excel
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="exportGrid(2)">
+                      PDF
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
+              <v-list-group prepend-icon="mdi-table-cog" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Consulta</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="snackbar = true"
+                      >Guardar</v-list-item-title
+                    >
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="snackbar = true"
+                      >Abrir</v-list-item-title
+                    >
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="snackbar = true"
+                      >Eliminar</v-list-item-title
+                    >
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
+              <v-list-group prepend-icon="mdi-cog" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Configuración</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item>
+                  <v-list-item-action>
+                    <v-switch v-model="setConf.agrupar"></v-switch>
+                  </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title>Panel Agrupar</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-action>
+                    <v-switch v-model="setConf.filtros"></v-switch>
+                  </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title>Filtro avanzado</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="snackbar = true"
+                      >Ajustes</v-list-item-title
+                    >
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
+            </v-list>
+          </v-menu>
+        </v-toolbar>
+      </template>
+      <div ref="resizableDiv" v-resize="onResize">
+        <DxDataGrid
+          :ref="curGridRefKey"
+          :focused-row-enabled="true"
+          :data-source="dataSource"
+          :remote-operations="false"
+          :column-auto-width="true"
+          :allow-column-reordering="true"
+          :allow-column-resizing="true"
+          column-resizing-mode="widget"
+          :row-alternation-enabled="true"
+          :show-column-lines="true"
+          :show-row-lines="false"
+          :show-borders="true"
+          :height="tableHeight"
+        >
+          <DxColumn
+            width="200"
+            :allow-grouping="false"
+            data-field="SKU"
+            name="FOTO"
+            caption="Foto"
+            cell-template="imgCellTemplate"
+            :allow-header-filtering="false"
+          />
+          <DxColumn
+            v-for="xcol in colsConfig"
+            :key="xcol.id"
+            :allow-grouping="xcol.configval7 == '1'"
+            :data-field="xcol.configkey"
+            :visible="xcol.configval2 == '1'"
+            :caption="xcol.configval3"
+            :data-type="xcol.configval4"
+            :format="setFormat(xcol.configval5)"
+            :alignment="xcol.configval6"
+          />
+          <DxGrouping :auto-expand-all="false" />
+          <DxGroupPanel
+            :visible="setConf.agrupar"
+            empty-panel-text="Arrastre aquí el encabezado de una columna para agrupar"
+          />
+          <DxSearchPanel
+            :visible="setConf.agrupar"
+            :highlight-case-sensitive="true"
+          />
+          <DxColumnChooser
+            mode="select"
+            :allow-search="true"
+            :height="360"
+            title="Ver Columna"
+          />
+          <DxFilterRow :visible="setConf.filtros" />
+          <DxHeaderFilter :visible="true" />
+          <DxScrolling mode="virtual" />
+          <DxPaging :page-size="100" />
+          <DxSelection
+            select-all-mode="allPages"
+            show-check-boxes-mode="always"
+            mode="multiple"
+          />
+          <DxSummary>
+            <template v-for="gcol in colsWithSummary">
+              <DxGroupItem
+                :key="'gi' + gcol.id"
+                :column="gcol.configkey"
+                :align-by-column="true"
+                :summary-type="gcol.configval8"
+                :value-format="setFormat(gcol.configval5)"
+                :display-format="setDFormat('gi', gcol.configval8)"
+              />
+              <DxTotalItem
+                :key="'ti' + gcol.id"
+                :column="gcol.configkey"
+                :summary-type="gcol.configval8"
+                :value-format="setFormat(gcol.configval5)"
+                :display-format="setDFormat('ti', gcol.configval8)"
+              />
+            </template>
+          </DxSummary>
+          <DxLoadPanel :enable="true" />
+          <template #imgCellTemplate="{ data: cellData }">
+            <ImgForGrid :img-file="cellData" />
+          </template>
+        </DxDataGrid>
+      </div>
+    </MaterialCard>
+    <BaseFilters
+      :dialog.sync="showBaseFilters"
+      :config="config.filter((el) => el.tipo == 'filter')"
+      :numvista="18"
+      curstore="linabi/salesdetail"
+      @closeDialog="closeDialog"
+    />
     <LoadingView :busy-with="busyWith" :message="loadingMessage" />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
@@ -268,6 +264,7 @@ import {
   DxDataGrid,
   DxColumn,
   DxSummary,
+  DxGroupItem,
   DxTotalItem,
   DxGrouping,
   DxGroupPanel,
@@ -349,6 +346,7 @@ export default {
     DxDataGrid,
     DxColumn,
     DxSummary,
+    DxGroupItem,
     DxTotalItem,
     DxGrouping,
     DxGroupPanel,

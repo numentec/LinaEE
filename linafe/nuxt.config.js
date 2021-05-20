@@ -120,6 +120,7 @@ export default {
   },
 
   publicRuntimeConfig: {
+    browserBaseURL: process.env.API_URL_CLIENT,
     publicURL: process.env.PUBLIC_URL,
     fotosURL: process.env.FOTOS_URL,
     fotosExt: process.env.FOTOS_EXT,
