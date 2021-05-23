@@ -16,7 +16,7 @@ export default {
   // Global CSS (https://go.nuxtjs.dev/config-css)
   css: [
     'devextreme/dist/css/dx.common.css',
-    '~/assets/dxstyles/dx.material.linaee_cerceta.css',
+    '~/assets/dxstyles/dx.material.linaee_cerceta_compact.css',
     // 'devextreme/dist/css/dx.light.css',
   ],
 

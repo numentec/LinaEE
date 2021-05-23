@@ -55,7 +55,7 @@
             <v-list nav>
               <v-list-item link>
                 <v-list-item-icon>
-                  <v-icon>mdi-cloud-download</v-icon>
+                  <v-icon>mdi-account-plus</v-icon>
                 </v-list-item-icon>
                 <v-list-item-title
                   @click.stop="
@@ -241,7 +241,7 @@ export default {
   },
 
   async fetch() {
-    // Lista de usuarios y grupos
+    // Lista de usuarios
     await this.fetchUsers().then((store) => {
       this.dataSource = store
     })

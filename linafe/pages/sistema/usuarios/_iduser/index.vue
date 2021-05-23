@@ -344,6 +344,27 @@
                         dense
                       ></v-text-field>
                     </v-col>
+                    <v-col cols="12" md="4" align="center">
+                      <v-tooltip bottom>
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-btn
+                            :disabled="curUser.id !== loggedInUser.id"
+                            fab
+                            large
+                            :dark="curUser.id == loggedInUser.id"
+                            color="primary darken-1"
+                            v-bind="attrs"
+                            v-on="on"
+                            @click.stop="showRenew = true"
+                          >
+                            <v-icon large :dark="curUser.id == loggedInUser.id">
+                              mdi-lock-reset
+                            </v-icon>
+                          </v-btn>
+                        </template>
+                        <span>Renovar contraseña</span>
+                      </v-tooltip>
+                    </v-col>
                   </v-row>
                 </v-card>
               </v-tab-item>
@@ -402,6 +423,11 @@
       @progress="onProgress"
       @upload-started="onUploadStarted"
     />
+    <renew-password
+      :uid="curUser.id"
+      :dialog.sync="showRenew"
+      @closeDialog="closeRenew"
+    />
     <v-dialog v-model="stillEditing" persistent max-width="300">
       <v-card>
         <v-card-title class="headline"> Editando Perfil </v-card-title>
@@ -426,6 +452,7 @@ import DxList from 'devextreme-vue/list'
 import DataSource from 'devextreme/data/data_source'
 import { DxFileUploader } from 'devextreme-vue/file-uploader'
 import { DxProgressBar } from 'devextreme-vue/progress-bar'
+import RenewPassword from '~/components/core/RenewPassword.vue'
 
 const searchList = 'search-list'
 // const formData = new FormData(this.$ref.curform)
@@ -448,6 +475,7 @@ export default {
     DxList,
     DxFileUploader,
     DxProgressBar,
+    RenewPassword,
   },
 
   async fetch() {
@@ -476,14 +504,13 @@ export default {
       modo: 'r',
       searchList,
       curUser: {},
-      xdataSource: null,
       listSelectedKeys: [],
       userGroups: [],
       toolbar_title: 'Perfil - Consultar',
-      sm: 'contains',
       cols_mainbody: 9,
       cols_serchtool: 3,
       showsearch: true,
+      showRenew: false,
       window_size: {
         width: 0,
         height: 0,
@@ -496,8 +523,6 @@ export default {
       ],
       bdmenu: false,
       imageSource: '',
-      uploadPhoto: null,
-      photoRefreshPending: false,
       isDropZoneActive: false,
       progressVisible: false,
       progressValue: 0,
@@ -527,6 +552,7 @@ export default {
 
   computed: {
     ...mapGetters('sistema', ['getUsers']),
+    ...mapGetters(['loggedInUser']),
     dataSource() {
       const ds = new DataSource({
         store: {
@@ -591,12 +617,18 @@ export default {
   mounted() {
     window.addEventListener('resize', this.windowSize)
     this.windowSize()
-    const usr = this.getUsers.find(
-      (usr) => usr.id === parseInt(this.$route.params.iduser)
-    )
-    this.curUser = JSON.parse(JSON.stringify(usr))
+    if (this.getUsers.length > 0) {
+      const usr = this.getUsers.find(
+        (usr) => usr.id === parseInt(this.$route.params.iduser)
+      )
+      this.curUser = JSON.parse(JSON.stringify(usr))
+      if (this.getUsers.length === 1) {
+        this.showSearch()
+      }
+      this.listSelectedKeys = [usr.id]
+    }
+
     this.modo = 'r'
-    this.listSelectedKeys = [usr.id]
   },
 
   destroyed() {
@@ -641,8 +673,6 @@ export default {
         this.imageSource = fileReader.result
       }
       fileReader.readAsDataURL(file)
-      // this.uploadPhoto = file
-      // console.log('PHOTO NAME', this.uploadPhoto.name)
 
       const fd = new FormData()
 
@@ -709,6 +739,9 @@ export default {
       setTimeout(() => (this.listSelectedKeys = [selitems[0].id]), 150)
       this.modo = 'r'
       this.stillEditing = false
+    },
+    closeRenew() {
+      this.showRenew = false
     },
   },
 

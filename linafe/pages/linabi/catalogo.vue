@@ -242,8 +242,10 @@
             :data-type="xcol.configval4"
             :format="setFormat(xcol.configval5)"
             :alignment="xcol.configval6"
+            :sorting-method="selFunction(xcol.configval9)"
           >
           </DxColumn>
+          <DxSorting mode="multiple" />
           <DxMasterDetail :enabled="true" template="mdTemplate" />
           <DxGrouping :auto-expand-all="false" />
           <DxGroupPanel
@@ -253,6 +255,7 @@
           <DxSearchPanel
             :visible="setConf.agrupar"
             :highlight-case-sensitive="true"
+            placeholder="Buscar..."
           />
           <DxColumnChooser
             mode="select"
@@ -261,7 +264,7 @@
             title="Columnas"
           />
           <DxFilterRow :visible="setConf.filtros" />
-          <DxHeaderFilter :visible="true" />
+          <DxHeaderFilter :visible="true" :allow-search="true" />
           <DxScrolling mode="virtual" />
           <DxPaging :page-size="100" />
           <DxSelection
@@ -332,6 +335,7 @@ import DataSource from 'devextreme/data/data_source'
 import {
   DxDataGrid,
   DxColumn,
+  DxSorting,
   DxMasterDetail,
   DxSummary,
   DxGroupItem,
@@ -359,6 +363,7 @@ import ProdVariants from '~/components/linabi/ProdVariants.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
+import { selFunction } from '~/assets/utilities'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -404,6 +409,7 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
+    DxSorting,
     DxMasterDetail,
     DxSummary,
     DxGroupItem,
@@ -448,6 +454,7 @@ export default {
   data() {
     return {
       curGridRefKey,
+      selFunction,
       dataSource: null,
       curDetail: [],
       menuConf: false,
@@ -475,7 +482,6 @@ export default {
     }
   },
   computed: {
-    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     ...mapState('linabi/catalogo', ['curStore']),
     ...mapGetters('linabi/catalogo', ['getCurCatalog']),
     curGrid() {

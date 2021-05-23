@@ -53,6 +53,24 @@ export const actions = {
     }
   },
 
+  async userProfile({ commit, error }, userid) {
+    try {
+      await this.$axios.$get(`profiles/${userid}`).then((data) => {
+        commit('SET_USERS', [data])
+      })
+    } catch (err) {
+      commit('SET_ERROR', err.response.data.message)
+    }
+  },
+
+  async renewPass({ commit, error }, pl) {
+    try {
+      await this.$axios.$put(`profiles/${pl.uid}/renew-pass/`, pl.pwd)
+    } catch (err) {
+      commit('SET_ERROR', err.response.data.message)
+    }
+  },
+
   async editUser({ commit, error }, userdata) {
     try {
       await this.$axios.$put('profiles/' + userdata.id + '/', userdata)

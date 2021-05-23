@@ -11,7 +11,7 @@ from .serializers import (
     ProfileSerializer,
     GroupsSerializer,
     StakeHolderSerializer,
-    ChangePasswordSerializer,
+    RenewPasswordSerializer,
 )
 from apps.core import models
 from apps.core import serializers
@@ -222,12 +222,14 @@ class ProfileViewSet(viewsets.ModelViewSet):
     
     def get_serializer_class(self):
         """Retornar serializer requerido"""
-        if self.action == 'create':
+        if self.action == 'retrieve':
+            return UserSerializer
+        elif self.action == 'create':
             return UserRegisterSerializer
         elif self.action == 'upload_foto':
             return UserFotoSerializer
-        elif self.action == 'change_pass':
-            return ChangePasswordSerializer
+        elif self.action == 'renew_pass':
+            return RenewPasswordSerializer
 
         return self.serializer_class
 
@@ -243,9 +245,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['PUT',], detail=True, url_path='change-pass')
-    def change_pass(self, request, pk=None):
-        """Cambiar contraseña"""
+    @action(methods=['PUT',], detail=True, url_path='renew-pass')
+    def renew_pass(self, request, pk=None):
+        """Renovar contraseña"""
         perfil = self.get_object()
         serializer = self.get_serializer(perfil, data=request.data)
 
@@ -256,9 +258,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ChangePasswordView(UpdateAPIView):
+class RenewPasswordView(UpdateAPIView):
 
-    serializer_class = ChangePasswordSerializer
+    serializer_class = RenewPasswordSerializer
     
     def get_queryset(self):
         return LinaUserModel.objects.filter(is_active=True).order_by('-id')

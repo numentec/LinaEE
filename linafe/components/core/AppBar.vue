@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <v-app-bar id="app-bar" color="primary" clipped-left fixed app dense dark>
     <v-btn icon @click="setMiniState(!is_mini)">
@@ -30,7 +31,7 @@
       </template>
       <v-list>
         <AppBarItem>
-          <v-list-item-title @click.stop="goProfile">Perfil</v-list-item-title>
+          <v-list-item-title @click="goProfile">Perfil</v-list-item-title>
         </AppBarItem>
         <AppBarItem>
           <v-list-item-title @click.stop="userLogout">
@@ -91,6 +92,7 @@ export default {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
     ...mapState('sistema', ['curuser']),
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
+    ...mapGetters('sistema', ['getUsers']),
     imgSrc() {
       return this.$config.publicURL + this.loggedInUser.foto
     },
@@ -105,10 +107,18 @@ export default {
 
   methods: {
     ...mapActions('core', ['SetDrawer', 'setIsMini', 'setIsExpanded']),
-    ...mapActions('sistema', ['userLogout']),
+    ...mapActions('sistema', ['userLogout', 'userProfile']),
     goProfile() {
-      // this.$router.push({ path: '/sistema/usuarios/' + this.loggedInUser.id })
-      this.$router.push({ path: '/sistema/usuarios' })
+      const curID = this.loggedInUser.id
+      if (this.getUsers.length === 0) {
+        this.userProfile(curID).then(() => {
+          this.$router.push({
+            path: '/sistema/usuarios/' + curID,
+          })
+        })
+      } else {
+        this.$router.push({ path: '/sistema/usuarios/' + curID })
+      }
     },
     setMiniState(mini) {
       this.setIsMini(mini)
