@@ -5,8 +5,8 @@ from rest_framework import viewsets
 from rest_framework import authentication, permissions
 from rest_framework import status
 from drf_dx_datagrid import DxModelViewSet
-from .models import BICatalog, BIFavorito
-from .serializers import BICatalogSerializer, BIFavoritoSerializer
+from . import models
+from . import serializers
 from ..core.views import CommonViewSet
 
 
@@ -24,7 +24,6 @@ class ListAsQuerySet(list):
 
 class CommonListsAPIView(APIView):
     """Listas de parámetros comunes (clientes, vendedores, categorías, etc."""
-
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -54,7 +53,6 @@ class CommonListsAPIView(APIView):
 
 class TallasBCAPIView(APIView):
     """Lista de codigo de barras por talla"""
-
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -87,7 +85,7 @@ class TallasBCAPIView(APIView):
 class CatalogModelViewSet(DxModelViewSet):
 # class CatalogModelViewSet(viewsets.ModelViewSet):
     """Catálogo - Lista de productos"""
-    serializer_class = BICatalogSerializer
+    serializer_class = serializers.BICatalogSerializer
     # queryset = BICatalog.objects.all()
 
     def get_queryset(self):
@@ -122,14 +120,13 @@ class CatalogModelViewSet(DxModelViewSet):
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
-        qs = ListAsQuerySet(result, model=BICatalog)
+        qs = ListAsQuerySet(result, model=models.BICatalog)
 
         return qs
 
 
 class CatalogAPIView(APIView):
     """Catálogo - Lista de productos"""
-
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -205,7 +202,6 @@ class CatalogAPIView(APIView):
 
 class SaleDocsMAPIView(APIView):
     """Documentos de ventas"""
-
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -255,7 +251,6 @@ class SaleDocsMAPIView(APIView):
 
 class SaleDocsDAPIView(APIView):
     """Detalle de documentos de ventas"""
-
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -292,7 +287,6 @@ class SaleDocsDAPIView(APIView):
 
 class SalesDetailAPIView(APIView):
     """Detalle de ventas"""
-
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -345,7 +339,20 @@ class SalesDetailAPIView(APIView):
 
 class FavoritoModelViewset(CommonViewSet):
     """Vista para CRUD de Favoritos"""
+    serializer_class = serializers.BIFavoritoSerializer
 
-    serializer_class = BIFavoritoSerializer
+    queryset = models.BIFavorito.objects.all()
 
-    queryset = BIFavorito.objects.all()
+
+class BIXLSXTemplateModelViewset(CommonViewSet):
+    """Vista para CRUD de BIXLSXTemplate"""
+    serializer_class = serializers.BIXLSXTemplateSerializer
+
+    queryset = models.BIXLSXTemplate.objects.all()
+
+
+class BIXLSXTemplateColModelViewset(CommonViewSet):
+    """Vista para CRUD de BIXLSXTemplateCol"""
+    serializer_class = serializers.BIXLSXTemplateColSerializer
+
+    queryset = models.BIXLSXTemplateCol.objects.all()

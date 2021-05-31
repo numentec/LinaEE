@@ -14,7 +14,7 @@
           </v-tooltip>
           <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
           <v-spacer />
-          <!-- <v-btn dark icon @click="testMethod">
+          <!-- <v-btn dark icon @click="testMethod2">
             <v-icon>mdi-test-tube</v-icon>
           </v-btn> -->
           <v-menu
@@ -79,6 +79,13 @@
                   <v-list-item-content>
                     <v-list-item-title @click.stop="exportGrid(1)">
                       Excel
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="selTemplate">
+                      Excel - Plantilla
                     </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
@@ -234,6 +241,7 @@
           />
           <DxColumn
             v-for="xcol in colsConfig"
+            id="colx"
             :key="xcol.id"
             :allow-grouping="xcol.configval7 == '1'"
             :data-field="xcol.configkey"
@@ -318,6 +326,12 @@
       @closeDialog="closeCatalogBuilder"
     />
     <LoadingView :busy-with="busyWith" :message="loadingMessage" />
+    <TemplatesAdmin
+      :dialog.sync="showSelTemplate"
+      :numvista="14"
+      @closeDialog="closeSelTemplate"
+      @setTemplate="doExportTemplate"
+    />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -360,6 +374,7 @@ import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
 import CatalogBuilder from '~/components/linabi/CatalogBuilder'
 import ProdVariants from '~/components/linabi/ProdVariants.vue'
+import TemplatesAdmin from '~/components/linabi/TemplatesAdmin.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
@@ -367,6 +382,7 @@ import { selFunction } from '~/assets/utilities'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
+let customTemplate = false
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -404,6 +420,16 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
     })
 }
 
+// function curWorkSheet(wb, src) {
+//   if (src === 'new') {
+//     return wb.addWorksheet('Catalogo')
+//   } else {
+//     wb.xlsx.readFile(src).then((w) => {
+//       return w
+//     })
+//   }
+// }
+
 export default {
   name: 'Catalogo',
   components: {
@@ -430,6 +456,7 @@ export default {
     TableSettings,
     LoadingView,
     ProdVariants,
+    TemplatesAdmin,
   },
   async asyncData({ $axios, error }) {
     try {
@@ -470,6 +497,7 @@ export default {
       radioGroup: '1',
       showBaseFilters: false,
       showCatalogBuilder: false,
+      showSelTemplate: false,
       tableHeight: 0,
       onContentReady(e) {
         if (!collapsed) {
@@ -479,6 +507,12 @@ export default {
       },
       busyWith: false,
       loadingMessage: 'Exportando...',
+      plantilla: {
+        name: '',
+        savingFilename: '',
+        row: 1,
+        col: 1,
+      },
     }
   },
   computed: {
@@ -543,8 +577,72 @@ export default {
         })
       }
     },
+    addToCatalog() {
+      const selected = this.curGrid.getSelectedRowsData()
+      this.addToCurCatalog(selected)
+      this.menuFilter = false
+      this.showCatalogBuilder = true
+    },
+    downloadCatalog() {
+      this.dataSource = new DataSource({
+        store: {
+          type: 'array',
+          key: 'SKU',
+          data: this.getCurCatalog,
+        },
+      })
+      this.showCatalogBuilder = false
+      this.menuFilter = false
+    },
     closeCatalogBuilder() {
       this.showCatalogBuilder = false
+    },
+    selTemplate() {
+      this.showSelTemplate = true
+      this.menuFilter = false
+    },
+    doExportTemplate(e) {
+      this.plantilla.name = e.name.toLowerCase() + '.xlsx'
+      this.plantilla.row = e.inirow
+      this.plantilla.col = e.inicol
+      this.plantilla.savingFilename = e.name + '.xlsx'
+
+      this.curGrid.beginCustomLoading('Cargando plantilla')
+
+      setTimeout(() => {
+        // Current visible columns
+        const vc = this.curGrid
+          .getVisibleColumns()
+          .filter((obj) => obj.showInColumnChooser)
+
+        // Columns to hide
+        const cth = vc.filter((el) => {
+          return !e.cols.find((element) => {
+            return element.name === el.name
+          })
+        })
+
+        // Show and order template's columns
+        e.cols.forEach((col) => {
+          this.curGrid.columnOption(col.name, {
+            visible: true,
+            visibleIndex: col.orden,
+          })
+        })
+
+        // Hide extra columns
+        cth.forEach((col) => {
+          this.curGrid.columnOption(col.name, { visible: false })
+        })
+      }, 500)
+
+      setTimeout(() => {
+        this.curGrid.endCustomLoading()
+        this.exportGrid(4)
+      }, 500)
+    },
+    closeSelTemplate() {
+      this.showSelTemplate = false
     },
     onResize() {
       this.tableHeight =
@@ -591,19 +689,63 @@ export default {
 
         // Exportar a Excel
         if (opc === 1) {
-          this.doExportExcel([], ax)
+          const savingFilename = 'Catalog.xlsx'
+          const workbook = new ExcelJS.Workbook()
+          const worksheet = workbook.addWorksheet(savingFilename)
+
+          this.doExportExcel(workbook, worksheet, savingFilename, ax)
         }
 
         // Exportar a Excel con detalle de códigos de barra
         if (opc === 2) {
           this.fetchVariants({ sku: selectedRows }).then((vv) => {
-            this.doExportExcel(vv, ax)
+            const savingFilename = 'CatalogBC.xlsx'
+            const workbook = new ExcelJS.Workbook()
+            const worksheet = workbook.addWorksheet(savingFilename)
+            this.doExportExcel(workbook, worksheet, savingFilename, ax, vv)
           })
         }
 
         // Exportar a PDF
         if (opc === 3) {
           this.doExportPDF()
+        }
+
+        // Exportar a Excel usando plantilla (Tova)
+        // http://192.168.1.50:8001/media/xlsx_templates/
+        if (opc === 4) {
+          customTemplate = true
+          const template = this.plantilla.name
+          const axx = this.$axios.create({
+            baseURL: this.$config.publicURL + '/media/xlsx_templates/',
+          })
+          axx
+            .get(template, {
+              responseType: 'arraybuffer',
+            })
+            .then((response) => {
+              const workbook = new ExcelJS.Workbook()
+              const buffer = response.data
+
+              workbook.xlsx.load(buffer).then((workbook) => {
+                const worksheet = workbook.worksheets[0]
+
+                const savingFilename = this.plantilla.savingFilename
+                const topLeftCell = {
+                  row: this.plantilla.row,
+                  column: this.plantilla.col,
+                }
+
+                this.doExportExcel(
+                  workbook,
+                  worksheet,
+                  savingFilename,
+                  topLeftCell,
+                  ax,
+                  []
+                )
+              })
+            })
         }
       }
     },
@@ -661,11 +803,15 @@ export default {
       })
     },
 
-    doExportExcel(vv, ax) {
+    doExportExcel(
+      workbook,
+      worksheet,
+      savingFilename,
+      topLeftCell = { row: 1, column: 1 },
+      ax,
+      vv = []
+    ) {
       const PromiseArray = []
-      const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet('Catalogo')
-
       const masterRows = []
 
       this.busyWith = true
@@ -673,7 +819,8 @@ export default {
       exportDataGridToExcel({
         component: this.curGrid,
         worksheet,
-        autoFilterEnabled: true,
+        topLeftCell,
+        autoFilterEnabled: !customTemplate,
         selectedRowsOnly: true,
         customizeCell: ({ excelCell, gridCell }) => {
           if (gridCell.rowType === 'data') {
@@ -701,9 +848,24 @@ export default {
               })
             }
           }
+          if (customTemplate) {
+            if (gridCell.rowType === 'totalFooter' && excelCell.value) {
+              excelCell.value = null
+            }
+            // if (gridCell.rowType === 'header') {
+            //   excelCell.value = null
+            // }
+          }
         },
       })
         .then((cellRange) => {
+          if (customTemplate) {
+            const row = worksheet.getRow(cellRange.from.row)
+            row.values = []
+            // row.hidden = true
+            // worksheet.spliceRows(cellRange.from.row, 1)
+            // console.log('FROMROW VALUE:', cellRange.from.row)
+          }
           if (vv.length > 0) {
             const borderStyle = {
               style: 'thin',
@@ -786,33 +948,103 @@ export default {
             workbook.xlsx.writeBuffer().then((buffer) => {
               saveAs(
                 new Blob([buffer], { type: 'application/octet-stream' }),
-                'Catalog.xlsx'
+                savingFilename
               )
               this.busyWith = false
             })
           })
         })
     },
-    // testMethod() {
-    //   this.busyWith = !this.busyWith
-    // },
-    addToCatalog() {
-      const selected = this.curGrid.getSelectedRowsData()
-      this.addToCurCatalog(selected)
-      this.menuFilter = false
-      this.showCatalogBuilder = true
-    },
-    downloadCatalog() {
-      this.dataSource = new DataSource({
-        store: {
-          type: 'array',
-          key: 'SKU',
-          data: this.getCurCatalog,
-        },
+    async testMethod() {
+      const ax = this.$axios.create({
+        baseURL: 'http://192.168.1.50:8001/media/xlsx_templates/',
       })
-      this.showCatalogBuilder = false
-      this.menuFilter = false
+      await ax
+        .get('tova.xlsx', {
+          responseType: 'arraybuffer',
+        })
+        .then((response) => {
+          const workbook = new ExcelJS.Workbook()
+          const buf = response.data
+
+          workbook.xlsx
+            .load(buf)
+            .then((wkb) => {
+              const worksheet = wkb.worksheets[0]
+
+              // keep {} where you wan to skip the column
+              worksheet.columns = [
+                {},
+                { key: 'marca', header: '' },
+                { key: 'ref', header: '' },
+                { key: 'bc', header: '' },
+                { key: 'color', header: '' },
+                { key: 'talla', header: '' },
+                { key: 'material', header: '' },
+                { key: 'descrip', header: '' },
+                { key: 'um', header: '' },
+                { key: 'cxb', header: '' },
+                { key: 'bultos', header: '' },
+                {},
+                { key: 'costo', header: '' },
+              ]
+              // keep {} where you wan to skip the row
+              const data = [
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {
+                  marca: 'ST. JACKS',
+                  ref: 'ACC0027504',
+                  bc: '6563011000363',
+                  color: 'Marron',
+                  talla: '54CMS',
+                  material: '100%ALGODON',
+                  descrip: 'GORRA P/NIÑAS (MINNIE TSUM) 54CMS',
+                  um: 'PCS',
+                  cxb: '12',
+                  bultos: '5',
+                  costo: '8.75',
+                },
+                {
+                  marca: 'GERBER',
+                  ref: '708525060-N1306I',
+                  bc: '0047213459683',
+                  color: 'Azul',
+                  talla: '06I',
+                  material: '100%ALGODON',
+                  descrip: 'GORRITOS P/BEBES 5PK (NEUTRAL)',
+                  um: 'SET',
+                  cxb: '6',
+                  bultos: '10',
+                  costo: '5.0',
+                },
+              ]
+
+              worksheet.addRows(data)
+            })
+            .then(() => {
+              workbook.xlsx.writeBuffer().then((buffer) => {
+                saveAs(
+                  new Blob([buffer], { type: 'application/octet-stream' }),
+                  'tovatest.xlsx'
+                )
+              })
+            })
+        })
+        .catch((err) => {
+          if (err.response.status === 404) {
+          }
+        })
     },
+    testMethod2() {},
   },
   head() {
     return {

@@ -4,6 +4,7 @@
     class="mx-auto my-4"
     max-width="300"
     style="height: 100%"
+    :loading="loadingView"
     @click="goView"
   >
     <v-img :src="fav.image" height="200px"></v-img>
@@ -14,7 +15,7 @@
       </v-badge>
     </v-card-title>
 
-    <v-card-subtitle>Usuario: {{ fav.created_by }}</v-card-subtitle>
+    <v-card-subtitle>Usuario: {{ fav.username }}</v-card-subtitle>
 
     <v-card-actions>
       <v-btn icon color="success" @click.stop="onEdit(fav.id)">
@@ -59,31 +60,14 @@ export default {
   },
   data: () => ({
     descrip: false,
+    loadingView: false,
   }),
+  activated() {
+    this.loadingView = false
+  },
   methods: {
     goView() {
-      const curBreadCrumbs = [
-        {
-          text: 'FAVORITOS',
-          exact: true,
-          append: true,
-          replace: true,
-          to: '/linabi/favoritos',
-          nuxt: true,
-        },
-        {
-          text: this.fav.name.toUpperCase(),
-          exact: true,
-          append: true,
-          replace: true,
-          to: this.fav.link,
-          nuxt: true,
-        },
-      ]
-      this.$store.dispatch(
-        'linabi/favoritos/setBreadCrumbsItems',
-        curBreadCrumbs
-      )
+      this.loadingView = true
       this.$router.push(this.fav.link)
     },
   },

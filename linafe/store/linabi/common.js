@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import CustomStore from 'devextreme/data/custom_store'
 export const namespaced = true
 
 export const state = () => ({
@@ -13,6 +14,7 @@ export const state = () => ({
   error: null,
   variants: [],
   fotos: {},
+  loadingView: false,
 })
 
 export const mutations = {
@@ -48,6 +50,9 @@ export const mutations = {
   },
   SET_FOTOS(state, payload) {
     state.fotos = payload
+  },
+  SET_LOADING_VIEW(state, payload) {
+    state.loadingView = payload
   },
 }
 
@@ -186,8 +191,33 @@ export const actions = {
       })
   },
 
+  fetchTemplates({ commit }) {
+    const ax = this.$axios
+
+    // commit('SET_LOADING_STATUS')
+
+    async function load() {
+      return await ax
+        .get('linabi/xlsxtemplates/')
+        .then((response) => response.data)
+    }
+
+    const store = new CustomStore({
+      key: 'id',
+      load,
+    })
+
+    // commit('SET_LOADING_STATUS')
+
+    return store
+  },
+
   setError({ commit }, payload) {
     commit('SET_ERROR', payload)
+  },
+
+  setLoadingView({ commit }, payload) {
+    commit('SET_LOADING_VIEW', payload)
   },
 }
 
@@ -233,5 +263,8 @@ export const getters = {
   },
   getFotos(state) {
     return state.fotos
+  },
+  getLoadingView(state) {
+    return state.loadingView
   },
 }

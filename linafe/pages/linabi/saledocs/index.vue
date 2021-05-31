@@ -100,6 +100,13 @@
                     </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="selTemplate">
+                      Excel - Plantilla
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
                 <v-list-item v-show="expDetail" link>
                   <v-list-item-content>
                     <v-list-item-title @click.stop="exportGrid(2)">
@@ -380,6 +387,12 @@
       @closeDialog="closeDialog"
     />
     <LoadingView :busy-with="busyWith" :message="loadingMessage" />
+    <TemplatesAdmin
+      :dialog.sync="showSelTemplate"
+      :numvista="14"
+      @closeDialog="closeSelTemplate"
+      @setTemplate="doExportTemplate"
+    />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -419,6 +432,7 @@ import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import MaterialCard from '~/components/core/MaterialCard'
 import BaseFilters from '~/components/linabi/BaseFilters'
+import TemplatesAdmin from '~/components/linabi/TemplatesAdmin.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
@@ -426,6 +440,7 @@ import LoadingView from '~/components/utilities/LoadingView'
 const curGridRefKey0 = 'cur-grid1'
 const curGridRefKey1 = 'cur-grid2'
 let collapsed = false
+let customTemplate = false
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -486,6 +501,7 @@ export default {
     ImgForGrid,
     TableSettings,
     LoadingView,
+    TemplatesAdmin,
   },
 
   async asyncData({ $axios, error }) {
@@ -533,6 +549,7 @@ export default {
       menuFilter: false,
       radioGroup: '1',
       showBaseFilters: false,
+      showSelTemplate: false,
       tableHeight: 0,
       tableWidth: 0,
       snackbar: false,
@@ -544,6 +561,12 @@ export default {
       },
       busyWith: false,
       loadingMessage: 'Exportando...',
+      plantilla: {
+        name: '',
+        savingFilename: '',
+        row: 1,
+        col: 1,
+      },
     }
   },
   computed: {
@@ -655,6 +678,61 @@ export default {
 
       return stypes[stype]?.(itype) ?? ''
     },
+    selTemplate() {
+      this.showSelTemplate = true
+      this.menuFilter = false
+    },
+    doExportTemplate(e) {
+      let curGrid
+
+      if (this.tab === 0) {
+        curGrid = this.curGrid0
+      } else {
+        curGrid = this.curGrid1
+      }
+
+      this.plantilla.name = e.name.toLowerCase() + '.xlsx'
+      this.plantilla.row = e.inirow
+      this.plantilla.col = e.inicol
+      this.plantilla.savingFilename = e.name + '.xlsx'
+
+      curGrid.beginCustomLoading('Cargando plantilla')
+
+      setTimeout(() => {
+        // Current visible columns
+        const vc = curGrid
+          .getVisibleColumns()
+          .filter((obj) => obj.showInColumnChooser)
+
+        // Columns to hide
+        const cth = vc.filter((el) => {
+          return !e.cols.find((element) => {
+            return element.name === el.name
+          })
+        })
+
+        // Show and order template's columns
+        e.cols.forEach((col) => {
+          curGrid.columnOption(col.name, {
+            visible: true,
+            visibleIndex: col.orden,
+          })
+        })
+
+        // Hide extra columns
+        cth.forEach((col) => {
+          curGrid.columnOption(col.name, { visible: false })
+        })
+      }, 500)
+
+      setTimeout(() => {
+        curGrid.endCustomLoading()
+        this.exportGrid(4)
+      }, 500)
+    },
+    closeSelTemplate() {
+      this.showSelTemplate = false
+    },
     exportGrid(opc) {
       this.menuFilter = false
 
@@ -686,19 +764,71 @@ export default {
 
         // Exportar a Excel
         if (opc === 1) {
-          this.doExportExcel([], ax, curGrid)
+          const savingFilename = curGrid.docname + '.xlsx'
+          const workbook = new ExcelJS.Workbook()
+          const worksheet = workbook.addWorksheet(curGrid.docname)
+
+          this.doExportExcel(workbook, worksheet, savingFilename, ax, curGrid)
         }
 
         // Exportar a Excel con detalle de códigos de barra
         if (opc === 2) {
           this.fetchVariants({ sku: selectedRows }).then((vv) => {
-            this.doExportExcel(vv, ax, curGrid)
+            const savingFilename = curGrid.docname + '.xlsx'
+            const workbook = new ExcelJS.Workbook()
+            const worksheet = workbook.addWorksheet(curGrid.docname)
+            this.doExportExcel(
+              workbook,
+              worksheet,
+              savingFilename,
+              ax,
+              curGrid,
+              vv
+            )
           })
         }
 
         // Exportar a PDF
         if (opc === 3) {
           this.doExportPDF(curGrid)
+        }
+
+        // Exportar a Excel usando plantilla (Tova)
+        // http://192.168.1.50:8001/media/xlsx_templates/
+        if (opc === 4) {
+          customTemplate = true
+          const template = this.plantilla.name
+          const axx = this.$axios.create({
+            baseURL: this.$config.publicURL + '/media/xlsx_templates/',
+          })
+          axx
+            .get(template, {
+              responseType: 'arraybuffer',
+            })
+            .then((response) => {
+              const workbook = new ExcelJS.Workbook()
+              const buffer = response.data
+
+              workbook.xlsx.load(buffer).then((workbook) => {
+                const worksheet = workbook.worksheets[0]
+
+                const savingFilename = this.plantilla.savingFilename
+                const topLeftCell = {
+                  row: this.plantilla.row,
+                  column: this.plantilla.col,
+                }
+
+                this.doExportExcel(
+                  workbook,
+                  worksheet,
+                  savingFilename,
+                  topLeftCell,
+                  ax,
+                  curGrid,
+                  []
+                )
+              })
+            })
         }
       }
     },
@@ -743,11 +873,16 @@ export default {
       })
     },
 
-    doExportExcel(vv, ax, curGrid) {
+    doExportExcel(
+      workbook,
+      worksheet,
+      savingFilename,
+      topLeftCell = { row: 1, column: 1 },
+      ax,
+      curGrid,
+      vv = []
+    ) {
       const PromiseArray = []
-      const workbook = new ExcelJS.Workbook()
-      const worksheet = workbook.addWorksheet(curGrid.docname)
-
       const masterRows = []
 
       this.busyWith = true
@@ -755,7 +890,8 @@ export default {
       exportDataGridToExcel({
         component: curGrid.component,
         worksheet,
-        autoFilterEnabled: true,
+        topLeftCell,
+        autoFilterEnabled: !customTemplate,
         selectedRowsOnly: true,
         customizeCell: ({ excelCell, gridCell }) => {
           if (curGrid.docname === 'ventas_detalle') {
@@ -784,10 +920,19 @@ export default {
                 })
               }
             }
+            if (customTemplate) {
+              if (gridCell.rowType === 'totalFooter' && excelCell.value) {
+                excelCell.value = null
+              }
+            }
           }
         },
       })
         .then((cellRange) => {
+          if (customTemplate) {
+            const row = worksheet.getRow(cellRange.from.row)
+            row.values = []
+          }
           if (vv.length > 0) {
             const borderStyle = {
               style: 'thin',
@@ -865,7 +1010,7 @@ export default {
             workbook.xlsx.writeBuffer().then((buffer) => {
               saveAs(
                 new Blob([buffer], { type: 'application/octet-stream' }),
-                curGrid.docname + '.xlsx'
+                savingFilename
               )
               this.busyWith = false
             })

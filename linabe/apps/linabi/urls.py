@@ -7,6 +7,8 @@ app_name = "linabi"
 router = DefaultRouter()
 router.register(r'model-catalog', views.CatalogModelViewSet, basename='model-catalog')
 router.register(r'favoritos', views.FavoritoModelViewset, basename='favoritos')
+router.register(r'xlsxtemplates', views.BIXLSXTemplateModelViewset, basename='xlsxtemplates')
+router.register(r'xlsxtemplatescols', views.BIXLSXTemplateColModelViewset, basename='xlsxtemplatescols')
 
 urlpatterns = [
     path('', include(router.urls)),
