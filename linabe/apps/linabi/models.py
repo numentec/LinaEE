@@ -13,7 +13,7 @@ def template_path(instance, filename):
     onlyname = getattr(instance, 'name').lower()
     filename = f'{onlyname}.{ext}'
 
-    return os.path.join('xlsx_templates/', filename)
+    return os.path.join('xlsxtemplates/', filename)
 
 
 # Clase base abstracta para modelo transitorio.

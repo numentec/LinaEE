@@ -799,34 +799,38 @@ export default {
           customTemplate = true
           const template = this.plantilla.name
           const axx = this.$axios.create({
-            baseURL: this.$config.publicURL + '/media/xlsx_templates/',
+            baseURL: this.$config.publicURL + '/media/xlsxtemplates/',
           })
           axx
             .get(template, {
-              responseType: 'arraybuffer',
+              responseType: 'blob',
             })
             .then((response) => {
               const workbook = new ExcelJS.Workbook()
-              const buffer = response.data
+              const blob = new Blob([response.data])
 
-              workbook.xlsx.load(buffer).then((workbook) => {
-                const worksheet = workbook.worksheets[0]
+              // const buffer = response.data
 
-                const savingFilename = this.plantilla.savingFilename
-                const topLeftCell = {
-                  row: this.plantilla.row,
-                  column: this.plantilla.col,
-                }
+              blob.arrayBuffer().then((buffer) => {
+                workbook.xlsx.load(buffer).then((workbook) => {
+                  const worksheet = workbook.worksheets[0]
 
-                this.doExportExcel(
-                  workbook,
-                  worksheet,
-                  savingFilename,
-                  topLeftCell,
-                  ax,
-                  curGrid,
-                  []
-                )
+                  const savingFilename = this.plantilla.savingFilename
+                  const topLeftCell = {
+                    row: this.plantilla.row,
+                    column: this.plantilla.col,
+                  }
+
+                  this.doExportExcel(
+                    workbook,
+                    worksheet,
+                    savingFilename,
+                    topLeftCell,
+                    ax,
+                    curGrid,
+                    []
+                  )
+                })
               })
             })
         }

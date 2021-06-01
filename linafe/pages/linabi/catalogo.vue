@@ -717,7 +717,7 @@ export default {
           customTemplate = true
           const template = this.plantilla.name
           const axx = this.$axios.create({
-            baseURL: this.$config.publicURL + '/media/xlsx_templates/',
+            baseURL: this.$config.publicURL + '/media/xlsxtemplates/',
           })
           axx
             .get(template, {
@@ -957,7 +957,7 @@ export default {
     },
     async testMethod() {
       const ax = this.$axios.create({
-        baseURL: 'http://192.168.1.50:8001/media/xlsx_templates/',
+        baseURL: 'http://192.168.1.50:8001/media/xlsxtemplates/',
       })
       await ax
         .get('tova.xlsx', {
