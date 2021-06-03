@@ -14,9 +14,10 @@
           </v-tooltip>
           <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
           <v-spacer />
-          <!-- <v-btn dark icon @click="testMethod2">
+          <v-text-field v-model="testfilename" label="Outlined" outlined />
+          <v-btn dark icon @click="testMethod">
             <v-icon>mdi-test-tube</v-icon>
-          </v-btn> -->
+          </v-btn>
           <v-menu
             v-model="menuConf"
             :nudge-width="200"
@@ -499,6 +500,7 @@ export default {
       showCatalogBuilder: false,
       showSelTemplate: false,
       tableHeight: 0,
+      testfilename: '',
       onContentReady(e) {
         if (!collapsed) {
           e.component.expandRow(1)
@@ -956,91 +958,31 @@ export default {
         })
     },
     async testMethod() {
+      const filename = this.testfilename
       const ax = this.$axios.create({
-        baseURL: 'http://192.168.1.50:8001/media/xlsxtemplates/',
+        baseURL: this.$config.publicURL + '/media/xlsxtemplates/',
       })
       await ax
-        .get('tova.xlsx', {
+        .get(filename, {
           responseType: 'arraybuffer',
         })
         .then((response) => {
-          const workbook = new ExcelJS.Workbook()
-          const buf = response.data
-
-          workbook.xlsx
-            .load(buf)
-            .then((wkb) => {
-              const worksheet = wkb.worksheets[0]
-
-              // keep {} where you wan to skip the column
-              worksheet.columns = [
-                {},
-                { key: 'marca', header: '' },
-                { key: 'ref', header: '' },
-                { key: 'bc', header: '' },
-                { key: 'color', header: '' },
-                { key: 'talla', header: '' },
-                { key: 'material', header: '' },
-                { key: 'descrip', header: '' },
-                { key: 'um', header: '' },
-                { key: 'cxb', header: '' },
-                { key: 'bultos', header: '' },
-                {},
-                { key: 'costo', header: '' },
-              ]
-              // keep {} where you wan to skip the row
-              const data = [
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
-                {},
-                {
-                  marca: 'ST. JACKS',
-                  ref: 'ACC0027504',
-                  bc: '6563011000363',
-                  color: 'Marron',
-                  talla: '54CMS',
-                  material: '100%ALGODON',
-                  descrip: 'GORRA P/NIÑAS (MINNIE TSUM) 54CMS',
-                  um: 'PCS',
-                  cxb: '12',
-                  bultos: '5',
-                  costo: '8.75',
-                },
-                {
-                  marca: 'GERBER',
-                  ref: '708525060-N1306I',
-                  bc: '0047213459683',
-                  color: 'Azul',
-                  talla: '06I',
-                  material: '100%ALGODON',
-                  descrip: 'GORRITOS P/BEBES 5PK (NEUTRAL)',
-                  um: 'SET',
-                  cxb: '6',
-                  bultos: '10',
-                  costo: '5.0',
-                },
-              ]
-
-              worksheet.addRows(data)
-            })
-            .then(() => {
-              workbook.xlsx.writeBuffer().then((buffer) => {
-                saveAs(
-                  new Blob([buffer], { type: 'application/octet-stream' }),
-                  'tovatest.xlsx'
-                )
-              })
-            })
+          // const buf = response.data
+          alert('FILE DOWNLOADED', filename)
         })
         .catch((err) => {
-          if (err.response.status === 404) {
+          if (err.response) {
+            // The response status is an error code
+            alert(err.response.status)
+            console.log(err.response.status)
+          } else if (err.request) {
+            // Response not received though the request was sent
+            alert(err.request)
+            console.log(err.request)
+          } else {
+            // An error occurred when setting up the request
+            alert(err.message)
+            console.log(err.message)
           }
         })
     },
