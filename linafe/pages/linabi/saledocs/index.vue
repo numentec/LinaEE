@@ -797,41 +797,47 @@ export default {
         // http://192.168.1.50:8001/media/xlsx_templates/
         if (opc === 4) {
           customTemplate = true
-          const template = this.plantilla.name
+          const template = 'plantillas/' + this.plantilla.name
           const axx = this.$axios.create({
-            baseURL: this.$config.publicURL + '/media/xlsxtemplates/',
+            baseURL: this.$config.mediaURL,
+            headers: {
+              common: {
+                Accept: 'application/json, text/plain, */*',
+              },
+            },
           })
           axx
             .get(template, {
-              responseType: 'blob',
+              // responseType: 'blob',
+              responseType: 'arraybuffer',
             })
             .then((response) => {
               const workbook = new ExcelJS.Workbook()
-              const blob = new Blob([response.data])
+              // const blob = new Blob([response.data])
 
-              // const buffer = response.data
+              const buffer = response.data
 
-              blob.arrayBuffer().then((buffer) => {
-                workbook.xlsx.load(buffer).then((workbook) => {
-                  const worksheet = workbook.worksheets[0]
+              // blob.arrayBuffer().then((buffer) => {
+              workbook.xlsx.load(buffer).then((workbook) => {
+                const worksheet = workbook.worksheets[0]
 
-                  const savingFilename = this.plantilla.savingFilename
-                  const topLeftCell = {
-                    row: this.plantilla.row,
-                    column: this.plantilla.col,
-                  }
+                const savingFilename = this.plantilla.savingFilename
+                const topLeftCell = {
+                  row: this.plantilla.row,
+                  column: this.plantilla.col,
+                }
 
-                  this.doExportExcel(
-                    workbook,
-                    worksheet,
-                    savingFilename,
-                    topLeftCell,
-                    ax,
-                    curGrid,
-                    []
-                  )
-                })
+                this.doExportExcel(
+                  workbook,
+                  worksheet,
+                  savingFilename,
+                  topLeftCell,
+                  ax,
+                  curGrid,
+                  []
+                )
               })
+              // })
             })
         }
       }

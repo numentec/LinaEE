@@ -124,6 +124,7 @@ export default {
     publicURL: process.env.PUBLIC_URL,
     fotosURL: process.env.FOTOS_URL,
     fotosExt: process.env.FOTOS_EXT,
+    mediaURL: process.env.MEDIA_URL,
   },
   privateRuntimeConfig: {},
 }

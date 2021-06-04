@@ -14,10 +14,10 @@
           </v-tooltip>
           <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
           <v-spacer />
-          <v-text-field v-model="testfilename" label="Outlined" outlined />
+          <!-- <v-text-field v-model="testfilename" label="Outlined" outlined />
           <v-btn dark icon @click="testMethod">
             <v-icon>mdi-test-tube</v-icon>
-          </v-btn>
+          </v-btn> -->
           <v-menu
             v-model="menuConf"
             :nudge-width="200"
@@ -384,6 +384,32 @@ import { selFunction } from '~/assets/utilities'
 const curGridRefKey = 'cur-grid'
 let collapsed = false
 let customTemplate = false
+
+// async function funcTest(ax, filename) {
+//   await ax
+//     .get(filename, {
+//       responseType: 'arraybuffer',
+//     })
+//     .then((response) => {
+//       // const buf = response.data
+//       alert('FILE DOWNLOADED', filename)
+//     })
+//     .catch((err) => {
+//       if (err.response) {
+//         // The response status is an error code
+//         alert(err.response.status)
+//         console.log(err.response.status)
+//       } else if (err.request) {
+//         // Response not received though the request was sent
+//         alert('No se recibió respuesta')
+//         console.log(err.request)
+//       } else {
+//         // An error occurred when setting up the request
+//         alert('Error armando solicitud (Request)', err.message)
+//         console.log(err.message)
+//       }
+//     })
+// }
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -957,34 +983,17 @@ export default {
           })
         })
     },
-    async testMethod() {
-      const filename = this.testfilename
-      const ax = this.$axios.create({
-        baseURL: this.$config.publicURL + '/media/xlsxtemplates/',
-      })
-      await ax
-        .get(filename, {
-          responseType: 'arraybuffer',
-        })
-        .then((response) => {
-          // const buf = response.data
-          alert('FILE DOWNLOADED', filename)
-        })
-        .catch((err) => {
-          if (err.response) {
-            // The response status is an error code
-            alert(err.response.status)
-            console.log(err.response.status)
-          } else if (err.request) {
-            // Response not received though the request was sent
-            alert(err.request)
-            console.log(err.request)
-          } else {
-            // An error occurred when setting up the request
-            alert(err.message)
-            console.log(err.message)
-          }
-        })
+    testMethod() {
+      // const filename = 'plantillas/' + this.testfilename
+      // const ax = this.$axios.create({
+      //   baseURL: this.$config.mediaURL,
+      //   headers: {
+      //     common: {
+      //       Accept: 'application/json, text/plain, */*',
+      //     },
+      //   },
+      // })
+      // funcTest(ax, filename)
     },
     testMethod2() {},
   },
