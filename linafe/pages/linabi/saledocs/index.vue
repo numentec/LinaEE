@@ -14,6 +14,9 @@
           </v-tooltip>
           <v-toolbar-title>Documentos de Ventas</v-toolbar-title>
           <v-spacer />
+          <!-- <v-btn dark icon @click="testMethod">
+            <v-icon>mdi-test-tube</v-icon>
+          </v-btn> -->
           <v-menu
             v-model="menuConf"
             :nudge-width="200"
@@ -382,6 +385,7 @@
     <BaseFilters
       :dialog.sync="showBaseFilters"
       :config="config0.filter((el) => el.tipo == 'filter')"
+      :perms="filterPerms"
       :numvista="16"
       curstore="linabi/saledocsm"
       @closeDialog="closeDialog"
@@ -478,6 +482,10 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
     })
 }
 
+function uniqByKeepLast(data, key) {
+  return [...new Map(data.map((x) => [key(x), x])).values()]
+}
+
 export default {
   name: 'SaleDocs',
   components: {
@@ -504,26 +512,38 @@ export default {
     TemplatesAdmin,
   },
 
-  async asyncData({ $axios, error }) {
+  async asyncData({ $axios, store, error }) {
+    const loggedInUser = store.getters.loggedInUser
+    const groupList = loggedInUser.ugroups.toString()
     try {
-      const [conf0, conf1] = await Promise.all([
+      const [resp0, resp1, resp2] = await Promise.all([
         $axios.get('vistas/16/'),
         $axios.get('vistas/17/'),
+        $axios.get('accviewconf-list/', {
+          params: { idvista: '16', groups: groupList },
+        }),
       ])
+      const filterPerms = uniqByKeepLast(resp2.data, (it) => it.vistaconf)
       return {
-        config0: conf0.data.configs_x_vista,
-        config1: conf1.data.configs_x_vista,
+        config0: resp0.data.configs_x_vista,
+        config1: resp1.data.configs_x_vista,
+        filterPerms,
       }
     } catch (err) {
       if (err.response) {
         error({
           statusCode: err.response.status,
-          message: err.response.data.detail,
+          message: err.response.data.message,
+        })
+      } else if (error.request) {
+        error({
+          statusCode: 503,
+          message: 'No hubo respuesta del servidor',
         })
       } else {
         error({
-          statusCode: 503,
-          message: 'No se pudo cargar la configuración. Intente luego',
+          statusCode: 1010,
+          message: err.message,
         })
       }
     }
@@ -1027,6 +1047,10 @@ export default {
           })
         })
     },
+    // testMethod() {
+    //   const fp = uniqByKeepLast(this.filterPerms, (it) => it.vistaconf)
+    //   console.log('filterPerms', fp[0].configkey)
+    // },
   },
   head() {
     return {

@@ -315,6 +315,7 @@
     <BaseFilters
       :dialog.sync="showBaseFilters"
       :config="viewConf.filter((el) => el.tipo == 'filter')"
+      :perms="filterPerms"
       :numvista="14"
       curstore="linabi/catalogo"
       @closeDialog="closeBaseFilters"
@@ -447,6 +448,9 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
     })
 }
 
+function uniqByKeepLast(data, key) {
+  return [...new Map(data.map((x) => [key(x), x])).values()]
+}
 // function curWorkSheet(wb, src) {
 //   if (src === 'new') {
 //     return wb.addWorksheet('Catalogo')
@@ -485,22 +489,36 @@ export default {
     ProdVariants,
     TemplatesAdmin,
   },
-  async asyncData({ $axios, error }) {
+  async asyncData({ $axios, store, error }) {
+    const loggedInUser = store.getters.loggedInUser
+    const groupList = loggedInUser.ugroups.toString()
     try {
-      const { data } = await $axios.get('vistas/14/')
+      const [resp0, resp1] = await Promise.all([
+        $axios.get('vistas/14/'),
+        $axios.get('accviewconf-list/', {
+          params: { idvista: '14', groups: groupList },
+        }),
+      ])
+      const filterPerms = uniqByKeepLast(resp1.data, (it) => it.vistaconf)
       return {
-        viewConf: data.configs_x_vista,
+        viewConf: resp0.data.configs_x_vista,
+        filterPerms,
       }
     } catch (err) {
       if (err.response) {
         error({
           statusCode: err.response.status,
-          message: err.response.data.detail,
+          message: err.response.data.message,
+        })
+      } else if (error.request) {
+        error({
+          statusCode: 503,
+          message: 'No hubo respuesta del servidor',
         })
       } else {
         error({
-          statusCode: 503,
-          message: 'No se pudo cargar la configuración. Intente luego',
+          statusCode: 1010,
+          message: err.message,
         })
       }
     }

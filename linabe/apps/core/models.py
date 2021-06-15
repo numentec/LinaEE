@@ -1,7 +1,7 @@
 import os
 from django.db import models, transaction, OperationalError
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.auth import get_user_model
 from ckeditor.fields import RichTextField
 
@@ -207,11 +207,11 @@ class TipoGenerico(Common):
 
 
 # Modelo del sistema. Módulos
-class Modulo(Common):
+class Modulo(models.Model):
     nombre = models.CharField('Nombre', max_length=25, unique=True)
     descrip = models.CharField('Descripción', max_length=50, blank=True)
     tipo = models.PositiveIntegerField('Tipo', default=0)
-    disponible = models.BooleanField('Disponible', default=False)
+    is_active = models.BooleanField('Activo', default=False)
 
     def __str__(self):
         return 'Módulo {}'.format(self.nombre)
@@ -228,6 +228,7 @@ class Vista(Common):
     descrip = models.CharField('Descripción', max_length=50, blank=True)
     link = models.CharField('Enlace Interno', max_length=100, default='/')
     tipo = models.PositiveIntegerField('Tipo', default=0)
+    disponible = models.BooleanField('Disponible', default=True)
     modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, verbose_name='Módulo', related_name='vistas_x_modulo')
 
     def __str__(self):
@@ -237,6 +238,38 @@ class Vista(Common):
         db_table = 'core_vistas'
         verbose_name = 'Vista'
         verbose_name_plural = 'Vistas'
+
+
+# Modelo del sistema. Elementos de Vistas
+# class VistaElement(models.Model):
+#     nombre = models.CharField('Nombre', max_length=25, unique=True)
+#     descrip = models.CharField('Descripción', max_length=50, blank=True)
+#     vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista', related_name='elements_x_vista')
+#     disponible = models.BooleanField('Disponible', default=True)
+
+#     def __str__(self):
+#         return 'Elemento {} de vista {}'.format(self.nombre, self.vista.nombre)
+
+#     class Meta:
+#         db_table = 'core_vistaelement'
+#         verbose_name = 'Elemento'
+#         verbose_name_plural = 'Elementos'
+
+
+# Modelo del sistema. Acceso a elementos de vista
+# class VistaElementAccess(models.Model):
+#     vista_element = models.ForeignKey(VistaElement, on_delete=models.CASCADE, verbose_name='Elemento_de_Vista', \
+#          related_name='acc_x_vistaelelemt')
+#     group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name='Grupo', related_name='acc_x_group')
+#     accesso = models.BooleanField('Acceso', default=True)
+
+#     def __str__(self):
+#         return 'Acceso a elemento de vista {}'.format(self.vista_element.nombre)
+
+#     class Meta:
+#         db_table = 'core_vistaelementacc'
+#         verbose_name = 'Acceso'
+#         verbose_name_plural = 'Accesos'
 
 
 # Modelo del sistema. Configuración de la vista o formulario
@@ -255,12 +288,28 @@ class VistaConfig(Common):
     tipo = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
-        return 'Config vista {}'.format(self.vista.nombre)
+        return 'Config vista {} - {}'.format(self.vista.nombre, self.configkey)
 
     class Meta:
         db_table = 'core_vistaconfig'
         verbose_name = 'Configuración por Vista'
         verbose_name_plural = 'Configuraciones por Vista'
+
+
+# Modelo del sistema. Acceso por grupo a clave de configuración de la vista
+class VistaConfigAcc(models.Model):
+    vistaconf = models.ForeignKey(VistaConfig, on_delete=models.CASCADE, verbose_name='Vistaconf', \
+         related_name='acc_x_vistaconf')
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name='Grupo', related_name='acc_x_group')
+    acceso = models.BooleanField('Acceso', default=True)
+
+    def __str__(self):
+        return 'Acceso a configuración de vista {}'.format(self.vistaconf.configkey)
+
+    class Meta:
+        db_table = 'core_vistaconfacc'
+        verbose_name = 'Acceso a conf'
+        verbose_name_plural = 'Accesos a conf'
 
 
 # Modelo del sistema. Configuración de la vista o formulario por usuario

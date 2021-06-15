@@ -15,6 +15,7 @@ router.register(r'modulos', views.ModuloViewSet, basename='modulos')
 router.register(r'vistas', views.VistaViewSet, basename='vistas')
 router.register(r'vistas-conf', views.VistaConfigViewSet, basename='vistas-conf')
 router.register(r'vistas-conf-usr', views.VistaConfigUserViewSet, basename='vistas-conf-usr')
+router.register(r'vistaconfacc', views.VistaConfigAccViewSet, basename='vistaconfacc')
 router.register(r'profiles', views.ProfileViewSet, basename='profiles')
 
 urlpatterns = [
@@ -30,4 +31,6 @@ urlpatterns = [
     path('user_perms/<pk>/', views.UserPermsDetail.as_view(), name='user_perms'),
     path('user_register/', views.UserRegister.as_view(), name='user_register'),
     path('groups/', views.GroupsList.as_view(), name='groups'),
+    path('modul-actives/', views.ModulosActivosList.as_view(), name='modul-actives'),
+    path('accviewconf-list/', views.VistaConfigAccList.as_view(), name='accviewconf-list'),
 ]

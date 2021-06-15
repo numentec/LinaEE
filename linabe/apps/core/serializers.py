@@ -200,10 +200,44 @@ class VistaSerializer(serializers.ModelSerializer):
         fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'configs_x_vista', 'modulo')
 
 
+class VistaConfigAccSerializer(serializers.ModelSerializer):
+    
+    # vistaconf = VistaConfigSerializer(read_only=True)
+    configkey = serializers.SerializerMethodField()
+    idvista = serializers.SerializerMethodField()
+
+    def get_configkey(self, obj):
+        return '{}'.format(obj.vistaconf.configkey)
+
+    def get_idvista(self, obj):
+        return '{}'.format(obj.vistaconf.vista.id)
+
+    class Meta:
+        model = models.VistaConfigAcc
+        fields = ('id', 'vistaconf', 'idvista', 'configkey', 'group', 'acceso')
+        read_only_fields = ('id', 'idvista', 'configkey')
+
+
 class ModuloSerializer(serializers.ModelSerializer):
 
     vistas_x_modulo = VistaSerializer(read_only=True, many=True)
 
     class Meta:
         model = models.Modulo
-        fields = ('id', 'nombre', 'descrip', 'tipo', 'vistas_x_modulo')
+        fields = ('id', 'nombre', 'descrip', 'tipo', 'is_active', 'vistas_x_modulo')
+
+
+# class VistaElementAccessSerializer(serializers.ModelSerializer):
+
+#     class Meta:
+#         model = models.VistaElementAccess
+#         fields = ('id', 'vista_element', 'group', 'accesso')
+
+
+# class VistaElementSerializer(serializers.ModelSerializer):
+
+#     acc_x_vistaelelemt = VistaElementAccessSerializer(read_only=True, many=True)
+
+#     class Meta:
+#         model = models.VistaElement
+#         fields = ('id', 'nombre', 'descrip', 'disponible', 'vista', 'acc_x_vistaelelemt')

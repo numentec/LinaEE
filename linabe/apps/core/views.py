@@ -1,3 +1,4 @@
+import django.core.serializers as ss
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -15,7 +16,8 @@ from .serializers import (
 )
 from apps.core import models
 from apps.core import serializers
-from linapi.permissions import CustomDjangoModelPermissions
+# from linapi.permissions import CustomDjangoModelPermissions
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -25,6 +27,8 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+
+import json
 
 LinaUserModel = get_user_model()
 
@@ -39,6 +43,12 @@ class LinaAuthToken(ObtainAuthToken):
         token, created = Token.objects.get_or_create(user=user)
 
         fullname = '{} {}'.format(user.first_name, user.last_name)
+
+        # groups = serializers.SlugRelatedField(
+        #     many=True,
+        #     read_only=True,
+        #     slug_field='name',
+        # )
 
         min_permissions = [
             'core.view_module_linabi',
@@ -65,6 +75,12 @@ class LinaAuthToken(ObtainAuthToken):
         else:
             ufoto = ''
 
+        # Grupos del usuario (por nombre de grupo)
+        if user.groups :
+            ugroups = user.groups.values_list('name', flat=True)
+        else:
+            ugroups = []
+
         return Response({
             'token': token.key,
             'user': {
@@ -75,7 +91,9 @@ class LinaAuthToken(ObtainAuthToken):
                 'last_name': user.last_name,
                 'fullname': fullname,
                 'foto': ufoto,
-                'perms': perms
+                'perms': perms,
+                'is_superuser': user.is_superuser,
+                'ugroups': ugroups
             }
         })
 
@@ -95,7 +113,7 @@ class CommonViewSet(viewsets.ModelViewSet):
 class CiaViewSet(CommonViewSet):
     """ViewSet de compañías"""
     serializer_class = CiaSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     queryset = Cia.objects.none()
 
@@ -118,7 +136,7 @@ class CiaViewSet(CommonViewSet):
 class StakeHolderViewSet(CommonViewSet):
     """ViewSet de stakeholders"""
     serializer_class = StakeHolderSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     queryset = StakeHolder.stakeholders.all()
 
@@ -154,7 +172,7 @@ class StakeHolderViewSet(CommonViewSet):
 class UserList(ListAPIView):
     """Lista de usuarios"""
     serializer_class = UserSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     queryset = User.objects.none()
 
@@ -277,16 +295,22 @@ class GroupsList(ListAPIView):
 class ModuloViewSet(CommonViewSet):
     """ViewSet de módulos"""
     serializer_class = serializers.ModuloSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     def get_queryset(self):
         return models.Modulo.objects.all()
 
+class ModulosActivosList(ListAPIView):
+    """Lista de módulos disponibles"""
+    serializer_class = serializers.ModuloSerializer
+
+    def get_queryset(self):
+        return models.Modulo.objects.filter(is_active=True)
 
 class VistaViewSet(CommonViewSet):
     """ViewSet de vistas"""
     serializer_class = serializers.VistaSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     def get_queryset(self):
         return models.Vista.objects.all()
@@ -295,16 +319,79 @@ class VistaViewSet(CommonViewSet):
 class VistaConfigViewSet(CommonViewSet):
     """ViewSet de configuraciones por vista"""
     serializer_class = serializers.VistaConfigSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     def get_queryset(self):
         return models.VistaConfig.objects.all()
 
 
 class VistaConfigUserViewSet(CommonViewSet):
-    """ViewSet de configuraciones por vista"""
+    """ViewSet de configuraciones por vista por usuario"""
     serializer_class = serializers.VistaConfigUserSerializer
-    permission_classes = (CustomDjangoModelPermissions, )
+    # permission_classes = (CustomDjangoModelPermissions, )
 
     def get_queryset(self):
         return models.VistaConfigUser.objects.all()
+
+
+class VistaConfigAccViewSet(viewsets.ModelViewSet):
+    """ViewSet de accesos a configuraciones por vista"""
+    serializer_class = serializers.VistaConfigAccSerializer
+    # permission_classes = (CustomDjangoModelPermissions, )
+
+    def get_queryset(self):
+        return models.VistaConfigAcc.objects.all()
+
+
+class VistaConfigAccList(ListAPIView):
+    """ListAPI para filtrar los permisos de un grupo para una vista específica"""
+    model = models.VistaConfigAcc
+    serializer_class = serializers.VistaConfigAccSerializer
+    # permission_classes = (CustomDjangoModelPermissions, )
+
+    def get_queryset(self):
+        idv = self.request.query_params.get('idvista', 0)
+        groups = self.request.query_params.get('groups', '')
+        glist = list(groups.split(','))
+
+        if int(idv) > 0 and len(glist) > 0:
+            acclist = models.VistaConfigAcc.objects \
+                .filter(vistaconf__vista__id=idv, group__name__in=glist, acceso=True)
+            # #         .values('vistaconf_id').distinct()
+        else:
+            acclist = models.VistaConfigAcc.objects.all()
+
+        return acclist
+
+
+# class VistaElementViewSet(CommonViewSet):
+#     """ViewSet de elementos de vista"""
+#     serializer_class = serializers.VistaElementSerializer
+#     permission_classes = (CustomDjangoModelPermissions, )
+
+#     def get_queryset(self):
+#         return models.VistaElement.objects.all()
+
+
+# class VistaElementAccessViewSet(CommonViewSet):
+#     """ViewSet de elementos de vista"""
+#     serializer_class = serializers.VistaElementAccessSerializer
+#     permission_classes = (CustomDjangoModelPermissions, )
+
+#     def get_queryset(self):
+#         return models.VistaElementAccess.objects.all()
+
+
+# class VistaElAccList(ListAPIView):
+#     """ListAPI para filtrar los permisos de un grupo para una vista específica"""
+#     serializer_class = serializers.VistaElementAccessSerializer
+#     permission_classes = (IsAuthenticated, )
+
+#     def get_queryset(self):
+#         idvista = self.kwargs['idvista']
+#         idgroup = self.kwargs['idgroup']
+
+#         acclist = models.VistaElementAccess.objects \
+#             .filter(vista_element__vista__id=idvista, group__id=idgroup)
+
+#         return acclist

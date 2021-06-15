@@ -21,7 +21,7 @@
           </v-list-item-content>
         </v-list-item>
         <v-list-group
-          v-for="item in items"
+          v-for="item in modulos_disponibles"
           v-show="perms[item.perm]"
           :key="item.title"
           :prepend-icon="item.icon"
@@ -76,12 +76,23 @@
 import { mapState, mapActions } from 'vuex'
 export default {
   name: 'CoreDrawer',
-
+  async fetch() {
+    await this.$axios.get('modul-actives/').then((response) => {
+      const modulosActivos = response.data
+      this.modulos_disponibles = this.modulos.filter((el) => {
+        return modulosActivos.find((element) => {
+          return element.nombre === el.name
+        })
+      })
+    })
+  },
   data() {
     return {
+      modulos_disponibles: [],
       perms: this.$auth.user.perms,
-      items: [
+      modulos: [
         {
+          name: 'crm',
           icon: 'mdi-handshake-outline',
           title: 'CRM',
           perm: 'core.view_module_crm',
@@ -104,6 +115,7 @@ export default {
           ],
         },
         {
+          name: 'ventas',
           icon: 'mdi-storefront',
           title: 'Ventas',
           perm: 'core.view_module_sales',
@@ -151,6 +163,7 @@ export default {
           ],
         },
         {
+          name: 'compras',
           icon: 'mdi-cart-plus',
           title: 'Compras',
           perm: 'core.view_module_purchase',
@@ -178,6 +191,7 @@ export default {
           ],
         },
         {
+          name: 'inv',
           icon: 'mdi-package-variant',
           title: 'Inventario',
           perm: 'core.view_module_inv',
@@ -220,6 +234,7 @@ export default {
           ],
         },
         {
+          name: 'rrhh',
           icon: 'mdi-account-cog',
           title: 'RR.HH',
           perm: 'core.view_module_hr_module',
@@ -247,6 +262,7 @@ export default {
           ],
         },
         {
+          name: 'conta',
           icon: 'mdi-calculator-variant',
           title: 'Contabilidad',
           perm: 'core.view_module_accounting',
@@ -289,6 +305,7 @@ export default {
           ],
         },
         {
+          name: 'logistica',
           icon: 'mdi-truck-fast',
           title: 'Logística',
           perm: 'core.view_module_logistics',
@@ -316,6 +333,7 @@ export default {
           ],
         },
         {
+          name: 'linabi',
           icon: 'mdi-finance',
           title: 'Lina Bi',
           perm: 'core.view_module_linabi',
@@ -343,6 +361,7 @@ export default {
           ],
         },
         {
+          name: 'config',
           icon: 'mdi-application-cog',
           title: 'Configuración',
           perm: 'core.view_module_sys',

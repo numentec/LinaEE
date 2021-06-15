@@ -65,14 +65,15 @@
               </template>
               <v-row justify="center">
                 <v-expansion-panels accordion flat mandatory>
-                  <v-expansion-panel>
+                  <v-expansion-panel v-show="showExP0.panel">
                     <v-expansion-panel-header class="grey--text">
-                      Maestro
+                      <span>
+                        <v-icon class="mr-2"> mdi-filter-outline </v-icon>
+                        Maestro
+                      </span>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter01')"
-                      >
+                      <template v-if="showExP0.f01">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter01')
@@ -90,9 +91,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter02')"
-                      >
+                      <template v-if="showExP0.f02">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter02')
@@ -137,9 +136,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter03')"
-                      >
+                      <template v-if="showExP0.f03">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter03')
@@ -186,11 +183,16 @@
                       </template>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <v-expansion-panel v-show="showExP1">
+                  <v-expansion-panel v-show="showExP1.panel">
                     <v-expansion-panel-header class="grey--text">
                       <v-row no-gutters>
                         <v-col cols="4">
-                          <span><v-icon>mdi-filter-variant-plus</v-icon></span>
+                          <span>
+                            <v-icon class="mr-2">
+                              mdi-filter-variant-plus
+                            </v-icon>
+                            Filtro 1
+                          </span>
                         </v-col>
                         <v-col cols="8">
                           <span></span>
@@ -198,9 +200,7 @@
                       </v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter04')"
-                      >
+                      <template v-if="showExP1.f04">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter04')
@@ -245,9 +245,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter05')"
-                      >
+                      <template v-if="showExP1.f05">
                         <div
                           v-if="
                             config.find((obj) => obj.configkey == 'filter05')
@@ -292,9 +290,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter06')"
-                      >
+                      <template v-if="showExP1.f06">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter06')
@@ -341,21 +337,22 @@
                       </template>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <v-expansion-panel v-show="showExP2">
+                  <v-expansion-panel v-show="showExP2.panel">
                     <v-expansion-panel-header class="grey--text">
                       <v-row no-gutters>
                         <v-col cols="4">
-                          <span><v-icon>mdi-filter-variant-plus</v-icon></span>
+                          <span>
+                            <v-icon class="mr-2">
+                              mdi-filter-variant-plus
+                            </v-icon>
+                            Filtro 2
+                          </span>
                         </v-col>
-                        <v-col cols="8">
-                          <span></span>
-                        </v-col>
+                        <v-col cols="8"></v-col>
                       </v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter07')"
-                      >
+                      <template v-if="showExP2.f07">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter07')
@@ -397,9 +394,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter08')"
-                      >
+                      <template v-if="showExP2.f08">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter08')
@@ -441,9 +436,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template
-                        v-if="config.find((obj) => obj.configkey == 'filter09')"
-                      >
+                      <template v-if="showExP2.f09">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter09')
@@ -487,9 +480,12 @@
                       </template>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <v-expansion-panel>
+                  <v-expansion-panel v-show="showExP3.panel">
                     <v-expansion-panel-header class="grey--text">
-                      Periodo
+                      <span>
+                        <v-icon class="mr-2">mdi-calendar-range</v-icon>
+                        Periodo
+                      </span>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <template
@@ -652,6 +648,7 @@
 
 <script>
 import { mapFields } from 'vuex-map-fields'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'BaseFilters',
@@ -665,15 +662,42 @@ export default {
       type: Array,
       default: () => [{}],
     },
+    perms: {
+      type: Array,
+      default: () => [{}],
+    },
     curstore: {
       type: String,
       default: '',
+    },
+    visibleFilters: {
+      type: Object,
+      default: () => {
+        return {
+          f01: true,
+          f02: true,
+          f03: true,
+          f04: true,
+          f05: true,
+          f06: true,
+          f07: true,
+          f08: true,
+          f09: true,
+          f10: true,
+          f11: true,
+          f12: true,
+          f13: true,
+          f14: true,
+          f15: true,
+        }
+      },
     },
   },
 
   data() {
     this.$options.computed = {
       ...this.$options.computed,
+      ...mapGetters(['loggedInUser']),
       ...mapFields(this.curstore, [
         'filters.p01',
         'filters.p02',
@@ -712,22 +736,121 @@ export default {
     }
   },
   computed: {
+    showExP0() {
+      let f01, f02, f03
+
+      const objf01 = this.config.find((obj) => obj.configkey === 'filter01')
+      if (objf01) {
+        f01 = objf01.configval1 === '1'
+        if (f01) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf01 = this.perms.find(
+              (obj) => obj.configkey === 'filter01'
+            )
+            if (permf01) {
+              f01 = permf01.acceso
+            } else {
+              f01 = false
+            }
+          }
+        }
+      }
+      const objf02 = this.config.find((obj) => obj.configkey === 'filter02')
+      if (objf02) {
+        f02 = objf02.configval1 === '1'
+        if (f02) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf02 = this.perms.find(
+              (obj) => obj.configkey === 'filter02'
+            )
+            if (permf02) {
+              f02 = permf02.acceso
+            } else {
+              f02 = false
+            }
+          }
+        }
+      }
+      const objf03 = this.config.find((obj) => obj.configkey === 'filter03')
+      if (objf03) {
+        f03 = objf03.configval1 === '1'
+        if (f03) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf03 = this.perms.find(
+              (obj) => obj.configkey === 'filter03'
+            )
+            if (permf03) {
+              f03 = permf03.acceso
+            } else {
+              f03 = false
+            }
+          }
+        }
+      }
+      return {
+        panel: f01 || f02 || f03,
+        f01,
+        f02,
+        f03,
+      }
+    },
     showExP1() {
       let f04, f05, f06
 
       const objf04 = this.config.find((obj) => obj.configkey === 'filter04')
       if (objf04) {
         f04 = objf04.configval1 === '1'
+        if (f04) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf04 = this.perms.find(
+              (obj) => obj.configkey === 'filter04'
+            )
+            if (permf04) {
+              f04 = permf04.acceso
+            } else {
+              f04 = false
+            }
+          }
+        }
       }
       const objf05 = this.config.find((obj) => obj.configkey === 'filter05')
       if (objf05) {
         f05 = objf05.configval1 === '1'
+        if (f05) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf05 = this.perms.find(
+              (obj) => obj.configkey === 'filter05'
+            )
+            if (permf05) {
+              f05 = permf05.acceso
+            } else {
+              f05 = false
+            }
+          }
+        }
       }
       const objf06 = this.config.find((obj) => obj.configkey === 'filter06')
       if (objf06) {
         f06 = objf06.configval1 === '1'
+        if (f06) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf06 = this.perms.find(
+              (obj) => obj.configkey === 'filter06'
+            )
+            if (permf06) {
+              f06 = permf06.acceso
+            } else {
+              f06 = false
+            }
+          }
+        }
       }
-      return f04 || f05 || f06
+      return {
+        panel: f04 || f05 || f06,
+        f04,
+        f05,
+        f06,
+      }
     },
     showExP2() {
       let f07, f08, f09
@@ -735,16 +858,79 @@ export default {
       const objf07 = this.config.find((obj) => obj.configkey === 'filter07')
       if (objf07) {
         f07 = objf07.configval1 === '1'
+        if (f07) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf07 = this.perms.find(
+              (obj) => obj.configkey === 'filter07'
+            )
+            if (permf07) {
+              f07 = permf07.acceso
+            } else {
+              f07 = false
+            }
+          }
+        }
       }
       const objf08 = this.config.find((obj) => obj.configkey === 'filter08')
       if (objf08) {
         f08 = objf08.configval1 === '1'
+        if (f08) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf08 = this.perms.find(
+              (obj) => obj.configkey === 'filter08'
+            )
+            if (permf08) {
+              f08 = permf08.acceso
+            } else {
+              f08 = false
+            }
+          }
+        }
       }
       const objf09 = this.config.find((obj) => obj.configkey === 'filter09')
       if (objf09) {
         f09 = objf09.configval1 === '1'
+        if (f09) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf09 = this.perms.find(
+              (obj) => obj.configkey === 'filter09'
+            )
+            if (permf09) {
+              f09 = permf09.acceso
+            } else {
+              f09 = false
+            }
+          }
+        }
       }
-      return f07 || f08 || f09
+      return {
+        panel: f07 || f08 || f09,
+        f07,
+        f08,
+        f09,
+      }
+    },
+    showExP3() {
+      let f11 = false
+
+      const objf11 = this.config.find((obj) => obj.configkey === 'filter11')
+      if (objf11) {
+        f11 = objf11.configval1 === '1'
+        if (f11) {
+          if (!this.loggedInUser.is_superuser) {
+            const permf11 = this.perms.find(
+              (obj) => obj.configkey === 'filter11'
+            )
+            if (permf11) {
+              f11 = permf11.acceso
+            } else {
+              f11 = false
+            }
+          }
+        }
+      }
+
+      return { panel: f11 }
     },
   },
   created() {
