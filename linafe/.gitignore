@@ -91,3 +91,6 @@ sw.*
 
 # Global linafe configuration
 linaconfig.js
+
+# Django migration folders
+migrations/

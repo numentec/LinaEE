@@ -197,7 +197,7 @@ class VistaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Vista
-        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'configs_x_vista', 'modulo')
+        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'disponible', 'configs_x_vista', 'modulo')
 
 
 class VistaConfigAccSerializer(serializers.ModelSerializer):

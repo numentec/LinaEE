@@ -13,7 +13,7 @@ def template_path(instance, filename):
     onlyname = getattr(instance, 'name').lower()
     filename = f'{onlyname}.{ext}'
 
-    return os.path.join('xlsxtemplates/', filename)
+    return os.path.join('plantillas/', filename)
 
 
 # Clase base abstracta para modelo transitorio.
@@ -86,4 +86,3 @@ class BIXLSXTemplateCol(Common):
 
     def __str_(self):
         return "Columna {}".format(self.name)
-        
