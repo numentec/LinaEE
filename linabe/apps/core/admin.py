@@ -3,12 +3,6 @@ from django.contrib.auth.admin import UserAdmin
 from apps.core import models
 from rest_framework.authtoken.admin import TokenAdmin
 
-TokenAdmin.raw_id_fields = ['user']
-
-
-class CiaAdmin(admin.ModelAdmin):
-     list_display = ('id', 'codigo', 'nombre', 'ruc')
-
 
 class UserAdminx(UserAdmin):
     """User admin."""
@@ -33,13 +27,19 @@ class UserAdminx(UserAdmin):
 
     readonly_fields = ('date_joined', 'modified_at',)
 
+TokenAdmin.raw_id_fields = ['user']
 
-class GenSecAdmin(admin.ModelAdmin):
-     list_display = ('id', 'nombre', 'conteo', 'obs')
+
+class CiaAdmin(admin.ModelAdmin):
+     list_display = ('id', 'codigo', 'nombre', 'ruc')
 
 
 class TipoGenAdmin(admin.ModelAdmin):
      list_display = ('id', 'idgenerico', 'descripcion')
+
+
+class GenSecAdmin(admin.ModelAdmin):
+     list_display = ('id', 'nombre', 'conteo', 'obs')
 
 
 class ModuloAdmin(admin.ModelAdmin):
@@ -134,11 +134,11 @@ class StakeHolderAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.User, UserAdminx)
-admin.site.register(models.GenSequence, GenSecAdmin)
+admin.site.register(models.Cia, CiaAdmin)
 admin.site.register(models.TipoGenerico, TipoGenAdmin)
+admin.site.register(models.GenSequence, GenSecAdmin)
 admin.site.register(models.Modulo, ModuloAdmin)
 admin.site.register(models.Vista, VistaAdmin)
 admin.site.register(models.VistaConfig, VistaConfigAdmin)
 admin.site.register(models.VistaConfigUser, VistaConfigUserAdmin)
-admin.site.register(models.Cia, CiaAdmin)
 admin.site.register(models.StakeHolder, StakeHolderAdmin)

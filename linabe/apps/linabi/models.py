@@ -86,3 +86,4 @@ class BIXLSXTemplateCol(Common):
 
     def __str_(self):
         return "Columna {}".format(self.name)
+        

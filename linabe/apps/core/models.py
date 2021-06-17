@@ -158,6 +158,22 @@ class Identidad(models.Model):
         abstract = True
 
 
+# Identificador de hasta tres caracteres para uso discrecional del usuario
+# Ej.: A, B, C, CR1, ... X, Y, Z, P25, Z01, etc.
+class TipoGenerico(Common):
+    
+    idgenerico = models.CharField('ID Genérico', max_length=3, unique=True, help_text='Identificador para propósitos generales')
+    descripcion = models.CharField('Descripción', max_length=15, blank=True, default='')
+
+    def __str__(self):
+        return '{}'.format(self.idgenerico)
+    class Meta:
+        db_table = 'core_tipo_generico'
+        verbose_name = 'Tipo Generico'
+        verbose_name_plural = 'Tipos Genericos'
+        ordering = ['idgenerico']
+
+
 # Generador de secuencias
 class GenSequence(models.Model):
     nombre = models.CharField('Nombre', max_length=15, unique=True, help_text='Nombre de la secuencia')
@@ -188,22 +204,6 @@ class GenSequence(models.Model):
         db_table = 'core_gensequence'
         verbose_name = 'Secuencia'
         verbose_name_plural = 'Secuencias'
-
-
-# Identificador de hasta tres caracteres para uso discrecional del usuario
-# Ej.: A, B, C, CR1, ... X, Y, Z, P25, Z01, etc.
-class TipoGenerico(Common):
-    
-    idgenerico = models.CharField('ID Genérico', max_length=3, unique=True, help_text='Identificador para propósitos generales')
-    descripcion = models.CharField('Descripción', max_length=15, blank=True, default='')
-
-    def __str__(self):
-        return '{}'.format(self.idgenerico)
-    class Meta:
-        db_table = 'core_tipo_generico'
-        verbose_name = 'Tipo Generico'
-        verbose_name_plural = 'Tipos Genericos'
-        ordering = ['idgenerico']
 
 
 # Modelo del sistema. Módulos
