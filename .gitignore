@@ -263,3 +263,6 @@ secret.json
 
 # Global linafe configuration
 linaconfig.js
+
+# Django migration folders
+migrations/
