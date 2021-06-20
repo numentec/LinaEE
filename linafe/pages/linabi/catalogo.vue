@@ -246,8 +246,8 @@
             :key="xcol.id"
             :allow-grouping="xcol.configval7 == '1'"
             :data-field="xcol.configkey"
-            :visible="xcol.configval2 == '1'"
-            :caption="xcol.configval3"
+            :visible="xcol.configval3 == '1'"
+            :caption="xcol.configval2"
             :data-type="xcol.configval4"
             :format="setFormat(xcol.configval5)"
             :alignment="xcol.configval6"
@@ -316,7 +316,7 @@
       :dialog.sync="showBaseFilters"
       :config="viewConf.filter((el) => el.tipo == 'filter')"
       :perms="filterPerms"
-      :numvista="14"
+      :cur-view="curView"
       curstore="linabi/catalogo"
       @closeDialog="closeBaseFilters"
     />
@@ -501,6 +501,10 @@ export default {
       ])
       const filterPerms = uniqByKeepLast(resp1.data, (it) => it.vistaconf)
       return {
+        curView: {
+          num: resp0.data.id,
+          checkelperms: resp0.data.checkelperms,
+        },
         viewConf: resp0.data.configs_x_vista,
         filterPerms,
       }

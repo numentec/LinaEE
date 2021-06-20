@@ -96,21 +96,9 @@ class User(AbstractUser):
 
         super(User, self).save(*args, **kwargs)
 
-    class Meta:
-
-        permissions =   (
-                            ("view_module_crm", "Access to CRM Module"),
-                            ("view_module_sales", "Access to Sales Module"),
-                            ("view_module_purchase", "Access to Purchase Module"),
-                            ("view_module_inv", "Access to Inventory Module"),
-                            ("view_module_hr", "Access to HR Module"),
-                            ("view_module_accounting", "Access to Accounting Module"),
-                            ("view_module_logistics", "Access to Logistics Module"),
-                            ("view_module_linabi", "Access to BI Module"),
-                            ("view_module_sys", "Access to System Module")     
-                        )
 
 LinaUserModel = get_user_model()
+
 
 # @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 @receiver(post_save, sender=LinaUserModel)
@@ -217,6 +205,17 @@ class Modulo(models.Model):
         return 'Módulo {}'.format(self.nombre)
 
     class Meta:
+        permissions =   (
+                            ("acc_crm", "Access to CRM Module"),
+                            ("acc_sales", "Access to Sales Module"),
+                            ("acc_purchase", "Access to Purchase Module"),
+                            ("acc_inv", "Access to Inventory Module"),
+                            ("acc_hr", "Access to HR Module"),
+                            ("acc_accounting", "Access to Accounting Module"),
+                            ("acc_logistics", "Access to Logistics Module"),
+                            ("acc_linabi", "Access to BI Module"),
+                            ("acc_config", "Access to Configuration Module")     
+                        )
         db_table = 'core_modulos'
         verbose_name = 'Módulo'
         verbose_name_plural = 'Módulos'
@@ -228,6 +227,7 @@ class Vista(Common):
     descrip = models.CharField('Descripción', max_length=50, blank=True)
     link = models.CharField('Enlace Interno', max_length=100, default='/')
     tipo = models.PositiveIntegerField('Tipo', default=0)
+    checkelperms = models.BooleanField('Evaluar Permisos', default=True, help_text='Evaluar permisos para elementos de la vista')
     disponible = models.BooleanField('Disponible', default=True)
     modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, verbose_name='Módulo', related_name='vistas_x_modulo')
 
@@ -235,47 +235,23 @@ class Vista(Common):
         return 'Vista {}'.format(self.nombre)
 
     class Meta:
+        permissions =   (
+                            ("acc_linabi_catalog", "Access to LinaBI Catalog view"),
+                            ("acc_linabi_saledocs_master", "Access to LinaBI Sale Docs Master view"),
+                            ("acc_linabi_saledocs_datail", "Access to LinaBI Sale Docs Detail view"),
+                            ("acc_linabi_sales_detail", "Access to LinaBI  Sales Detail view"),
+                            ("acc_linabi_reports", "Access to LinaBI  Reports view")
+                        )
         db_table = 'core_vistas'
         verbose_name = 'Vista'
         verbose_name_plural = 'Vistas'
-
-
-# Modelo del sistema. Elementos de Vistas
-# class VistaElement(models.Model):
-#     nombre = models.CharField('Nombre', max_length=25, unique=True)
-#     descrip = models.CharField('Descripción', max_length=50, blank=True)
-#     vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista', related_name='elements_x_vista')
-#     disponible = models.BooleanField('Disponible', default=True)
-
-#     def __str__(self):
-#         return 'Elemento {} de vista {}'.format(self.nombre, self.vista.nombre)
-
-#     class Meta:
-#         db_table = 'core_vistaelement'
-#         verbose_name = 'Elemento'
-#         verbose_name_plural = 'Elementos'
-
-
-# Modelo del sistema. Acceso a elementos de vista
-# class VistaElementAccess(models.Model):
-#     vista_element = models.ForeignKey(VistaElement, on_delete=models.CASCADE, verbose_name='Elemento_de_Vista', \
-#          related_name='acc_x_vistaelelemt')
-#     group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name='Grupo', related_name='acc_x_group')
-#     accesso = models.BooleanField('Acceso', default=True)
-
-#     def __str__(self):
-#         return 'Acceso a elemento de vista {}'.format(self.vista_element.nombre)
-
-#     class Meta:
-#         db_table = 'core_vistaelementacc'
-#         verbose_name = 'Acceso'
-#         verbose_name_plural = 'Accesos'
 
 
 # Modelo del sistema. Configuración de la vista o formulario
 class VistaConfig(Common):
     vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista', related_name='configs_x_vista')
     configkey = models.CharField(max_length=20)
+    ordinal = models.IntegerField('Ordinal', default=0, help_text='Para ordenar las llaves de configuración')
     configval1 = models.CharField(max_length=20, blank=True)
     configval2 = models.CharField(max_length=20, blank=True)
     configval3 = models.CharField(max_length=20, blank=True)
@@ -288,9 +264,10 @@ class VistaConfig(Common):
     tipo = models.CharField(max_length=10, blank=True)
 
     def __str__(self):
-        return 'Config vista {} - {}'.format(self.vista.nombre, self.configkey)
+        return '{} - {} - {} - {}'.format(self.id, self.vista.nombre, self.configkey, self.configval2)
 
     class Meta:
+        ordering = ['vista', 'ordinal']
         db_table = 'core_vistaconfig'
         verbose_name = 'Configuración por Vista'
         verbose_name_plural = 'Configuraciones por Vista'

@@ -7,14 +7,16 @@
       tile
       min-height="200"
     >
-      <FavoritoCard
-        v-for="curfav in favoritos"
-        :key="curfav.id"
-        class="pa-2"
-        :on-delete="delFavorito"
-        :on-edit="editFavorito"
-        :fav="curfav"
-      />
+      <template v-for="curfav in favoritos">
+        <FavoritoCard
+          v-if="accReject(curfav.perm)"
+          :key="curfav.id"
+          class="pa-2"
+          :on-delete="delFavorito"
+          :on-edit="editFavorito"
+          :fav="curfav"
+        />
+      </template>
     </v-card>
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
@@ -24,11 +26,25 @@
         </v-btn>
       </template>
     </v-snackbar>
+    <v-dialog v-model="noAccess" persistent max-width="300">
+      <v-card>
+        <v-card-title class="headline"> Acceso Denegado </v-card-title>
+        <v-card-text>
+          No tiene autorización para ejecutar este comando
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green darken-1" text @click.stop="noAccess = false">
+            Aceptar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import FavoritoCard from '~/components/linabi/FavoritoCard.vue'
 
 export default {
@@ -60,10 +76,13 @@ export default {
     return {
       favoritos: [],
       snackbar: false,
+      noAccess: false,
+      perms: this.$auth.user.perms,
     }
   },
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
+    ...mapGetters(['loggedInUser']),
   },
   created() {
     const defaultBC = [
@@ -84,6 +103,13 @@ export default {
     },
     editFavorito(favid) {
       this.snackbar = true
+    },
+    accReject(perm) {
+      let showv = false
+      if (this.loggedInUser.is_superuser || this.perms[perm]) {
+        showv = true
+      }
+      return showv
     },
   },
   head() {

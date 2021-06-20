@@ -29,7 +29,7 @@ class BIXLSXTemplateColSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BIXLSXTemplateCol
-        fields = ('id', 'name', 'orden', 'posicion')
+        fields = ('id', 'name', 'ordinal', 'posicion')
 
 class BIXLSXTemplateSerializer(serializers.ModelSerializer):
     """Plantillas XLSX en LinaBI"""

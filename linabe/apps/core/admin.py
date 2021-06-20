@@ -67,6 +67,7 @@ class VistaConfigAdmin(admin.ModelAdmin):
         'id',
         'vista',
         'configkey',
+        'ordinal',
         'configval1',
         'configval2',
         'configval3',

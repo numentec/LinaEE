@@ -42,6 +42,7 @@ class BIFavorito(Common):
     vuextore = models.CharField("Vuex Store", max_length=50, blank=True)
     image = models.ImageField('Imagen', upload_to='images/bifavoritos', \
          blank=True, default='images/bifavoritos/prev1.jpg')
+    perm = models.CharField("Permiso", max_length=50, blank = True, help_text='Permiso de acceso relacionado')
 
     class Meta:
         db_table = 'linabi_favorito'
@@ -74,7 +75,7 @@ class BIXLSXTemplateCol(Common):
     """Modelo para columnas incluidas en la plantilla xlsx en LinaBI"""
     name = models.CharField("Columna", max_length=20, unique=True)
     descrip = models.TextField("Descripción", blank = True)
-    orden = models.IntegerField("Orden", default=0)
+    ordinal = models.IntegerField("Ordinal", default=0)
     posicion = models.IntegerField("Posición", default=1)
     plantilla = models.ForeignKey(BIXLSXTemplate, on_delete=models.CASCADE, \
                 verbose_name='Plantilla', related_name='cols_x_plantilla')

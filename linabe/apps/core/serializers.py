@@ -104,25 +104,29 @@ class UserPermsSerializer(serializers.ModelSerializer):
 
     def get_perms(self, obj):
 
-        persmin = [
-            'core.view_linabi_module',
+        min_permissions = [
+            'core.acc_crm',
+            'core.acc_sales',
+            'core.acc_purchase',
+            'core.acc_inv',
+            'core.acc_hr',
+            'core.acc_accounting',
+            'core.acc_logistics',
+            'core.acc_linabi',
+            'core.acc_config',
             'core.view_user',
-            'core.view_accounting_module',
-            'core.view_hr_module',
             'core.view_cia',
             'core.add_cia',
-            'core.view_purchase_module',
-            'core.view_sys_module',
-            'core.view_crm_module',
-            'core.view_inv_module',
-            'core.view_logistics_module',
-            'core.view_sales_module'
+            'core.acc_linabi_catalog',
+            'core.acc_linabi_saledocs_master',
+            'core.acc_linabi_saledocs_datail',
+            'core.acc_linabi_sales_detail'
             ]
 
         all_permissions = LinaUserModel(is_superuser=True).get_all_permissions()
         user_permissions = obj.get_all_permissions()
 
-        return {p: p in user_permissions for p in persmin}
+        return {p: p in user_permissions for p in min_permissions}
 
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
@@ -187,7 +191,7 @@ class VistaConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.VistaConfig
         fields = ('id', 'vista', 
-        'configkey', 'configval1', 'configval2', 'configval3', 'configval4',
+        'configkey', 'ordinal', 'configval1', 'configval2', 'configval3', 'configval4',
         'configval5', 'configval6', 'configval7', 'configval8', 'configval9', 'tipo')
 
 
@@ -197,7 +201,7 @@ class VistaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Vista
-        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'disponible', 'configs_x_vista', 'modulo')
+        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'disponible', 'checkelperms', 'configs_x_vista', 'modulo')
 
 
 class VistaConfigAccSerializer(serializers.ModelSerializer):

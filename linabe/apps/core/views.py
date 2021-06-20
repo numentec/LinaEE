@@ -51,21 +51,25 @@ class LinaAuthToken(ObtainAuthToken):
         # )
 
         min_permissions = [
-            'core.view_module_linabi',
+            'core.acc_crm',
+            'core.acc_sales',
+            'core.acc_purchase',
+            'core.acc_inv',
+            'core.acc_hr',
+            'core.acc_accounting',
+            'core.acc_logistics',
+            'core.acc_linabi',
+            'core.acc_config',
             'core.view_user',
-            'core.view_module_accounting',
-            'core.view_module_hr',
             'core.view_cia',
             'core.add_cia',
-            'core.view_module_purchase',
-            'core.view_module_sys',
-            'core.view_module_crm',
-            'core.view_module_inv',
-            'core.view_module_logistics',
-            'core.view_module_sales'
+            'core.acc_linabi_catalog',
+            'core.acc_linabi_saledocs_master',
+            'core.acc_linabi_saledocs_datail',
+            'core.acc_linabi_sales_detail'
             ]
 
-        #all_permissions = User(is_superuser=True).get_all_permissions()
+        # all_permissions = User(is_superuser=True).get_all_permissions()
         user_permissions = user.get_all_permissions()
 
         perms = {p: p in user_permissions for p in min_permissions}
@@ -113,7 +117,6 @@ class CommonViewSet(viewsets.ModelViewSet):
 class CiaViewSet(CommonViewSet):
     """ViewSet de compañías"""
     serializer_class = CiaSerializer
-    # permission_classes = (CustomDjangoModelPermissions, )
 
     queryset = Cia.objects.none()
 
@@ -136,7 +139,6 @@ class CiaViewSet(CommonViewSet):
 class StakeHolderViewSet(CommonViewSet):
     """ViewSet de stakeholders"""
     serializer_class = StakeHolderSerializer
-    # permission_classes = (CustomDjangoModelPermissions, )
 
     queryset = StakeHolder.stakeholders.all()
 

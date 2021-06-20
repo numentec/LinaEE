@@ -58,10 +58,13 @@ export default {
       default: () => ({}),
     },
   },
-  data: () => ({
-    descrip: false,
-    loadingView: false,
-  }),
+  data() {
+    return {
+      descrip: false,
+      loadingView: false,
+      perms: this.$auth.user.perms,
+    }
+  },
   activated() {
     this.loadingView = false
   },

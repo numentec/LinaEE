@@ -8,7 +8,7 @@ class BIXLSXTemplateAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
 
 class BIXLSXTemplateColAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'orden', 'plantilla')
+    list_display = ('id', 'name', 'ordinal', 'plantilla')
 
 admin.site.register(models.BIFavorito, BIFavoritoAdmin)
 admin.site.register(models.BIXLSXTemplate, BIXLSXTemplateAdmin)

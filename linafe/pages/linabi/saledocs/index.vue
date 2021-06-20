@@ -240,8 +240,8 @@
                   :key="'tab0' + xcol.id"
                   :allow-grouping="xcol.configval7 == '1'"
                   :data-field="xcol.configkey"
-                  :visible="xcol.configval2 == '1'"
-                  :caption="xcol.configval3"
+                  :visible="xcol.configval3 == '1'"
+                  :caption="xcol.configval2"
                   :data-type="xcol.configval4"
                   :format="setFormat(xcol.configval5)"
                   :alignment="xcol.configval6"
@@ -323,8 +323,8 @@
                   :key="'tab1' + xcol.id"
                   :allow-grouping="xcol.configval7 == '1'"
                   :data-field="xcol.configkey"
-                  :visible="xcol.configval2 == '1'"
-                  :caption="xcol.configval3"
+                  :visible="xcol.configval3 == '1'"
+                  :caption="xcol.configval2"
                   :data-type="xcol.configval4"
                   :format="setFormat(xcol.configval5)"
                   :alignment="xcol.configval6"
@@ -386,7 +386,7 @@
       :dialog.sync="showBaseFilters"
       :config="config0.filter((el) => el.tipo == 'filter')"
       :perms="filterPerms"
-      :numvista="16"
+      :cur-view="curView"
       curstore="linabi/saledocsm"
       @closeDialog="closeDialog"
     />
@@ -525,6 +525,10 @@ export default {
       ])
       const filterPerms = uniqByKeepLast(resp2.data, (it) => it.vistaconf)
       return {
+        curView: {
+          num: resp0.data.id,
+          checkelperms: resp0.data.checkelperms,
+        },
         config0: resp0.data.configs_x_vista,
         config1: resp1.data.configs_x_vista,
         filterPerms,

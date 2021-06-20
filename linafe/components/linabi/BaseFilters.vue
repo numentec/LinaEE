@@ -654,9 +654,14 @@ export default {
   name: 'BaseFilters',
   props: {
     dialog: Boolean,
-    numvista: {
-      type: Number,
-      default: 0,
+    curView: {
+      type: Object,
+      default: () => {
+        return {
+          num: 0,
+          checkelperms: true,
+        }
+      },
     },
     config: {
       type: Array,
@@ -743,7 +748,7 @@ export default {
       if (objf01) {
         f01 = objf01.configval1 === '1'
         if (f01) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf01 = this.perms.find(
               (obj) => obj.configkey === 'filter01'
             )
@@ -759,7 +764,7 @@ export default {
       if (objf02) {
         f02 = objf02.configval1 === '1'
         if (f02) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf02 = this.perms.find(
               (obj) => obj.configkey === 'filter02'
             )
@@ -775,7 +780,7 @@ export default {
       if (objf03) {
         f03 = objf03.configval1 === '1'
         if (f03) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf03 = this.perms.find(
               (obj) => obj.configkey === 'filter03'
             )
@@ -801,7 +806,7 @@ export default {
       if (objf04) {
         f04 = objf04.configval1 === '1'
         if (f04) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf04 = this.perms.find(
               (obj) => obj.configkey === 'filter04'
             )
@@ -817,7 +822,7 @@ export default {
       if (objf05) {
         f05 = objf05.configval1 === '1'
         if (f05) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf05 = this.perms.find(
               (obj) => obj.configkey === 'filter05'
             )
@@ -833,7 +838,7 @@ export default {
       if (objf06) {
         f06 = objf06.configval1 === '1'
         if (f06) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf06 = this.perms.find(
               (obj) => obj.configkey === 'filter06'
             )
@@ -859,7 +864,7 @@ export default {
       if (objf07) {
         f07 = objf07.configval1 === '1'
         if (f07) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf07 = this.perms.find(
               (obj) => obj.configkey === 'filter07'
             )
@@ -875,7 +880,7 @@ export default {
       if (objf08) {
         f08 = objf08.configval1 === '1'
         if (f08) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf08 = this.perms.find(
               (obj) => obj.configkey === 'filter08'
             )
@@ -891,7 +896,7 @@ export default {
       if (objf09) {
         f09 = objf09.configval1 === '1'
         if (f09) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf09 = this.perms.find(
               (obj) => obj.configkey === 'filter09'
             )
@@ -917,7 +922,7 @@ export default {
       if (objf11) {
         f11 = objf11.configval1 === '1'
         if (f11) {
-          if (!this.loggedInUser.is_superuser) {
+          if (!this.loggedInUser.is_superuser && this.curView.checkelperms) {
             const permf11 = this.perms.find(
               (obj) => obj.configkey === 'filter11'
             )
