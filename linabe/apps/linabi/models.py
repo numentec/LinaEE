@@ -1,7 +1,9 @@
 import os
+import secrets
+from datetime import date, timedelta
 from django.db import models
 from .attributs import attrs_catalog
-from ..core.models import Common
+from ..core.models import Common, StakeHolder
 
 
 # Se asegura que el nombre de archivo de la plantilla
@@ -87,3 +89,57 @@ class BIXLSXTemplateCol(Common):
 
     def __str_(self):
         return "Columna {}".format(self.name)
+
+
+# Modelo para categorías temporales de los usuarios 
+class BICustomCatalogCategory(Common):
+    """Modelo para categorías alternativas temporales creadas por usuarios"""
+    name = models.CharField("Nombre", max_length=20)
+    descrip = models.TextField("Descripción", blank = True)
+
+    class Meta:
+        unique_together = ('name', 'created_by',)
+        db_table = 'linabi_customcatalogcat'
+        verbose_name = 'Categoria'
+        verbose_name_plural = 'Categorias'
+
+def defaultTTL():
+    ttl = date.today + timedelta(days=5)
+    return ttl
+
+
+# Modelo para maestro de catálogo personalizado
+class BICustomCatalogMaster(Common):
+    """Modelo para maestro de catálogo personalizado"""
+    name = models.CharField("Nombre", max_length=20, blank=True, default='Custom Catalog')
+    descrip = models.TextField("Descripción", blank = True)
+    note =  models.TextField("Nota", blank = True)
+    token = models.CharField("Token", max_length=45, unique=True, default=secrets.token_urlsafe(32))
+    ttl = models.DateField("TTL", default=defaultTTL)
+    stakeholder = models.ForeignKey(StakeHolder, on_delete=models.SET_NULL, \
+                verbose_name='Cliente', related_name='catalog_x_stakeholder', null=True)
+
+    class Meta:
+        db_table = 'linabi_customcatalogm'
+        verbose_name = 'Catalogo'
+        verbose_name_plural = 'Catalogos'
+
+    def __str_(self):
+        return "Custom catalog {} / {}".format(self.name, self.token)
+
+
+# Modelo para detalle de catálogo personalizado
+class BICustomCatalogDetail(Common):
+    """Modelo para detalle de catálogo personalizado"""
+    sku = models.CharField("SKU", max_length=50)
+    note =  models.TextField("Nota", blank = True)
+    category = models.ForeignKey(BICustomCatalogCategory, on_delete=models.SET_NULL, null=True)
+    catalog =  models.ForeignKey(BICustomCatalogMaster, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'linabi_customcatalogd'
+        verbose_name = 'Detalle'
+        verbose_name_plural = 'Detalles'
+
+    def __str_(self):
+        return "Item {} - {} - {}".format(self.id, self.sku, self.catalog)

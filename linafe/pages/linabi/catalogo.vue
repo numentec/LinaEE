@@ -676,7 +676,7 @@ export default {
         e.cols.forEach((col) => {
           this.curGrid.columnOption(col.name, {
             visible: true,
-            visibleIndex: col.orden,
+            visibleIndex: col.ordinal,
           })
         })
 

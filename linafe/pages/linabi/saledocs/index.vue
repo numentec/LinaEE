@@ -739,7 +739,7 @@ export default {
         e.cols.forEach((col) => {
           curGrid.columnOption(col.name, {
             visible: true,
-            visibleIndex: col.orden,
+            visibleIndex: col.ordinal,
           })
         })
 
@@ -837,11 +837,9 @@ export default {
             })
             .then((response) => {
               const workbook = new ExcelJS.Workbook()
-              // const blob = new Blob([response.data])
 
               const buffer = response.data
 
-              // blob.arrayBuffer().then((buffer) => {
               workbook.xlsx.load(buffer).then((workbook) => {
                 const worksheet = workbook.worksheets[0]
 
@@ -861,7 +859,6 @@ export default {
                   []
                 )
               })
-              // })
             })
         }
       }

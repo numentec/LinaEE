@@ -2,7 +2,7 @@ from django.db import models
 
 attrs_catalog = {
     'ID': models.IntegerField(),
-    'REFERENCIA': models.CharField(max_length=30),
+    'SKU': models.CharField(max_length=30),
     'DESCRIP': models.CharField(max_length=100),
     'DESCRIP_EN': models.CharField(max_length=100),
 	'UMEDIDA': models.CharField(max_length=100),
