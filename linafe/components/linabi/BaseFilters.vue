@@ -9,7 +9,12 @@
       @input="$emit('update:dialog', false)"
       @keydown.esc="closeDialog(false)"
     >
-      <v-form>
+      <v-form
+        ref="bf_form"
+        v-model="valid"
+        lazy-validation
+        @submit.prevent="closeDialog(true)"
+      >
         <v-card>
           <v-toolbar color="accent darken-3" dark>
             <v-toolbar-title>Filtros Iniciales</v-toolbar-title>
@@ -24,7 +29,7 @@
                 v-if="config.find((obj) => obj.configkey == 'filter15')"
               >
                 <div
-                  v-show="
+                  v-if="
                     config.find((obj) => obj.configkey == 'filter15')
                       .configval1 == '1'
                   "
@@ -32,6 +37,7 @@
                 >
                   <v-autocomplete
                     v-model="p15"
+                    :rules="[rules.required]"
                     :items="items"
                     item-text="descrip"
                     item-value="key"
@@ -634,6 +640,7 @@
                 block
                 :disabled="!valid"
                 color="success darken-1"
+                type="submit"
                 @click="closeDialog(true)"
               >
                 Aplicar
@@ -962,14 +969,23 @@ export default {
   },
   methods: {
     reset() {
-      this.$refs.basefilters_form.reset()
+      this.$refs.bf_form.reset()
+    },
+    resetValidation() {
+      this.$refs.bf_form.resetValidation()
     },
     closeDialog(refresh) {
-      this.$store.dispatch(this.curstore + '/setDates', {
-        p12: this.dateIni,
-        p13: this.dateEnd,
-      })
-      this.$emit('closeDialog', refresh)
+      if (refresh) {
+        if (this.$refs.bf_form.validate()) {
+          this.$store.dispatch(this.curstore + '/setDates', {
+            p12: this.dateIni,
+            p13: this.dateEnd,
+          })
+          this.$emit('closeDialog', refresh)
+        }
+      } else {
+        this.$emit('closeDialog', refresh)
+      }
     },
     periodDisabled() {
       this.pD = !this.pD
