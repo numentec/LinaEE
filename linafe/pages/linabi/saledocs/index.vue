@@ -312,7 +312,7 @@
                 <DxColumn
                   width="200"
                   :allow-grouping="false"
-                  data-field="REFERENCIA"
+                  data-field="SKU"
                   name="FOTO"
                   caption="Foto"
                   cell-template="imgCellTemplate"
@@ -791,8 +791,16 @@ export default {
           const savingFilename = curGrid.docname + '.xlsx'
           const workbook = new ExcelJS.Workbook()
           const worksheet = workbook.addWorksheet(curGrid.docname)
-
-          this.doExportExcel(workbook, worksheet, savingFilename, ax, curGrid)
+          const tLC = { row: 1, column: 1 }
+          this.doExportExcel(
+            workbook,
+            worksheet,
+            savingFilename,
+            tLC,
+            ax,
+            curGrid,
+            []
+          )
         }
 
         // Exportar a Excel con detalle de códigos de barra
@@ -801,10 +809,12 @@ export default {
             const savingFilename = curGrid.docname + '.xlsx'
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet(curGrid.docname)
+            const tLC = { row: 1, column: 1 }
             this.doExportExcel(
               workbook,
               worksheet,
               savingFilename,
+              tLC,
               ax,
               curGrid,
               vv

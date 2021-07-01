@@ -71,7 +71,7 @@
               </template>
               <v-row justify="center">
                 <v-expansion-panels accordion flat mandatory>
-                  <v-expansion-panel v-show="showExP0.panel">
+                  <v-expansion-panel v-show="showExP1.panel">
                     <v-expansion-panel-header class="grey--text">
                       <span>
                         <v-icon class="mr-2"> mdi-filter-outline </v-icon>
@@ -79,7 +79,7 @@
                       </span>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template v-if="showExP0.f01">
+                      <template v-if="showExP1.f01">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter01')
@@ -97,7 +97,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="showExP0.f02">
+                      <template v-if="showExP1.f02">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter02')
@@ -142,7 +142,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="showExP0.f03">
+                      <template v-if="showExP1.f03">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter03')
@@ -189,7 +189,7 @@
                       </template>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <v-expansion-panel v-show="showExP1.panel">
+                  <v-expansion-panel v-show="showExP2.panel">
                     <v-expansion-panel-header class="grey--text">
                       <v-row no-gutters>
                         <v-col cols="4">
@@ -206,7 +206,7 @@
                       </v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template v-if="showExP1.f04">
+                      <template v-if="showExP2.f04">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter04')
@@ -251,7 +251,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="showExP1.f05">
+                      <template v-if="showExP2.f05">
                         <div
                           v-if="
                             config.find((obj) => obj.configkey == 'filter05')
@@ -296,7 +296,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="showExP1.f06">
+                      <template v-if="showExP2.f06">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter06')
@@ -343,7 +343,7 @@
                       </template>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <v-expansion-panel v-show="showExP2.panel">
+                  <v-expansion-panel v-show="showExP3.panel">
                     <v-expansion-panel-header class="grey--text">
                       <v-row no-gutters>
                         <v-col cols="4">
@@ -358,7 +358,7 @@
                       </v-row>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template v-if="showExP2.f07">
+                      <template v-if="showExP3.f07">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter07')
@@ -400,7 +400,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="showExP2.f08">
+                      <template v-if="showExP3.f08">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter08')
@@ -442,7 +442,7 @@
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="showExP2.f09">
+                      <template v-if="showExP3.f09">
                         <div
                           v-show="
                             config.find((obj) => obj.configkey == 'filter09')
@@ -486,7 +486,7 @@
                       </template>
                     </v-expansion-panel-content>
                   </v-expansion-panel>
-                  <v-expansion-panel v-show="showExP3.panel">
+                  <v-expansion-panel v-show="showExP4.panel">
                     <v-expansion-panel-header class="grey--text">
                       <span>
                         <v-icon class="mr-2">mdi-calendar-range</v-icon>
@@ -682,28 +682,6 @@ export default {
       type: String,
       default: '',
     },
-    visibleFilters: {
-      type: Object,
-      default: () => {
-        return {
-          f01: true,
-          f02: true,
-          f03: true,
-          f04: true,
-          f05: true,
-          f06: true,
-          f07: true,
-          f08: true,
-          f09: true,
-          f10: true,
-          f11: true,
-          f12: true,
-          f13: true,
-          f14: true,
-          f15: true,
-        }
-      },
-    },
   },
 
   data() {
@@ -741,14 +719,25 @@ export default {
       pD: false,
       dateIni: this.p12,
       dateEnd: this.p13,
+      pp01: this.p01,
+      pp02: this.p02,
+      pp03: this.p03,
+      pp04: this.p04,
+      pp05: this.p05,
+      pp06: this.p06,
+      pp07: this.p07,
+      pp08: this.p08,
+      pp09: this.p09,
       verify: '',
       rules: {
         required: (value) => !!value || 'Requerido.',
+        isEmpty: () =>
+          this.checkEmpty() || 'Proporcione a menos un parámetro más',
       },
     }
   },
   computed: {
-    showExP0() {
+    showExP1() {
       let f01, f02, f03
 
       const objf01 = this.config.find((obj) => obj.configkey === 'filter01')
@@ -806,7 +795,7 @@ export default {
         f03,
       }
     },
-    showExP1() {
+    showExP2() {
       let f04, f05, f06
 
       const objf04 = this.config.find((obj) => obj.configkey === 'filter04')
@@ -864,8 +853,10 @@ export default {
         f06,
       }
     },
-    showExP2() {
-      let f07, f08, f09
+    showExP3() {
+      let f07 = false
+      let f08 = false
+      let f09 = false
 
       const objf07 = this.config.find((obj) => obj.configkey === 'filter07')
       if (objf07) {
@@ -922,7 +913,7 @@ export default {
         f09,
       }
     },
-    showExP3() {
+    showExP4() {
       let f11 = false
 
       const objf11 = this.config.find((obj) => obj.configkey === 'filter11')
@@ -989,6 +980,69 @@ export default {
     },
     periodDisabled() {
       this.pD = !this.pD
+    },
+    checkEmpty() {
+      let isEmpty = true
+      const visibleFilters = []
+
+      if (this.showExP1) {
+        if (this.showExP1.panel) {
+          if (this.showExP1.f01) {
+            visibleFilters.push(this.p01)
+          }
+          if (this.showExP1.f02) {
+            visibleFilters.push(this.p02)
+          }
+          if (this.showExP1.f03) {
+            visibleFilters.push(this.p03)
+          }
+        }
+      }
+
+      if (this.showExP2) {
+        if (this.showExP2.panel) {
+          if (this.showExP2.f04) {
+            visibleFilters.push(this.p04)
+          }
+          if (this.showExP2.f05) {
+            visibleFilters.push(this.p05)
+          }
+          if (this.showExP2.f06) {
+            visibleFilters.push(this.p06)
+          }
+        }
+      }
+
+      if (this.showExP3) {
+        if (this.showExP3.panel) {
+          if (this.showExP3.f07) {
+            visibleFilters.push(this.p07)
+          }
+          if (this.showExP3.f08) {
+            visibleFilters.push(this.p08)
+          }
+          if (this.showExP3.f09) {
+            visibleFilters.push(this.p09)
+          }
+        }
+      }
+
+      if (this.showExP4) {
+        if (this.showExP4.panel) {
+          visibleFilters.push(this.dateIni)
+          visibleFilters.push(this.dateEnd)
+        }
+      }
+
+      console.log('VALOR VISIBLEFILTERS', visibleFilters)
+
+      visibleFilters.forEach((obj) => {
+        if (obj) {
+          isEmpty = false
+        }
+      })
+
+      return !isEmpty
     },
   },
 }

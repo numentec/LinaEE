@@ -233,7 +233,7 @@
           <DxColumn
             width="200"
             :allow-grouping="false"
-            data-field="REFERENCIA"
+            data-field="SKU"
             name="FOTO"
             caption="Foto"
             cell-template="imgCellTemplate"
@@ -742,8 +742,8 @@ export default {
           const savingFilename = 'Catalog.xlsx'
           const workbook = new ExcelJS.Workbook()
           const worksheet = workbook.addWorksheet(savingFilename)
-
-          this.doExportExcel(workbook, worksheet, savingFilename, ax)
+          const tLC = { row: 1, column: 1 }
+          this.doExportExcel(workbook, worksheet, savingFilename, tLC, ax, [])
         }
 
         // Exportar a Excel con detalle de códigos de barra
@@ -752,7 +752,8 @@ export default {
             const savingFilename = 'CatalogBC.xlsx'
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet(savingFilename)
-            this.doExportExcel(workbook, worksheet, savingFilename, ax, vv)
+            const tLC = { row: 1, column: 1 }
+            this.doExportExcel(workbook, worksheet, savingFilename, tLC, ax, vv)
           })
         }
 
@@ -875,7 +876,7 @@ export default {
         customizeCell: ({ excelCell, gridCell }) => {
           if (gridCell.rowType === 'data') {
             if (gridCell.column.name === 'FOTO') {
-              excelCell.value = undefined
+              // excelCell.value = undefined
               const imgfile = gridCell.value + this.$config.fotosExt
               PromiseArray.push(
                 new Promise((resolve, reject) => {
