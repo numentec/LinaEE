@@ -2,7 +2,6 @@
 <template>
   <client-only>
     <v-dialog
-      eager
       :value="dialog"
       persistent
       max-width="600px"
@@ -18,31 +17,6 @@
       >
         <v-card>
           <v-toolbar color="accent darken-3" dark>
-            <v-menu v-model="menuClear" :nudge-width="150" offset-y>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn dark icon v-bind="attrs" v-on="on">
-                  <v-icon>mdi-dots-vertical</v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item link>
-                  <v-list-item-icon>
-                    <v-icon>mdi-text-box-remove-outline</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title @click="reset">
-                    Limpiar datos
-                  </v-list-item-title>
-                </v-list-item>
-                <v-list-item link>
-                  <v-list-item-icon>
-                    <v-icon>mdi-autorenew</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title @click="resetValidation"
-                    >Reiniciar validación</v-list-item-title
-                  >
-                </v-list-item>
-              </v-list>
-            </v-menu>
             <v-toolbar-title>Filtros Iniciales</v-toolbar-title>
             <v-spacer />
             <v-btn icon @click="closeDialog(false)">
@@ -51,24 +25,43 @@
           </v-toolbar>
           <v-container>
             <v-card-text>
-              <template v-if="cfl['filter15']">
-                <div v-if="cfl['filter15'].configval1 == '1'" class="px-2">
+              <template
+                v-if="config.find((obj) => obj.configkey == 'filter15')"
+              >
+                <div
+                  v-if="
+                    config.find((obj) => obj.configkey == 'filter15')
+                      .configval1 == '1'
+                  "
+                  class="px-2"
+                >
                   <v-autocomplete
-                    v-model="fl.p15"
-                    :rules="choiceRules(cfl['filter15'].configval5)"
+                    v-model="p15"
+                    :rules="[rules.required]"
                     :items="items"
                     item-text="descrip"
                     item-value="key"
-                    :label="cfl['filter15'].configval2"
+                    :label="
+                      config.find((obj) => obj.configkey == 'filter15')
+                        .configval2
+                    "
                     clearable
                     dense
                   >
                   </v-autocomplete>
                 </div>
               </template>
-              <template v-if="cfl['filter14']">
-                <div v-show="cfl['filter14'].configval1 == '1'" class="px-2">
-                  <v-radio-group v-model="fl.p14" row class="my-0">
+              <template
+                v-if="config.find((obj) => obj.configkey == 'filter14')"
+              >
+                <div
+                  v-show="
+                    config.find((obj) => obj.configkey == 'filter14')
+                      .configval1 == '1'
+                  "
+                  class="px-2"
+                >
+                  <v-radio-group v-model="p14" row class="my-0">
                     <v-radio key="1" label="Todos" value="1"></v-radio>
                     <v-radio key="2" label="Disponible" value="2"></v-radio>
                     <v-radio key="3" label="Futuro" value="3"></v-radio>
@@ -87,73 +80,108 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <template v-if="showExP1.f01">
-                        <div v-show="cfl['filter01'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter01')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-text-field
-                            v-model="fl.p01"
-                            :rules="choiceRules(cfl['filter01'].configval5)"
-                            :label="cfl['filter01'].configval2"
+                            v-model="p01"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter01')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
                       <template v-if="showExP1.f02">
-                        <div v-show="cfl['filter02'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter02')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter02'].configval3 == '1'"
-                            v-model="fl.p02"
-                            :rules="choiceRules(cfl['filter02'].configval5)"
-                            :label="cfl['filter02'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter02')
+                                .configval3 == '1'
+                            "
+                            v-model="p02"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter02')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter02'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter02'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
                             item-value="ID"
                             multiple
                             chips
-                            :counter="countChips"
                             deletable-chips
                             clearable
                             dense
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p02"
-                            :rules="choiceRules(cfl['filter02'].configval5)"
-                            :label="cfl['filter02'].configval2"
+                            v-model="p02"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter02')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
                       <template v-if="showExP1.f03">
-                        <div v-show="cfl['filter03'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter03')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter03'].configval3 == '1'"
-                            v-model="fl.p03"
-                            :rules="choiceRules(cfl['filter03'].configval5)"
-                            :label="cfl['filter03'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter03')
+                                .configval3 == '1'
+                            "
+                            v-model="p03"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter03')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter03'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter03'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
                             item-value="ID"
                             multiple
                             chips
-                            :counter="countChips"
                             deletable-chips
                             clearable
                             dense
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p03"
-                            :rules="choiceRules(cfl['filter03'].configval5)"
-                            :label="cfl['filter03'].configval2"
+                            v-model="p03"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter03')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
@@ -179,93 +207,135 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <template v-if="showExP2.f04">
-                        <div v-show="cfl['filter04'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter04')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter04'].configval3 == '1'"
-                            v-model="fl.p04"
-                            :rules="choiceRules(cfl['filter04'].configval5)"
-                            :label="cfl['filter04'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter04')
+                                .configval3 == '1'
+                            "
+                            v-model="p04"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter04')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter04'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter04'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
                             item-value="ID"
                             multiple
                             chips
-                            :counter="3"
                             deletable-chips
                             clearable
                             dense
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p04"
-                            :rules="choiceRules(cfl['filter04'].configval5)"
-                            :label="cfl['filter04'].configval2"
+                            v-model="p04"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter04')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
                       <template v-if="showExP2.f05">
-                        <div v-if="cfl['filter05'].configval1 == '1'">
+                        <div
+                          v-if="
+                            config.find((obj) => obj.configkey == 'filter05')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter05'].configval3 == '1'"
-                            v-model="fl.p05"
-                            :rules="choiceRules(cfl['filter05'].configval5)"
-                            :label="cfl['filter05'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter05')
+                                .configval3 == '1'
+                            "
+                            v-model="p05"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter05')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter05'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter05'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
                             item-value="ID"
                             multiple
                             chips
-                            :counter="3"
                             deletable-chips
                             clearable
                             dense
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p05"
-                            :rules="choiceRules(cfl['filter05'].configval5)"
-                            :label="cfl['filter05'].configval2"
+                            v-model="p05"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter05')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
                       <template v-if="showExP2.f06">
-                        <div v-show="cfl['filter06'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter06')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter06'].configval3 == '1'"
-                            v-model="fl.p06"
-                            :rules="choiceRules(cfl['filter06'].configval5)"
-                            :label="cfl['filter06'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter06')
+                                .configval3 == '1'
+                            "
+                            v-model="p06"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter06')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter06'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter06'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
                             item-value="ID"
                             multiple
                             chips
-                            :counter="3"
                             deletable-chips
                             clearable
                             dense
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p06"
-                            :rules="choiceRules(cfl['filter06'].configval5)"
-                            :label="cfl['filter06'].configval2"
+                            v-model="p06"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter06')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
@@ -289,15 +359,28 @@
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
                       <template v-if="showExP3.f07">
-                        <div v-show="cfl['filter07'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter07')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter07'].configval3 == '1'"
-                            v-model="fl.p07"
-                            :rules="choiceRules(cfl['filter07'].configval5)"
-                            :label="cfl['filter07'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter07')
+                                .configval3 == '1'
+                            "
+                            v-model="p07"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter07')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter07'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter07'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
@@ -307,24 +390,39 @@
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p07"
-                            :rules="choiceRules(cfl['filter07'].configval5)"
-                            :label="cfl['filter07'].configval2"
+                            v-model="p07"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter07')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
                       <template v-if="showExP3.f08">
-                        <div v-show="cfl['filter08'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter08')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter08'].configval3 == '1'"
-                            v-model="fl.p08"
-                            :rules="choiceRules(cfl['filter08'].configval5)"
-                            :label="cfl['filter08'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter08')
+                                .configval3 == '1'
+                            "
+                            v-model="p08"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter08')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter08'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter08'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
@@ -334,24 +432,39 @@
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p08"
-                            :rules="choiceRules(cfl['filter08'].configval5)"
-                            :label="cfl['filter08'].configval2"
+                            v-model="p08"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter08')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
                       <template v-if="showExP3.f09">
-                        <div v-show="cfl['filter09'].configval1 == '1'">
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter09')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-autocomplete
-                            v-if="cfl['filter09'].configval3 == '1'"
-                            v-model="fl.p09"
-                            :rules="choiceRules(cfl['filter09'].configval5)"
-                            :label="cfl['filter09'].configval2"
+                            v-if="
+                              config.find((obj) => obj.configkey == 'filter09')
+                                .configval3 == '1'
+                            "
+                            v-model="p09"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter09')
+                                .configval2
+                            "
                             :items="
                               $store.getters[
-                                'linabi/common/' + cfl['filter09'].configval4
+                                'linabi/common/' +
+                                  config.find(
+                                    (obj) => obj.configkey == 'filter09'
+                                  ).configval4
                               ]
                             "
                             item-text="NOMBRE"
@@ -361,9 +474,11 @@
                           ></v-autocomplete>
                           <v-text-field
                             v-else
-                            v-model="fl.p09"
-                            :rules="choiceRules(cfl['filter09'].configval5)"
-                            :label="cfl['filter09'].configval2"
+                            v-model="p09"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter09')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
@@ -379,25 +494,44 @@
                       </span>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
-                      <template v-if="cfl['filter10']">
-                        <div v-show="cfl['filter10'].configval1 == '1'">
+                      <template
+                        v-if="config.find((obj) => obj.configkey == 'filter10')"
+                      >
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter10')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-text-field
-                            v-model="fl.p10"
-                            :rules="choiceRules(cfl['filter10'].configval5)"
-                            :label="cfl['filter10'].configval2"
+                            v-model="p10"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter10')
+                                .configval2
+                            "
                             clearable
                             dense
                           ></v-text-field>
                         </div>
                       </template>
-                      <template v-if="cfl['filter11']">
-                        <div v-show="cfl['filter11'].configval1 == '1'">
+                      <template
+                        v-if="config.find((obj) => obj.configkey == 'filter11')"
+                      >
+                        <div
+                          v-show="
+                            config.find((obj) => obj.configkey == 'filter11')
+                              .configval1 == '1'
+                          "
+                        >
                           <v-checkbox
                             ref="activePeriod"
-                            v-model="fl.p11"
+                            v-model="p11"
                             :true-value="1"
                             :false-value="0"
-                            :label="cfl['filter11'].configval2"
+                            :label="
+                              config.find((obj) => obj.configkey == 'filter11')
+                                .configval2
+                            "
                             class="my-0"
                             @change="periodDisabled"
                           >
@@ -405,9 +539,16 @@
                         </div>
                       </template>
                       <v-row no-gutters>
-                        <template v-if="cfl['filter12']">
+                        <template
+                          v-if="
+                            config.find((obj) => obj.configkey == 'filter12')
+                          "
+                        >
                           <v-col
-                            v-show="cfl['filter12'].configval1 == '1'"
+                            v-show="
+                              config.find((obj) => obj.configkey == 'filter12')
+                                .configval1 == '1'
+                            "
                             cols="6"
                           >
                             <v-menu
@@ -420,9 +561,13 @@
                             >
                               <template v-slot:activator="{ on, attrs }">
                                 <v-text-field
-                                  v-model="fl.p12"
+                                  v-model="dateIni"
                                   :disabled="pD"
-                                  :label="cfl['filter12'].configval2"
+                                  :label="
+                                    config.find(
+                                      (obj) => obj.configkey == 'filter12'
+                                    ).configval2
+                                  "
                                   prepend-icon="mdi-calendar"
                                   clearable
                                   dense
@@ -432,16 +577,23 @@
                                 ></v-text-field>
                               </template>
                               <v-date-picker
-                                v-model="fl.p12"
+                                v-model="dateIni"
                                 reactive
                                 @input="menuDate1 = false"
                               ></v-date-picker>
                             </v-menu>
                           </v-col>
                         </template>
-                        <template v-if="cfl['filter13']">
+                        <template
+                          v-if="
+                            config.find((obj) => obj.configkey == 'filter13')
+                          "
+                        >
                           <v-col
-                            v-show="cfl['filter13'].configval1 == '1'"
+                            v-show="
+                              config.find((obj) => obj.configkey == 'filter13')
+                                .configval1 == '1'
+                            "
                             cols="6"
                           >
                             <v-menu
@@ -454,9 +606,13 @@
                             >
                               <template v-slot:activator="{ on, attrs }">
                                 <v-text-field
-                                  v-model="fl.p13"
+                                  v-model="dateEnd"
                                   :disabled="pD"
-                                  :label="cfl['filter13'].configval2"
+                                  :label="
+                                    config.find(
+                                      (obj) => obj.configkey == 'filter13'
+                                    ).configval2
+                                  "
                                   prepend-icon="mdi-calendar"
                                   clearable
                                   dense
@@ -466,7 +622,7 @@
                                 ></v-text-field>
                               </template>
                               <v-date-picker
-                                v-model="fl.p13"
+                                v-model="dateEnd"
                                 @input="menuDate2 = false"
                               ></v-date-picker>
                             </v-menu>
@@ -480,7 +636,13 @@
             </v-card-text>
             <v-divider></v-divider>
             <v-card-actions>
-              <v-btn block color="success darken-1" type="submit">
+              <v-btn
+                block
+                :disabled="!valid"
+                color="success darken-1"
+                type="submit"
+                @click="closeDialog(true)"
+              >
                 Aplicar
               </v-btn>
             </v-card-actions>
@@ -492,53 +654,8 @@
 </template>
 
 <script>
+import { mapFields } from 'vuex-map-fields'
 import { mapGetters } from 'vuex'
-const countChips = 3
-
-const rules = {
-  required: true || 'Requerido.',
-  isEmpty: true || 'Proporcione al menos un parámetro más',
-  maxchips: true || 'Max selection 3',
-  checkPeriod: true || 'Proporcione un periodo correcto',
-}
-
-function objIsEmpty(obj) {
-  let isEmpty = true
-
-  if (obj) {
-    if (Array.isArray(obj)) {
-      if (obj.length > 0) {
-        isEmpty = false
-      }
-    }
-    if (typeof obj === 'string') {
-      if (obj.trim !== '') {
-        isEmpty = false
-      }
-    }
-  }
-
-  return isEmpty
-}
-
-function clearProps(obj) {
-  Object.keys(obj).forEach((key) => {
-    if (obj[key]) {
-      if (Array.isArray(obj[key])) {
-        if (obj[key].length === 0) {
-          delete obj[key]
-        }
-      }
-      if (typeof obj[key] === 'string') {
-        if (obj[key].trim === '') {
-          delete obj[key]
-        }
-      }
-    }
-  })
-
-  return obj
-}
 
 export default {
   name: 'BaseFilters',
@@ -571,7 +688,23 @@ export default {
     this.$options.computed = {
       ...this.$options.computed,
       ...mapGetters(['loggedInUser']),
-      ...mapGetters(this.curstore, ['getFilters']),
+      ...mapFields(this.curstore, [
+        'filters.p01',
+        'filters.p02',
+        'filters.p03',
+        'filters.p04',
+        'filters.p05',
+        'filters.p06',
+        'filters.p07',
+        'filters.p08',
+        'filters.p09',
+        'filters.p10',
+        'filters.p11',
+        'filters.p12',
+        'filters.p13',
+        'filters.p14',
+        'filters.p15',
+      ]),
     }
     return {
       valid: true,
@@ -581,14 +714,26 @@ export default {
         { key: 'PEDCONF', descrip: 'Pedidos Confirmados' },
         { key: 'FAC', descrip: 'Facturas' },
       ],
-      menuClear: false,
       menuDate1: false,
       menuDate2: false,
       pD: false,
-      fl: {},
+      dateIni: this.p12,
+      dateEnd: this.p13,
+      pp01: this.p01,
+      pp02: this.p02,
+      pp03: this.p03,
+      pp04: this.p04,
+      pp05: this.p05,
+      pp06: this.p06,
+      pp07: this.p07,
+      pp08: this.p08,
+      pp09: this.p09,
       verify: '',
-      countChips,
-      rules,
+      rules: {
+        required: (value) => !!value || 'Requerido.',
+        isEmpty: () =>
+          this.checkEmpty() || 'Proporcione a menos un parámetro más',
+      },
     }
   },
   computed: {
@@ -790,47 +935,27 @@ export default {
 
       return { panel: f11 }
     },
-    cfl() {
-      // Object filter configuration
-      const conf = this.config.reduce((obj, item) => {
-        obj[item.configkey] = item
-        return obj
-      }, {})
-      return conf
-    },
-  },
-  watch: {
-    // when dialog shown or hidden
-    shown() {
-      this.rules = rules
-      // this.$refs.form.reset()
-    },
   },
   created() {
-    const objfilter14 = this.cfl.filter14
+    const objfilter14 = this.config.find((obj) => obj.configkey === 'filter14')
     if (objfilter14) {
-      this.fl.p14 = objfilter14.configval3
+      this.p14 = objfilter14.configval3
     }
 
-    const objfilter11 = this.cfl.filter11
+    const objfilter11 = this.config.find((obj) => obj.configkey === 'filter11')
     if (objfilter11) {
       const valf11 = objfilter11.configval3
       if (valf11 === '1') {
-        this.fl.p11 = 1
+        this.p11 = 1
         this.pD = false
       } else {
-        this.fl.p11 = 0
+        this.p11 = 0
         this.pD = true
       }
     }
 
     if (!this.listed) {
       this.$store.dispatch('linabi/common/setLists')
-    }
-  },
-  mounted() {
-    if (Object.keys(this.getFilters).length > 0) {
-      Object.assign(this.fl, this.getFilters)
     }
   },
   methods: {
@@ -840,40 +965,15 @@ export default {
     resetValidation() {
       this.$refs.bf_form.resetValidation()
     },
-    choiceRules(indexes) {
-      const indxs = Array.from(indexes).map(Number)
-
-      const arrayRules = [
-        this.rules.required,
-        this.rules.isEmpty,
-        this.rules.maxchips,
-        this.rules.checkPeriod,
-      ]
-
-      const selectedRules = arrayRules.filter((e, i) => indxs.includes(i))
-
-      return selectedRules
-    },
     closeDialog(refresh) {
       if (refresh) {
-        this.rules = {
-          required: (v) => !!v || 'Requerido.',
-          isEmpty: () =>
-            this.checkEmpty() || 'Proporcione al menos un parámetro más',
-          maxchips: (v) =>
-            (v ? v.length <= countChips : true) || 'Max selection 3',
-          checkPeriod: (v) =>
-            ((v ? v.length > 0 : false) ? this.checkPeriod(v) : true) ||
-            'Proporcione un periodo válido',
+        if (this.$refs.bf_form.validate()) {
+          this.$store.dispatch(this.curstore + '/setDates', {
+            p12: this.dateIni,
+            p13: this.dateEnd,
+          })
+          this.$emit('closeDialog', refresh)
         }
-        this.$nextTick(() => {
-          if (this.$refs.bf_form.validate()) {
-            const clearfl = clearProps(this.fl)
-            // const objfl = JSON.parse(JSON.stringify(clearfl))
-            this.$store.dispatch(this.curstore + '/setFilters', clearfl)
-            this.$emit('closeDialog', refresh)
-          }
-        })
       } else {
         this.$emit('closeDialog', refresh)
       }
@@ -883,23 +983,18 @@ export default {
     },
     checkEmpty() {
       let isEmpty = true
+      const visibleFilters = []
 
       if (this.showExP1) {
         if (this.showExP1.panel) {
           if (this.showExP1.f01) {
-            if (!objIsEmpty(this.fl.p01)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p01)
           }
           if (this.showExP1.f02) {
-            if (!objIsEmpty(this.fl.p02)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p02)
           }
           if (this.showExP1.f03) {
-            if (!objIsEmpty(this.fl.p03)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p03)
           }
         }
       }
@@ -907,19 +1002,13 @@ export default {
       if (this.showExP2) {
         if (this.showExP2.panel) {
           if (this.showExP2.f04) {
-            if (!objIsEmpty(this.fl.p04)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p04)
           }
           if (this.showExP2.f05) {
-            if (!objIsEmpty(this.fl.p05)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p05)
           }
           if (this.showExP2.f06) {
-            if (!objIsEmpty(this.fl.p06)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p06)
           }
         }
       }
@@ -927,45 +1016,33 @@ export default {
       if (this.showExP3) {
         if (this.showExP3.panel) {
           if (this.showExP3.f07) {
-            if (!objIsEmpty(this.fl.p07)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p07)
           }
           if (this.showExP3.f08) {
-            if (!objIsEmpty(this.fl.p08)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p08)
           }
           if (this.showExP3.f09) {
-            if (!objIsEmpty(this.fl.p09)) {
-              isEmpty = false
-            }
+            visibleFilters.push(this.p09)
           }
         }
       }
 
       if (this.showExP4) {
         if (this.showExP4.panel) {
-          if (!objIsEmpty(this.fl.p12) && !objIsEmpty(this.fl.p13)) {
-            isEmpty = false
-          }
+          visibleFilters.push(this.dateIni)
+          visibleFilters.push(this.dateEnd)
         }
       }
+
+      console.log('VALOR VISIBLEFILTERS', visibleFilters)
+
+      visibleFilters.forEach((obj) => {
+        if (obj) {
+          isEmpty = false
+        }
+      })
 
       return !isEmpty
-    },
-    checkPeriod(v) {
-      let hasPeriod = true
-      if (this.showExP4) {
-        if (this.showExP4.panel) {
-          if (this.fl.p11) {
-            if (objIsEmpty(this.fl.p12) || objIsEmpty(this.fl.p13)) {
-              hasPeriod = false
-            }
-          }
-        }
-      }
-      return hasPeriod
     },
   },
 }

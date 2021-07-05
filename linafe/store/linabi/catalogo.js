@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import CustomStore from 'devextreme/data/custom_store'
-import { getField, updateField } from 'vuex-map-fields'
+// import { getField, updateField } from 'vuex-map-fields'
 
 export const namespaced = true
 
@@ -16,7 +16,6 @@ export const state = () => ({
 })
 
 export const mutations = {
-  updateField,
   SET_CUR_STORE(state, payload) {
     state.curStore = payload
   },
@@ -50,6 +49,9 @@ export const mutations = {
 }
 
 export const actions = {
+  setFilters({ commit }, payload) {
+    commit('SET_FILTERS', payload)
+  },
   setCurStore({ commit }, payload) {
     commit('SET_CUR_STORE', payload)
   },
@@ -103,15 +105,15 @@ export const actions = {
 
     // Quita los elementos que sean null, '' o undefined
     // y convierte en string el valor de la propiedad de cada objeto restante
-    let curparams = Object.entries(usefilters).reduce(
+    const curparams = Object.entries(usefilters).reduce(
       (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
       {}
     )
 
-    curparams = Object.entries(curparams).reduce(
-      (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
-      {}
-    )
+    // curparams = Object.entries(curparams).reduce(
+    //   (a, [k, v]) => (v ? ((a[k] = v.toString()), a) : a),
+    //   {}
+    // )
 
     async function load() {
       return await ax
@@ -173,7 +175,9 @@ export const actions = {
 }
 
 export const getters = {
-  getField,
+  getFilters(state) {
+    return state.filters
+  },
   getCurStore(state) {
     return state.curStore
   },

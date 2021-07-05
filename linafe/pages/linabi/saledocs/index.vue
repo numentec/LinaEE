@@ -82,7 +82,7 @@
               </v-list-item>
               <v-list-item link>
                 <v-list-item-icon>
-                  <v-icon>mdi-table-cancel</v-icon>
+                  <v-icon>mdi-table-remove</v-icon>
                 </v-list-item-icon>
                 <v-list-item-title @click.stop="clearData">
                   Limpiar Datos
@@ -409,7 +409,6 @@
 </template>
 <script>
 import { mapState, mapActions } from 'vuex'
-import { mapFields } from 'vuex-map-fields'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
@@ -595,7 +594,7 @@ export default {
   },
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
-    ...mapFields('linabi/saledocsm', ['filters']),
+    ...mapState('linabi/saledocsm', ['filters']),
     curGrid0() {
       return this.$refs[curGridRefKey0].instance
     },

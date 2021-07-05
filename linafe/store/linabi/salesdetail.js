@@ -1,5 +1,4 @@
 import CustomStore from 'devextreme/data/custom_store'
-import { getField, updateField } from 'vuex-map-fields'
 
 export const namespaced = true
 
@@ -11,9 +10,11 @@ export const state = () => ({
 })
 
 export const mutations = {
-  updateField,
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
+  },
+  SET_FILTERS(state, payload) {
+    state.filters = Object.assign({}, state.filters, payload)
   },
   SET_DATES(state, payload) {
     state.filters.p12 = payload.p12
@@ -30,6 +31,9 @@ export const mutations = {
 }
 
 export const actions = {
+  setFilters({ commit }, payload) {
+    commit('SET_FILTERS', payload)
+  },
   setDates({ commit }, payload) {
     commit('SET_DATES', payload)
   },
@@ -72,7 +76,9 @@ export const actions = {
 }
 
 export const getters = {
-  getField,
+  getFilters(state) {
+    return state.filters
+  },
   getTotalCount(state) {
     return state.totalCount
   },

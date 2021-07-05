@@ -58,7 +58,7 @@
               </v-list-item>
               <v-list-item link>
                 <v-list-item-icon>
-                  <v-icon>mdi-table-cancel</v-icon>
+                  <v-icon>mdi-table-remove</v-icon>
                 </v-list-item-icon>
                 <v-list-item-title @click.stop="clearData">
                   Limpiar Datos

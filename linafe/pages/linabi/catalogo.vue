@@ -62,7 +62,7 @@
               </v-list-item>
               <v-list-item link>
                 <v-list-item-icon>
-                  <v-icon>mdi-table-cancel</v-icon>
+                  <v-icon>mdi-table-remove</v-icon>
                 </v-list-item-icon>
                 <v-list-item-title @click.stop="clearData">
                   Limpiar Datos
@@ -229,6 +229,7 @@
           :show-borders="true"
           :height="tableHeight"
           @content-ready="onContentReady"
+          @cell-click="manageCellClick"
         >
           <DxColumn
             width="200"
@@ -334,6 +335,13 @@
       @closeDialog="closeSelTemplate"
       @setTemplate="doExportTemplate"
     />
+    <Slideshow
+      :data-source="dataSource"
+      :cur-key="curRowKey"
+      :cur-index="curRowIndex"
+      :show-slideshow="slideshow"
+      @hideSlideshow="slideshow = false"
+    />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -377,6 +385,7 @@ import BaseFilters from '~/components/linabi/BaseFilters'
 import CatalogBuilder from '~/components/linabi/CatalogBuilder'
 import ProdVariants from '~/components/linabi/ProdVariants.vue'
 import TemplatesAdmin from '~/components/linabi/TemplatesAdmin.vue'
+import Slideshow from '~/components/linabi/Slideshow'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
@@ -488,6 +497,7 @@ export default {
     LoadingView,
     ProdVariants,
     TemplatesAdmin,
+    Slideshow,
   },
   async asyncData({ $axios, store, error }) {
     const loggedInUser = store.getters.loggedInUser
@@ -563,6 +573,9 @@ export default {
         row: 1,
         col: 1,
       },
+      slideshow: false,
+      curRowKey: '',
+      curRowIndex: 0,
     }
   },
   computed: {
@@ -1005,6 +1018,16 @@ export default {
             })
           })
         })
+    },
+    manageCellClick(e) {
+      // console.log('ALL e', e)
+      if (e.column) {
+        if (e.column.name === 'FOTO') {
+          this.curRowKey = e.key
+          this.curRowIndex = e.rowIndex
+          this.slideshow = true
+        }
+      }
     },
     testMethod() {
       // const filename = 'plantillas/' + this.testfilename
