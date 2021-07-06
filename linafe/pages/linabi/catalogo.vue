@@ -336,7 +336,7 @@
       @setTemplate="doExportTemplate"
     />
     <Slideshow
-      :data-source="dataSource"
+      :data-source="getCurStore"
       :cur-key="curRowKey"
       :cur-index="curRowIndex"
       :show-slideshow="slideshow"
@@ -394,32 +394,6 @@ import { selFunction } from '~/assets/utilities'
 const curGridRefKey = 'cur-grid'
 let collapsed = false
 let customTemplate = false
-
-// async function funcTest(ax, filename) {
-//   await ax
-//     .get(filename, {
-//       responseType: 'arraybuffer',
-//     })
-//     .then((response) => {
-//       // const buf = response.data
-//       alert('FILE DOWNLOADED', filename)
-//     })
-//     .catch((err) => {
-//       if (err.response) {
-//         // The response status is an error code
-//         alert(err.response.status)
-//         console.log(err.response.status)
-//       } else if (err.request) {
-//         // Response not received though the request was sent
-//         alert('No se recibió respuesta')
-//         console.log(err.request)
-//       } else {
-//         // An error occurred when setting up the request
-//         alert('Error armando solicitud (Request)', err.message)
-//         console.log(err.message)
-//       }
-//     })
-// }
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -580,7 +554,7 @@ export default {
   },
   computed: {
     ...mapState('linabi/catalogo', ['curStore']),
-    ...mapGetters('linabi/catalogo', ['getCurCatalog']),
+    ...mapGetters('linabi/catalogo', ['getCurCatalog', 'getCurStore']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
@@ -1020,7 +994,6 @@ export default {
         })
     },
     manageCellClick(e) {
-      // console.log('ALL e', e)
       if (e.column) {
         if (e.column.name === 'FOTO') {
           this.curRowKey = e.key

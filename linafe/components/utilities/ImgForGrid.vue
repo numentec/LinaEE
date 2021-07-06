@@ -1,7 +1,6 @@
-/* eslint-disable no-console */
 <template>
   <div>
-    <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="120">
+    <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="175">
       <template v-slot:placeholder>
         <v-row class="fill-height ma-0" align="center" justify="center">
           <v-progress-circular
@@ -47,9 +46,7 @@ export default {
       return this.imgFile.value
     },
   },
-  mounted() {
-    // console.log('VALOR DE IMGFILE', this.imgFile)
-  },
+  mounted() {},
 }
 </script>
 

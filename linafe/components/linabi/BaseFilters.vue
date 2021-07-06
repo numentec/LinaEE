@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 <template>
   <client-only>
     <v-dialog
