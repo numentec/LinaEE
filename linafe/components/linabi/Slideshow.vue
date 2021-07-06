@@ -31,7 +31,7 @@
             >
               <v-card flat tile class="mx-auto">
                 <v-container>
-                  <v-carousel v-model="curItem">
+                  <v-carousel v-model="curItem" hide-delimiters>
                     <v-carousel-item v-for="(item, i) in dS" :key="i">
                       <v-container>
                         <v-img :src="imgSrc(item.SKU)" contain max-width="700">
