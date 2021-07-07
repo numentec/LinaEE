@@ -228,6 +228,7 @@
           :show-row-lines="false"
           :show-borders="true"
           :height="tableHeight"
+          :hover-state-enabled="true"
           @content-ready="onContentReady"
           @cell-click="manageCellClick"
         >
@@ -238,6 +239,7 @@
             name="FOTO"
             caption="Foto"
             cell-template="imgCellTemplate"
+            css-class="cell-highlighted"
             :allow-header-filtering="false"
             :allow-reordering="false"
           />
@@ -1027,3 +1029,12 @@ const getProdVariants = (variants, sku) => {
   return variants.filter((v) => v.SKU === sku)
 }
 </script>
+
+<style scoped>
+.dx-data-row.dx-state-hover:not(.dx-selection):not(.dx-row-inserted):not(.dx-row-removed):not(.dx-edit-row)
+  .cell-highlighted
+  > td:not(.dx-focused) {
+  background-color: #aed6f1 !important;
+  cursor: pointer;
+}
+</style>
