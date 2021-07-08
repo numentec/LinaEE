@@ -37,6 +37,7 @@
               :set-agrupar="setConf0.agrupar"
               @set-conf-filtros="setConf0.filtros = !setConf0.filtros"
               @set-conf-agrupar="setConf0.agrupar = !setConf0.agrupar"
+              @clear-all-filters="clearFilters"
               @menu-conf-close="menuConf = false"
               @snkb="snackbar = true"
             />
@@ -48,6 +49,7 @@
               :set-agrupar="setConf1.agrupar"
               @set-conf-filtros="setConf1.filtros = !setConf1.filtros"
               @set-conf-agrupar="setConf1.agrupar = !setConf1.agrupar"
+              @clear-all-filters="clearFilters"
               @menu-conf-close="menuConf = false"
               @snkb="snackbar = true"
             />
@@ -155,6 +157,50 @@
                   </v-list-item-content>
                 </v-list-item>
               </v-list-group>
+              <v-list-group prepend-icon="mdi-close-outline" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Remover</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters('header')">
+                      Filtros de encabezados
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters('row')">
+                      Filtros avanzados
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters()">
+                      Todos los filtros
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearSorting">
+                      Ordenamiento
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearGrouping">
+                      Grupos
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
               <v-list-group prepend-icon="mdi-cog" no-action>
                 <template v-slot:activator>
                   <v-list-item>
@@ -245,6 +291,7 @@
                   :data-type="xcol.configval4"
                   :format="setFormat(xcol.configval5)"
                   :alignment="xcol.configval6"
+                  :sorting-method="selFunction(xcol.configval9)"
                 />
                 <DxGrouping :auto-expand-all="false" />
                 <DxGroupPanel
@@ -328,6 +375,7 @@
                   :data-type="xcol.configval4"
                   :format="setFormat(xcol.configval5)"
                   :alignment="xcol.configval6"
+                  :sorting-method="selFunction(xcol.configval9)"
                 />
                 <DxGrouping :auto-expand-all="false" />
                 <DxGroupPanel
@@ -439,6 +487,7 @@ import TemplatesAdmin from '~/components/linabi/TemplatesAdmin.vue'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
+import { selFunction } from '~/assets/utilities'
 
 const curGridRefKey0 = 'cur-grid1'
 const curGridRefKey1 = 'cur-grid2'
@@ -556,6 +605,7 @@ export default {
       tab: 0,
       curGridRefKey0,
       curGridRefKey1,
+      selFunction,
       dataSource0: null,
       dataSource1: null,
       menuConf: false,
@@ -640,6 +690,38 @@ export default {
         this.dataSource1 = null
       }
 
+      this.menuFilter = false
+    },
+    clearFilters(opc = 'all') {
+      if (this.tab === 0) {
+        if (opc !== 'all') {
+          this.curGrid0.clearFilter(opc)
+        } else {
+          this.curGrid0.clearFilter()
+        }
+      }
+
+      if (opc !== 'all') {
+        this.curGrid1.clearFilter(opc)
+      } else {
+        this.curGrid1.clearFilter()
+      }
+
+      this.menuConf = false
+      this.menuFilter = false
+    },
+    clearSorting() {
+      if (this.tab === 0) {
+        this.curGrid0.clearSorting()
+      }
+      this.curGrid1.clearSorting()
+      this.menuFilter = false
+    },
+    clearGrouping() {
+      if (this.tab === 0) {
+        this.curGrid0.clearGrouping()
+      }
+      this.curGrid1.clearGrouping()
       this.menuFilter = false
     },
     showColumnChooser() {

@@ -36,6 +36,7 @@
               :set-agrupar="setConf.agrupar"
               @set-conf-filtros="setConf.filtros = !setConf.filtros"
               @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
+              @clear-all-filters="clearFilters"
               @menu-conf-close="menuConf = false"
               @snkb="snackbar = true"
             />
@@ -56,7 +57,12 @@
                 <v-list-item-icon>
                   <v-icon>mdi-cloud-download</v-icon>
                 </v-list-item-icon>
-                <v-list-item-title @click.stop="showBaseFilters = true">
+                <v-list-item-title
+                  @click.stop="
+                    showBaseFilters = true
+                    menuFilter = false
+                  "
+                >
                   Descargar Datos
                 </v-list-item-title>
               </v-list-item>
@@ -177,6 +183,50 @@
                   </v-list-item-content>
                 </v-list-item>
               </v-list-group>
+              <v-list-group prepend-icon="mdi-close-outline" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Remover</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters('header')">
+                      Filtros de encabezados
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters('row')">
+                      Filtros avanzados
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters()">
+                      Todos los filtros
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearSorting">
+                      Ordenamiento
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearGrouping">
+                      Grupos
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
               <v-list-group prepend-icon="mdi-cog" no-action>
                 <template v-slot:activator>
                   <v-list-item>
@@ -240,7 +290,6 @@
             caption="Foto"
             cell-template="imgCellTemplate"
             css-class="cell-highlighted"
-            :allow-header-filtering="false"
             :allow-reordering="false"
           />
           <DxColumn
@@ -602,6 +651,23 @@ export default {
     },
     clearData() {
       this.dataSource = null
+      this.menuFilter = false
+    },
+    clearFilters(opc = 'all') {
+      if (opc !== 'all') {
+        this.curGrid.clearFilter(opc)
+      } else {
+        this.curGrid.clearFilter()
+      }
+      this.menuConf = false
+      this.menuFilter = false
+    },
+    clearSorting() {
+      this.curGrid.clearSorting()
+      this.menuFilter = false
+    },
+    clearGrouping() {
+      this.curGrid.clearGrouping()
       this.menuFilter = false
     },
     showColumnChooser() {

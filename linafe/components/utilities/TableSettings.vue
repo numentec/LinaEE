@@ -45,6 +45,14 @@
           </v-list-item-action>
           <v-list-item-title>Total global</v-list-item-title>
         </v-list-item> -->
+        <v-list-item link>
+          <v-list-item-icon>
+            <v-icon>mdi-filter-variant-remove</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title @click="$emit('clear-all-filters')">
+            Limpiar filtros
+          </v-list-item-title>
+        </v-list-item>
 
         <v-list-item link>
           <v-list-item-icon>

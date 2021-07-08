@@ -32,6 +32,7 @@
               :set-agrupar="setConf.agrupar"
               @set-conf-filtros="setConf.filtros = !setConf.filtros"
               @set-conf-agrupar="setConf.agrupar = !setConf.agrupar"
+              @clear-all-filters="clearFilters"
               @menu-conf-close="menuConf = false"
               @snkb="snackbar = true"
             />
@@ -117,6 +118,50 @@
                   </v-list-item-content>
                 </v-list-item>
               </v-list-group>
+              <v-list-group prepend-icon="mdi-close-outline" no-action>
+                <template v-slot:activator>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>Remover</v-list-item-title>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters('header')">
+                      Filtros de encabezados
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters('row')">
+                      Filtros avanzados
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearFilters()">
+                      Todos los filtros
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearSorting">
+                      Ordenamiento
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="clearGrouping">
+                      Grupos
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-group>
               <v-list-group prepend-icon="mdi-cog" no-action>
                 <template v-slot:activator>
                   <v-list-item>
@@ -188,6 +233,7 @@
             :data-type="xcol.configval4"
             :format="setFormat(xcol.configval5)"
             :alignment="xcol.configval6"
+            :sorting-method="selFunction(xcol.configval9)"
           />
           <DxGrouping :auto-expand-all="false" />
           <DxGroupPanel
@@ -289,6 +335,7 @@ import BaseFilters from '~/components/linabi/BaseFilters'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
+import { selFunction } from '~/assets/utilities'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -410,6 +457,7 @@ export default {
   data() {
     return {
       curGridRefKey,
+      selFunction,
       dataSource: null,
       menuConf: false,
       setConf: {
@@ -458,6 +506,23 @@ export default {
     },
     clearData() {
       this.dataSource = null
+      this.menuFilter = false
+    },
+    clearFilters(opc = 'all') {
+      if (opc !== 'all') {
+        this.curGrid.clearFilter(opc)
+      } else {
+        this.curGrid.clearFilter()
+      }
+      this.menuConf = false
+      this.menuFilter = false
+    },
+    clearSorting() {
+      this.curGrid.clearSorting()
+      this.menuFilter = false
+    },
+    clearGrouping() {
+      this.curGrid.clearGrouping()
       this.menuFilter = false
     },
     showColumnChooser() {

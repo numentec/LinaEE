@@ -143,8 +143,9 @@ export default {
     },
   },
   watch: {
-    curIndex(newVal) {
-      this.curItem = newVal
+    curKey(newVal) {
+      const ci = this.dS.findIndex((obj) => obj.SKU === newVal)
+      this.curItem = ci
     },
   },
   mounted() {},
