@@ -1,4 +1,5 @@
 import django.core.serializers as ss
+# from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -16,7 +17,6 @@ from .serializers import (
 )
 from apps.core import models
 from apps.core import serializers
-# from linapi.permissions import CustomDjangoModelPermissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
 from rest_framework import viewsets, status
@@ -27,8 +27,11 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from rest_framework.exceptions import PermissionDenied
 
 import json
+
+from ipware import get_client_ip
 
 LinaUserModel = get_user_model()
 
@@ -40,6 +43,23 @@ class LinaAuthToken(ObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+
+        client_ip, is_routable = get_client_ip(request)
+
+        if client_ip is None:
+            # Unable to get the client's IP address
+            raise PermissionDenied("No se pudo comprobar la dirección de origen")
+        else:
+            # We got the client's IP address
+            if is_routable:
+                # The client's IP address is publicly routable on the Internet
+                if not user.has_perm('core.ext_acc'):
+                    raise PermissionDenied("Solo puede acceder desde la Intranet")
+            # else:
+            #     # The client's IP address is private
+            #     print(f'IP INTERNA: {client_ip}')
+
+
         token, created = Token.objects.get_or_create(user=user)
 
         fullname = '{} {}'.format(user.first_name, user.last_name)
@@ -66,7 +86,8 @@ class LinaAuthToken(ObtainAuthToken):
             'core.acc_linabi_catalog',
             'core.acc_linabi_saledocs_master',
             'core.acc_linabi_saledocs_datail',
-            'core.acc_linabi_sales_detail'
+            'core.acc_linabi_sales_detail',
+            'core.ext_acc'
             ]
 
         # all_permissions = User(is_superuser=True).get_all_permissions()

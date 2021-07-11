@@ -2,7 +2,7 @@
   <client-only>
     <div>
       <v-alert
-        v-show="error"
+        v-model="showAlert"
         type="error"
         text
         outlined
@@ -10,8 +10,10 @@
         dismissible
         dense
         icon="mdi-account-alert"
+        max-width="800"
+        class="mx-auto text-center"
       >
-        {{ error }}
+        {{ `${error.message} (codigo: ${error.statusCode})` }}
       </v-alert>
       <v-card max-width="400" class="mx-auto mt-16">
         <LinaLogo logosize="xstr" class="text-center logo_stack" />
@@ -98,6 +100,7 @@ export default {
     database: '',
     verify: '',
     show1: false,
+    showAlert: false,
     rules: {
       required: (value) => !!value || 'Requerido.',
       min: (v) => (v && v.length >= 8) || 'Min 8 caracteres',
@@ -105,6 +108,14 @@ export default {
   }),
   computed: {
     ...mapState('sistema', ['error']),
+  },
+  watch: {
+    error(newVal) {
+      const errcode = this.error.statusCode
+      if (errcode !== '0') {
+        this.showAlert = true
+      }
+    },
   },
   methods: {
     ...mapActions('sistema', ['setError']),

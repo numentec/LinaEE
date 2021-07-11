@@ -96,6 +96,10 @@ class User(AbstractUser):
 
         super(User, self).save(*args, **kwargs)
 
+    class Meta:
+        permissions =   [("ext_acc", "Allow external access")]
+    
+
 
 LinaUserModel = get_user_model()
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import CustomStore from 'devextreme/data/custom_store'
 
 export const namespaced = true
@@ -6,7 +7,7 @@ export const state = () => ({
   curuser: null,
   users: [],
   isLoading: false,
-  error: null,
+  error: { statusCode: 0, message: '' },
 })
 
 export const mutations = {
@@ -38,10 +39,36 @@ export const actions = {
       })
       .then(({ data }) => {
         commit('SET_USER_DATA', data.user)
-        commit('SET_ERROR', null)
+        commit('SET_ERROR', { statusCode: 0, message: '' })
       })
       .catch((err) => {
-        commit('SET_ERROR', err.response.data.non_field_errors[0])
+        let error
+
+        if (err.response) {
+          let msgerr = 'X'
+          if (err.response.data.non_field_errors) {
+            msgerr = err.response.data.non_field_errors[0]
+          } else if (err.response.data.detail) {
+            msgerr = err.response.data.detail
+          } else {
+            msgerr = err.response.statusText
+          }
+          error = {
+            statusCode: err.response.status,
+            message: msgerr,
+          }
+        } else if (error.request) {
+          error = {
+            statusCode: 503,
+            message: 'No hubo respuesta del servidor',
+          }
+        } else {
+          error = {
+            statusCode: 1010,
+            message: err.message,
+          }
+        }
+        commit('SET_ERROR', error)
       })
   },
 
