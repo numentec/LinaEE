@@ -1,5 +1,5 @@
-import django.core.serializers as ss
 # from django.core.exceptions import PermissionDenied
+from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -44,7 +44,11 @@ class LinaAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        client_ip, is_routable = get_client_ip(request)
+        # print(f'REQUEST META: {request.META}')
+        pc = getattr(settings, 'PROXY_COUNT', 0)
+        ptips = getattr(settings, 'PROXY_TRUSTED', [])
+
+        client_ip, is_routable = get_client_ip(request, proxy_count=pc, proxy_trusted_ips=ptips)
 
         if client_ip is None:
             # Unable to get the client's IP address
