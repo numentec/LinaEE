@@ -112,7 +112,7 @@ export default {
   watch: {
     error(newVal) {
       const errcode = this.error.statusCode
-      if (errcode !== '0') {
+      if (errcode !== 0) {
         this.showAlert = true
       }
     },

@@ -1,6 +1,12 @@
 <template>
   <div>
-    <v-img :src="imgSrc" :lazy-src="lazySrc" contain max-width="175">
+    <v-img
+      :src="imgSrc"
+      :lazy-src="lazySrc"
+      contain
+      max-width="175"
+      @error="onImgError"
+    >
       <template v-slot:placeholder>
         <v-row class="fill-height ma-0" align="center" justify="center">
           <v-progress-circular
@@ -30,16 +36,22 @@ export default {
   data() {
     return {
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+      imgErr: false,
     }
   },
   computed: {
     imgSrc() {
-      let imgsrc = this.imgFile.value
-      if (!this.fullPath) {
-        imgsrc =
-          this.$config.fotosURL + this.imgFile.value + this.$config.fotosExt
-      }
+      let imgsrc
 
+      if (this.imgErr) {
+        imgsrc = '/no_image.png'
+      } else {
+        imgsrc = this.imgFile.value
+        if (!this.fullPath) {
+          imgsrc =
+            this.$config.fotosURL + this.imgFile.value + this.$config.fotosExt
+        }
+      }
       return imgsrc
     },
     imgID() {
@@ -47,6 +59,12 @@ export default {
     },
   },
   mounted() {},
+  methods: {
+    onImgError() {
+      this.imgErr = true
+      this.$emit('no-image', { itemkey: this.imgFile.value })
+    },
+  },
 }
 </script>
 

@@ -14,8 +14,7 @@
           </v-tooltip>
           <v-toolbar-title>Catálogo de Productos</v-toolbar-title>
           <v-spacer />
-          <!-- <v-text-field v-model="testfilename" label="Outlined" outlined />
-          <v-btn dark icon @click="testMethod">
+          <!-- <v-btn dark icon @click="testMethod">
             <v-icon>mdi-test-tube</v-icon>
           </v-btn> -->
           <v-menu
@@ -281,8 +280,10 @@
           :hover-state-enabled="true"
           @content-ready="onContentReady"
           @cell-click="manageCellClick"
+          @context-menu-preparing="addMenuItems"
         >
           <DxColumn
+            id="FOTO"
             width="200"
             :allow-grouping="false"
             data-field="SKU"
@@ -291,6 +292,8 @@
             cell-template="imgCellTemplate"
             css-class="cell-highlighted"
             :allow-reordering="false"
+            :allow-sorting="false"
+            :allow-header-filtering="false"
           />
           <DxColumn
             v-for="xcol in colsConfig"
@@ -359,7 +362,7 @@
             />
           </template>
           <template #imgCellTemplate="{ data: cellData }">
-            <ImgForGrid :img-file="cellData" />
+            <ImgForGrid :img-file="cellData" @no-image="storeNoImg" />
           </template>
         </DxDataGrid>
       </div>
@@ -429,6 +432,7 @@ import saveAs from 'file-saver'
 import { jsPDF as JsPDF } from 'jspdf'
 import 'jspdf-autotable'
 import ExcelJS from 'exceljs'
+import JSZip from 'jszip'
 import { exportDataGrid as exportDataGridToPdf } from 'devextreme/pdf_exporter'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import MaterialCard from '~/components/core/MaterialCard'
@@ -446,14 +450,27 @@ const curGridRefKey = 'cur-grid'
 let collapsed = false
 let customTemplate = false
 
-async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
+function fileDownloader(url, ax) {
   // url = this.$config.publicURL + url
   // ax.onResponse((response) => {
   //   if (response.status === 404) {
   //       console.log('Oh no it returned a 404')
   //   }
   // })
+  return new Promise((resolve, reject) => {
+    ax.get(url, {
+      responseType: 'arraybuffer',
+    })
+      .then((response) => {
+        resolve(response.data)
+      })
+      .catch((err) => {
+        reject(err.toString())
+      })
+  })
+}
 
+async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   await ax
     .get(url, {
       responseType: 'arraybuffer',
@@ -494,6 +511,12 @@ function uniqByKeepLast(data, key) {
 //     })
 //   }
 // }
+
+const contextItems = [
+  { text: 'Todos' },
+  { text: 'Con foto' },
+  { text: 'Sin foto' },
+]
 
 export default {
   name: 'Catalogo',
@@ -601,6 +624,8 @@ export default {
       slideshow: false,
       curRowKey: '',
       curRowIndex: 0,
+      noImgList: [],
+      contextItems,
     }
   },
   computed: {
@@ -622,6 +647,18 @@ export default {
       }
       return result
     },
+    noImgFilters() {
+      return [
+        {
+          text: 'Con foto',
+          value: ['SKU', 'noneof', this.noImgList],
+        },
+        {
+          text: 'Sin foto',
+          value: ['SKU', 'anyof', this.noImgList],
+        },
+      ]
+    },
   },
   // watch: {
   //   menuFilter(val) {
@@ -641,13 +678,49 @@ export default {
     ...mapActions('linabi/catalogo', ['fetchData', 'addToCurCatalog']),
     ...mapActions('linabi/common', ['fetchVariants']),
     savePhotos() {
+      this.menuFilter = false
+
       const selectedRows = this.curGrid.getSelectedRowKeys()
 
-      selectedRows.forEach((rowKey) => {
-        const imgfile = rowKey + this.$config.fotosExt
+      if (selectedRows.length === 1) {
+        const imgfile = selectedRows[0] + this.$config.fotosExt
         const imgurl = this.$config.fotosURL + imgfile
         saveAs(imgurl, imgfile)
-      })
+      } else if (selectedRows.length > 1) {
+        const zipobj = new JSZip()
+        const zipFilename = 'photos.zip'
+        const promises = []
+
+        const ax = this.$axios.create({
+          baseURL: this.$config.fotosURL,
+          headers: {
+            common: {
+              Accept: 'image/*, application/json, text/plain, */*',
+            },
+          },
+        })
+
+        selectedRows.forEach((rowKey) => {
+          const imgfile = rowKey + this.$config.fotosExt
+          const imgurl = this.$config.fotosURL + imgfile
+
+          if (!this.noImgList.includes(rowKey)) {
+            const promise = fileDownloader(imgurl, ax).then((data) => {
+              zipobj.file(imgfile, data, { binary: true })
+            })
+
+            promises.push(promise)
+          }
+        })
+
+        if (promises.length === 0) return
+
+        Promise.all(promises).then(() => {
+          zipobj.generateAsync({ type: 'blob' }).then((content) => {
+            saveAs(content, zipFilename)
+          })
+        })
+      }
     },
     clearData() {
       this.dataSource = null
@@ -677,6 +750,7 @@ export default {
     closeBaseFilters(refresh) {
       this.showBaseFilters = false
       if (refresh) {
+        this.noImgList = []
         this.fetchData().then((store) => {
           this.dataSource = store
         })
@@ -1064,13 +1138,50 @@ export default {
     manageCellClick(e) {
       if (e.column) {
         if (e.column.name === 'FOTO') {
-          this.curRowKey = e.key
-          this.curRowIndex = e.rowIndex
-          this.slideshow = true
+          if (e.rowType === 'data') {
+            this.curRowKey = e.key
+            this.curRowIndex = e.rowIndex
+            this.slideshow = true
+          }
         }
       }
     },
+    storeNoImg(e) {
+      if (!this.noImgList.includes(e.itemkey)) {
+        this.noImgList.push(e.itemkey)
+      }
+    },
+    addMenuItems(e) {
+      if (e.target === 'header' && e.column.name === 'FOTO') {
+        if (!e.items) e.items = []
+        e.items.push(
+          {
+            text: 'Todos',
+            icon: 'selectall',
+            onItemClick: () => {
+              this.curGrid.filter((item) => true)
+            },
+          },
+          {
+            text: 'Con foto',
+            icon: 'photo',
+            onItemClick: () => {
+              this.curGrid.filter((item) => !this.noImgList.includes(item.SKU))
+            },
+          },
+          {
+            text: 'Sin foto',
+            icon: 'isblank',
+            onItemClick: () => {
+              this.curGrid.filter((item) => this.noImgList.includes(item.SKU))
+            },
+          }
+        )
+      }
+    },
     testMethod() {
+      this.curGrid.filter((item) => this.noImgList.includes(item.SKU))
+      // return ['SKU', 'noneof', this.noImgList]
       // const filename = 'plantillas/' + this.testfilename
       // const ax = this.$axios.create({
       //   baseURL: this.$config.mediaURL,
@@ -1082,7 +1193,6 @@ export default {
       // })
       // funcTest(ax, filename)
     },
-    testMethod2() {},
   },
   head() {
     return {
