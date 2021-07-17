@@ -183,5 +183,7 @@ STATIC_ROOT = '/linabe/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/linabe/media/'
 
+# PROXY_COUNT = 1
+# PROXY_TRUSTED = ['192.168.15.11']
 # PROXY_COUNT = environ.get("PROXY_COUNT")
 # PROXY_TRUSTED = environ.get("PROXY_TRUSTED")

@@ -394,6 +394,7 @@
       :cur-key="curRowKey"
       :cur-index="curRowIndex"
       :show-slideshow="slideshow"
+      :no-img-list="noImgList"
       @hideSlideshow="slideshow = false"
     />
     <v-snackbar v-model="snackbar" timeout="2000">

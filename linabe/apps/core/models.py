@@ -384,3 +384,39 @@ class StakeHolder(Common, Identidad):
                             ("create_socio", "Create partner"),
                             ("update_socio", "Update partner"),
                         )
+
+
+class DayOfWeek(models.Model):
+    name = models.CharField('Día', max_length=10, unique=True)
+    abr = models.CharField('Abreviatura', max_length=3, blank=True)
+
+    def __str__(self):
+        return 'Día {}'.format(self.name)
+
+    class Meta:
+        db_table = 'core_dayofweek'
+        verbose_name = 'Día'
+        verbose_name_plural = 'Días'
+
+def allDays():
+    daysList = DayOfWeek.objects.all()
+    return daysList
+
+# Modelo del sistema. Direcciones IP sin restricción por origen
+class IpWhiteList(Common):
+    ip_address = models. GenericIPAddressField('IP', unique=True)
+    descrip = models.CharField('Descripción', max_length=25, blank=True, default='')
+    reject = models.BooleanField('Rechazar', default=False, help_text="Marcar para denegar acceso desde esta IP")
+    hora_ini = models.TimeField('Hora de inicio', default='07:00:00')
+    hora_fin = models.TimeField('Hora de fin', default='18:00:00')
+    days = models.ManyToManyField(DayOfWeek, default=allDays(), verbose_name='Días con acceso')
+
+
+    def __str__(self):
+        return 'Dirección IP {}'.format(self.ip_address)
+
+    class Meta:
+        db_table = 'core_ipwhitelist'
+        verbose_name = 'Dirección IP'
+        verbose_name_plural = 'Direcciones IP'
+

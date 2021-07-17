@@ -109,6 +109,10 @@ export default {
       type: Array,
       default: () => [],
     },
+    noImgList: {
+      type: Array,
+      default: () => [],
+    },
   },
 
   data() {
@@ -151,7 +155,12 @@ export default {
   mounted() {},
   methods: {
     imgSrc(key) {
-      const imgsrc = this.$config.fotosURL + key + this.$config.fotosExt
+      let imgsrc = '/no_image.png'
+
+      if (!this.noImgList.includes(key)) {
+        imgsrc = this.$config.fotosURL + key + this.$config.fotosExt
+      }
+
       return imgsrc
     },
     showDetails() {

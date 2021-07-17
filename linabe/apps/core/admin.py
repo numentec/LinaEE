@@ -134,6 +134,36 @@ class StakeHolderAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'modified_at',)
 
 
+class DayOfWeekAdmin(admin.ModelAdmin):
+    """Días de la semana admin."""
+
+    list_display = ('id', 'name', 'abr')
+
+    search_fields = (
+        'id',
+        'name',
+        'abr',
+    )
+
+
+class IpWhiteListAdmin(admin.ModelAdmin):
+    """IP White list admin."""
+
+    list_display = ('id', 'ip_address', 'descrip', 'reject', 'is_active')
+
+    search_fields = (
+        'id',
+        'ip_address',
+    )
+
+    list_filter = (
+        'is_active',
+        'reject',
+    )
+
+    readonly_fields = ('created_at', 'modified_at',)
+
+
 admin.site.register(models.User, UserAdminx)
 admin.site.register(models.Cia, CiaAdmin)
 admin.site.register(models.TipoGenerico, TipoGenAdmin)
@@ -143,3 +173,5 @@ admin.site.register(models.Vista, VistaAdmin)
 admin.site.register(models.VistaConfig, VistaConfigAdmin)
 admin.site.register(models.VistaConfigUser, VistaConfigUserAdmin)
 admin.site.register(models.StakeHolder, StakeHolderAdmin)
+admin.site.register(models.DayOfWeek, DayOfWeekAdmin)
+admin.site.register(models.IpWhiteList, IpWhiteListAdmin)

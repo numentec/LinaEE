@@ -3,7 +3,7 @@ from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from .models import Cia, StakeHolder, User
+from .models import Cia, StakeHolder, User, IpWhiteList
 from .serializers import (
     CiaSerializer,
     UserSerializer,
@@ -30,6 +30,7 @@ from rest_framework.settings import api_settings
 from rest_framework.exceptions import PermissionDenied
 
 import json
+import datetime
 
 from ipware import get_client_ip
 
@@ -55,13 +56,25 @@ class LinaAuthToken(ObtainAuthToken):
             raise PermissionDenied("No se pudo comprobar la dirección de origen")
         else:
             # We got the client's IP address
-            if is_routable:
-                # The client's IP address is publicly routable on the Internet
-                if not user.has_perm('core.ext_acc'):
-                    raise PermissionDenied("Solo puede acceder desde la Intranet")
-            # else:
-            #     # The client's IP address is private
-            #     print(f'IP INTERNA: {client_ip}')
+            try:
+                nowtime = datetime.datetime.now().strftime("%H:%M:%S")
+                # print(f'HORA ACTUAL: {nowtime}')
+                ipwl = IpWhiteList.objects.get(
+                    ip_address=client_ip,
+                    hora_ini__lt=nowtime,
+                    hora_fin__gt=nowtime
+                )
+                if ipwl.reject:
+                    raise PermissionDenied("Acceso denegado para este origen")
+            except IpWhiteList.DoesNotExist:
+                
+                if is_routable:
+                    # The client's IP address is publicly routable on the Internet
+                    if not user.has_perm('core.ext_acc'):
+                        raise PermissionDenied("Solo puede acceder desde la Intranet")
+                # else:
+                #     # The client's IP address is private
+                #     print(f'IP INTERNA: {client_ip}')
 
 
         token, created = Token.objects.get_or_create(user=user)
