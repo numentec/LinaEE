@@ -7,6 +7,7 @@ export const namespaced = true
 export const state = () => ({
   curStore: [],
   curCatalog: [],
+  photosList: [],
   changes: [],
   curVariants: [],
   filters: {},
@@ -24,6 +25,9 @@ export const mutations = {
   },
   SET_CUR_CATALOG(state, payload) {
     state.curCatalog = payload
+  },
+  SET_PHOTOS_LIST(state, payload) {
+    state.photosList = payload
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
@@ -89,6 +93,17 @@ export const actions = {
     cc = cc.concat(payload)
 
     commit('SET_CUR_CATALOG', cc)
+
+    if (state.photosList.length === 0) {
+      const pl = Array.from(state.curCatalog, (item) => {
+        return {
+          sku: item.SKU,
+          imgsrc: this.$config.fotosURL + item.SKU + this.$config.fotosExt,
+          ordinal: 1,
+        }
+      })
+      commit('SET_PHOTOS_LIST', pl)
+    }
   },
   fetchData(context, localFilters = null) {
     context.commit('SET_LOADING_STATUS')
@@ -169,6 +184,31 @@ export const actions = {
   setCurCatalog({ commit }, payload) {
     commit('SET_CUR_CATALOG', payload)
   },
+  setPhotosList({ commit }, payload) {
+    commit('SET_PHOTOS_LIST', payload)
+  },
+  iniPhotosList({ commit, state }) {
+    const pl = Array.from(state.curCatalog, (item) => {
+      return {
+        sku: item.SKU,
+        imgsrc: this.$config.fotosURL + item.SKU + this.$config.fotosExt,
+        ordinal: 1,
+      }
+    })
+    commit('SET_PHOTOS_LIST', pl)
+  },
+  addToPhotosList({ commit, state }, payload) {
+    let pl = state.photosList
+    pl = pl.filter((el1) => {
+      return !payload.find((el2) => {
+        return el2.SKU === el1.SKU
+      })
+    })
+
+    pl = pl.concat(payload)
+
+    commit('SET_PHOTOS_LIST', pl)
+  },
   setChanges({ commit }, payload) {
     commit('SET_CHANGES', payload)
   },
@@ -196,6 +236,9 @@ export const getters = {
   },
   getCurCatalog(state) {
     return state.curCatalog
+  },
+  getPhotosList(state) {
+    return state.photosList
   },
   isLoading(state) {
     return state.isLoading

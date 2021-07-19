@@ -29,8 +29,16 @@
                   <v-list-item-icon>
                     <v-icon>mdi-content-save-all</v-icon>
                   </v-list-item-icon>
+                  <v-list-item-title @click.stop="snackbar = true">
+                    Publicar
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-icon>
+                    <v-icon>mdi-content-save-all</v-icon>
+                  </v-list-item-icon>
                   <v-list-item-title @click.stop="doExportExcel">
-                    Guardar
+                    Exportar
                   </v-list-item-title>
                 </v-list-item>
                 <v-list-item>
@@ -67,8 +75,9 @@
           </v-toolbar>
           <v-card-text class="mt-2">
             <v-tabs v-model="tab">
-              <v-tab key="tab0" dense> En construcción </v-tab>
-              <v-tab key="tab1" dense> Cargar archivo </v-tab>
+              <v-tab key="tab0" dense> En proceso </v-tab>
+              <v-tab key="tab1" dense> Importar </v-tab>
+              <v-tab key="tab2" dense> Publicados </v-tab>
               <v-tabs-items v-model="tab">
                 <v-tab-item key="tab0">
                   <DxDataGrid
@@ -84,8 +93,8 @@
                     :show-row-lines="false"
                     :show-borders="true"
                     height="500px"
-                    @selection-changed="showDetail"
                     @saving="onSaving"
+                    @cell-click="showDetail"
                   >
                     <DxEditing
                       :changes="changes"
@@ -134,14 +143,35 @@
                     <DxSelection mode="single" />
                     <DxLoadPanel :enable="true" />
                     <template #mdTemplate="{ data: cellData }">
-                      <v-row>
-                        <v-col>
-                          <ImgForGrid :img-file="{ value: cellData.key }" />
-                        </v-col>
-                        <v-col>
-                          <p>{{ cellData.data.DESCRIP_EN }}</p>
-                        </v-col>
-                      </v-row>
+                      <div id="dropzone-frame">
+                        <v-hover v-slot="{ hover }">
+                          <v-card
+                            clas="mx-auto"
+                            :class="{ 'on-hover': hover }"
+                            flat
+                            tile
+                            :outlined="hover || isDropZoneActive"
+                          >
+                            <DxTileView
+                              :items="photosByKey(cellData.key)"
+                              :height="200"
+                              :base-item-height="120"
+                              :base-item-width="185"
+                              width="100%"
+                              :item-margin="10"
+                            >
+                              <template #item="{ data }">
+                                <div
+                                  :style="{
+                                    backgroundImage: 'url(' + data.imgsrc + ')',
+                                  }"
+                                  class="dx-tile-image"
+                                />
+                              </template>
+                            </DxTileView>
+                          </v-card>
+                        </v-hover>
+                      </div>
                     </template>
                   </DxDataGrid>
                 </v-tab-item>
@@ -149,6 +179,7 @@
                   <v-card flat>
                     <v-form>
                       <DxFileUploader
+                        id="file-uploader1"
                         select-button-text="Explorar"
                         label-text="(Arrastre el archivo aquí)"
                         :allowed-file-extensions="['.xlsx', '.xls']"
@@ -165,6 +196,34 @@
           </v-card-text>
         </v-card>
       </v-dialog>
+      <DxFileUploader
+        id="file-uploader2"
+        dialog-trigger="#dropzone-frame"
+        drop-zone="#dropzone-frame"
+        :multiple="false"
+        :allowed-file-extensions="allowedFileExtensions"
+        upload-mode="instantly"
+        upload-url=""
+        :visible="false"
+        @drop-zone-enter="onDropZoneEnter"
+        @drop-zone-leave="onDropZoneLeave"
+        @uploaded="onUploaded"
+        @progress="onProgress"
+        @upload-started="onUploadStarted"
+      />
+      <v-snackbar v-model="snackbar" timeout="2000">
+        No implementado
+        <template v-slot:action="{ attrs }">
+          <v-btn
+            color="secondary"
+            text
+            v-bind="attrs"
+            @click="snackbar = false"
+          >
+            Cerrar
+          </v-btn>
+        </template>
+      </v-snackbar>
       <v-dialog v-model="replaceDialog" max-width="300">
         <v-card>
           <v-card-title class="headline"> ¿Reemplazar artículos? </v-card-title>
@@ -206,17 +265,13 @@ import {
 } from 'devextreme-vue/data-grid'
 import DxLoadPanel from 'devextreme-vue/load-panel'
 import DxFileUploader from 'devextreme-vue/file-uploader'
+import DxTileView from 'devextreme-vue/tile-view'
 import saveAs from 'file-saver'
 import ExcelJS from 'exceljs'
 import { exportDataGrid as exportDataGridToExcel } from 'devextreme/excel_exporter'
 import XLSX from 'xlsx'
-import ImgForGrid from '../utilities/ImgForGrid.vue'
 
 const curGridRefKey = 'cur-grid'
-// const makeCols = (refstr) =>
-//   Array(XLSX.utils.decode_range(refstr).e.c + 1)
-//     .fill(0)
-//     .map((x, i) => ({ name: XLSX.utils.encode_col(i), key: i }))
 
 export default {
   name: 'CatalogBuilder',
@@ -233,7 +288,7 @@ export default {
     DxSelection,
     DxLoadPanel,
     DxFileUploader,
-    ImgForGrid,
+    DxTileView,
   },
   props: {
     dialog: Boolean,
@@ -262,10 +317,15 @@ export default {
       rules: {
         required: (value) => !!value || 'Requerido.',
       },
+      showdetails: false,
+      curRowIndex: -1,
+      isDropZoneActive: false,
+      allowedFileExtensions: ['.jpg', '.jpeg', '.gif', '.png'],
+      snackbar: false,
     }
   },
   computed: {
-    ...mapGetters('linabi/catalogo', ['getCurCatalog']),
+    ...mapGetters('linabi/catalogo', ['getCurCatalog', 'getPhotosList']),
     changes: {
       get() {
         return this.$store.state.linabi.catalogo.changes
@@ -299,8 +359,20 @@ export default {
       this.menu = false
     },
     showDetail(e) {
-      e.component.collapseAll(-1)
-      e.component.expandRow(e.currentSelectedRowKeys[0])
+      if (e.rowType === 'data') {
+        if (this.curRowIndex !== e.rowIndex) {
+          this.showdetails = false
+          this.curRowIndex = e.rowIndex
+        }
+        this.showdetails = !this.showdetails
+        if (this.showdetails) {
+          e.component.collapseAll(-1)
+          e.component.expandRow(e.key)
+          // e.component.expandRow(e.currentSelectedRowKeys[0])
+        } else {
+          e.component.collapseAll(-1)
+        }
+      }
     },
     onSaving(e) {
       e.cancel = true
@@ -374,8 +446,35 @@ export default {
       this.menu = false
       alert(msg)
     },
+    photosByKey(key) {
+      return this.getPhotosList.filter((item) => item.sku === key)
+    },
+    // Upload image methods
+    onDropZoneEnter(e) {
+      if (e.dropZoneElement.id === 'dropzone-frame') {
+        this.isDropZoneActive = true
+      }
+    },
+    onDropZoneLeave(e) {
+      if (e.dropZoneElement.id === 'dropzone-frame') {
+        this.isDropZoneActive = false
+      }
+    },
+    onUploaded(e) {
+      // const file = e.file
+    },
+    onProgress(e) {},
+    onUploadStarted() {},
   },
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped>
+.dx-tile-image {
+  height: 100%;
+  width: 100%;
+  background-position: center;
+  background-size: cover;
+  display: block;
+}
+</style>

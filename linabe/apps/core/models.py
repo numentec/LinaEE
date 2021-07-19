@@ -417,6 +417,6 @@ class IpWhiteList(Common):
 
     class Meta:
         db_table = 'core_ipwhitelist'
-        verbose_name = 'Dirección IP'
-        verbose_name_plural = 'Direcciones IP'
+        verbose_name = 'IP Whitelist'
+        verbose_name_plural = 'IPs Whitelist'
 

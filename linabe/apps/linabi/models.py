@@ -6,18 +6,6 @@ from .attributs import attrs_catalog
 from ..core.models import Common, StakeHolder
 
 
-# Se asegura que el nombre de archivo de la plantilla
-# coincida con el campo "name" asignado por el usuario
-def template_path(instance, filename):
-    """Se asegura que el nombre de archivo de la plantilla
-    coincida con el campo "name" asignado por el usuario"""
-    ext = filename.split('.')[-1]
-    onlyname = getattr(instance, 'name').lower()
-    filename = f'{onlyname}.{ext}'
-
-    return os.path.join('plantillas/', filename)
-
-
 # Clase base abstracta para modelo transitorio.
 class TransientModel(models.Model):
     """Inherit from this class to use
@@ -54,6 +42,17 @@ class BIFavorito(Common):
     def __str_(self):
         return "Reporte {}".format(self.name)
 
+
+# Se asegura que el nombre de archivo de la plantilla
+# coincida con el campo "name" asignado por el usuario
+def template_path(instance, filename):
+    """Se asegura que el nombre de archivo de la plantilla
+    coincida con el campo "name" asignado por el usuario"""
+    ext = filename.split('.')[-1]
+    onlyname = getattr(instance, 'name').lower()
+    filename = f'{onlyname}.{ext}'
+
+    return os.path.join('plantillas/', filename)
 
 # Modelo para plantillas de Excel
 class BIXLSXTemplate(Common):
@@ -100,8 +99,8 @@ class BICustomCatalogCategory(Common):
     class Meta:
         unique_together = ('name', 'created_by',)
         db_table = 'linabi_customcatalogcat'
-        verbose_name = 'Categoria'
-        verbose_name_plural = 'Categorias'
+        verbose_name = 'Custom Category'
+        verbose_name_plural = 'Custom Categories'
 
 def defaultTTL():
     ttl = date.today + timedelta(days=5)
@@ -143,3 +142,23 @@ class BICustomCatalogDetail(Common):
 
     def __str_(self):
         return "Item {} - {} - {}".format(self.id, self.sku, self.catalog)
+
+
+# Ruta de las imágenes de un custom catalog específico
+def cc_path(instance, filename):
+    """Ruta de las imágenes de un custom catalog específico"""
+    itemd = getattr(instance, 'itemdetail')
+    ccdir = 'cc' + str(itemd.catalog.id) + '/'
+
+    return os.path.join('images/customcatalogs/', ccdir + filename)
+
+# Modelo para imágenes adicionales para cada item del detalle de catálogo personalizado
+class BICustomCatalogDetailImage(models.Model):
+    """Modelo para imágenes adicionales para items del detalle de catálogo personalizado"""
+    itemdetail = models.ForeignKey(BICustomCatalogDetail, on_delete=models.CASCADE)
+    image = models.ImageField('Imagen', upload_to=cc_path, blank=True)
+
+    class Meta:
+        db_table = 'linabi_customcatalogdimg'
+        verbose_name = 'Custom Catalog Image'
+        verbose_name_plural = 'Custom Catalogs Images'

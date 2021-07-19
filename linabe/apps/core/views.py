@@ -58,7 +58,6 @@ class LinaAuthToken(ObtainAuthToken):
             # We got the client's IP address
             try:
                 nowtime = datetime.datetime.now().strftime("%H:%M:%S")
-                # print(f'HORA ACTUAL: {nowtime}')
                 ipwl = IpWhiteList.objects.get(
                     ip_address=client_ip,
                     hora_ini__lt=nowtime,
