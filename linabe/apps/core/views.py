@@ -334,7 +334,6 @@ class GroupsList(ListAPIView):
 class ModuloViewSet(CommonViewSet):
     """ViewSet de módulos"""
     serializer_class = serializers.ModuloSerializer
-    # permission_classes = (CustomDjangoModelPermissions, )
 
     def get_queryset(self):
         return models.Modulo.objects.all()
@@ -401,6 +400,14 @@ class VistaConfigAccList(ListAPIView):
             acclist = models.VistaConfigAcc.objects.all()
 
         return acclist
+
+
+class SQLQueryViewSet(CommonViewSet):
+    """ViewSet de SQL queries"""
+    serializer_class = serializers.SQLQuerySerializer
+
+    def get_queryset(self):
+        return models.SQLQuery.objects.all()
 
 
 # class VistaElementViewSet(CommonViewSet):

@@ -395,8 +395,8 @@ class DayOfWeek(models.Model):
 
     class Meta:
         db_table = 'core_dayofweek'
-        verbose_name = 'Día'
-        verbose_name_plural = 'Días'
+        verbose_name = 'Dia'
+        verbose_name_plural = 'Dias'
 
 def allDays():
     daysList = DayOfWeek.objects.all()
@@ -409,7 +409,7 @@ class IpWhiteList(Common):
     reject = models.BooleanField('Rechazar', default=False, help_text="Marcar para denegar acceso desde esta IP")
     hora_ini = models.TimeField('Hora de inicio', default='07:00:00')
     hora_fin = models.TimeField('Hora de fin', default='18:00:00')
-    days = models.ManyToManyField(DayOfWeek, default=allDays(), verbose_name='Días con acceso')
+    days = models.ManyToManyField(DayOfWeek, default=allDays, verbose_name='Días con acceso')
 
 
     def __str__(self):
@@ -420,3 +420,32 @@ class IpWhiteList(Common):
         verbose_name = 'IP Whitelist'
         verbose_name_plural = 'IPs Whitelist'
 
+
+# Modelo del sistema. Consultas SQL por vista
+class SQLQuery(Common):
+
+    DB_CHOICES = [
+        ('MARIDB', 'MariaDB'),
+        ('MYSQL', 'My SQL'),
+        ('ORACLE', 'ORACLE DB'),
+        ('SQLITE', 'SQLite'),
+        ('MSSQL', 'MS SQL Server'),
+    ]
+
+    name  = models.CharField('Nombre', max_length=25, default='SQL')
+    content = models.TextField('Contenido', blank=True, default='')
+    ordinal = models.IntegerField('Ordinal', default=1)
+    dbtype = models.CharField('DB Type', max_length=6, choices=DB_CHOICES, default='MARYDB')
+    dbuser = models.CharField('DB User', max_length=15, blank=True)
+    dbpass = models.CharField('DB Password', max_length=15, blank=True)
+    comment = models.CharField('Comentario', max_length=50, blank=True)
+    vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista', related_name='sqlquery_x_vista')
+
+    def __str__(self):
+        return 'SQL Query {}'.format(self.name)
+
+    class Meta:
+        db_table = 'core_sqlquery'
+        verbose_name = 'Consulta SQl por vista'
+        verbose_name_plural = 'Consultas SQl por vista'
+        ordering = ['vista', 'ordinal']

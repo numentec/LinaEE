@@ -231,6 +231,11 @@ class ModuloSerializer(serializers.ModelSerializer):
         fields = ('id', 'nombre', 'descrip', 'tipo', 'is_active', 'vistas_x_modulo')
 
 
+class SQLQuerySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.SQLQuery
+        fields = ('id', 'name', 'is_active', 'content', 'ordinal', 'dbtype', 'dbuser', 'dbpass', 'vista')
 # class VistaElementAccessSerializer(serializers.ModelSerializer):
 
 #     class Meta:

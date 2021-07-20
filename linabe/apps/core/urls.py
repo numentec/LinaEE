@@ -17,6 +17,7 @@ router.register(r'vistas-conf', views.VistaConfigViewSet, basename='vistas-conf'
 router.register(r'vistas-conf-usr', views.VistaConfigUserViewSet, basename='vistas-conf-usr')
 router.register(r'vistaconfacc', views.VistaConfigAccViewSet, basename='vistaconfacc')
 router.register(r'profiles', views.ProfileViewSet, basename='profiles')
+router.register(r'sqlqueries', views.SQLQueryViewSet, basename='sqlqueries')
 
 urlpatterns = [
     path('login/', views.LinaAuthToken.as_view(), name='login'),

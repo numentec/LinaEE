@@ -8,6 +8,7 @@ from drf_dx_datagrid import DxModelViewSet
 from . import models
 from . import serializers
 from ..core.views import CommonViewSet
+from ..core.models import SQLQuery
 
 
 class ListAsQuerySet(list):
@@ -24,6 +25,7 @@ class ListAsQuerySet(list):
 
 class CommonListsAPIView(APIView):
     """Listas de parámetros comunes (clientes, vendedores, categorías, etc."""
+    # Vista Nº 19
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -37,11 +39,14 @@ class CommonListsAPIView(APIView):
 
         result = []
 
+        query = SQLQuery.objects.get(vista = 19, ordinal = 1)
+
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_LISTS', [p01, refCursor])
+            # cursor.callproc('DMC.LINA_LISTS', [p01, refCursor])
+            cursor.callproc(query.content, [p01, refCursor])
 
             descrip = refCursor.description
 
@@ -53,6 +58,7 @@ class CommonListsAPIView(APIView):
 
 class TallasBCAPIView(APIView):
     """Lista de codigo de barras por talla"""
+    # Vista Nº 20
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -67,11 +73,14 @@ class TallasBCAPIView(APIView):
 
         result = []
 
+        query = SQLQuery.objects.get(vista = 20, ordinal = 1)
+
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_TALLASBC', params + [refCursor])
+            # cursor.callproc('DMC.LINA_TALLASBC', params + [refCursor])
+            cursor.callproc(query.content, params + [refCursor])
 
             descrip = refCursor.description
 
@@ -127,6 +136,7 @@ class CatalogModelViewSet(DxModelViewSet):
 
 class CatalogAPIView(APIView):
     """Catálogo - Lista de productos"""
+    # Vista Nº 14
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -167,8 +177,11 @@ class CatalogAPIView(APIView):
 
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
+        qrys = SQLQuery.objects.filter(vista=14)
+
         result = []
-        qrycalling = 'DMC.LINAEE_QRYCATALOGO'
+        # qrycalling = 'DMC.LINAEE_QRYCATALOGO'
+        qrycalling = qrys[0].content
         skulist = False
 
         # Preparar lista de SKUs o codigos de barra
@@ -183,7 +196,8 @@ class CatalogAPIView(APIView):
             if (p02 not in ['sku', 'bc']):
                 p02 = 'SKU'
             params = [p01, p02]
-            qrycalling = 'DMC.LINAEE_QRYCATALOGO_SKU'
+            # qrycalling = 'DMC.LINAEE_QRYCATALOGO_SKU'
+            qrycalling = qrys[1].content
 
         with connections['extdb1'].cursor() as cursor:
 
