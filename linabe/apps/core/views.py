@@ -28,6 +28,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.exceptions import PermissionDenied
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 
 import json
 import datetime
@@ -35,6 +37,23 @@ import datetime
 from ipware import get_client_ip
 
 LinaUserModel = get_user_model()
+
+# Listar usuarios con sesión iniciada
+def get_all_logged_in_users():
+    # Query all non-expired sessions
+    # use timezone.now() instead of datetime.now() in latest versions of Django
+    # sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    sessions = Session.objects.filter(expire_date__gte=datetime.datetime.now())
+    uid_list = []
+
+    # Build a list of user ids from that query
+    for session in sessions:
+        data = session.get_decoded()
+        uid_list.append(data.get('_auth_user_id', None))
+
+    # Query all logged in users based on id list
+    return LinaUserModel.objects.filter(id__in=uid_list)
+
 
 class LinaAuthToken(ObtainAuthToken):
     """Autenticación por token"""

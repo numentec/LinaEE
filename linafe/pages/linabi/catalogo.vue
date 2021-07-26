@@ -81,6 +81,14 @@
                     </v-list-item-content>
                   </v-list-item>
                 </template>
+                <v-list-item v-show="expDetail">
+                  <v-list-item-action>
+                    <v-switch v-model="variantes"></v-switch>
+                  </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title>Variantes</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
                 <v-list-item link>
                   <v-list-item-content>
                     <v-list-item-title @click.stop="exportGrid(1)">
@@ -92,13 +100,6 @@
                   <v-list-item-content>
                     <v-list-item-title @click.stop="selTemplate">
                       Excel - Plantilla
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item v-show="expDetail" link>
-                  <v-list-item-content>
-                    <v-list-item-title @click.stop="exportGrid(2)">
-                      Excel BC
                     </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
@@ -357,7 +358,7 @@
           </DxSummary>
           <template #mdTemplate="{ data }">
             <ProdVariants
-              :variant-data="data"
+              :variant-data="data.key"
               :variant-title="'Códigos de Barra por Talla'"
             />
           </template>
@@ -471,34 +472,60 @@ function fileDownloader(url, ax) {
   })
 }
 
-async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
-  await ax
-    .get(url, {
-      responseType: 'arraybuffer',
-    })
-    .then((response) => {
-      const base64Img = Buffer.from(response.data, 'binary').toString('base64')
+// async function imgDownload(url, ax) {
+//   await ax
+//     .get(url, {
+//       responseType: 'arraybuffer',
+//     })
+//     .then((response) => {
+//       const base64Img = Buffer.from(response.data, 'binary').toString('base64')
 
-      const image = workbook.addImage({
-        base64: base64Img,
-        extension: 'JPEG',
-      })
+//       return base64Img
+//     })
+//     .catch(() => {})
+// }
 
-      worksheet.getRow(excelCell.row).height = 100
-      worksheet.addImage(image, {
-        tl: { col: excelCell.col - 1, row: excelCell.row - 1 },
-        br: { col: excelCell.col, row: excelCell.row },
-      })
+// async function addImageExcel(
+//   url,
+//   workbook,
+//   worksheet,
+//   excelCell,
+//   ax,
+//   resolve,
+//   indx
+// ) {
+//   await ax
+//     .get(url, {
+//       responseType: 'arraybuffer',
+//     })
+//     .then((response) => {
+//       const base64Img = Buffer.from(response.data, 'binary').toString('base64')
 
-      resolve()
-    })
-    .catch(() => {
-      // if (err.response.status === 404) {
-      worksheet.getRow(excelCell.row).height = 100
-      resolve()
-      // }
-    })
-}
+//       const image = workbook.addImage({
+//         base64: base64Img,
+//         extension: 'JPEG',
+//       })
+
+//       worksheet.getRow(excelCell.row).height = 100
+//       // worksheet.addImage(image, {
+//       //   tl: { col: excelCell.col - 1, row: excelCell.row - 1 },
+//       //   br: { col: excelCell.col, row: excelCell.row },
+//       // })
+//       console.log('INDX VALUE', indx)
+//       worksheet.addImage(image, {
+//         tl: { col: excelCell.col - 1, row: indx - 1 },
+//         br: { col: excelCell.col, row: indx },
+//       })
+
+//       resolve()
+//     })
+//     .catch(() => {
+//       // if (err.response.status === 404) {
+//       worksheet.getRow(excelCell.row).height = 100
+//       resolve()
+//       // }
+//     })
+// }
 
 function uniqByKeepLast(data, key) {
   return [...new Map(data.map((x) => [key(x), x])).values()]
@@ -591,7 +618,7 @@ export default {
       curGridRefKey,
       selFunction,
       dataSource: null,
-      curDetail: [],
+      variantes: false,
       menuConf: false,
       snackbar: false,
       setConf: {
@@ -627,6 +654,16 @@ export default {
       curRowIndex: 0,
       noImgList: [],
       contextItems,
+      curImgList: [],
+      rowHeaderIndex: [2],
+      imgax: this.$axios.create({
+        baseURL: this.$config.fotosURL,
+        headers: {
+          common: {
+            Accept: 'image/*, application/json, text/plain, */*',
+          },
+        },
+      }),
     }
   },
   computed: {
@@ -645,7 +682,11 @@ export default {
           const grd = this.$refs[curGridRefKey].instance
           result = grd.columnOption('TALLA', 'visible')
         }
+        if (!result) {
+          this.makeVariantFalse()
+        }
       }
+
       return result
     },
     noImgFilters() {
@@ -818,7 +859,7 @@ export default {
 
       setTimeout(() => {
         this.curGrid.endCustomLoading()
-        this.exportGrid(4)
+        this.exportGrid(2)
       }, 500)
     },
     closeSelTemplate() {
@@ -858,33 +899,20 @@ export default {
       const selectedRows = this.curGrid.getSelectedRowKeys()
 
       if (selectedRows.length > 0) {
-        const ax = this.$axios.create({
-          baseURL: this.$config.fotosURL,
-          headers: {
-            common: {
-              Accept: 'image/*, application/json, text/plain, */*',
-            },
-          },
-        })
-
         // Exportar a Excel
         if (opc === 1) {
           const savingFilename = 'Catalog.xlsx'
           const workbook = new ExcelJS.Workbook()
-          const worksheet = workbook.addWorksheet(savingFilename)
           const tLC = { row: 1, column: 1 }
-          this.doExportExcel(workbook, worksheet, savingFilename, tLC, ax, [])
-        }
-
-        // Exportar a Excel con detalle de códigos de barra
-        if (opc === 2) {
-          this.fetchVariants({ sku: selectedRows }).then((vv) => {
-            const savingFilename = 'CatalogBC.xlsx'
-            const workbook = new ExcelJS.Workbook()
-            const worksheet = workbook.addWorksheet(savingFilename)
-            const tLC = { row: 1, column: 1 }
-            this.doExportExcel(workbook, worksheet, savingFilename, tLC, ax, vv)
-          })
+          const worksheet = workbook.addWorksheet(savingFilename)
+          if (this.variantes) {
+            // Exportar a Excel con detalle de códigos de barra
+            this.fetchVariants({ sku: selectedRows }).then((vv) => {
+              this.doExportExcel(workbook, worksheet, savingFilename, tLC, vv)
+            })
+          } else {
+            this.doExportExcel(workbook, worksheet, savingFilename, tLC, [])
+          }
         }
 
         // Exportar a PDF
@@ -892,13 +920,12 @@ export default {
           this.doExportPDF()
         }
 
-        // Exportar a Excel usando plantilla (Tova)
-        // http://192.168.1.50:8001/media/xlsx_templates/
-        if (opc === 4) {
+        // Exportar a Excel usando plantilla
+        if (opc === 2) {
           customTemplate = true
-          const template = this.plantilla.name
+          const template = 'plantillas/' + this.plantilla.name
           const axx = this.$axios.create({
-            baseURL: this.$config.publicURL + '/media/xlsxtemplates/',
+            baseURL: this.$config.mediaURL,
           })
           axx
             .get(template, {
@@ -917,14 +944,26 @@ export default {
                   column: this.plantilla.col,
                 }
 
-                this.doExportExcel(
-                  workbook,
-                  worksheet,
-                  savingFilename,
-                  topLeftCell,
-                  ax,
-                  []
-                )
+                if (this.variantes) {
+                  // Exportar a Excel con detalle de códigos de barra
+                  this.fetchVariants({ sku: selectedRows }).then((vv) => {
+                    this.doExportExcel(
+                      workbook,
+                      worksheet,
+                      savingFilename,
+                      topLeftCell,
+                      [vv]
+                    )
+                  })
+                } else {
+                  this.doExportExcel(
+                    workbook,
+                    worksheet,
+                    savingFilename,
+                    topLeftCell,
+                    []
+                  )
+                }
               })
             })
         }
@@ -989,7 +1028,6 @@ export default {
       worksheet,
       savingFilename,
       topLeftCell = { row: 1, column: 1 },
-      ax,
       vv = []
     ) {
       const PromiseArray = []
@@ -1006,20 +1044,44 @@ export default {
         customizeCell: ({ excelCell, gridCell }) => {
           if (gridCell.rowType === 'data') {
             if (gridCell.column.name === 'FOTO') {
-              // excelCell.value = undefined
-              const imgfile = gridCell.value + this.$config.fotosExt
-              PromiseArray.push(
-                new Promise((resolve, reject) => {
-                  addImageExcel(
-                    imgfile,
-                    workbook,
-                    worksheet,
-                    excelCell,
-                    ax,
-                    resolve
-                  )
-                })
-              )
+              excelCell.value = undefined
+              if (gridCell.value) {
+                const imgfile = gridCell.value + this.$config.fotosExt
+
+                PromiseArray.push(
+                  new Promise((resolve, reject) => {
+                    this.addImageExcel(
+                      imgfile,
+                      workbook,
+                      worksheet,
+                      excelCell,
+                      topLeftCell.row,
+                      resolve
+                    )
+                  })
+                )
+              }
+
+              // if (gridCell.value) {
+              //   console.log('FULL GRIDCELL', gridCell)
+              //   console.log('FULL EXCEL CELL', excelCell)
+              //   console.log('EXCEL FULL ADDRESS ROW', excelCell.fullAddress.row)
+              //   const b64img = this.curImgList.find(
+              //     (el) => el.sku === gridCell.value
+              //   )
+
+              //   const image = workbook.addImage({
+              //     base64: b64img.img,
+              //     extension: 'JPEG',
+              //   })
+
+              //   worksheet.getRow(excelCell.row).height = 100
+              //   worksheet.addImage(image, {
+              //     tl: { col: excelCell.col - 1, row: excelCell.row - 1 },
+              //     br: { col: excelCell.col, row: excelCell.row },
+              //     editAs: undefined,
+              //   })
+              // }
             }
 
             if (gridCell.column.dataField === 'TALLA' && vv.length > 0) {
@@ -1033,9 +1095,6 @@ export default {
             if (gridCell.rowType === 'totalFooter' && excelCell.value) {
               excelCell.value = null
             }
-            // if (gridCell.rowType === 'header') {
-            //   excelCell.value = null
-            // }
           }
         },
       })
@@ -1053,6 +1112,7 @@ export default {
               color: { argb: 'FF7E7E7E' },
             }
             let offset = 0
+            let xrow
 
             const insertRow = (index, offset, outlineLevel) => {
               const currentIndex = index + offset
@@ -1070,9 +1130,9 @@ export default {
             }
 
             for (let i = 0; i < masterRows.length; i++) {
-              // const columnIndex = cellRange.from.column + 1
-              const columnIndex =
-                this.curGrid.columnOption('TALLA', 'visibleIndex') - 1
+              const columnIndex = cellRange.from.column + 1
+              // const columnIndex =
+              //   this.curGrid.columnOption('TALLA', 'visibleIndex') - 1
 
               // const prodData = this.curStore.find(
               //   (item) => item.SKU === masterRows[i].data.SKU
@@ -1082,6 +1142,7 @@ export default {
               const columns = ['TALLA', 'BARCODE']
 
               const row = insertRow(masterRows[i].rowIndex + i, offset++, 2)
+              row.height = 15
               columns.forEach((columnName, currentColumnIndex) => {
                 Object.assign(row.getCell(columnIndex + currentColumnIndex), {
                   value: columnName,
@@ -1100,8 +1161,12 @@ export default {
                 })
               })
 
+              xrow = row
+
               getProdVariants(vv, prodSKU).forEach((variant, index) => {
                 const row = insertRow(masterRows[i].rowIndex + i, offset++, 2)
+                row.height = 15
+                xrow = row
 
                 columns.forEach((columnName, currentColumnIndex) => {
                   Object.assign(row.getCell(columnIndex + currentColumnIndex), {
@@ -1121,6 +1186,9 @@ export default {
                 })
               })
               offset--
+              if (xrow) {
+                this.rowHeaderIndex.push(xrow.number + 1)
+              }
             }
           }
         })
@@ -1132,6 +1200,8 @@ export default {
                 savingFilename
               )
               this.busyWith = false
+              // this.rowHeaderIndex = [2]
+              this.rowHeaderIndex = [topLeftCell.row + 1]
             })
           })
         })
@@ -1180,20 +1250,72 @@ export default {
         )
       }
     },
-    testMethod() {
-      this.curGrid.filter((item) => this.noImgList.includes(item.SKU))
-      // return ['SKU', 'noneof', this.noImgList]
-      // const filename = 'plantillas/' + this.testfilename
-      // const ax = this.$axios.create({
-      //   baseURL: this.$config.mediaURL,
-      //   headers: {
-      //     common: {
-      //       Accept: 'application/json, text/plain, */*',
-      //     },
-      //   },
-      // })
-      // funcTest(ax, filename)
+    async addImageExcel(url, workbook, worksheet, excelCell, inirow, resolve) {
+      await this.imgax
+        .get(url, {
+          responseType: 'arraybuffer',
+        })
+        .then((response) => {
+          const base64Img = Buffer.from(response.data, 'binary').toString(
+            'base64'
+          )
+
+          const image = workbook.addImage({
+            base64: base64Img,
+            extension: 'JPEG',
+          })
+
+          let indx = excelCell.row
+
+          if (this.rowHeaderIndex.length > 1) {
+            const imgIndex = excelCell.row - (inirow + 1)
+            indx = this.rowHeaderIndex[imgIndex]
+          }
+
+          worksheet.getRow(indx).height = 100
+
+          worksheet.addImage(image, {
+            tl: { col: excelCell.col - 1, row: indx - 1 },
+            br: { col: excelCell.col, row: indx },
+          })
+
+          resolve()
+        })
+        .catch(() => {
+          // worksheet.getRow(excelCell.row).height = 15
+          resolve()
+        })
     },
+    makeVariantFalse() {
+      this.variantes = false
+    },
+    // testMethod() {
+    //   const selectedRows = this.curGrid.getSelectedRowKeys()
+    //   const ax = this.$axios.create({
+    //     baseURL: this.$config.fotosURL,
+    //     headers: {
+    //       common: {
+    //         Accept: 'image/*, application/json, text/plain, */*',
+    //       },
+    //     },
+    //   })
+
+    //   selectedRows.forEach(async (imgname) => {
+    //     const url = imgname + '.jpg'
+    //     await ax
+    //       .get(url, {
+    //         responseType: 'arraybuffer',
+    //       })
+    //       .then((response) => {
+    //         const base64Img = Buffer.from(response.data, 'binary').toString(
+    //           'base64'
+    //         )
+
+    //         this.curImgList.push({ sku: imgname, img: base64Img })
+    //       })
+    //       .catch(() => {})
+    //   })
+    // },
   },
   head() {
     return {

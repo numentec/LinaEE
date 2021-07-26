@@ -155,20 +155,20 @@ class CatalogAPIView(APIView):
         # p12 - Fecha inicial del periodo a consultar
         # p13 - Fecha final del periodo a consultar
         # p14 - Existencia (Todos = 1, Disponible = 2, A futuro = 3)
-        p01 = str(request.query_params.get('p01', '%')).lower()
-        p02 = str(request.query_params.get('p02', '%')).lower()
-        p03 = str(request.query_params.get('p03', '%')).lower()
-        p04 = str(request.query_params.get('p04', '%')).lower()
-        p05 = str(request.query_params.get('p05', '%')).lower()
-        p06 = str(request.query_params.get('p06', '%')).lower()
-        p07 = str(request.query_params.get('p07', '%')).lower()
-        p08 = str(request.query_params.get('p08', '%')).lower()
-        p09 = str(request.query_params.get('p09', '%')).lower()
-        p10 = str(request.query_params.get('p10', '%')).lower()
+        p01 = str(request.query_params.get('p01', '%')).lower().strip()
+        p02 = str(request.query_params.get('p02', '%')).lower().strip()
+        p03 = str(request.query_params.get('p03', '%')).lower().strip()
+        p04 = str(request.query_params.get('p04', '%')).lower().strip()
+        p05 = str(request.query_params.get('p05', '%')).lower().strip()
+        p06 = str(request.query_params.get('p06', '%')).lower().strip()
+        p07 = str(request.query_params.get('p07', '%')).lower().strip()
+        p08 = str(request.query_params.get('p08', '%')).lower().strip()
+        p09 = str(request.query_params.get('p09', '%')).lower().strip()
+        p10 = str(request.query_params.get('p10', '%')).lower().strip()
         p11 = str(request.query_params.get('p11', 0)).lower()
-        p12 = str(request.query_params.get('p12', '2021-01-01')).lower()
-        p13 = str(request.query_params.get('p13', '2021-01-01')).lower()
-        p14 = str(request.query_params.get('p14', '1')).lower()
+        p12 = str(request.query_params.get('p12', '2021-01-01')).lower().strip()
+        p13 = str(request.query_params.get('p13', '2021-01-01')).lower().strip()
+        p14 = str(request.query_params.get('p14', '1')).lower().strip()
 
         pvals = p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12 + p13 + p14
 
@@ -216,6 +216,7 @@ class CatalogAPIView(APIView):
 
 class SaleDocsMAPIView(APIView):
     """Documentos de ventas"""
+    # Vista 16
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -228,13 +229,13 @@ class SaleDocsMAPIView(APIView):
         # p13 - Fecha final del periodo a consultar
         # p15 - Tipo de documento: Cotización (COT), Pedido cotizado (PEDCOT), pedido confirmado (PEDCONF), factura (FAC)
 
-        p01 = str(request.query_params.get('p01', '0')).lower()
-        p02 = str(request.query_params.get('p02', '%')).lower()
-        p03 = str(request.query_params.get('p03', '%')).lower()
-        p11 = str(request.query_params.get('p11', '0')).lower()
-        p12 = str(request.query_params.get('p12', '2021-01-01'))
-        p13 = str(request.query_params.get('p13', '2021-01-31'))
-        p15 = str(request.query_params.get('p15', 'COT'))
+        p01 = str(request.query_params.get('p01', '0')).lower().strip()
+        p02 = str(request.query_params.get('p02', '%')).lower().strip()
+        p03 = str(request.query_params.get('p03', '%')).lower().strip()
+        p11 = str(request.query_params.get('p11', '0')).lower().strip()
+        p12 = str(request.query_params.get('p12', '2021-01-01')).strip()
+        p13 = str(request.query_params.get('p13', '2021-01-31')).strip()
+        p15 = str(request.query_params.get('p15', 'COT')).strip()
 
         pvals = p01 + p02 + p03 + p11 + p12 + p13 + p15
 
@@ -248,11 +249,14 @@ class SaleDocsMAPIView(APIView):
 
         result = []
 
+        qrys = SQLQuery.objects.filter(vista=16)
+        qrycalling = qrys[0].content    # 'DMC.LINA_QRYSALEDOCSM'
+
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_QRYSALEDOCSM', params + [refCursor])
+            cursor.callproc(qrycalling, params + [refCursor])
 
             descrip = refCursor.description
 
@@ -265,6 +269,7 @@ class SaleDocsMAPIView(APIView):
 
 class SaleDocsDAPIView(APIView):
     """Detalle de documentos de ventas"""
+    # Vista 17
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -272,8 +277,8 @@ class SaleDocsDAPIView(APIView):
         # p01 - Lista con los números de documentos a consultar
         # p15 - Tipo de documento: Cotización (COT), Pedido cotizado (PEDCOT), pedido confirmado (PEDCONF), factura (FAC)
         
-        p01 = str(request.query_params.get('p01', '0')).lower()
-        p15 = str(request.query_params.get('p15', 'COT'))
+        p01 = str(request.query_params.get('p01', '0')).lower().strip()
+        p15 = str(request.query_params.get('p15', 'COT')).strip()
 
         pvals = p01 + p15
 
@@ -284,11 +289,14 @@ class SaleDocsDAPIView(APIView):
 
         result = []
 
+        qrys = SQLQuery.objects.filter(vista=17)
+        qrycalling = qrys[0].content    # 'DMC.LINA_QRYSALEDOCSD'
+
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_QRYSALEDOCSD', params + [refCursor])
+            cursor.callproc(qrycalling, params + [refCursor])
 
             descrip = refCursor.description
 
@@ -301,6 +309,7 @@ class SaleDocsDAPIView(APIView):
 
 class SalesDetailAPIView(APIView):
     """Detalle de ventas"""
+    # Vista 18
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -308,18 +317,18 @@ class SalesDetailAPIView(APIView):
         # p01 - Lista de SKUs
         # p02 - Lista de Marcas
         # p03 - Categoría
-        # p11 - Tipo de consulta: Listado por números de documentos, por periodo (0, 1)
+        # p11 - Tipo de consulta: Listado por lista de SKUs, por periodo (0, 1)
         # p12 - Fecha inicial del periodo a consultar
         # p13 - Fecha final del periodo a consultar
         # p15 - Tipo de documento: Cotización (COT), Pedido cotizado (PEDCOT), pedido confirmado (PEDCONF), factura (FAC)
         
-        p01 = str(request.query_params.get('p01', '0')).lower()
-        p02 = str(request.query_params.get('p02', '%')).lower()
-        p03 = str(request.query_params.get('p03', '%')).lower()
-        p11 = str(request.query_params.get('p11', '0')).lower()
-        p12 = str(request.query_params.get('p12', '2021-01-01'))
-        p13 = str(request.query_params.get('p13', '2021-01-31'))
-        p15 = str(request.query_params.get('p15', 'COT'))
+        p01 = str(request.query_params.get('p01', '0')).lower().strip()
+        p02 = str(request.query_params.get('p02', '%')).lower().strip()
+        p03 = str(request.query_params.get('p03', '%')).lower().strip()
+        p11 = str(request.query_params.get('p11', '0')).lower().strip()
+        p12 = str(request.query_params.get('p12', '2021-01-01')).strip()
+        p13 = str(request.query_params.get('p13', '2021-01-31')).strip()
+        p15 = str(request.query_params.get('p15', 'COT')).strip()
 
         pvals = p01 + p02 + p03 + p11 + p12 + p13 + p15
         print(pvals)
@@ -328,19 +337,28 @@ class SalesDetailAPIView(APIView):
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         if p01 != '0':
-            p11 = '0'
+            p11 = 0
         else:
             p11 = 1
+
+        # Preparar lista de SKUs o codigos de barra
+        if (',' in p01):
+            p01 = p01.replace(' ', '')
+        elif (' ' in p01):
+            p01 = p01.replace(' ', ',')
 
         params = [p01, p02, p03, p11, p12, p13, p15]
 
         result = []
 
+        qrys = SQLQuery.objects.filter(vista=18)
+        qrycalling = qrys[0].content
+
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINA_QRYSALESDETAIL', params + [refCursor])
+            cursor.callproc(qrycalling, params + [refCursor])
 
             descrip = refCursor.description
 
@@ -353,6 +371,7 @@ class SalesDetailAPIView(APIView):
 
 class FavoritoModelViewset(CommonViewSet):
     """Vista para CRUD de Favoritos"""
+    # Vista 15
     serializer_class = serializers.BIFavoritoSerializer
 
     queryset = models.BIFavorito.objects.all()

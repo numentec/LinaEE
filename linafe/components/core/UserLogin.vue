@@ -54,6 +54,7 @@
                 </v-col>
                 <v-col cols="12">
                   <v-select
+                    v-show="showdb"
                     v-model="database"
                     prepend-icon="mdi-database-lock-outline"
                     label="Base de Datos"
@@ -101,6 +102,7 @@ export default {
     verify: '',
     show1: false,
     showAlert: false,
+    showdb: false,
     rules: {
       required: (value) => !!value || 'Requerido.',
       min: (v) => (v && v.length >= 8) || 'Min 8 caracteres',

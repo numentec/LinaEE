@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <div>
     <h4>{{ variantTitle }}</h4>
@@ -26,8 +27,8 @@ export default {
   components: { DxDataGrid, DxColumn, VueBarcode },
   props: {
     variantData: {
-      type: Object,
-      default: () => {},
+      type: String,
+      default: '',
     },
     variantTitle: {
       type: String,
@@ -36,7 +37,7 @@ export default {
   },
   computed: {
     dataSource() {
-      const sku = this.variantData.key
+      const sku = this.variantData
 
       const store = this.fetchVariants(sku)
 
