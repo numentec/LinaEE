@@ -466,66 +466,12 @@ function fileDownloader(url, ax) {
       .then((response) => {
         resolve(response.data)
       })
-      .catch((err) => {
-        reject(err.toString())
+      .catch(() => {
+        // reject(err.toString())
+        resolve()
       })
   })
 }
-
-// async function imgDownload(url, ax) {
-//   await ax
-//     .get(url, {
-//       responseType: 'arraybuffer',
-//     })
-//     .then((response) => {
-//       const base64Img = Buffer.from(response.data, 'binary').toString('base64')
-
-//       return base64Img
-//     })
-//     .catch(() => {})
-// }
-
-// async function addImageExcel(
-//   url,
-//   workbook,
-//   worksheet,
-//   excelCell,
-//   ax,
-//   resolve,
-//   indx
-// ) {
-//   await ax
-//     .get(url, {
-//       responseType: 'arraybuffer',
-//     })
-//     .then((response) => {
-//       const base64Img = Buffer.from(response.data, 'binary').toString('base64')
-
-//       const image = workbook.addImage({
-//         base64: base64Img,
-//         extension: 'JPEG',
-//       })
-
-//       worksheet.getRow(excelCell.row).height = 100
-//       // worksheet.addImage(image, {
-//       //   tl: { col: excelCell.col - 1, row: excelCell.row - 1 },
-//       //   br: { col: excelCell.col, row: excelCell.row },
-//       // })
-//       console.log('INDX VALUE', indx)
-//       worksheet.addImage(image, {
-//         tl: { col: excelCell.col - 1, row: indx - 1 },
-//         br: { col: excelCell.col, row: indx },
-//       })
-
-//       resolve()
-//     })
-//     .catch(() => {
-//       // if (err.response.status === 404) {
-//       worksheet.getRow(excelCell.row).height = 100
-//       resolve()
-//       // }
-//     })
-// }
 
 function uniqByKeepLast(data, key) {
   return [...new Map(data.map((x) => [key(x), x])).values()]
