@@ -363,7 +363,7 @@ export default {
         {
           name: 'config',
           icon: 'mdi-application-cog',
-          title: 'Configuración',
+          title: 'Ajustes',
           perm: 'core.acc_config',
           items: [
             {
@@ -378,7 +378,7 @@ export default {
             },
             {
               icon: 'mdi-info',
-              title: 'Ajustes',
+              title: 'Opciones',
               to: '/sistema/config',
             },
           ],
