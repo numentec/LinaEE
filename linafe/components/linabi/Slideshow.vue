@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <client-only>
     <v-dialog
@@ -148,11 +149,24 @@ export default {
   },
   watch: {
     curKey(newVal) {
+      // if (this.curKey !== 'non') {
       const ci = this.dS.findIndex((obj) => obj.SKU === newVal)
       this.curItem = ci
+      //   this.curKey = 'non'
+      // }
     },
   },
   mounted() {},
+  // activated() {
+  //   console.log('activate')
+  //   const ci = this.dS.findIndex((obj) => obj.SKU === this.curKey)
+  //   this.curItem = ci
+  //   console.log('CURITEM VALUE', this.curItem)
+  //   console.log('CURKEY VALUE', this.curKey)
+  // },
+  // deactivated() {
+  //   console.log('deactivated')
+  // },
   methods: {
     imgSrc(key) {
       let imgsrc = '/no_image.png'

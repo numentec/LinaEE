@@ -281,6 +281,7 @@
                 :show-borders="true"
                 :height="tableHeight"
                 :width="tableWidth"
+                @row-dbl-click="loadDetailsForOne"
               >
                 <DxColumn
                   v-for="xcol in colsConfig0"
@@ -294,6 +295,7 @@
                   :alignment="xcol.configval6"
                   :sorting-method="selFunction(xcol.configval9)"
                 />
+                <DxSorting mode="multiple" />
                 <DxGrouping :auto-expand-all="false" />
                 <DxGroupPanel
                   :visible="setConf0.agrupar"
@@ -383,6 +385,7 @@
                   :alignment="xcol.configval6"
                   :sorting-method="selFunction(xcol.configval9)"
                 />
+                <DxSorting mode="multiple" />
                 <DxMasterDetail :enabled="true" template="mdTemplate" />
                 <DxGrouping :auto-expand-all="false" />
                 <DxGroupPanel
@@ -482,6 +485,7 @@ import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
   DxColumn,
+  DxSorting,
   DxMasterDetail,
   DxSummary,
   DxGroupItem,
@@ -558,6 +562,7 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
+    DxSorting,
     DxMasterDetail,
     DxSummary,
     DxGroupItem,
@@ -839,21 +844,30 @@ export default {
           this.dataSource0 = store
           // this.setTotalCount(store.length)
         })
+        this.tab = 0
       }
     },
     loadDetails() {
       const selectedRows = this.curGrid0.getSelectedRowKeys()
       this.menuFilter = false
-      if (selectedRows.length) {
+      if (selectedRows.length > 0) {
         const numdocs = selectedRows.toString()
-        const tipodoc = this.filters.p15
-
-        this.setFiltersDetails({ p01: numdocs, p15: tipodoc })
-        this.fetchDataDetails().then((store) => {
-          this.dataSource1 = store
-        })
+        this.fetchDatails(numdocs)
         this.tab = 1
       }
+    },
+    loadDetailsForOne(e) {
+      if (e.rowType === 'data') {
+        this.fetchDatails(e.key)
+        this.tab = 1
+      }
+    },
+    fetchDatails(numdocs) {
+      const tipodoc = this.filters.p15
+      this.setFiltersDetails({ p01: numdocs, p15: tipodoc })
+      this.fetchDataDetails().then((store) => {
+        this.dataSource1 = store
+      })
     },
     onResize() {
       this.tableHeight =

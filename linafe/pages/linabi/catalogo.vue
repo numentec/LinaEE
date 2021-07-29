@@ -648,13 +648,6 @@ export default {
       ]
     },
   },
-  // watch: {
-  //   menuFilter(val) {
-  //     if (val) {
-  //       this.expDetail = this.curGrid.columnOption('TALLA', 'visible')
-  //     }
-  //   },
-  // },
   created() {
     locale(navigator.language)
     // config({ defaultCurrency: 'USD' })
@@ -694,7 +687,9 @@ export default {
 
           if (!this.noImgList.includes(rowKey)) {
             const promise = fileDownloader(imgurl, ax).then((data) => {
-              zipobj.file(imgfile, data, { binary: true })
+              if (data) {
+                zipobj.file(imgfile, data, { binary: true })
+              }
             })
 
             promises.push(promise)
