@@ -127,6 +127,13 @@
                     </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
+                <v-list-item link>
+                  <v-list-item-content>
+                    <v-list-item-title @click.stop="snackbar = true">
+                      Guardar Fotos
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
               </v-list-group>
               <v-list-group prepend-icon="mdi-table-cog" no-action>
                 <template v-slot:activator>
@@ -138,9 +145,9 @@
                 </template>
                 <v-list-item link>
                   <v-list-item-content>
-                    <v-list-item-title @click.stop="snackbar = true"
-                      >Guardar</v-list-item-title
-                    >
+                    <v-list-item-title @click.stop="snackbar = true">
+                      Guardar
+                    </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item link>
@@ -771,7 +778,9 @@ export default {
 
           if (!this.noImgList.includes(rowKey)) {
             const promise = fileDownloader(imgurl, ax).then((data) => {
-              zipobj.file(imgfile, data, { binary: true })
+              if (data) {
+                zipobj.file(imgfile, data, { binary: true })
+              }
             })
 
             promises.push(promise)
@@ -851,6 +860,7 @@ export default {
       const selectedRows = this.curGrid0.getSelectedRowKeys()
       this.menuFilter = false
       if (selectedRows.length > 0) {
+        this.noImgList = []
         const numdocs = selectedRows.toString()
         this.fetchDatails(numdocs)
         this.tab = 1
@@ -858,6 +868,7 @@ export default {
     },
     loadDetailsForOne(e) {
       if (e.rowType === 'data') {
+        this.noImgList = []
         this.fetchDatails(e.key)
         this.tab = 1
       }
@@ -1294,21 +1305,21 @@ export default {
             text: 'Todos',
             icon: 'selectall',
             onItemClick: () => {
-              this.curGrid.filter((item) => true)
+              e.component.filter((item) => true)
             },
           },
           {
             text: 'Con foto',
             icon: 'photo',
             onItemClick: () => {
-              this.curGrid.filter((item) => !this.noImgList.includes(item.SKU))
+              e.component.filter((item) => !this.noImgList.includes(item.SKU))
             },
           },
           {
             text: 'Sin foto',
             icon: 'isblank',
             onItemClick: () => {
-              this.curGrid.filter((item) => this.noImgList.includes(item.SKU))
+              e.component.filter((item) => this.noImgList.includes(item.SKU))
             },
           }
         )
