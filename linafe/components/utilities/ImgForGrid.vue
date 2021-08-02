@@ -24,9 +24,9 @@ export default {
   name: 'ImgForGrid',
   props: {
     imgFile: {
-      type: Object,
+      type: String,
       required: true,
-      default: () => {},
+      default: 'noimg.jpg',
     },
     fullPath: {
       type: Boolean,
@@ -46,10 +46,10 @@ export default {
       if (this.imgErr) {
         imgsrc = '/no_image.png'
       } else {
-        imgsrc = this.imgFile.value
+        imgsrc = this.imgFile
         if (!this.fullPath) {
-          imgsrc =
-            this.$config.fotosURL + this.imgFile.value + this.$config.fotosExt
+          // imgsrc = this.$config.fotosURL + this.imgFile + this.$config.fotosExt
+          imgsrc = this.$config.fotosURL + this.imgFile
         }
       }
       return imgsrc
@@ -62,7 +62,7 @@ export default {
   methods: {
     onImgError() {
       this.imgErr = true
-      this.$emit('no-image', { itemkey: this.imgFile.value })
+      this.$emit('no-image')
     },
   },
 }

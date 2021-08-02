@@ -217,10 +217,11 @@
           <DxColumn
             width="200"
             :allow-grouping="false"
-            data-field="SKU"
+            data-field="FOTO"
             name="FOTO"
             caption="Foto"
             cell-template="imgCellTemplate"
+            :allow-sorting="false"
             :allow-header-filtering="false"
           />
           <DxColumn
@@ -279,8 +280,11 @@
             </template>
           </DxSummary>
           <DxLoadPanel :enable="true" />
-          <template #imgCellTemplate="{ data: cellData }">
-            <ImgForGrid :img-file="cellData" />
+          <template #imgCellTemplate="{ data }">
+            <ImgForGrid
+              :img-file="data.value"
+              @no-image="storeNoImg(data.value)"
+            />
           </template>
         </DxDataGrid>
       </div>
@@ -481,6 +485,7 @@ export default {
       localBCItems: defaultBCItem,
       busyWith: false,
       loadingMessage: 'Exportando...',
+      noImgList: [],
     }
   },
   computed: {
@@ -602,6 +607,9 @@ export default {
         mch = { minCellHeight: 20 }
       }
 
+      // Foto column index
+      const fci = this.curGrid.getVisibleColumnIndex('FOTO') - 2
+
       exportDataGridToPdf({
         component: this.curGrid,
         jsPDFDocument: pdfDoc,
@@ -610,13 +618,16 @@ export default {
         autoTableOptions: {
           bodyStyles: mch,
           didDrawCell: (data) => {
-            if (this.curGrid.columnOption('FOTO', 'visible')) {
-              if (data.column.index === 0 && data.cell.section === 'body') {
-                const rowKey = data.cell.raw.content
-                const imgsrc =
-                  this.$config.fotosURL + rowKey + this.$config.fotosExt
-                const tPos = data.cell.getTextPos()
-                pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+            if (fci >= 0) {
+              if (data.column.index === fci && data.cell.section === 'body') {
+                const rowImg = data.cell.raw.content
+                if (rowImg) {
+                  if (!this.noImgList.includes(rowImg)) {
+                    const imgsrc = this.$config.fotosURL + rowImg
+                    const tPos = data.cell.getTextPos()
+                    pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+                  }
+                }
               }
             }
           },
@@ -642,7 +653,7 @@ export default {
           if (gridCell.rowType === 'data') {
             if (gridCell.column.name === 'FOTO') {
               excelCell.value = undefined
-              const imgfile = gridCell.value + this.$config.fotosExt
+              const imgfile = gridCell.value
               PromiseArray.push(
                 new Promise((resolve, reject) => {
                   addImageExcel(
@@ -669,6 +680,11 @@ export default {
           })
         })
       })
+    },
+    storeNoImg(imgfile) {
+      if (!this.noImgList.includes(imgfile)) {
+        this.noImgList.push(imgfile)
+      }
     },
   },
   head() {

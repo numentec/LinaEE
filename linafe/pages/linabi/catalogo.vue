@@ -287,12 +287,11 @@
             id="FOTO"
             width="200"
             :allow-grouping="false"
-            data-field="SKU"
+            data-field="FOTO"
             name="FOTO"
             caption="Foto"
             cell-template="imgCellTemplate"
             css-class="cell-highlighted"
-            :allow-reordering="false"
             :allow-sorting="false"
             :allow-header-filtering="false"
           />
@@ -362,8 +361,11 @@
               :variant-title="'Códigos de Barra por Talla'"
             />
           </template>
-          <template #imgCellTemplate="{ data: cellData }">
-            <ImgForGrid :img-file="cellData" @no-image="storeNoImg" />
+          <template #imgCellTemplate="{ data }">
+            <ImgForGrid
+              :img-file="data.value"
+              @no-image="storeNoImg(data.value)"
+            />
           </template>
         </DxDataGrid>
       </div>
@@ -657,14 +659,16 @@ export default {
   },
   methods: {
     ...mapActions('linabi/catalogo', ['fetchData', 'addToCurCatalog']),
-    ...mapActions('linabi/common', ['fetchVariants']),
+    ...mapActions('linabi/common', ['fetchVariants', 'setSlidecurkey']),
     savePhotos() {
       this.menuFilter = false
 
-      const selectedRows = this.curGrid.getSelectedRowKeys()
+      const selectedRows = this.curGrid
+        .getSelectedRowsData()
+        .map((obj) => obj.FOTO)
 
       if (selectedRows.length === 1) {
-        const imgfile = selectedRows[0] + this.$config.fotosExt
+        const imgfile = selectedRows[0]
         const imgurl = this.$config.fotosURL + imgfile
         saveAs(imgurl, imgfile)
       } else if (selectedRows.length > 1) {
@@ -682,7 +686,7 @@ export default {
         })
 
         selectedRows.forEach((rowKey) => {
-          const imgfile = rowKey + this.$config.fotosExt
+          const imgfile = rowKey
           const imgurl = this.$config.fotosURL + imgfile
 
           if (!this.noImgList.includes(rowKey)) {
@@ -923,6 +927,9 @@ export default {
         mch = { minCellHeight: 20 }
       }
 
+      // Foto column index
+      const fci = this.curGrid.getVisibleColumnIndex('FOTO') - 2
+
       exportDataGridToPdf({
         component: this.curGrid,
         jsPDFDocument: pdfDoc,
@@ -934,8 +941,7 @@ export default {
 
         //       pdfCell.content = ''
 
-        //       const imgsrc =
-        //         this.$config.fotosURL + rowKey + this.$config.fotosExt
+        //       const imgsrc = this.$config.fotosURL + rowKey // + this.$config.fotosExt
 
         //       pdfCell.customDrawCell = function (data) {
         //         const tPos = data.cell.getTextPos()
@@ -947,13 +953,16 @@ export default {
         autoTableOptions: {
           bodyStyles: mch,
           didDrawCell: (data) => {
-            if (this.curGrid.columnOption('FOTO', 'visible')) {
-              if (data.column.index === 0 && data.cell.section === 'body') {
-                const rowKey = data.cell.raw.content
-                const imgsrc =
-                  this.$config.fotosURL + rowKey + this.$config.fotosExt
-                const tPos = data.cell.getTextPos()
-                pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+            if (fci >= 0) {
+              if (data.column.index === fci && data.cell.section === 'body') {
+                const rowImg = data.cell.raw.content
+                if (rowImg) {
+                  if (!this.noImgList.includes(rowImg)) {
+                    const imgsrc = this.$config.fotosURL + rowImg
+                    const tPos = data.cell.getTextPos()
+                    pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+                  }
+                }
               }
             }
           },
@@ -987,7 +996,7 @@ export default {
             if (gridCell.column.name === 'FOTO') {
               excelCell.value = undefined
               if (gridCell.value) {
-                const imgfile = gridCell.value + this.$config.fotosExt
+                const imgfile = gridCell.value
 
                 PromiseArray.push(
                   new Promise((resolve, reject) => {
@@ -1151,6 +1160,7 @@ export default {
       if (e.column) {
         if (e.column.name === 'FOTO') {
           if (e.rowType === 'data') {
+            this.setSlidecurkey(e.key)
             this.curRowKey = e.key
             this.curRowIndex = e.rowIndex
             this.slideshow = true
@@ -1158,9 +1168,9 @@ export default {
         }
       }
     },
-    storeNoImg(e) {
-      if (!this.noImgList.includes(e.itemkey)) {
-        this.noImgList.push(e.itemkey)
+    storeNoImg(imgfile) {
+      if (!this.noImgList.includes(imgfile)) {
+        this.noImgList.push(imgfile)
       }
     },
     addMenuItems(e) {
@@ -1178,14 +1188,14 @@ export default {
             text: 'Con foto',
             icon: 'photo',
             onItemClick: () => {
-              this.curGrid.filter((item) => !this.noImgList.includes(item.SKU))
+              this.curGrid.filter((item) => !this.noImgList.includes(item.FOTO))
             },
           },
           {
             text: 'Sin foto',
             icon: 'isblank',
             onItemClick: () => {
-              this.curGrid.filter((item) => this.noImgList.includes(item.SKU))
+              this.curGrid.filter((item) => this.noImgList.includes(item.FOTO))
             },
           }
         )
@@ -1231,31 +1241,8 @@ export default {
       this.variantes = false
     },
     // testMethod() {
-    //   const selectedRows = this.curGrid.getSelectedRowKeys()
-    //   const ax = this.$axios.create({
-    //     baseURL: this.$config.fotosURL,
-    //     headers: {
-    //       common: {
-    //         Accept: 'image/*, application/json, text/plain, */*',
-    //       },
-    //     },
-    //   })
-
-    //   selectedRows.forEach(async (imgname) => {
-    //     const url = imgname + '.jpg'
-    //     await ax
-    //       .get(url, {
-    //         responseType: 'arraybuffer',
-    //       })
-    //       .then((response) => {
-    //         const base64Img = Buffer.from(response.data, 'binary').toString(
-    //           'base64'
-    //         )
-
-    //         this.curImgList.push({ sku: imgname, img: base64Img })
-    //       })
-    //       .catch(() => {})
-    //   })
+    //   const coli = this.curGrid.getVisibleColumnIndex('SKU')
+    //   alert(coli)
     // },
   },
   head() {

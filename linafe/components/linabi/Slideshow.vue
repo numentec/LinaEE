@@ -35,7 +35,7 @@
                   <v-carousel v-model="curItem" hide-delimiters>
                     <v-carousel-item v-for="(item, i) in dS" :key="i">
                       <v-container>
-                        <v-img :src="imgSrc(item.SKU)" contain max-width="700">
+                        <v-img :src="imgSrc(item.FOTO)" contain max-width="700">
                           <template v-slot:placeholder>
                             <v-row
                               class="fill-height ma-0"
@@ -158,6 +158,10 @@ export default {
   },
   mounted() {},
   // activated() {
+  //   const valx = this.$store.state.linabi.common.slidecurkey
+  //   console.log('VUEX STORE VALUE', valx)
+  // },
+  // activated() {
   //   console.log('activate')
   //   const ci = this.dS.findIndex((obj) => obj.SKU === this.curKey)
   //   this.curItem = ci
@@ -168,11 +172,11 @@ export default {
   //   console.log('deactivated')
   // },
   methods: {
-    imgSrc(key) {
+    imgSrc(foto) {
       let imgsrc = '/no_image.png'
 
-      if (!this.noImgList.includes(key)) {
-        imgsrc = this.$config.fotosURL + key + this.$config.fotosExt
+      if (!this.noImgList.includes(foto)) {
+        imgsrc = this.$config.fotosURL + foto // + this.$config.fotosExt
       }
 
       return imgsrc

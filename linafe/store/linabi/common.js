@@ -15,6 +15,7 @@ export const state = () => ({
   variants: [],
   fotos: {},
   loadingView: false,
+  slidecurkey: '',
 })
 
 export const mutations = {
@@ -53,6 +54,9 @@ export const mutations = {
   },
   SET_LOADING_VIEW(state, payload) {
     state.loadingView = payload
+  },
+  SET_SLIDECURKEY(state, payload) {
+    state.slidecurkey = payload
   },
 }
 
@@ -219,6 +223,10 @@ export const actions = {
   setLoadingView({ commit }, payload) {
     commit('SET_LOADING_VIEW', payload)
   },
+
+  setSlidecurkey({ commit }, payload) {
+    commit('SET_SLIDECURKEY', payload)
+  },
 }
 
 export const getters = {
@@ -266,5 +274,8 @@ export const getters = {
   },
   getLoadingView(state) {
     return state.loadingView
+  },
+  getSlidecurkey(state) {
+    return state.slidecurkey
   },
 }

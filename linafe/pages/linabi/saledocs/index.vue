@@ -371,12 +371,11 @@
                 <DxColumn
                   width="200"
                   :allow-grouping="false"
-                  data-field="SKU"
+                  data-field="FOTO"
                   name="FOTO"
                   caption="Foto"
                   cell-template="imgCellTemplate"
                   css-class="cell-highlighted"
-                  :allow-reordering="false"
                   :allow-sorting="false"
                   :allow-header-filtering="false"
                 />
@@ -444,8 +443,11 @@
                     :variant-title="'Códigos de Barra por Talla'"
                   />
                 </template>
-                <template #imgCellTemplate="{ data: cellData }">
-                  <ImgForGrid :img-file="cellData" @no-image="storeNoImg" />
+                <template #imgCellTemplate="{ data }">
+                  <ImgForGrid
+                    :img-file="data.value"
+                    @no-image="storeNoImg(data.value)"
+                  />
                 </template>
               </DxDataGrid>
             </v-tab-item>
@@ -751,11 +753,13 @@ export default {
     savePhotos() {
       this.menuFilter = false
 
-      const selRowsData = this.curGrid.getSelectedRowsData()
-      const selectedRows = selRowsData.map((obj) => obj.SKU)
+      // const selRowsData = this.curGrid.getSelectedRowsData()
+      const selectedRows = this.curGrid
+        .getSelectedRowsData()
+        .map((obj) => obj.FOTO)
 
       if (selectedRows.length === 1) {
-        const imgfile = selectedRows[0] + this.$config.fotosExt
+        const imgfile = selectedRows[0]
         const imgurl = this.$config.fotosURL + imgfile
         saveAs(imgurl, imgfile)
       } else if (selectedRows.length > 1) {
@@ -773,7 +777,7 @@ export default {
         })
 
         selectedRows.forEach((rowKey) => {
-          const imgfile = rowKey + this.$config.fotosExt
+          const imgfile = rowKey
           const imgurl = this.$config.fotosURL + imgfile
 
           if (!this.noImgList.includes(rowKey)) {
@@ -1086,10 +1090,14 @@ export default {
       })
 
       let mch = { minCellHeight: 5 }
+      // Foto column index
+      let fci = -1
       if (curGrid.docname === 'ventas_detalle') {
-        if (curGrid.columnOption('FOTO', 'visible')) {
+        if (curGrid.component.columnOption('FOTO', 'visible')) {
           mch = { minCellHeight: 20 }
         }
+
+        fci = curGrid.component.getVisibleColumnIndex('FOTO') - 2
       }
 
       exportDataGridToPdf({
@@ -1100,13 +1108,16 @@ export default {
           bodyStyles: mch,
           didDrawCell: (data) => {
             if (curGrid.docname === 'ventas_detalle') {
-              if (curGrid.columnOption('FOTO', 'visible')) {
-                if (data.column.index === 0 && data.cell.section === 'body') {
-                  const rowKey = data.cell.raw.content
-                  const imgsrc =
-                    this.$config.fotosURL + rowKey + this.$config.fotosExt
-                  const tPos = data.cell.getTextPos()
-                  pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+              if (fci >= 0) {
+                if (data.column.index === fci && data.cell.section === 'body') {
+                  const rowImg = data.cell.raw.content
+                  if (rowImg) {
+                    if (!this.noImgList.includes(rowImg)) {
+                      const imgsrc = this.$config.fotosURL + rowImg
+                      const tPos = data.cell.getTextPos()
+                      pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+                    }
+                  }
                 }
               }
             }
@@ -1145,7 +1156,7 @@ export default {
               if (gridCell.column.name === 'FOTO') {
                 excelCell.value = undefined
                 if (gridCell.value) {
-                  const imgfile = gridCell.value + this.$config.fotosExt
+                  const imgfile = gridCell.value
                   PromiseArray.push(
                     new Promise((resolve, reject) => {
                       this.addImageExcel(
@@ -1285,16 +1296,16 @@ export default {
       if (e.column) {
         if (e.column.name === 'FOTO') {
           if (e.rowType === 'data') {
-            this.curRowKey = e.key
+            this.curRowKey = e.key.toString()
             this.curRowIndex = e.rowIndex
             this.slideshow = true
           }
         }
       }
     },
-    storeNoImg(e) {
-      if (!this.noImgList.includes(e.itemkey)) {
-        this.noImgList.push(e.itemkey)
+    storeNoImg(imgfile) {
+      if (!this.noImgList.includes(imgfile)) {
+        this.noImgList.push(imgfile)
       }
     },
     addMenuItems(e) {
@@ -1312,14 +1323,14 @@ export default {
             text: 'Con foto',
             icon: 'photo',
             onItemClick: () => {
-              e.component.filter((item) => !this.noImgList.includes(item.SKU))
+              e.component.filter((item) => !this.noImgList.includes(item.FOTO))
             },
           },
           {
             text: 'Sin foto',
             icon: 'isblank',
             onItemClick: () => {
-              e.component.filter((item) => this.noImgList.includes(item.SKU))
+              e.component.filter((item) => this.noImgList.includes(item.FOTO))
             },
           }
         )
