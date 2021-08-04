@@ -99,8 +99,8 @@ export default {
       default: false,
     },
     curKey: {
-      type: String,
-      default: '',
+      type: Number,
+      default: 0,
     },
     curIndex: {
       type: Number,
@@ -150,7 +150,7 @@ export default {
   watch: {
     curKey(newVal) {
       // if (this.curKey !== 'non') {
-      const ci = this.dS.findIndex((obj) => obj.SKU === newVal)
+      const ci = this.dS.findIndex((obj) => obj.ID === newVal)
       this.curItem = ci
       //   this.curKey = 'non'
       // }

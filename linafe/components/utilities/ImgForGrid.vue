@@ -28,10 +28,6 @@ export default {
       required: true,
       default: 'noimg.jpg',
     },
-    fullPath: {
-      type: Boolean,
-      default: false,
-    },
   },
   data() {
     return {
@@ -41,24 +37,14 @@ export default {
   },
   computed: {
     imgSrc() {
-      let imgsrc
+      let imgsrc = '/no_image.png'
 
-      if (this.imgErr) {
-        imgsrc = '/no_image.png'
-      } else {
+      if (!this.imgErr) {
         imgsrc = this.imgFile
-        if (!this.fullPath) {
-          // imgsrc = this.$config.fotosURL + this.imgFile + this.$config.fotosExt
-          imgsrc = this.$config.fotosURL + this.imgFile
-        }
       }
       return imgsrc
     },
-    imgID() {
-      return this.imgFile.value
-    },
   },
-  mounted() {},
   methods: {
     onImgError() {
       this.imgErr = true

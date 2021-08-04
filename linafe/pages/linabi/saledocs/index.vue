@@ -368,29 +368,33 @@
                 @cell-click="manageCellClick"
                 @context-menu-preparing="addMenuItems"
               >
-                <DxColumn
-                  width="200"
-                  :allow-grouping="false"
-                  data-field="FOTO"
-                  name="FOTO"
-                  caption="Foto"
-                  cell-template="imgCellTemplate"
-                  css-class="cell-highlighted"
-                  :allow-sorting="false"
-                  :allow-header-filtering="false"
-                />
-                <DxColumn
-                  v-for="xcol in colsConfig1"
-                  :key="'tab1' + xcol.id"
-                  :allow-grouping="xcol.configval7 == '1'"
-                  :data-field="xcol.configkey"
-                  :visible="xcol.configval3 == '1'"
-                  :caption="xcol.configval2"
-                  :data-type="xcol.configval4"
-                  :format="setFormat(xcol.configval5)"
-                  :alignment="xcol.configval6"
-                  :sorting-method="selFunction(xcol.configval9)"
-                />
+                <template v-for="xcol in colsConfig1">
+                  <DxColumn
+                    v-if="xcol.configkey == 'FOTO'"
+                    :key="'tab1' + xcol.id"
+                    width="200"
+                    :allow-grouping="false"
+                    data-field="FOTO"
+                    name="FOTO"
+                    caption="Foto"
+                    cell-template="imgCellTemplate"
+                    css-class="cell-highlighted"
+                    :allow-sorting="false"
+                    :allow-header-filtering="false"
+                  />
+                  <DxColumn
+                    v-else
+                    :key="'tab1' + xcol.id"
+                    :allow-grouping="xcol.configval7 == '1'"
+                    :data-field="xcol.configkey"
+                    :visible="xcol.configval3 == '1'"
+                    :caption="xcol.configval2"
+                    :data-type="xcol.configval4"
+                    :format="setFormat(xcol.configval5)"
+                    :alignment="xcol.configval6"
+                    :sorting-method="selFunction(xcol.configval9)"
+                  />
+                </template>
                 <DxSorting mode="multiple" />
                 <DxMasterDetail :enabled="true" template="mdTemplate" />
                 <DxGrouping :auto-expand-all="false" />
@@ -445,7 +449,7 @@
                 </template>
                 <template #imgCellTemplate="{ data }">
                   <ImgForGrid
-                    :img-file="data.value"
+                    :img-file="$config.fotosURL + data.value"
                     @no-image="storeNoImg(data.value)"
                   />
                 </template>
@@ -489,7 +493,7 @@
   </div>
 </template>
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
@@ -678,7 +682,7 @@ export default {
         col: 1,
       },
       slideshow: false,
-      curRowKey: '',
+      curRowKey: 0,
       curRowIndex: 0,
       noImgList: [],
       contextItems,
@@ -697,7 +701,7 @@ export default {
   computed: {
     ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     ...mapState('linabi/saledocsm', ['filters']),
-    ...mapState('linabi/saledocsd', ['getCurStore']),
+    ...mapGetters('linabi/saledocsd', ['getCurStore']),
     curGrid0() {
       return this.$refs[curGridRefKey0].instance
     },
@@ -1296,7 +1300,7 @@ export default {
       if (e.column) {
         if (e.column.name === 'FOTO') {
           if (e.rowType === 'data') {
-            this.curRowKey = e.key.toString()
+            this.curRowKey = e.key
             this.curRowIndex = e.rowIndex
             this.slideshow = true
           }

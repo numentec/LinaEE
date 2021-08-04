@@ -279,36 +279,38 @@
           :show-borders="true"
           :height="tableHeight"
           :hover-state-enabled="true"
-          @content-ready="onContentReady"
           @cell-click="manageCellClick"
           @context-menu-preparing="addMenuItems"
         >
-          <DxColumn
-            id="FOTO"
-            width="200"
-            :allow-grouping="false"
-            data-field="FOTO"
-            name="FOTO"
-            caption="Foto"
-            cell-template="imgCellTemplate"
-            css-class="cell-highlighted"
-            :allow-sorting="false"
-            :allow-header-filtering="false"
-          />
-          <DxColumn
-            v-for="xcol in colsConfig"
-            id="colx"
-            :key="xcol.id"
-            :allow-grouping="xcol.configval7 == '1'"
-            :data-field="xcol.configkey"
-            :visible="xcol.configval3 == '1'"
-            :caption="xcol.configval2"
-            :data-type="xcol.configval4"
-            :format="setFormat(xcol.configval5)"
-            :alignment="xcol.configval6"
-            :sorting-method="selFunction(xcol.configval9)"
-          >
-          </DxColumn>
+          <template v-for="xcol in colsConfig">
+            <DxColumn
+              v-if="xcol.configkey == 'FOTO'"
+              id="FOTO"
+              :key="xcol.id"
+              width="200"
+              :allow-grouping="false"
+              data-field="FOTO"
+              name="FOTO"
+              caption="Foto"
+              cell-template="imgCellTemplate"
+              css-class="cell-highlighted"
+              :allow-sorting="false"
+              :allow-header-filtering="false"
+            />
+            <DxColumn
+              v-else
+              id="colx"
+              :key="xcol.id"
+              :allow-grouping="xcol.configval7 == '1'"
+              :data-field="xcol.configkey"
+              :visible="xcol.configval3 == '1'"
+              :caption="xcol.configval2"
+              :data-type="xcol.configval4"
+              :format="setFormat(xcol.configval5)"
+              :alignment="xcol.configval6"
+              :sorting-method="selFunction(xcol.configval9)"
+            />
+          </template>
           <DxSorting mode="multiple" />
           <DxMasterDetail :enabled="true" template="mdTemplate" />
           <DxGrouping :auto-expand-all="false" />
@@ -357,13 +359,13 @@
           </DxSummary>
           <template #mdTemplate="{ data }">
             <ProdVariants
-              :variant-data="data.key"
+              :variant-data="data.data.SKU"
               :variant-title="'Códigos de Barra por Talla'"
             />
           </template>
           <template #imgCellTemplate="{ data }">
             <ImgForGrid
-              :img-file="data.value"
+              :img-file="$config.fotosURL + data.value"
               @no-image="storeNoImg(data.value)"
             />
           </template>
@@ -598,7 +600,7 @@ export default {
         col: 1,
       },
       slideshow: false,
-      curRowKey: '',
+      curRowKey: 0,
       curRowIndex: 0,
       noImgList: [],
       contextItems,
@@ -641,11 +643,11 @@ export default {
       return [
         {
           text: 'Con foto',
-          value: ['SKU', 'noneof', this.noImgList],
+          value: ['FOTO', 'noneof', this.noImgList],
         },
         {
           text: 'Sin foto',
-          value: ['SKU', 'anyof', this.noImgList],
+          value: ['FOTO', 'anyof', this.noImgList],
         },
       ]
     },
@@ -753,7 +755,7 @@ export default {
       this.dataSource = new DataSource({
         store: {
           type: 'array',
-          key: 'SKU',
+          key: 'ID',
           data: this.getCurCatalog,
         },
       })
@@ -841,7 +843,10 @@ export default {
     exportGrid(opc) {
       this.menuFilter = false
 
-      const selectedRows = this.curGrid.getSelectedRowKeys()
+      // const selectedRows = this.curGrid.getSelectedRowKeys()
+      const selectedRows = this.curGrid
+        .getSelectedRowsData()
+        .map((obj) => obj.SKU)
 
       if (selectedRows.length > 0) {
         // Exportar a Excel
@@ -1160,7 +1165,7 @@ export default {
       if (e.column) {
         if (e.column.name === 'FOTO') {
           if (e.rowType === 'data') {
-            this.setSlidecurkey(e.key)
+            // this.setSlidecurkey(e.key)
             this.curRowKey = e.key
             this.curRowIndex = e.rowIndex
             this.slideshow = true

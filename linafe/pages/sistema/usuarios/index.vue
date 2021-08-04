@@ -186,8 +186,8 @@
               <v-icon color="primary lightn-2">mdi-account-details</v-icon>
             </v-btn>
           </template>
-          <template #imgCellTemplate="{ data: cellData }">
-            <ImgForGrid :img-file="cellData" :full-path="true" />
+          <template #imgCellTemplate="{ data }">
+            <ImgForGrid :img-file="data.value" />
           </template>
         </DxDataGrid>
       </div>

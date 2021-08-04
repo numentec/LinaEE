@@ -214,28 +214,32 @@
           :show-borders="true"
           :height="tableHeight"
         >
-          <DxColumn
-            width="200"
-            :allow-grouping="false"
-            data-field="FOTO"
-            name="FOTO"
-            caption="Foto"
-            cell-template="imgCellTemplate"
-            :allow-sorting="false"
-            :allow-header-filtering="false"
-          />
-          <DxColumn
-            v-for="xcol in colsConfig"
-            :key="xcol.id"
-            :allow-grouping="xcol.configval7 == '1'"
-            :data-field="xcol.configkey"
-            :visible="xcol.configval3 == '1'"
-            :caption="xcol.configval2"
-            :data-type="xcol.configval4"
-            :format="setFormat(xcol.configval5)"
-            :alignment="xcol.configval6"
-            :sorting-method="selFunction(xcol.configval9)"
-          />
+          <template v-for="xcol in colsConfig">
+            <DxColumn
+              v-if="xcol.configkey == 'FOTO'"
+              :key="xcol.id"
+              width="200"
+              :allow-grouping="false"
+              data-field="FOTO"
+              name="FOTO"
+              caption="Foto"
+              cell-template="imgCellTemplate"
+              :allow-sorting="false"
+              :allow-header-filtering="false"
+            />
+            <DxColumn
+              v-else
+              :key="xcol.id"
+              :allow-grouping="xcol.configval7 == '1'"
+              :data-field="xcol.configkey"
+              :visible="xcol.configval3 == '1'"
+              :caption="xcol.configval2"
+              :data-type="xcol.configval4"
+              :format="setFormat(xcol.configval5)"
+              :alignment="xcol.configval6"
+              :sorting-method="selFunction(xcol.configval9)"
+            />
+          </template>
           <DxGrouping :auto-expand-all="false" />
           <DxGroupPanel
             :visible="setConf.agrupar"
@@ -282,7 +286,7 @@
           <DxLoadPanel :enable="true" />
           <template #imgCellTemplate="{ data }">
             <ImgForGrid
-              :img-file="data.value"
+              :img-file="$config.fotosURL + data.value"
               @no-image="storeNoImg(data.value)"
             />
           </template>

@@ -139,7 +139,7 @@ export const actions = {
     }
 
     const store = new CustomStore({
-      key: 'SKU',
+      key: 'ID',
       load,
       onLoaded: (data) => {
         if (localFilters) {
