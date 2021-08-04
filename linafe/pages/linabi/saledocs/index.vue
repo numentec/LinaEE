@@ -377,6 +377,7 @@
                     data-field="FOTO"
                     name="FOTO"
                     caption="Foto"
+                    :visible="xcol.configval3 == '1'"
                     cell-template="imgCellTemplate"
                     css-class="cell-highlighted"
                     :allow-sorting="false"
