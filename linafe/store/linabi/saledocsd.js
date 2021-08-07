@@ -22,7 +22,7 @@ export const mutations = {
     state.isLoading = !state.isLoading
   },
   SET_FILTERS(state, payload) {
-    state.filters = payload
+    state.filters = Object.assign({}, payload)
   },
   SET_TOTAL_COUNT(state, payload) {
     state.totalCount = payload

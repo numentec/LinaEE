@@ -33,7 +33,7 @@ export const mutations = {
     state.isLoading = !state.isLoading
   },
   SET_FILTERS(state, payload) {
-    state.filters = Object.assign({}, state.filters, payload)
+    state.filters = Object.assign({}, payload)
   },
   SET_DATES(state, payload) {
     state.filters.p12 = payload.p12
