@@ -351,7 +351,7 @@ export default {
             {
               icon: 'mdi-info',
               title: 'Consultas',
-              to: '/linabi/genconsulta',
+              to: '/linabi/consultas',
             },
             {
               icon: 'mdi-info',

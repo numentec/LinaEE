@@ -182,6 +182,87 @@ class CatalogAPIView(APIView):
         result = []
         # qrycalling = 'DMC.LINAEE_QRYCATALOGO'
         qrycalling = qrys[0].content
+            
+        skulist = False
+
+        # Preparar lista de SKUs o codigos de barra
+        if (',' in p01):
+            p01 = p01.replace(' ', '')
+            skulist = True
+        elif (' ' in p01):
+            p01 = p01.replace(' ', ',')
+            skulist = True
+
+        if skulist:
+            if (p02 not in ['sku', 'bc']):
+                p02 = 'SKU'
+            params = [p01, p02]
+            # qrycalling = 'DMC.LINAEE_QRYCATALOGO_SKU'
+            qrycalling = qrys[1].content
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc(qrycalling, params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class StoragexlocAPIView(APIView):
+    """Inventario por localización - Lista de productos"""
+    # Vista Nº 21
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - SKU exacto o parcial con %
+        # p02 - Descripción parcial con %
+        # p03 - Marca 
+        # p04 - Departamento
+        # p05 - Categoría
+        # p06 - Sub categoría
+        # p07 - Cla1
+        # p08 - Cla2
+        # p09 - Cla3
+        # p10 - Número de entrada
+        # p11 - Tipo de consulta: incluir periodo (0, 1)
+        # p12 - Fecha inicial del periodo a consultar
+        # p13 - Fecha final del periodo a consultar
+        # p14 - Existencia (Todos = 1, Disponible = 2, A futuro = 3)
+        p01 = str(request.query_params.get('p01', '%')).lower().strip()
+        p02 = str(request.query_params.get('p02', '%')).lower().strip()
+        p03 = str(request.query_params.get('p03', '%')).lower().strip()
+        p04 = str(request.query_params.get('p04', '%')).lower().strip()
+        p05 = str(request.query_params.get('p05', '%')).lower().strip()
+        p06 = str(request.query_params.get('p06', '%')).lower().strip()
+        p07 = str(request.query_params.get('p07', '%')).lower().strip()
+        p08 = str(request.query_params.get('p08', '%')).lower().strip()
+        p09 = str(request.query_params.get('p09', '%')).lower().strip()
+        p10 = str(request.query_params.get('p10', '%')).lower().strip()
+        p11 = str(request.query_params.get('p11', 0)).lower()
+        p12 = str(request.query_params.get('p12', '2021-01-01')).lower().strip()
+        p13 = str(request.query_params.get('p13', '2021-01-01')).lower().strip()
+        p14 = str(request.query_params.get('p14', '1')).lower().strip()
+
+        pvals = p01 + p02 + p03 + p04 + p05 + p06 + p07 + p08 + p09 + p10 + p11 + p12 + p13 + p14
+
+        if pvals == '%%%%%%%%%%022021-01-012021-01-011':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
+
+        qrys = SQLQuery.objects.filter(vista=21)
+
+        result = []
+        # qrycalling = 'DMC.LINAEE_QRYCATALOGO'
+        qrycalling = qrys[0].content
         skulist = False
 
         # Preparar lista de SKUs o codigos de barra
@@ -369,12 +450,20 @@ class SalesDetailAPIView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class BIQueryModelViewset(CommonViewSet):
+    """Vista para CRUD de BIQuery"""
+    # Vista 19
+    serializer_class = serializers.BIQuerySerializer
+
+    queryset = models.BIQuery.objects.all()
+
+
 class FavoritoModelViewset(CommonViewSet):
     """Vista para CRUD de Favoritos"""
     # Vista 15
     serializer_class = serializers.BIFavoritoSerializer
 
-    queryset = models.BIFavorito.objects.all()
+    queryset = models.BIQuery.objects.filter(is_active = True, favoritos = True)
 
 
 class BIXLSXTemplateModelViewset(CommonViewSet):

@@ -2,8 +2,11 @@ import os
 import secrets
 from datetime import date, timedelta
 from django.db import models
+from django.contrib.auth import get_user_model
 from .attributs import attrs_catalog
 from ..core.models import Common, StakeHolder
+
+LinaUserModel = get_user_model()
 
 
 # Clase base abstracta para modelo transitorio.
@@ -21,6 +24,33 @@ class TransientModel(models.Model):
 
 # Modelo transitorio para cargar productos (extdb1)
 BICatalog = type("BICatalog", (TransientModel,), attrs_catalog)
+
+
+# Modelo para enlaces a consultas de LinaBI
+class BIQuery(Common):
+    """Modelo para consultas en LinaBI"""
+    name = models.CharField("Nombre", max_length=25, unique=True)
+    link = models.CharField("Enlace", max_length=200, default='/')
+    param = models.CharField("Parámetro", max_length=10, blank=True)
+    descrip = models.TextField("Reseña", blank = True)
+    qdescrip = models.CharField("Descripción", max_length=30, blank = True)
+    owner  = models.ForeignKey(LinaUserModel, null=True, db_index=True, verbose_name='Owner',
+                on_delete=models.SET_NULL, related_name='biqueries_x_owner')
+    todos = models.BooleanField("Todos", default=True)
+    vuextore = models.CharField("Vuex Store", max_length=50, blank=True)
+    image = models.ImageField('Imagen', upload_to='images/bifavoritos', \
+         blank=True, default='images/bifavoritos/prev1.jpg')
+    favoritos = models.BooleanField('Favoritos', default=False)
+    perm = models.CharField("Permiso", max_length=50, blank = True, help_text='Permiso de acceso relacionado')
+
+    class Meta:
+        db_table = 'linabi_query'
+        verbose_name = 'BIQuery'
+        verbose_name_plural = 'BIQueries'
+
+    def __str_(self):
+        return "BI Query {}".format(self.name)
+
 
 # Modelo para enlaces a favoritos
 class BIFavorito(Common):

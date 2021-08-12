@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import BICatalog, BIFavorito, BIXLSXTemplate, BIXLSXTemplateCol
+from .models import BICatalog, BIFavorito, BIQuery, BIXLSXTemplate, BIXLSXTemplateCol
 from django.contrib.auth import get_user_model
 
 LinaUserModel = get_user_model()
@@ -11,8 +11,8 @@ class BICatalogSerializer(serializers.ModelSerializer):
         model = BICatalog
         fields = '__all__'
 
-class BIFavoritoSerializer(serializers.ModelSerializer):
-    """Favoritos de LinaBI"""
+class BIQuerySerializer(serializers.ModelSerializer):
+    """BIQuery de LinaBI"""
 
     username = serializers.SerializerMethodField()
 
@@ -20,7 +20,20 @@ class BIFavoritoSerializer(serializers.ModelSerializer):
         return obj.created_by.username
         
     class Meta:
-        model = BIFavorito
+        model = BIQuery
+        fields = '__all__'
+        read_only_fields = ('id', 'username')
+
+class BIFavoritoSerializer(serializers.ModelSerializer):
+    """Favoritos de LinaBI"""
+
+    username = serializers.SerializerMethodField()
+
+    def get_username(self, obj):
+        return obj.owner.username
+        
+    class Meta:
+        model = BIQuery
         fields = '__all__'
         read_only_fields = ('id', 'username')
 

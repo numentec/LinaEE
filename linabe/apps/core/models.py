@@ -244,7 +244,8 @@ class Vista(Common):
                             ("acc_linabi_saledocs_master", "Access to LinaBI Sale Docs Master view"),
                             ("acc_linabi_saledocs_datail", "Access to LinaBI Sale Docs Detail view"),
                             ("acc_linabi_sales_detail", "Access to LinaBI  Sales Detail view"),
-                            ("acc_linabi_reports", "Access to LinaBI  Reports view")
+                            ("acc_linabi_reports", "Access to LinaBI  Reports view"),
+                            ("acc_linabi_storagexloc", "Access to storage by location")
                         )
         db_table = 'core_vistas'
         verbose_name = 'Vista'

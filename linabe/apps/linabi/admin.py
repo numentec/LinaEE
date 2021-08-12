@@ -1,6 +1,9 @@
 from django.contrib import admin
 from apps.linabi import models
 
+class BIQueryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'link', 'owner')
+
 class BIFavoritoAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'link', 'todos')
 
@@ -10,6 +13,7 @@ class BIXLSXTemplateAdmin(admin.ModelAdmin):
 class BIXLSXTemplateColAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'ordinal', 'plantilla')
 
+admin.site.register(models.BIQuery, BIQueryAdmin)
 admin.site.register(models.BIFavorito, BIFavoritoAdmin)
 admin.site.register(models.BIXLSXTemplate, BIXLSXTemplateAdmin)
 admin.site.register(models.BIXLSXTemplateCol, BIXLSXTemplateColAdmin)
