@@ -6,6 +6,7 @@ export const state = () => ({
   listCli: [], // Clientes
   listVen: [], // Vendedores
   listMar: [], // Marcas
+  listBod: [], // Ubicaciones (Bodegas)
   listCla1: [], // Departamentos
   listCla2: [], // Categorías
   listCla3: [], // Sub categorías
@@ -27,6 +28,9 @@ export const mutations = {
   },
   SET_LIST_MAR(state, payload) {
     state.listMar = payload
+  },
+  SET_LIST_BOD(state, payload) {
+    state.listBod = payload
   },
   SET_LIST_CLA1(state, payload) {
     state.listCla1 = payload
@@ -70,6 +74,9 @@ export const actions = {
   setListMarca({ commit }, payload) {
     commit('SET_LIST_MAR', payload)
   },
+  setListBod({ commit }, payload) {
+    commit('SET_LIST_BOD', payload)
+  },
   setListCla1({ commit }, payload) {
     commit('SET_LIST_CLA1', payload)
   },
@@ -87,6 +94,7 @@ export const actions = {
       this.$axios.get('linabi/clists', { params: { p01: 'CLI' } }),
       this.$axios.get('linabi/clists', { params: { p01: 'VEN' } }),
       this.$axios.get('linabi/clists', { params: { p01: 'MAR' } }),
+      this.$axios.get('linabi/clists', { params: { p01: 'BOD' } }),
       this.$axios.get('linabi/clists', { params: { p01: 'CL1' } }),
       this.$axios.get('linabi/clists', { params: { p01: 'CL2' } }),
       this.$axios.get('linabi/clists', { params: { p01: 'CL3' } }),
@@ -96,10 +104,11 @@ export const actions = {
         commit('SET_LIST_CLI', responses[0].data)
         commit('SET_LIST_VEN', responses[1].data)
         commit('SET_LIST_MAR', responses[2].data)
-        commit('SET_LIST_CLA1', responses[3].data)
-        commit('SET_LIST_CLA2', responses[4].data)
-        commit('SET_LIST_CLA3', responses[5].data)
-        commit('SET_LIST_CLAX', responses[6].data)
+        commit('SET_LIST_BOD', responses[3].data)
+        commit('SET_LIST_CLA1', responses[4].data)
+        commit('SET_LIST_CLA2', responses[5].data)
+        commit('SET_LIST_CLA3', responses[6].data)
+        commit('SET_LIST_CLAX', responses[7].data)
         commit('SET_LISTED', true)
       })
       .catch((errs) => {
@@ -238,6 +247,9 @@ export const getters = {
   },
   getListMar(state) {
     return state.listMar
+  },
+  getListBpd(state) {
+    return state.listBod
   },
   getListCla1(state) {
     return state.listCla1
