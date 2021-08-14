@@ -248,7 +248,7 @@ export const getters = {
   getListMar(state) {
     return state.listMar
   },
-  getListBpd(state) {
+  getListBod(state) {
     return state.listBod
   },
   getListCla1(state) {

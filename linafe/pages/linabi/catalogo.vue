@@ -299,6 +299,20 @@
               :allow-header-filtering="false"
             />
             <DxColumn
+              v-else-if="xcol.configkey == 'FICHA'"
+              id="FICHA"
+              :key="xcol.id"
+              width="200"
+              :allow-grouping="false"
+              data-field="SKU"
+              name="FICHA"
+              caption="Ficha"
+              :visible="xcol.configval3 == '1'"
+              cell-template="fichaCellTemplate"
+              :allow-sorting="false"
+              :allow-header-filtering="false"
+            />
+            <DxColumn
               v-else
               id="colx"
               :key="xcol.id"
@@ -369,6 +383,15 @@
               :img-file="$config.fotosURL + data.value"
               @no-image="storeNoImg(data.value)"
             />
+          </template>
+          <template #fichaCellTemplate="{ data }">
+            <p style="font-size: 0.8rem">
+              SKU: {{ data.data.SKU }}<br />
+              Descrip: {{ data.data.DESCRIP }}<br />
+              Marca: {{ data.data.MARCA }}<br />
+              Tallas: {{ data.data.TALLA }}<br />
+              Dist.: {{ data.data.DISTRIBUCION }}
+            </p>
           </template>
         </DxDataGrid>
       </div>
@@ -940,22 +963,41 @@ export default {
         component: this.curGrid,
         jsPDFDocument: pdfDoc,
         selectedRowsOnly: true,
-        // customizeCell: ({ pdfCell, gridCell }) => {
-        //   if (gridCell.rowType === 'data') {
-        //     if (gridCell.column.name === 'FOTO') {
-        //       const rowKey = gridCell.value
+        customizeCell: ({ pdfCell, gridCell }) => {
+          if (gridCell.rowType === 'data') {
+            // if (gridCell.column.name === 'FOTO') {
+            //   const rowKey = gridCell.value
 
-        //       pdfCell.content = ''
+            //   pdfCell.content = ''
 
-        //       const imgsrc = this.$config.fotosURL + rowKey // + this.$config.fotosExt
+            //   const imgsrc = this.$config.fotosURL + rowKey // + this.$config.fotosExt
 
-        //       pdfCell.customDrawCell = function (data) {
-        //         const tPos = data.cell.getTextPos()
-        //         pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
-        //       }
-        //     }
-        //   }
-        // },
+            //   pdfCell.customDrawCell = function (data) {
+            //     const tPos = data.cell.getTextPos()
+            //     pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+            //   }
+            // }
+            if (gridCell.column.name === 'FICHA') {
+              if (gridCell.value) {
+                pdfCell.content =
+                  'SKU: ' +
+                  gridCell.data.SKU +
+                  '\n' +
+                  gridCell.data.DESCRIP +
+                  '\n' +
+                  'Marca: ' +
+                  gridCell.data.MARCA +
+                  '\n' +
+                  'Talla: ' +
+                  gridCell.data.TALLA +
+                  '\n' +
+                  'Dist.: ' +
+                  gridCell.data.DISTRIBUCION
+                // pdfCell.alignment = { horizontal: 'justify', vertical: 'top' }
+              }
+            }
+          }
+        },
         autoTableOptions: {
           bodyStyles: mch,
           didDrawCell: (data) => {
@@ -1038,6 +1080,26 @@ export default {
               //     editAs: undefined,
               //   })
               // }
+            }
+
+            if (gridCell.column.name === 'FICHA') {
+              if (gridCell.value) {
+                excelCell.value =
+                  'SKU: ' +
+                  gridCell.data.SKU +
+                  '\n' +
+                  gridCell.data.DESCRIP +
+                  '\n' +
+                  'Marca: ' +
+                  gridCell.data.MARCA +
+                  '\n' +
+                  'Talla: ' +
+                  gridCell.data.TALLA +
+                  '\n' +
+                  'Dist.: ' +
+                  gridCell.data.DISTRIBUCION
+                excelCell.alignment = { horizontal: 'justify', vertical: 'top' }
+              }
             }
 
             if (gridCell.column.dataField === 'TALLA' && vv.length > 0) {
