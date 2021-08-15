@@ -455,7 +455,7 @@ class BIQueryModelViewset(CommonViewSet):
     # Vista 19
     serializer_class = serializers.BIQuerySerializer
 
-    queryset = models.BIQuery.objects.all()
+    queryset = models.BIQuery.objects.filter(is_active = True)
 
 
 class FavoritoModelViewset(CommonViewSet):
