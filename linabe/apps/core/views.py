@@ -1,4 +1,3 @@
-# from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
@@ -27,12 +26,14 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 
 import json
 import datetime
+from socket import error as SocketError
+import errno
 
 from ipware import get_client_ip
 
@@ -361,10 +362,22 @@ class ModuloViewSet(CommonViewSet):
 
 class ModulosActivosList(ListAPIView):
     """Lista de módulos disponibles"""
-    serializer_class = serializers.ModuloSerializer
+    serializer_class = serializers.ModulosActLstSerializer
 
     def get_queryset(self):
         return models.Modulo.objects.filter(is_active=True)
+# class ModulosActivosList(ListAPIView):
+#     """Lista de módulos disponibles"""
+#     serializer_class = serializers.ModuloSerializer
+
+#     def get_queryset(self):
+#         try:
+#             resp = models.Modulo.objects.filter(is_active=True)
+#         except SocketError as e:
+#             if e.errno != errno.ECONNRESET:
+#                 raise NotFound("Error en Socket")
+
+#         return resp
 
 class VistaViewSet(CommonViewSet):
     """ViewSet de vistas"""

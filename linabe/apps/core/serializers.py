@@ -201,7 +201,7 @@ class VistaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Vista
-        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'disponible', 'checkelperms', 'configs_x_vista', 'modulo')
+        fields = ('id', 'nombre', 'descrip', 'link', 'tipo', 'disponible', 'checkelperms', 'modulo', 'configs_x_vista')
 
 
 class VistaConfigAccSerializer(serializers.ModelSerializer):
@@ -229,6 +229,12 @@ class ModuloSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Modulo
         fields = ('id', 'nombre', 'descrip', 'tipo', 'is_active', 'vistas_x_modulo')
+
+class ModulosActLstSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Modulo
+        fields = ('id', 'nombre', 'descrip', 'tipo', 'is_active')
 
 
 class SQLQuerySerializer(serializers.ModelSerializer):
