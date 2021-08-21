@@ -91,14 +91,14 @@ export const actions = {
   },
   setLists({ commit, error }) {
     Promise.all([
-      this.$axios.get('linabi/clists', { params: { p01: 'CLI' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'VEN' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'MAR' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'BOD' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'CL1' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'CL2' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'CL3' } }),
-      this.$axios.get('linabi/clists', { params: { p01: 'CLX' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'CLI' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'VEN' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'MAR' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'BOD' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'CL1' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'CL2' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'CL3' } }),
+      this.$axios.get('linabi/clists/', { params: { p01: 'CLX' } }),
     ])
       .then((responses) => {
         commit('SET_LIST_CLI', responses[0].data)
