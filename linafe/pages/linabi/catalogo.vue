@@ -638,6 +638,7 @@ export default {
           },
         },
       }),
+      imgListForPDF: {},
     }
   },
   computed: {
@@ -891,7 +892,29 @@ export default {
 
         // Exportar a PDF
         if (opc === 3) {
-          this.doExportPDF()
+          // If column FOTO is visible, then all photos are downloaded before build the PDF
+          if (this.curGrid.columnOption('FOTO', 'visible')) {
+            const PromiseArray = []
+            const imgList = this.curGrid
+              .getSelectedRowsData()
+              .map((obj) => obj.FOTO)
+
+            this.busyWith = true
+
+            imgList.forEach((imgfile) => {
+              PromiseArray.push(
+                new Promise((resolve, reject) => {
+                  this.addImgForPDF(imgfile, resolve)
+                })
+              )
+            })
+
+            Promise.all(PromiseArray).then(() => {
+              this.doExportPDF()
+            })
+          } else {
+            this.doExportPDF()
+          }
         }
 
         // Exportar a Excel usando plantilla
@@ -965,18 +988,6 @@ export default {
         selectedRowsOnly: true,
         customizeCell: ({ pdfCell, gridCell }) => {
           if (gridCell.rowType === 'data') {
-            // if (gridCell.column.name === 'FOTO') {
-            //   const rowKey = gridCell.value
-
-            //   pdfCell.content = ''
-
-            //   const imgsrc = this.$config.fotosURL + rowKey // + this.$config.fotosExt
-
-            //   pdfCell.customDrawCell = function (data) {
-            //     const tPos = data.cell.getTextPos()
-            //     pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
-            //   }
-            // }
             if (gridCell.column.name === 'FICHA') {
               if (gridCell.value) {
                 pdfCell.content =
@@ -1000,15 +1011,22 @@ export default {
         },
         autoTableOptions: {
           bodyStyles: mch,
+          willDrawCell: (data) => {
+            if (fci >= 0) {
+              if (data.column.index === fci && data.cell.section === 'body') {
+                data.doc.setTextColor(255)
+              }
+            }
+          },
           didDrawCell: (data) => {
             if (fci >= 0) {
               if (data.column.index === fci && data.cell.section === 'body') {
                 const rowImg = data.cell.raw.content
                 if (rowImg) {
-                  if (!this.noImgList.includes(rowImg)) {
-                    const imgsrc = this.$config.fotosURL + rowImg
+                  if (this.imgListForPDF[rowImg]) {
+                    const imgfile = this.imgListForPDF[rowImg]
                     const tPos = data.cell.getTextPos()
-                    pdfDoc.addImage(imgsrc, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+                    pdfDoc.addImage(imgfile, 'JPEG', tPos.x, tPos.y, 23.0, 15.0)
                   }
                 }
               }
@@ -1305,13 +1323,47 @@ export default {
           resolve()
         })
     },
+    async addImagePDF(url, tPos, pdfDoc, resolve) {
+      await this.imgax
+        .get(url, {
+          responseType: 'arraybuffer',
+        })
+        .then((response) => {
+          const base64Img = Buffer.from(response.data, 'binary').toString(
+            'base64'
+          )
+
+          pdfDoc.addImage(base64Img, 'JPEG', tPos.x, tPos.y, 22.5, 15)
+
+          resolve()
+        })
+        .catch(() => {
+          // worksheet.getRow(excelCell.row).height = 15
+          resolve()
+        })
+    },
+    async addImgForPDF(imgfile, resolve) {
+      const imgurl = this.$config.fotosURL + imgfile
+      await this.imgax
+        .get(imgurl, {
+          responseType: 'arraybuffer',
+        })
+        .then((response) => {
+          const base64Img = Buffer.from(response.data, 'binary').toString(
+            'base64'
+          )
+
+          this.imgListForPDF[imgfile] = base64Img
+          resolve()
+        })
+        .catch(() => {
+          resolve()
+        })
+    },
     makeVariantFalse() {
       this.variantes = false
     },
-    // testMethod() {
-    //   const coli = this.curGrid.getVisibleColumnIndex('SKU')
-    //   alert(coli)
-    // },
+    // testMethod() {},
   },
   head() {
     return {
