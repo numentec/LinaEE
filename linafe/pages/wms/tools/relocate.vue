@@ -2,7 +2,7 @@
   <div>
     <v-card class="px-0">
       <v-card-title>Reubicar producto</v-card-title>
-      <v-stepper v-model="curStep" alt-labels flat>
+      <v-stepper v-model="curStep" alt-labels flat tile>
         <v-stepper-header class="hidden-sm-and-down px-1">
           <v-stepper-step
             :complete="curStep > 1"
@@ -35,7 +35,7 @@
 
         <v-stepper-items>
           <v-stepper-content step="1" class="pa-0">
-            <v-card class="mb-1 px-4" min-height="200px" flat tile>
+            <v-card class="px-4" min-height="200px" flat tile>
               <v-switch v-model="useBC" label="Use Barcode"></v-switch>
               <v-row>
                 <v-col cols="12">
@@ -54,26 +54,11 @@
                   ></v-text-field>
                 </v-col>
               </v-row>
-              <v-card-actions>
-                <v-btn color="primary" @click="cancelStepper">
-                  <v-icon v-show="$vuetify.breakpoint.mobile">
-                    mdi-cancel
-                  </v-icon>
-                  <span v-show="!$vuetify.breakpoint.mobile">Cancel</span>
-                </v-btn>
-                <v-spacer />
-                <MobileSteps
-                  v-show="$vuetify.breakpoint.mobile"
-                  :cur-step="curStep"
-                  :enabled-step="editSteps"
-                  @clickStep="(v) => (curStep = v)"
-                />
-              </v-card-actions>
             </v-card>
           </v-stepper-content>
 
           <v-stepper-content step="2" class="px-0">
-            <v-card class="mb-1 px-4" min-height="200px" flat tile>
+            <v-card class="px-4" min-height="200px" flat tile>
               <v-row>
                 <v-col cols="12">
                   <v-text-field
@@ -117,28 +102,13 @@
                   </DxList>
                 </div>
               </v-row>
-              <v-card-actions>
-                <v-btn color="primary" @click="cancelStepper">
-                  <v-icon v-show="$vuetify.breakpoint.mobile">
-                    mdi-cancel
-                  </v-icon>
-                  <span v-show="!$vuetify.breakpoint.mobile">Cancel</span>
-                </v-btn>
-                <v-spacer />
-                <MobileSteps
-                  v-show="$vuetify.breakpoint.mobile"
-                  :cur-step="curStep"
-                  :enabled-step="editSteps"
-                  @clickStep="(v) => (curStep = v)"
-                />
-              </v-card-actions>
             </v-card>
           </v-stepper-content>
 
           <v-stepper-content step="3" class="px-0">
-            <v-card class="mb-1 px-4" min-height="200px" flat tile>
+            <v-card class="px-4" min-height="200px" flat tile>
               <v-row>
-                <v-col v-if="showEmpaques" :cols="6">
+                <v-col v-if="showEmpaques" cols="12" md="6">
                   <v-text-field
                     ref="txtEmpaques"
                     v-model="cantidad.empaq"
@@ -151,7 +121,7 @@
                     @keydown.enter="setCantidad"
                   ></v-text-field>
                 </v-col>
-                <v-col :cols="showEmpaques ? 6 : 12">
+                <v-col cols="12" :md="showEmpaques ? 6 : 12">
                   <v-text-field
                     ref="txtUnidades"
                     v-model="cantidad.uni"
@@ -167,26 +137,11 @@
                   ></v-text-field>
                 </v-col>
               </v-row>
-              <v-card-actions>
-                <v-btn color="primary" @click="cancelStepper">
-                  <v-icon v-show="$vuetify.breakpoint.mobile">
-                    mdi-cancel
-                  </v-icon>
-                  <span v-show="!$vuetify.breakpoint.mobile">Cancel</span>
-                </v-btn>
-                <v-spacer />
-                <MobileSteps
-                  v-show="$vuetify.breakpoint.mobile"
-                  :cur-step="curStep"
-                  :enabled-step="editSteps"
-                  @clickStep="(v) => (curStep = v)"
-                />
-              </v-card-actions>
             </v-card>
           </v-stepper-content>
 
           <v-stepper-content step="4" class="px-0">
-            <v-card class="mb-1 px-4" min-height="200px" flat tile>
+            <v-card class="px-4" min-height="200px" flat tile>
               <v-switch v-model="useBC" label="Use Barcode"></v-switch>
               <v-row>
                 <v-col cols="12">
@@ -203,25 +158,23 @@
                   ></v-text-field>
                 </v-col>
               </v-row>
-              <v-card-actions>
-                <v-btn color="primary" @click="cancelStepper">
-                  <v-icon v-show="$vuetify.breakpoint.mobile">
-                    mdi-cancel
-                  </v-icon>
-                  <span v-show="!$vuetify.breakpoint.mobile">Cancel</span>
-                </v-btn>
-                <v-spacer />
-                <MobileSteps
-                  v-show="$vuetify.breakpoint.mobile"
-                  :cur-step="curStep"
-                  :enabled-step="editSteps"
-                  @clickStep="(v) => (curStep = v)"
-                />
-              </v-card-actions>
             </v-card>
           </v-stepper-content>
         </v-stepper-items>
       </v-stepper>
+      <v-card-actions>
+        <v-btn color="primary" @click="cancelStepper">
+          <v-icon v-show="$vuetify.breakpoint.mobile"> mdi-cancel </v-icon>
+          <span v-show="!$vuetify.breakpoint.mobile">Cancel</span>
+        </v-btn>
+        <v-spacer />
+        <MobileSteps
+          v-show="$vuetify.breakpoint.mobile"
+          :cur-step="curStep"
+          :enabled-step="editSteps"
+          @clickStep="(v) => (curStep = v)"
+        />
+      </v-card-actions>
     </v-card>
     <v-snackbar v-model="snackbar" timeout="2000">
       {{ msgReloc }}
@@ -398,6 +351,7 @@ export default {
       this.showEmpaques = false
       this.editSteps = { s1: true, s2: false, s3: false, s4: false }
       this.curStep = 1
+      this.$nextTick(() => this.$refs.txtProdID.focus())
     },
   },
 }

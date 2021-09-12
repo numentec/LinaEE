@@ -35,7 +35,7 @@ class WMSQueryModelViewset(CommonViewSet):
 
 class WMSToolsModelViewset(CommonViewSet):
     """Vista para CRUD de WMSQuery"""
-    # Vista 24
+    # Vista XX
     serializer_class = serializers.WMSQuerySerializer
 
     queryset = models.WMSQuery.objects.filter(is_active = True, qtype = 'tool')
@@ -66,8 +66,7 @@ class QryStockExtAPIView(APIView):
         result = []
 
         qrys = SQLQuery.objects.filter(vista=24)
-        # qrycalling = qrys[0].content    # 'DMC.LINA_QRYSTOCKXLOC'
-        qrycalling = 'DMC.LINA_QRYSTOCKXLOC'
+        qrycalling = qrys[0].content    # 'DMC.LINA_QRYSTOCKXLOC'
 
         with connections['extdb1'].cursor() as cursor:
 

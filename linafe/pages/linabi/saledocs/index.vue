@@ -129,7 +129,7 @@
                 </v-list-item>
                 <v-list-item link>
                   <v-list-item-content>
-                    <v-list-item-title @click.stop="snackbar = true">
+                    <v-list-item-title @click.stop="savePhotos">
                       Guardar Fotos
                     </v-list-item-title>
                   </v-list-item-content>
