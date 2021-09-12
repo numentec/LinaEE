@@ -9,7 +9,7 @@ from ..core.models import SQLQuery
 
 class WMSQueryModelViewset(CommonViewSet):
     """Vista para CRUD de WMSQuery"""
-    # Vista 22
+    # Vista 23
     serializer_class = serializers.WMSQuerySerializer
 
     queryset = models.WMSQuery.objects.all()

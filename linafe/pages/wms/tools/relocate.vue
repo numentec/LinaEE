@@ -1,7 +1,17 @@
 <template>
   <div>
     <v-card class="px-0">
-      <v-card-title>Reubicar producto</v-card-title>
+      <v-card-title>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on" @click="$router.back()">
+              <v-icon large color="primary">mdi-chevron-left</v-icon>
+            </v-btn>
+          </template>
+          <span>Volver a vista anterior</span>
+        </v-tooltip>
+        <span>Reubicar producto</span>
+      </v-card-title>
       <v-stepper v-model="curStep" alt-labels flat tile>
         <v-stepper-header class="hidden-sm-and-down px-1">
           <v-stepper-step

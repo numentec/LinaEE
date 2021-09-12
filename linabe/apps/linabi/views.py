@@ -452,7 +452,7 @@ class SalesDetailAPIView(APIView):
 
 class BIQueryModelViewset(CommonViewSet):
     """Vista para CRUD de BIQuery"""
-    # Vista 23
+    # Vista 22
     serializer_class = serializers.BIQuerySerializer
 
     queryset = models.BIQuery.objects.filter(is_active = True)
