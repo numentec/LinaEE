@@ -127,7 +127,7 @@
                     </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
-                <v-list-item link>
+                <v-list-item v-show="tab == 1" link>
                   <v-list-item-content>
                     <v-list-item-title @click.stop="savePhotos">
                       Guardar Fotos
@@ -758,8 +758,7 @@ export default {
     savePhotos() {
       this.menuFilter = false
 
-      // const selRowsData = this.curGrid.getSelectedRowsData()
-      const selectedRows = this.curGrid
+      const selectedRows = this.curGrid1
         .getSelectedRowsData()
         .map((obj) => obj.FOTO)
 
