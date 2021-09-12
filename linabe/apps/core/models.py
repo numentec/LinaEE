@@ -218,7 +218,8 @@ class Modulo(models.Model):
                             ("acc_accounting", "Access to Accounting Module"),
                             ("acc_logistics", "Access to Logistics Module"),
                             ("acc_linabi", "Access to BI Module"),
-                            ("acc_config", "Access to Configuration Module")     
+                            ("acc_config", "Access to Configuration Module"),
+                            ("acc_wms", "Access to WMS Module"),
                         )
         db_table = 'core_modulos'
         verbose_name = 'Módulo'
@@ -245,7 +246,8 @@ class Vista(Common):
                             ("acc_linabi_saledocs_datail", "Access to LinaBI Sale Docs Detail view"),
                             ("acc_linabi_sales_detail", "Access to LinaBI  Sales Detail view"),
                             ("acc_linabi_reports", "Access to LinaBI  Reports view"),
-                            ("acc_linabi_storagexloc", "Access to storage by location")
+                            ("acc_linabi_storagexloc", "Access to storage by location"),
+                            ("acc_wms_relocate_tool", "Access to relocate tool"),
                         )
         db_table = 'core_vistas'
         verbose_name = 'Vista'

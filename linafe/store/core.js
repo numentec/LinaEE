@@ -1,7 +1,7 @@
 export const namespaced = true
 
 export const state = () => ({
-  drawer: null,
+  drawer: false,
   drawer_image:
     'https://demos.creative-tim.com/material-dashboard/assets/img/sidebar-1.jpg',
   is_mini: true,

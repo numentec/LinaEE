@@ -4,14 +4,16 @@
     class="mx-auto my-4"
     width="300"
     style="height: 100%"
-    :shaped="qry"
+    :shaped="false"
     :loading="loadingView"
     @click="goView"
   >
     <v-img v-if="!qry" :src="fav.image" height="200px"></v-img>
 
     <v-card-title v-if="qry">
-      <v-icon large left color="orange darken-2">mdi-text-search</v-icon>
+      <v-icon large left color="orange darken-2">{{
+        typeOpc[cardType].icon
+      }}</v-icon>
       {{ fav.name }}
     </v-card-title>
     <v-card-title v-else>
@@ -48,6 +50,18 @@
 </template>
 
 <script>
+const typeOpc = {
+  qry: {
+    icon: 'mdi-text-search',
+  },
+  rpt: {
+    icon: 'mdi-file-chart-outline',
+  },
+  tool: {
+    icon: 'mdi-tools',
+  },
+}
+
 export default {
   name: 'FavoritoCard',
   props: {
@@ -67,12 +81,17 @@ export default {
       type: Function,
       default: () => ({}),
     },
+    cardType: {
+      type: String,
+      default: 'qry',
+    },
   },
   data() {
     return {
       descrip: false,
       loadingView: false,
       perms: this.$auth.user.perms,
+      typeOpc,
     }
   },
   computed: {},

@@ -1,7 +1,8 @@
 <template>
   <v-app dark>
     <CoreAppBar />
-    <CoreDrawer />
+    <CoreDrawerMobile v-if="$vuetify.breakpoint.mobile" />
+    <CoreDrawer v-else />
     <v-main>
       <v-container>
         <nuxt keep-alive :keep-alive-props="{ exclude: ['modal'] }" />
@@ -21,6 +22,7 @@ export default {
   components: {
     CoreAppBar: () => import('../components/core/AppBar'),
     CoreDrawer: () => import('../components/core/Drawer'),
+    CoreDrawerMobile: () => import('../components/core/DrawerMobile'),
   },
   // mixins: [sessionMixin],
 }

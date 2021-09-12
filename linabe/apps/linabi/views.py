@@ -25,7 +25,7 @@ class ListAsQuerySet(list):
 
 class CommonListsAPIView(APIView):
     """Listas de parámetros comunes (clientes, vendedores, categorías, etc."""
-    # Vista Nº 19
+    # Vista 19
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -58,7 +58,7 @@ class CommonListsAPIView(APIView):
 
 class TallasBCAPIView(APIView):
     """Lista de codigo de barras por talla"""
-    # Vista Nº 20
+    # Vista 20
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -217,7 +217,7 @@ class CatalogAPIView(APIView):
 
 class StoragexlocAPIView(APIView):
     """Inventario por localización - Lista de productos"""
-    # Vista Nº 21
+    # Vista 21
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -452,7 +452,7 @@ class SalesDetailAPIView(APIView):
 
 class BIQueryModelViewset(CommonViewSet):
     """Vista para CRUD de BIQuery"""
-    # Vista 19
+    # Vista 23
     serializer_class = serializers.BIQuerySerializer
 
     queryset = models.BIQuery.objects.filter(is_active = True)

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.inv',
     'apps.linabi',
+    'apps.wms',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True

@@ -116,6 +116,7 @@ class LinaAuthToken(ObtainAuthToken):
             'core.acc_logistics',
             'core.acc_linabi',
             'core.acc_config',
+            'core.acc_wms',
             'core.view_user',
             'core.view_cia',
             'core.add_cia',
@@ -353,7 +354,7 @@ class GroupsList(ListAPIView):
         return Group.objects.all()
 
 
-class ModuloViewSet(CommonViewSet):
+class ModuloViewSet(viewsets.ModelViewSet):
     """ViewSet de módulos"""
     serializer_class = serializers.ModuloSerializer
 

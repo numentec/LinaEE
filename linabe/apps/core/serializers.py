@@ -229,6 +229,7 @@ class ModuloSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Modulo
         fields = ('id', 'nombre', 'descrip', 'tipo', 'is_active', 'vistas_x_modulo')
+        read_only_fields = ('id', 'vistas_x_modulo')
 
 class ModulosActLstSerializer(serializers.ModelSerializer):
 

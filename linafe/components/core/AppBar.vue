@@ -106,7 +106,7 @@ export default {
   },
 
   methods: {
-    ...mapActions('core', ['SetDrawer', 'setIsMini', 'setIsExpanded']),
+    ...mapActions('core', ['setDrawer', 'setIsMini', 'setIsExpanded']),
     ...mapActions('sistema', ['userLogout', 'userProfile']),
     goProfile() {
       const curID = this.loggedInUser.id
@@ -123,6 +123,7 @@ export default {
     setMiniState(mini) {
       this.setIsMini(mini)
       this.setIsExpanded(!mini)
+      this.setDrawer(!this.drawer)
     },
     testAlert() {
       alert(
