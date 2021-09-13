@@ -1,8 +1,7 @@
 <template>
   <v-app dark>
     <CoreAppBar />
-    <CoreDrawerMobile v-if="$vuetify.breakpoint.mobile" />
-    <CoreDrawer v-else />
+    <component :is="useDrawer" />
     <v-main>
       <v-container>
         <nuxt keep-alive :keep-alive-props="{ exclude: ['modal'] }" />
@@ -16,13 +15,22 @@
 
 <script>
 // import { sessionMixin } from '~/mixins/sessionMixin.js'
+const CoreDrawer = () => import('../components/core/Drawer')
+const CoreDrawerMobile = () => import('../components/core/DrawerMobile')
 
 export default {
   name: 'LinaHome',
   components: {
     CoreAppBar: () => import('../components/core/AppBar'),
-    CoreDrawer: () => import('../components/core/Drawer'),
-    CoreDrawerMobile: () => import('../components/core/DrawerMobile'),
+  },
+  computed: {
+    useDrawer() {
+      if (this.$vuetify.breakpoint.mobile) {
+        return CoreDrawerMobile
+      } else {
+        return CoreDrawer
+      }
+    },
   },
   // mixins: [sessionMixin],
 }

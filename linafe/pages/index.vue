@@ -6,14 +6,9 @@
           <LinaLogo logosize="mdtr" />
         </div>
         <v-card>
-          <v-card-title class="headline">
-            Welcome to Lina Enterprise Edition
-          </v-card-title>
+          <v-card-title class="headline"> Welcome to LinaEE </v-card-title>
           <v-card-text>
-            <p>
-              Gracias por elegir Lina Edición Empresarial como su ERP. Lina es
-              más que un ERP. Explore todas sus funcionalidades.
-            </p>
+            <p>Gracias por elegir Lina Edición Empresarial como su ERP.</p>
             <hr class="my-3" />
             <a
               href="https://linaee.com/"
@@ -22,14 +17,14 @@
             >
               LinaEE Site
             </a>
-            <br />
+            <!-- <br />
             <a
               href="https://github.com/nuxt/nuxt.js"
               target="_blank"
               rel="noopener noreferrer"
             >
               LinaEE GitHub
-            </a>
+            </a> -->
           </v-card-text>
           <v-card-actions>
             <v-spacer />

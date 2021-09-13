@@ -90,7 +90,6 @@ export default {
   components: {
     LinaLogo: () => import('~/components/core/LinaLogo.vue'),
   },
-  props: {},
 
   data: () => ({
     valid: true,
