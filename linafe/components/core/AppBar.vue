@@ -1,46 +1,58 @@
 /* eslint-disable no-console */
 <template>
-  <v-app-bar id="app-bar" color="primary" clipped-left fixed app dense dark>
-    <v-btn icon @click="setMiniState(!is_mini)">
-      <v-icon>
-        {{ `${is_expanded ? 'mdi-backburger' : 'mdi-menu'}` }}
-      </v-icon>
-    </v-btn>
-    <v-toolbar-title v-text="title" />
-    <v-spacer />
-    <!-- <v-btn v-if="isAuthenticated" @click.stop="testAlert"
-      >Logout: {{ loggedInUser.username }}</v-btn
-    > -->
+  <div>
+    <v-app-bar id="app-bar" color="primary" clipped-left fixed app dense dark>
+      <v-btn icon @click="setMiniState(!is_mini)">
+        <v-icon>
+          {{ `${is_expanded ? 'mdi-backburger' : 'mdi-menu'}` }}
+        </v-icon>
+      </v-btn>
+      <v-toolbar-title v-text="title" />
+      <v-spacer />
+      <!-- <v-btn v-if="isAuthenticated" @click.stop="testAlert"
+        >Logout: {{ loggedInUser.username }}</v-btn
+      > -->
 
-    <v-menu offset-y origin="center center" transition="scale-transition">
-      <template v-slot:activator="{ on: menu, attrs }">
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on: tooltip }">
-            <v-avatar
-              color="accent"
-              size="35"
-              v-bind="attrs"
-              v-on="{ ...tooltip, ...menu }"
-            >
-              <img v-if="loggedInUser.foto" :src="imgSrc" alt="U" />
-              <v-icon v-else dark>mdi-account-circle</v-icon>
-            </v-avatar>
-          </template>
-          <span>{{ capUserName }}</span>
-        </v-tooltip>
-      </template>
-      <v-list>
-        <AppBarItem>
-          <v-list-item-title @click="goProfile">Perfil</v-list-item-title>
-        </AppBarItem>
-        <AppBarItem>
-          <v-list-item-title @click.stop="userLogout">
-            Cerrar Sesión
-          </v-list-item-title>
-        </AppBarItem>
-      </v-list>
-    </v-menu>
-  </v-app-bar>
+      <v-menu offset-y origin="center center" transition="scale-transition">
+        <template v-slot:activator="{ on: menu, attrs }">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-avatar
+                color="accent"
+                size="35"
+                v-bind="attrs"
+                v-on="{ ...tooltip, ...menu }"
+              >
+                <img v-if="loggedInUser.foto" :src="imgSrc" alt="U" />
+                <v-icon v-else dark>mdi-account-circle</v-icon>
+              </v-avatar>
+            </template>
+            <span>{{ capUserName }}</span>
+          </v-tooltip>
+        </template>
+        <v-list>
+          <AppBarItem>
+            <v-list-item-title @click="goProfile">Perfil</v-list-item-title>
+          </AppBarItem>
+          <AppBarItem>
+            <v-list-item-title @click.stop="$root.$emit('fav')"
+              >Favoritos
+            </v-list-item-title>
+          </AppBarItem>
+          <AppBarItem>
+            <v-list-item-title @click.stop="$root.$emit('qtools')">
+              Quick tools
+            </v-list-item-title>
+          </AppBarItem>
+          <AppBarItem>
+            <v-list-item-title @click.stop="userLogout">
+              Cerrar Sesión
+            </v-list-item-title>
+          </AppBarItem>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
+  </div>
 </template>
 
 <script>

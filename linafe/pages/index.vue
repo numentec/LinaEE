@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row justify="center" align="center">
-      <v-col cols="12" sm="8" md="6">
+      <v-col cols="12">
         <div class="text-center">
           <LinaLogo logosize="mdtr" />
         </div>
@@ -28,13 +28,18 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer />
-            <v-btn color="primary" @click.stop="snackbar = true"> Docs </v-btn>
+            <v-btn
+              color="primary"
+              @click.stop="showSnackBar('Documentación en desarrollo')"
+            >
+              Docs
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
     <v-snackbar v-model="snackbar" timeout="2000">
-      Documentación en desarrollo
+      {{ snackmsg }}
       <template v-slot:action="{ attrs }">
         <v-btn color="secondary" text v-bind="attrs" @click="snackbar = false">
           Cerrar
@@ -54,9 +59,16 @@ export default {
   data() {
     return {
       snackbar: false,
+      snackmsg: '',
     }
   },
   computed: {},
+  methods: {
+    showSnackBar(msg) {
+      this.snackmsg = msg
+      this.snackbar = true
+    },
+  },
   head() {
     return {
       title: 'Inicio',

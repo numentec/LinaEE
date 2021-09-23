@@ -29,6 +29,12 @@ BICatalog = type("BICatalog", (TransientModel,), attrs_catalog)
 # Modelo para enlaces a consultas de LinaBI
 class BIQuery(Common):
     """Modelo para consultas en LinaBI"""
+    QTYPES_CHOICES = [
+        ('qry', 'Query'),
+        ('rpt', 'Report'),
+        ('tool', 'Tool'),
+    ]
+
     name = models.CharField("Nombre", max_length=25, unique=True)
     link = models.CharField("Enlace", max_length=200, default='/')
     param = models.CharField("Parámetro", max_length=10, blank=True)

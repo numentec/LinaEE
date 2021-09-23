@@ -6,7 +6,6 @@ LinaUserModel = get_user_model()
 
 # Modelo para enlaces a consultas de WMS
 class WMSQuery(Common):
-
     QTYPES_CHOICES = [
         ('qry', 'Query'),
         ('rpt', 'Report'),
