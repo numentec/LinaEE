@@ -81,3 +81,43 @@ class QryStockExtAPIView(APIView):
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class RelocateExtAPIView(APIView):
+    """Reubicar producto en bodega (data externa)"""
+    # Vista 25
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - SKU
+        # p02 - ID de ubicación origen
+        # p03 - ID de ubicación destino
+        # p04 - Cantidad a reubicar
+
+        p01 = str(request.query_params.get('p01', 'sku')).lower().strip()
+        p02 = str(request.query_params.get('p02', '0')).strip()
+        p03 = str(request.query_params.get('p03', '0')).strip()
+        p04 = str(request.query_params.get('p04', '0')).strip()
+
+        pvals = p01 + p02 + p03 + p04
+
+        if pvals == 'sku000':
+            return Response([{"status": "NOT EXEC PARAMS"}], status=status.HTTP_200_OK)
+
+        result = []
+
+        qrys = SQLQuery.objects.filter(vista=24)
+        qrycalling = qrys[0].content    # 'DMC.LINA_REUBICAR'
+
+        with connections['extdb1'].cursor() as cursor:
+
+            statusmsg = cursor.var(str)
+
+            params = [p01, p02, p03, p04, statusmsg]
+
+            cursor.callproc(qrycalling, params)
+
+            result = [dict({'status': statusmsg.var})]
+
+        return Response(result, status=status.HTTP_200_OK)

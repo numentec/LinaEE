@@ -33,11 +33,13 @@
         </v-row>
         <v-row>
           <v-col cols="12" md="8">
-            <v-img
-              src="/no_image.png"
-              contain
-              :max-width="$vuetify.breakpoint.mobile ? 200 : 400"
-            ></v-img>
+            <v-row justify="center" align="center">
+              <v-img
+                src="/no_image.png"
+                contain
+                :max-width="$vuetify.breakpoint.mobile ? 200 : 400"
+              ></v-img>
+            </v-row>
           </v-col>
           <v-col cols="12" md="4">
             <v-row justify="start" align="center">

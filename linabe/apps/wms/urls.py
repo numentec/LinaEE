@@ -11,4 +11,5 @@ router.register(r'wmstools', views.WMSToolsModelViewset, basename='wmstools')
 urlpatterns = [
     path('', include(router.urls)),
     path('qrystockext/', views.QryStockExtAPIView.as_view(), name='qrystockext'),
+    path('relocatext/', views.RelocateExtAPIView.as_view(), name='relocatext'),
 ]

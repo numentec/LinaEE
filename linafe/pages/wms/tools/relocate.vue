@@ -341,12 +341,49 @@ export default {
         this.editSteps.s4 = true
         this.curStep = 4
         this.$nextTick(() => this.$refs.txtDestino.focus())
+      } else {
+        let msgR = `Excede disponible: ${u}`
+        if (this.selectedLoc.SEPARADOR) {
+          const sep = this.selectedLoc.SEPARADOR
+          msgR = `Excede disponible: ${e} ${sep} ${u}`
+        }
+        this.msgReloc = msgR
+        this.msgColor = 'red'
+        this.snackbar = true
       }
     },
-    relocate() {
+    async relocate() {
       this.msgReloc = 'Reubicación exitosa'
       this.msgColor = 'green'
       this.snackbar = true
+
+      const e = this.cantidad.empaq
+      const u = this.cantidad.uni
+
+      let cantidad = u
+
+      if (this.selectedLoc.SEPARADOR) {
+        const sep = this.selectedLoc.SEPARADOR
+        cantidad = `${e} ${sep} ${u}`
+      }
+
+      if (this.destino) {
+        await this.$axios
+          .get('wms/relocatext/', {
+            params: {
+              p01: this.selectedLoc.SKU,
+              p02: this.origen,
+              p03: this.destino,
+              p04: cantidad,
+            },
+          })
+          .then((response) => {
+            if (response.data) {
+              if (response.data.length > 0) {
+              }
+            }
+          })
+      }
     },
     cancelStepper() {
       this.useBC = true
