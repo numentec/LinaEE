@@ -94,30 +94,34 @@ class RelocateExtAPIView(APIView):
         # p02 - ID de ubicación origen
         # p03 - ID de ubicación destino
         # p04 - Cantidad a reubicar
+        # p05 - CIA
 
         p01 = str(request.query_params.get('p01', 'sku')).lower().strip()
         p02 = str(request.query_params.get('p02', '0')).strip()
         p03 = str(request.query_params.get('p03', '0')).strip()
         p04 = str(request.query_params.get('p04', '0')).strip()
+        p05 = str(request.query_params.get('p05', '01')).strip()
 
-        pvals = p01 + p02 + p03 + p04
+        pvals = p01 + p02 + p03 + p04 + p05
 
-        if pvals == 'sku000':
+        if pvals == 'sku00001':
             return Response([{"status": "NOT EXEC PARAMS"}], status=status.HTTP_200_OK)
+
+        usr = request.user.username
 
         result = []
 
-        qrys = SQLQuery.objects.filter(vista=24)
+        qrys = SQLQuery.objects.filter(vista=25)
         qrycalling = qrys[0].content    # 'DMC.LINA_REUBICAR'
 
         with connections['extdb1'].cursor() as cursor:
 
-            statusmsg = cursor.var(str)
+            statusmsg = cursor.var(str).var
 
-            params = [p01, p02, p03, p04, statusmsg]
+            params = [p01, p02, p03, p04, p05, usr, statusmsg]
 
             cursor.callproc(qrycalling, params)
 
-            result = [dict({'status': statusmsg.var})]
+            result = [dict({'status': statusmsg.getvalue()})]
 
         return Response(result, status=status.HTTP_200_OK)

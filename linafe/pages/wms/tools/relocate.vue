@@ -16,7 +16,7 @@
         <v-stepper-header class="hidden-sm-and-down px-1">
           <v-stepper-step
             :complete="curStep > 1"
-            step="1"
+            :step="1"
             :editable="editSteps.s1"
           >
             Producto
@@ -24,7 +24,7 @@
 
           <v-stepper-step
             :complete="curStep > 2"
-            step="2"
+            :step="2"
             :editable="editSteps.s2"
           >
             Origen
@@ -32,13 +32,13 @@
 
           <v-stepper-step
             :complete="curStep > 3"
-            step="3"
+            :step="3"
             :editable="editSteps.s3"
           >
             Cantidad
           </v-stepper-step>
 
-          <v-stepper-step step="4" :editable="editSteps.s4">
+          <v-stepper-step :step="4" :editable="editSteps.s4">
             Destino
           </v-stepper-step>
         </v-stepper-header>
@@ -353,10 +353,6 @@ export default {
       }
     },
     async relocate() {
-      this.msgReloc = 'Reubicación exitosa'
-      this.msgColor = 'green'
-      this.snackbar = true
-
       const e = this.cantidad.empaq
       const u = this.cantidad.uni
 
@@ -380,8 +376,36 @@ export default {
           .then((response) => {
             if (response.data) {
               if (response.data.length > 0) {
+                const numerr = response.data[0].status.substring(0, 5)
+                const msgerr = response.data[0].status.substring(6)
+                this.msgReloc = msgerr
+                this.msgColor = numerr === 'EOK - ' ? 'green' : 'red'
+                this.snackbar = true
+              } else {
+                this.msgReloc = 'SIN RESPUESTA DE LA BASE DE DATOS'
+                this.msgColor = 'yellow'
+                this.snackbar = true
               }
+              this.cancelStepper()
             }
+          })
+          .catch((err) => {
+            let stcode = 0
+            let msg = ''
+            if (err.response) {
+              stcode = err.response.status
+              msg = err.response.data.message
+            } else if (err.request) {
+              stcode = 503
+              msg = err.response.data.message
+            } else {
+              stcode = 1010
+              msg = err.message
+            }
+
+            this.msgReloc = `${stcode} - ${msg}`
+            this.msgColor = 'red'
+            this.snackbar = true
           })
       }
     },
