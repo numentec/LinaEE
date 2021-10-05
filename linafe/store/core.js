@@ -6,6 +6,7 @@ export const state = () => ({
     'https://demos.creative-tim.com/material-dashboard/assets/img/sidebar-1.jpg',
   is_mini: true,
   is_expanded: false,
+  curCia: { name: 'CIA', id: '01' },
 })
 
 export const mutations = {
@@ -21,6 +22,10 @@ export const mutations = {
   SET_IS_EXPANDED(state, payload) {
     state.is_expanded = payload
   },
+  SET_CURCIA(state, payload) {
+    state.curCia.name = payload.name
+    state.curCia.id = payload.id
+  },
 }
 
 export const actions = {
@@ -35,5 +40,14 @@ export const actions = {
   },
   setIsExpanded({ commit }, payload) {
     commit('SET_IS_EXPANDED', payload)
+  },
+  setCurCia({ commit }, payload) {
+    commit('SET_CURCIA', payload)
+  },
+}
+
+export const getters = {
+  getCurCia(state) {
+    return state.curCia
   },
 }

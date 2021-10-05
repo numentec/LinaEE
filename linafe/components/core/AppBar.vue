@@ -35,14 +35,7 @@
             <v-list-item-title @click="goProfile">Perfil</v-list-item-title>
           </AppBarItem>
           <AppBarItem>
-            <v-list-item-title @click.stop="$root.$emit('fav')"
-              >Favoritos
-            </v-list-item-title>
-          </AppBarItem>
-          <AppBarItem>
-            <v-list-item-title @click.stop="$root.$emit('qtools')">
-              Quick tools
-            </v-list-item-title>
+            <v-list-item-title> Compañía </v-list-item-title>
           </AppBarItem>
           <AppBarItem>
             <v-list-item-title @click.stop="userLogout">

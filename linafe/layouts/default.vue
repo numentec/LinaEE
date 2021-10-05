@@ -30,7 +30,7 @@
       v-model="isActionSheetVisible"
       :data-source="dataSource"
       :visible="isActionSheetVisible"
-      :show-title="true"
+      :show-title="false"
       :show-cancel-button="true"
       cancel-text="Cancelar"
       title="Quick tools"
@@ -91,7 +91,6 @@ export default {
   },
   methods: {
     loadTool(name) {
-      console.log('ITEMDATA CONTENT', name.index)
       this.isActionSheetVisible = false
     },
     goHome() {

@@ -26,8 +26,8 @@
               clearable
               :placeholder="useBC ? 'Barcode de Producto' : 'SKU de Producto'"
               type="text"
-              @keydown.enter="findLocations"
-              @click:append-outer="findLocations"
+              @keydown.enter="qryProd"
+              @click:append-outer="qryProd"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -125,7 +125,7 @@ export default {
     this.$nextTick(() => this.$refs.txtProdID.focus())
   },
   methods: {
-    async findLocations() {
+    async qryProd() {
       if (this.productID) {
         const keyType = this.useBC ? 'BC' : 'SKU'
         await this.$axios
