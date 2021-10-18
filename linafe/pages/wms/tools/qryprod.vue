@@ -14,7 +14,7 @@
       </v-card-title>
       <v-card-text>
         <v-row>
-          <v-switch v-model="useBC" label="Use Barcode"></v-switch>
+          <v-switch v-model="useBC" label="Use Barcode" class="mx-2" />
         </v-row>
         <v-row>
           <v-col cols="12">
@@ -34,58 +34,56 @@
         <v-row>
           <v-col cols="12" md="8">
             <v-row justify="center" align="center">
-              <v-img
-                src="/no_image.png"
-                contain
-                :max-width="$vuetify.breakpoint.mobile ? 200 : 400"
-              ></v-img>
+              <ImgForGrid
+                :img-file="product.foto"
+                :swidth="200"
+                :lwidth="400"
+              />
             </v-row>
           </v-col>
           <v-col cols="12" md="4">
+            <v-row justify="start" align="center" dense>
+              <v-card-title class="my-0 py-0 px-2">
+                {{ `SKU: ${product.sku}` }}
+              </v-card-title>
+            </v-row>
+            <v-row justify="start" align="center" dense>
+              <v-card-text class="my-0 pt-0 px-2">
+                <div class="text-subtitle-1">
+                  {{ product.descrip }}
+                </div>
+              </v-card-text>
+            </v-row>
             <v-row justify="start" align="center">
-              <v-chip color="green" text-color="white" class="mb-4">
-                Precio: 45.95
+              <v-chip color="green" text-color="white" class="mb-4 mx-2">
+                {{ `Precio: ${product.precio}` }}
               </v-chip>
             </v-row>
             <v-row justify="start" align="center">
-              <v-chip color="light-blue" text-color="white">
-                Disponible: 100 / 0
+              <v-chip color="light-blue" text-color="white" class="mx-2">
+                {{ `Disponible: ${product.disponible}` }}
               </v-chip>
             </v-row>
           </v-col>
         </v-row>
       </v-card-text>
       <v-divider class="mx-4"></v-divider>
-      <v-card-text>
-        <v-row>
-          <div>
-            <DxList
-              ref="locationsList"
-              :data-source="dataSource"
-              selection-mode="single"
-              :selected-item-keys="selectedKeys"
-              :hover-state-enabled="true"
-              :height="200"
-              @selection-changed="onSelectionChanged"
-              @item-click="onItemClick"
-            >
-              <template #item="{ data: item }">
-                <div>
-                  <div class="ubix-container">
-                    <div class="ubix">{{ item.UBIX }}</div>
-                    <div class="ubixbc">{{ `${item.UBIXBC}` }}</div>
-                  </div>
-                  <div class="stock-container">
-                    <div class="stock">{{ item.CANT1 }}</div>
-                  </div>
-                </div>
-              </template>
-            </DxList>
-          </div>
-        </v-row>
-      </v-card-text>
+      <v-list rounded>
+        <v-list-item-group v-model="selectedItem" color="primary">
+          <v-list-item v-for="(item, i) in stocklist" :key="i">
+            <v-list-item-content>
+              <v-list-item-title
+                v-text="`${item.name}: ${item.cantidad}`"
+              ></v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
+      <v-row justify="center" align="center">
+        <VueBarcode :value="product.barcode" height="50">No barcode</VueBarcode>
+      </v-row>
     </v-card>
-    <v-snackbar v-model="snackbar" timeout="2000">
+    <v-snackbar v-model="snackbar" timeout="3000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
         <v-btn :color="msgColor" text v-bind="attrs" @click="snackbar = false">
@@ -97,26 +95,38 @@
 </template>
 
 <script>
-import DxList from 'devextreme-vue/list'
-import DataSource from 'devextreme/data/data_source'
+import VueBarcode from 'vue-barcode'
+import ImgForGrid from '~/components/utilities/ImgForGrid'
 
 export default {
   components: {
-    DxList,
+    VueBarcode,
+    ImgForGrid,
   },
+
   data() {
     return {
-      useBC: true,
+      useBC: false,
       productID: '',
       dataSource: null,
       selectedKeys: [],
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
+      product: {
+        sku: '*SKU*',
+        barcode: '000000000000',
+        descrip: 'PRODUCT',
+        precio: '0',
+        disponible: '0 / 0',
+        reservado: '0 / 0',
+        stock: '0 / 0',
+        foto: '/no_image.png',
+      },
+      stocklist: [],
+      selectedItem: 0,
       rules: {
         required: (v) => !!v || 'Requerido',
-        isNumber: (v) =>
-          (!isNaN(parseFloat(v)) && parseFloat(v) >= 0) || 'Solo números',
       },
     }
   },
@@ -129,27 +139,31 @@ export default {
       if (this.productID) {
         const keyType = this.useBC ? 'BC' : 'SKU'
         await this.$axios
-          .get('wms/qrystockext/', {
+          .get('wms/qryoneprod/', {
             params: { p01: this.productID, p02: keyType, p03: '01' },
           })
           .then((response) => {
-            let ds = null
             if (response.data) {
               if (response.data.length > 0) {
-                ds = new DataSource({
-                  store: {
-                    type: 'array',
-                    key: 'UBIXBC',
-                    data: response.data,
-                  },
-                  searchExpr: ['UBIXBC', 'UBIX'],
-                })
+                const curProd = response.data[0]
+                this.product.sku = curProd.SKU
+                this.product.barcode = curProd.BARCODE
+                this.product.descrip = curProd.DESCRIP
+                this.product.disponible = curProd.DISPONIBLE
+                this.product.precio = curProd.PRECIO
+                this.product.foto = this.$config.fotosURL + curProd.FOTO
+
+                this.stocklist = [
+                  { name: 'Existencia', cantidad: curProd.EXISTENCIA },
+                  { name: 'Reservado', cantidad: curProd.RESERVADO },
+                  { name: 'Futuro', cantidad: curProd.FUTURO },
+                ]
+              } else {
+                this.msgReloc = 'No se encontró el producto'
+                this.msgColor = 'yellow'
+                this.snackbar = true
               }
             }
-
-            this.dataSource = ds
-
-            this.$nextTick(() => this.$refs.txtOrigen.focus())
           })
       }
     },

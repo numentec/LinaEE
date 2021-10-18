@@ -79,6 +79,8 @@
                     clearable
                     placeholder="Ubicación de origen"
                     type="text"
+                    :hint="`SKU: ${curSKU}`"
+                    persistent-hint
                     @keydown.enter="setOrigen"
                     @click:append-outer="setOrigen"
                   ></v-text-field>
@@ -89,12 +91,11 @@
                   <DxList
                     ref="locationsList"
                     :data-source="dataSource"
-                    :search-enabled="true"
-                    :search-editor-options="{ placeholder: 'Buscar' }"
                     selection-mode="single"
                     :selected-item-keys="selectedKeys"
                     :hover-state-enabled="true"
                     :height="200"
+                    no-data-text="No se encontró"
                     @selection-changed="onSelectionChanged"
                     @item-click="onItemClick"
                   >
@@ -186,7 +187,7 @@
         />
       </v-card-actions>
     </v-card>
-    <v-snackbar v-model="snackbar" timeout="2000">
+    <v-snackbar v-model="snackbar" timeout="3000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
         <v-btn :color="msgColor" text v-bind="attrs" @click="snackbar = false">
@@ -215,6 +216,7 @@ export default {
       origen: '',
       destino: '',
       dataSource: null,
+      curSKU: '###',
       selectedKeys: [],
       selectedLoc: {},
       cantSelectedLoc: { empaq: 0, uni: 0 },
@@ -255,6 +257,7 @@ export default {
                   },
                   searchExpr: ['UBIXBC', 'UBIX'],
                 })
+                this.curSKU = response.data[0].SKU
               }
             }
 
@@ -415,6 +418,7 @@ export default {
       this.origen = ''
       this.destino = ''
       this.dataSource = null
+      this.curSKU = '###'
       this.selectedKeys = []
       this.selectedLoc = {}
       this.cantSelectedLoc = { empaq: 0, uni: 0 }

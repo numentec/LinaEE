@@ -248,6 +248,7 @@ class Vista(Common):
                             ("acc_linabi_reports", "Access to LinaBI  Reports view"),
                             ("acc_linabi_storagexloc", "Access to storage by location"),
                             ("acc_wms_relocate_tool", "Access to relocate tool"),
+                            ("acc_wms_qryoneprod_tool", "Access to query one product tool"),
                         )
         db_table = 'core_vistas'
         verbose_name = 'Vista'

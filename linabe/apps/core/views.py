@@ -118,6 +118,7 @@ class LinaAuthToken(ObtainAuthToken):
             'core.acc_config',
             'core.acc_wms',
             'core.acc_wms_relocate_tool',
+            'core.acc_wms_qryoneprod_tool',
             'core.view_user',
             'core.view_cia',
             'core.add_cia',
