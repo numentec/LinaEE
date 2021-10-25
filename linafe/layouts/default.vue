@@ -60,7 +60,13 @@ export default {
       bar: true,
       dataSource: [
         {
-          text: 'Ver Producto',
+          text: 'Producto - Consultar',
+          onClick: () => {
+            this.$router.push({ path: '/ventas/tools/qryprod' })
+          },
+        },
+        {
+          text: 'Producto - Ubicaciones',
           onClick: () => {
             this.$router.push({ path: '/wms/tools/qryprod' })
           },

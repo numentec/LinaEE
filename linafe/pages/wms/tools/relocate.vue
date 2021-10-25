@@ -79,13 +79,16 @@
                     clearable
                     placeholder="Ubicación de origen"
                     type="text"
-                    :hint="`SKU: ${curSKU}`"
                     persistent-hint
                     @keydown.enter="setOrigen"
                     @click:append-outer="setOrigen"
                   ></v-text-field>
                 </v-col>
               </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div class="text-h6" v-text="`SKU: ${curSKU}`"></div>
+              </v-row>
+              <v-divider></v-divider>
               <v-row>
                 <div class="mb-2">
                   <DxList
@@ -94,7 +97,7 @@
                     selection-mode="single"
                     :selected-item-keys="selectedKeys"
                     :hover-state-enabled="true"
-                    :height="200"
+                    :height="150"
                     no-data-text="No se encontró"
                     @selection-changed="onSelectionChanged"
                     @item-click="onItemClick"
@@ -123,7 +126,7 @@
                   <v-text-field
                     ref="txtEmpaques"
                     v-model="cantidad.empaq"
-                    :rules="[rules.isNumber]"
+                    :rules="[rules.isNumber, rules.required]"
                     clearable
                     placeholder="Empaques"
                     label="Empaques"
@@ -136,7 +139,7 @@
                   <v-text-field
                     ref="txtUnidades"
                     v-model="cantidad.uni"
-                    :rules="[rules.isNumber]"
+                    :rules="[rules.isNumber, rules.required]"
                     :append-outer-icon="'mdi-send'"
                     clearable
                     placeholder="Unidades"
@@ -187,7 +190,7 @@
         />
       </v-card-actions>
     </v-card>
-    <v-snackbar v-model="snackbar" timeout="3000">
+    <v-snackbar v-model="snackbar" timeout="5000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
         <v-btn :color="msgColor" text v-bind="attrs" @click="snackbar = false">
@@ -331,26 +334,52 @@ export default {
       }
     },
     setOrigen() {
-      if (!this.selectedKeys.includes(this.origen)) {
-        this.selectedKeys = [...[], this.origen]
+      if (this.origen) {
+        if (!this.selectedKeys.includes(this.origen)) {
+          if (this.dataSource._items.length > 0) {
+            const isInList = this.dataSource._items.find(
+              (obj) => obj.UBIXBC === this.origen || obj.UBIX === this.origen
+            )
+
+            if (isInList) {
+              this.selectedKeys = [...[], this.origen]
+            } else {
+              this.msgReloc = 'Ubicación incorrecta'
+              this.msgColor = 'red'
+              this.snackbar = true
+            }
+          }
+        }
+      } else {
+        this.msgReloc = 'Proporcione ubicación de origen'
+        this.msgColor = 'red'
+        this.snackbar = true
       }
     },
     setCantidad() {
-      const e = this.cantSelectedLoc.empaq
-      const u = this.cantSelectedLoc.uni
-      const empaq = this.cantidad.empaq
-      const uni = this.cantidad.uni
-      if (empaq <= e && uni <= u) {
-        this.editSteps.s4 = true
-        this.curStep = 4
-        this.$nextTick(() => this.$refs.txtDestino.focus())
-      } else {
-        let msgR = `Excede disponible: ${u}`
-        if (this.selectedLoc.SEPARADOR) {
-          const sep = this.selectedLoc.SEPARADOR
-          msgR = `Excede disponible: ${e} ${sep} ${u}`
+      if (this.cantidad.empaq && this.cantidad.uni) {
+        const e = this.cantSelectedLoc.empaq
+        const u = this.cantSelectedLoc.uni
+        const empaq = Number(this.cantidad.empaq)
+        const uni = Number(this.cantidad.uni)
+        if (empaq + uni > 0) {
+          if (empaq <= e && uni <= u) {
+            this.editSteps.s4 = true
+            this.curStep = 4
+            this.$nextTick(() => this.$refs.txtDestino.focus())
+          } else {
+            let msgR = `Excede disponible: ${u}`
+            if (this.selectedLoc.SEPARADOR) {
+              const sep = this.selectedLoc.SEPARADOR
+              msgR = `Excede disponible: ${e} ${sep} ${u}`
+            }
+            this.msgReloc = msgR
+            this.msgColor = 'red'
+            this.snackbar = true
+          }
         }
-        this.msgReloc = msgR
+      } else {
+        this.msgReloc = 'Proporcione cantidades válidas'
         this.msgColor = 'red'
         this.snackbar = true
       }
@@ -410,6 +439,10 @@ export default {
             this.msgColor = 'red'
             this.snackbar = true
           })
+      } else {
+        this.msgReloc = 'Proporcione ubicación destino'
+        this.msgColor = 'red'
+        this.snackbar = true
       }
     },
     cancelStepper() {

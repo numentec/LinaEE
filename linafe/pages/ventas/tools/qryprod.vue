@@ -10,7 +10,7 @@
           </template>
           <span>Volver a vista anterior</span>
         </v-tooltip>
-        <span>Ubicaciones del producto</span>
+        <span>Consultar producto</span>
       </v-card-title>
       <v-card-text>
         <v-row>
@@ -26,8 +26,8 @@
               clearable
               :placeholder="useBC ? 'Barcode de Producto' : 'SKU de Producto'"
               type="text"
-              @keydown.enter="findLocations"
-              @click:append-outer="findLocations"
+              @keydown.enter="qryProd"
+              @click:append-outer="qryProd"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -55,22 +55,17 @@
               </v-card-text>
             </v-row>
             <v-row justify="start" align="center">
-              <v-chip
-                v-show="product.precio != 0"
-                color="green"
-                text-color="white"
-                class="mb-4 mx-2"
-              >
-                {{ `Precio: ${product.precio}` }}
+              <v-chip color="green" text-color="white" class="mb-4 mx-2">
+                {{
+                  `Precio: ${product.precio.toLocaleString('es-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                  })}`
+                }}
               </v-chip>
             </v-row>
             <v-row justify="start" align="center">
-              <v-chip
-                v-show="product.disponible != 'NON'"
-                color="light-blue"
-                text-color="white"
-                class="mx-2"
-              >
+              <v-chip color="light-blue" text-color="white" class="mx-2">
                 {{ `Disponible: ${product.disponible}` }}
               </v-chip>
             </v-row>
@@ -82,27 +77,9 @@
         <v-list-item-group v-model="selectedItem" color="primary">
           <v-list-item v-for="(item, i) in stocklist" :key="i">
             <v-list-item-content>
-              <v-list-item-title v-text="item.UBIX"> </v-list-item-title>
-              <v-list-item-subtitle>
-                <div class="d-flex justify-space-between text-body-1">
-                  <div
-                    v-text="
-                      `${
-                        $vuetify.breakpoint.mobile ? 'EXIST:' : 'EXISTENCIA'
-                      } ${item.CANT2}`
-                    "
-                  ></div>
-                  <div
-                    v-text="
-                      `${$vuetify.breakpoint.mobile ? 'DISP:' : 'DISPONIBLE'} ${
-                        item.CANT1
-                      }`
-                    "
-                  ></div>
-                </div>
-              </v-list-item-subtitle>
-              <v-list-item-subtitle v-text="item.UBIXBC">
-              </v-list-item-subtitle>
+              <v-list-item-title
+                v-text="`${item.name}: ${item.cantidad}`"
+              ></v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list-item-group>
@@ -111,7 +88,7 @@
         <VueBarcode :value="product.barcode" height="50">No barcode</VueBarcode>
       </v-row>
     </v-card>
-    <v-snackbar v-model="snackbar" timeout="3000">
+    <v-snackbar v-model="snackbar" timeout="4000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
         <v-btn :color="msgColor" text v-bind="attrs" @click="snackbar = false">
@@ -145,7 +122,7 @@ export default {
 
   data() {
     return {
-      useBC: true,
+      useBC: false,
       productID: '',
       dataSource: null,
       selectedKeys: [],
@@ -165,11 +142,11 @@ export default {
     this.$nextTick(() => this.$refs.txtProdID.focus())
   },
   methods: {
-    async findLocations() {
+    async qryProd() {
       if (this.productID) {
         const keyType = this.useBC ? 'BC' : 'SKU'
         await this.$axios
-          .get('wms/qrystockext/', {
+          .get('wms/qryoneprod/', {
             params: { p01: this.productID, p02: keyType, p03: '01' },
           })
           .then((response) => {
@@ -179,11 +156,15 @@ export default {
                 this.product.sku = curProd.SKU
                 this.product.barcode = curProd.BARCODE
                 this.product.descrip = curProd.DESCRIP
-                this.product.disponible = 'NON'
-                this.product.precio = 0
+                this.product.disponible = curProd.DISPONIBLE
+                this.product.precio = curProd.PRECIO
                 this.product.foto = this.$config.fotosURL + curProd.FOTO
 
-                this.stocklist = response.data
+                this.stocklist = [
+                  { name: 'Existencia', cantidad: curProd.EXISTENCIA },
+                  { name: 'Reservado', cantidad: curProd.RESERVADO },
+                  { name: 'Futuro', cantidad: curProd.FUTURO },
+                ]
               } else {
                 const prod = {
                   sku: '*SKU*',
@@ -205,6 +186,8 @@ export default {
           })
       }
     },
+    onSelectionChanged(e) {},
+    onItemClick(e) {},
   },
 }
 </script>
