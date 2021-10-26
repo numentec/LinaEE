@@ -81,6 +81,8 @@ class User(AbstractUser):
     city = models.CharField(blank=True, max_length=100, default='')
     country = models.CharField(blank=True, max_length=100, default='')
 
+    extrel = models.CharField('Relación Externa', max_length=20, blank=True)
+
     modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
 
     def __str__(self):

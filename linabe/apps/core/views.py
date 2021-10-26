@@ -2,6 +2,7 @@ from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.contrib.sessions.serializers import  JSONSerializer
 from .models import Cia, StakeHolder, User, IpWhiteList
 from .serializers import (
     CiaSerializer,
@@ -16,8 +17,9 @@ from .serializers import (
 )
 from apps.core import models
 from apps.core import serializers
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import authentication, permissions
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView
+from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 
@@ -251,6 +253,30 @@ class UserList(ListAPIView):
             userslist = LinaUserModel.objects.filter(username__icontains=username).order_by('-id')
 
         return userslist
+
+
+class LoggedInUserList(APIView):
+    # Codigo correcto, pero las sesiones no se registran en la tabla django_sessions
+    # a menos que se inicie sesión desde el admin de Django
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        sessions = Session.objects.filter(expire_date__gte=datetime.datetime.now())
+        uid_list = []
+
+        # Build a list of user ids from that query
+        for session in sessions:
+            data = session.get_decoded()
+            uid_list.append(data.get('_auth_user_id', None))
+
+        # print('UID_LIST', uid_list)
+        # print('AT', datetime.datetime.now())
+
+        # Query all logged in users based on id list
+        result = LinaUserModel.objects.filter(id__in=uid_list)
+        # print('USERS_RESULT', result)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class UserDetail(RetrieveAPIView):

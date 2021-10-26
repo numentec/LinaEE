@@ -31,6 +31,7 @@ urlpatterns = [
     path('user/<pk>/', views.UserDetail.as_view(), name='user'),
     path('user_perms/<pk>/', views.UserPermsDetail.as_view(), name='user_perms'),
     path('user_register/', views.UserRegister.as_view(), name='user_register'),
+    path('loggedinusers/', views.LoggedInUserList.as_view(), name='loggedinusers'),
     path('groups/', views.GroupsList.as_view(), name='groups'),
     path('modul-actives/', views.ModulosActivosList.as_view(), name='modul-actives'),
     path('accviewconf-list/', views.VistaConfigAccList.as_view(), name='accviewconf-list'),

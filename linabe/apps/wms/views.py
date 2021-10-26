@@ -61,6 +61,7 @@ class QryStockExtAPIView(APIView):
         if pvals == '0BC01':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
+
         params = [p01, p02, p03]
 
         result = []
@@ -108,6 +109,7 @@ class RelocateExtAPIView(APIView):
             return Response([{"status": "NOT EXEC PARAMS"}], status=status.HTTP_200_OK)
 
         usr = request.user.username
+        usr_extrel = request.user.extrel
 
         result = []
 
@@ -118,7 +120,7 @@ class RelocateExtAPIView(APIView):
 
             statusmsg = cursor.var(str).var
 
-            params = [p01, p02, p03, p04, p05, usr, statusmsg]
+            params = [p01, p02, p03, p04, p05, usr, usr_extrel, statusmsg]
 
             cursor.callproc(qrycalling, params)
 
