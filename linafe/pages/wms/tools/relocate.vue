@@ -46,7 +46,7 @@
         <v-stepper-items>
           <v-stepper-content step="1" class="pa-0">
             <v-card class="px-4" min-height="200px" flat tile>
-              <v-switch v-model="useBC" label="Use Barcode"></v-switch>
+              <v-switch v-model="useBC1" label="Use Barcode"></v-switch>
               <v-row>
                 <v-col cols="12">
                   <v-text-field
@@ -56,7 +56,7 @@
                     :append-outer-icon="'mdi-send'"
                     clearable
                     :placeholder="
-                      useBC ? 'Barcode de Producto' : 'SKU de Producto'
+                      useBC1 ? 'Barcode de Producto' : 'SKU de Producto'
                     "
                     type="text"
                     @keydown.enter="findLocations"
@@ -125,8 +125,8 @@
                 <v-col v-if="showEmpaques" cols="12" md="6">
                   <v-text-field
                     ref="txtEmpaques"
-                    v-model="cantidad.empaq"
-                    :rules="[rules.isNumber, rules.required]"
+                    v-model.number="cantidad.empaq"
+                    :rules="[rules.isNumber]"
                     clearable
                     placeholder="Empaques"
                     label="Empaques"
@@ -138,8 +138,8 @@
                 <v-col cols="12" :md="showEmpaques ? 6 : 12">
                   <v-text-field
                     ref="txtUnidades"
-                    v-model="cantidad.uni"
-                    :rules="[rules.isNumber, rules.required]"
+                    v-model.number="cantidad.uni"
+                    :rules="[rules.isNumber]"
                     :append-outer-icon="'mdi-send'"
                     clearable
                     placeholder="Unidades"
@@ -156,7 +156,7 @@
 
           <v-stepper-content step="4" class="px-0">
             <v-card class="px-4" min-height="200px" flat tile>
-              <v-switch v-model="useBC" label="Use Barcode"></v-switch>
+              <v-switch v-model="useBC2" label="Use Barcode"></v-switch>
               <v-row>
                 <v-col cols="12">
                   <v-text-field
@@ -165,7 +165,7 @@
                     :rules="[rules.required]"
                     :append-outer-icon="'mdi-send'"
                     clearable
-                    :placeholder="useBC ? 'Destino (Barcode)' : 'Destino (ID)'"
+                    :placeholder="useBC2 ? 'Destino (Barcode)' : 'Destino (ID)'"
                     type="text"
                     @keydown.enter="relocate"
                     @click:append-outer="relocate"
@@ -214,7 +214,8 @@ export default {
   data() {
     return {
       curStep: 1,
-      useBC: true,
+      useBC1: true,
+      useBC2: true,
       productID: '',
       origen: '',
       destino: '',
@@ -243,7 +244,10 @@ export default {
   methods: {
     async findLocations() {
       if (this.productID) {
-        const keyType = this.useBC ? 'BC' : 'SKU'
+        const keyType = this.useBC1 ? 'BC' : 'SKU'
+
+        this.dataSource = null
+
         await this.$axios
           .get('wms/qrystockext/', {
             params: { p01: this.productID, p02: keyType, p03: '01' },
@@ -261,18 +265,22 @@ export default {
                   searchExpr: ['UBIXBC', 'UBIX'],
                 })
                 this.curSKU = response.data[0].SKU
+
+                this.dataSource = ds
+
+                this.editSteps.s1 = true
+                this.editSteps.s2 = true
+                this.editSteps.s3 = false
+                this.editSteps.s4 = false
+
+                this.curStep = 2
+                this.$nextTick(() => this.$refs.txtOrigen.focus())
+              } else {
+                this.msgReloc = 'Producto no disponible'
+                this.msgColor = 'yellow'
+                this.snackbar = true
               }
             }
-
-            this.dataSource = ds
-
-            this.editSteps.s1 = true
-            this.editSteps.s2 = true
-            this.editSteps.s3 = false
-            this.editSteps.s4 = false
-
-            this.curStep = 2
-            this.$nextTick(() => this.$refs.txtOrigen.focus())
           })
       }
     },
@@ -357,7 +365,10 @@ export default {
       }
     },
     setCantidad() {
-      if (this.cantidad.empaq && this.cantidad.uni) {
+      this.cantidad.empaq = Number(this.cantidad.empaq)
+      this.cantidad.uni = Number(this.cantidad.uni)
+
+      if (this.cantidad.empaq + this.cantidad.uni > 0) {
         const e = this.cantSelectedLoc.empaq
         const u = this.cantSelectedLoc.uni
         const empaq = Number(this.cantidad.empaq)
@@ -446,7 +457,8 @@ export default {
       }
     },
     cancelStepper() {
-      this.useBC = true
+      // this.useBC1 = true
+      // this.useBC2 = true
       this.productID = ''
       this.origen = ''
       this.destino = ''

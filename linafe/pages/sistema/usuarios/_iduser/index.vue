@@ -316,13 +316,24 @@
                       ></v-textarea>
                     </v-col>
                     <v-col cols="12" md="4">
-                      <v-text-field
-                        v-model="curUser.tel3"
-                        name="tel3"
-                        :readonly="modo == 'r'"
-                        label="Teléfono (2)"
-                        dense
-                      ></v-text-field>
+                      <v-row>
+                        <v-text-field
+                          v-model="curUser.tel3"
+                          name="tel3"
+                          :readonly="modo == 'r'"
+                          label="Teléfono (2)"
+                          dense
+                        ></v-text-field>
+                      </v-row>
+                      <v-row>
+                        <v-text-field
+                          v-model="curUser.extrel"
+                          name="extrel"
+                          :readonly="modo == 'r'"
+                          label="Relación externa"
+                          dense
+                        ></v-text-field>
+                      </v-row>
                     </v-col>
                   </v-row>
                   <v-row>
