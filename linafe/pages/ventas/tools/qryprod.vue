@@ -37,7 +37,7 @@
               <ImgForGrid
                 :img-file="product.foto"
                 :swidth="200"
-                :lwidth="400"
+                :lwidth="375"
               />
             </v-row>
           </v-col>

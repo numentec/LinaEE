@@ -24,7 +24,7 @@ export default {
     imgFile: {
       type: String,
       required: true,
-      default: 'noimg.jpg',
+      default: '/no_image.png',
     },
     swidth: {
       type: Number,
@@ -38,22 +38,18 @@ export default {
   data() {
     return {
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
-      imgErr: false,
+      imgSrc: this.imgFile,
     }
   },
-  computed: {
-    imgSrc() {
-      let imgsrc = '/no_image.png'
-
-      if (!this.imgErr) {
-        imgsrc = this.imgFile
-      }
-      return imgsrc
+  computed: {},
+  watch: {
+    imgFile() {
+      this.imgSrc = this.imgFile
     },
   },
   methods: {
     onImgError() {
-      this.imgErr = true
+      this.imgSrc = '/no_image.png'
       this.$emit('no-image')
     },
   },

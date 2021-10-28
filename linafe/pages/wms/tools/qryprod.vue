@@ -10,7 +10,7 @@
           </template>
           <span>Volver a vista anterior</span>
         </v-tooltip>
-        <span>Ubicaciones del producto</span>
+        <span>Ubicación de producto</span>
       </v-card-title>
       <v-card-text>
         <v-row>
@@ -37,7 +37,7 @@
               <ImgForGrid
                 :img-file="product.foto"
                 :swidth="200"
-                :lwidth="400"
+                :lwidth="375"
               />
             </v-row>
           </v-col>
@@ -197,7 +197,7 @@ export default {
                 }
                 this.product = Object.assign({}, prod)
                 this.stocklist = []
-                this.msgReloc = 'No se encontró el producto'
+                this.msgReloc = 'Producto no disponible'
                 this.msgColor = 'yellow'
                 this.snackbar = true
               }
