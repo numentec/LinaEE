@@ -421,7 +421,6 @@
     <Slideshow
       :data-source="getCurStore"
       :cur-key="curRowKey"
-      :cur-index="curRowIndex"
       :show-slideshow="slideshow"
       :no-img-list="noImgList"
       @hideSlideshow="slideshow = false"

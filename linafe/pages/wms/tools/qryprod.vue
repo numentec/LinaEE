@@ -34,17 +34,19 @@
         <v-row>
           <v-col cols="12" md="8">
             <v-row justify="center" align="center">
-              <ImgForGrid
-                :img-file="product.foto"
-                :swidth="200"
-                :lwidth="375"
-              />
+              <v-col class="shrink">
+                <ImgForGrid
+                  :img-file="product.foto"
+                  :swidth="200"
+                  :lwidth="350"
+                />
+              </v-col>
             </v-row>
           </v-col>
           <v-col cols="12" md="4">
             <v-row justify="start" align="center" dense>
               <v-card-title class="my-0 py-0 px-2">
-                {{ `SKU: ${product.sku}` }}
+                {{ product.sku }}
               </v-card-title>
             </v-row>
             <v-row justify="start" align="center" dense>
@@ -127,7 +129,7 @@ import VueBarcode from 'vue-barcode'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 
 const product = {
-  sku: '*SKU*',
+  sku: '*****',
   barcode: '000000000000',
   descrip: 'PRODUCT',
   precio: '0',

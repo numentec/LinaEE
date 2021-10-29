@@ -102,10 +102,6 @@ export default {
       type: Number,
       default: 0,
     },
-    curIndex: {
-      type: Number,
-      default: 0,
-    },
     dataSource: {
       type: Array,
       default: () => [],
@@ -148,12 +144,18 @@ export default {
     },
   },
   watch: {
-    curKey(newVal) {
-      // if (this.curKey !== 'non') {
-      const ci = this.dS.findIndex((obj) => obj.ID === newVal)
-      this.curItem = ci
-      //   this.curKey = 'non'
-      // }
+    // curKey(newVal) {
+    //   // if (this.curKey !== 'non') {
+    //   const ci = this.dS.findIndex((obj) => obj.ID === newVal)
+    //   this.curItem = ci
+    //   //   this.curKey = 'non'
+    //   // }
+    // },
+    showSlideshow(newVal) {
+      if (newVal) {
+        const ci = this.dS.findIndex((obj) => obj.ID === this.curKey)
+        this.curItem = ci
+      }
     },
   },
   mounted() {},
