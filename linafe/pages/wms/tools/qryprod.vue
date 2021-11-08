@@ -13,10 +13,10 @@
         <span>Ubicación de producto</span>
       </v-card-title>
       <v-card-text>
-        <v-row>
+        <v-row dense>
           <v-switch v-model="useBC" label="Use Barcode" class="mx-2" />
         </v-row>
-        <v-row>
+        <v-row dense>
           <v-col cols="12">
             <v-text-field
               ref="txtProdID"
@@ -31,22 +31,11 @@
             ></v-text-field>
           </v-col>
         </v-row>
-        <v-row>
-          <v-col cols="12" md="8">
-            <v-row justify="center" align="center">
-              <v-col class="shrink">
-                <ImgForGrid
-                  :img-file="product.foto"
-                  :swidth="200"
-                  :lwidth="350"
-                />
-              </v-col>
-            </v-row>
-          </v-col>
-          <v-col cols="12" md="4">
+        <v-row dense>
+          <v-col cols="12">
             <v-row justify="start" align="center" dense>
               <v-card-title class="my-0 py-0 px-2">
-                {{ product.sku }}
+                {{ `SKU: ${product.sku}` }}
               </v-card-title>
             </v-row>
             <v-row justify="start" align="center" dense>
@@ -56,62 +45,84 @@
                 </div>
               </v-card-text>
             </v-row>
-            <v-row justify="start" align="center">
-              <v-chip
-                v-show="product.precio != 0"
-                color="green"
-                text-color="white"
-                class="mb-4 mx-2"
-              >
-                {{ `Precio: ${product.precio}` }}
-              </v-chip>
-            </v-row>
-            <v-row justify="start" align="center">
-              <v-chip
-                v-show="product.disponible != 'NON'"
-                color="light-blue"
-                text-color="white"
-                class="mx-2"
-              >
-                {{ `Disponible: ${product.disponible}` }}
-              </v-chip>
-            </v-row>
           </v-col>
         </v-row>
       </v-card-text>
-      <v-divider class="mx-4"></v-divider>
-      <v-list rounded>
-        <v-list-item-group v-model="selectedItem" color="primary">
-          <v-list-item v-for="(item, i) in stocklist" :key="i">
-            <v-list-item-content>
-              <v-list-item-title v-text="item.UBIX"> </v-list-item-title>
-              <v-list-item-subtitle>
-                <div class="d-flex justify-space-between text-body-1">
-                  <div
-                    v-text="
-                      `${
-                        $vuetify.breakpoint.mobile ? 'EXIST:' : 'EXISTENCIA'
-                      } ${item.CANT2}`
-                    "
-                  ></div>
-                  <div
-                    v-text="
-                      `${$vuetify.breakpoint.mobile ? 'DISP:' : 'DISPONIBLE'} ${
-                        item.CANT1
-                      }`
-                    "
-                  ></div>
-                </div>
-              </v-list-item-subtitle>
-              <v-list-item-subtitle v-text="item.UBIXBC">
-              </v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list-item-group>
-      </v-list>
+      <v-card v-for="(item, i) in stocklist" :key="i" tile class="mx-auto mb-2">
+        <v-row justify="center" align="center" dense no-gutters>
+          <v-btn text class="mb-0" color="primary" block>
+            {{ item.UBIX }}
+          </v-btn>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-row justify="center" align="center" dense no-gutters>
+              <div
+                class="text-caption font-weight-medium"
+                v-text="$vuetify.breakpoint.mobile ? 'FIS' : 'FISICO'"
+              ></div>
+            </v-row>
+            <v-row justify="center" align="center" no-gutters>
+              <div v-text="item.BULTOS_FISICO"></div>
+            </v-row>
+            <v-row justify="center" align="center" no-gutters>
+              <div v-text="item.CANT1"></div>
+            </v-row>
+          </v-col>
+          <v-col>
+            <v-row justify="center" align="center" dense no-gutters>
+              <div
+                class="text-caption font-weight-medium"
+                v-text="$vuetify.breakpoint.mobile ? 'RES' : 'RESERVADO'"
+              ></div>
+            </v-row>
+            <v-row justify="center" align="center" no-gutters>
+              <div v-text="item.BULTOS_RESERVA"></div>
+            </v-row>
+            <v-row justify="center" align="center" no-gutters>
+              <div v-text="item.CANT2"></div>
+            </v-row>
+          </v-col>
+          <v-col>
+            <v-row justify="center" align="center" dense no-gutters>
+              <div
+                class="text-caption font-weight-medium"
+                v-text="$vuetify.breakpoint.mobile ? 'DIS' : 'DISPONIBLE'"
+              ></div>
+            </v-row>
+            <v-row justify="center" align="center" no-gutters>
+              <div v-text="item.BULTOS_DISPONIBLE"></div>
+            </v-row>
+            <v-row justify="center" align="center" no-gutters>
+              <div v-text="item.CANT3"></div>
+            </v-row>
+          </v-col>
+        </v-row>
+      </v-card>
       <v-row justify="center" align="center">
         <VueBarcode :value="product.barcode" height="50">No barcode</VueBarcode>
       </v-row>
+      <v-card-actions>
+        <v-card-text>Ver imagen</v-card-text>
+        <v-spacer></v-spacer>
+        <v-btn icon @click.stop="showImg = !showImg">
+          <v-icon>{{ showImg ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        </v-btn>
+      </v-card-actions>
+      <v-expand-transition>
+        <div v-show="showImg">
+          <v-divider></v-divider>
+          <v-row justify="center" align="center">
+            <v-col class="shrink">
+              <ImgForGrid
+                :img-file="product.foto"
+                :swidth="200"
+                :lwidth="350"
+              />
+            </v-col>
+          </v-row>
+        </div>
+      </v-expand-transition>
     </v-card>
     <v-snackbar v-model="snackbar" timeout="3000">
       {{ msgReloc }}
@@ -157,6 +168,7 @@ export default {
       product,
       stocklist: [],
       selectedItem: 0,
+      showImg: false,
       rules: {
         required: (v) => !!v || 'Requerido',
       },
