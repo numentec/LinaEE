@@ -48,57 +48,65 @@
           </v-col>
         </v-row>
       </v-card-text>
-      <v-card v-for="(item, i) in stocklist" :key="i" tile class="mx-auto mb-2">
-        <v-row justify="center" align="center" dense no-gutters>
-          <v-btn text class="mb-0" color="primary" block>
-            {{ item.UBIX }}
-          </v-btn>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-row justify="center" align="center" dense no-gutters>
-              <div
-                class="text-caption font-weight-medium"
-                v-text="$vuetify.breakpoint.mobile ? 'FIS' : 'FISICO'"
-              ></div>
-            </v-row>
-            <v-row justify="center" align="center" no-gutters>
-              <div v-text="item.BULTOS_FISICO"></div>
-            </v-row>
-            <v-row justify="center" align="center" no-gutters>
-              <div v-text="item.CANT1"></div>
-            </v-row>
-          </v-col>
-          <v-col>
-            <v-row justify="center" align="center" dense no-gutters>
-              <div
-                class="text-caption font-weight-medium"
-                v-text="$vuetify.breakpoint.mobile ? 'RES' : 'RESERVADO'"
-              ></div>
-            </v-row>
-            <v-row justify="center" align="center" no-gutters>
-              <div v-text="item.BULTOS_RESERVA"></div>
-            </v-row>
-            <v-row justify="center" align="center" no-gutters>
-              <div v-text="item.CANT2"></div>
-            </v-row>
-          </v-col>
-          <v-col>
-            <v-row justify="center" align="center" dense no-gutters>
-              <div
-                class="text-caption font-weight-medium"
-                v-text="$vuetify.breakpoint.mobile ? 'DIS' : 'DISPONIBLE'"
-              ></div>
-            </v-row>
-            <v-row justify="center" align="center" no-gutters>
-              <div v-text="item.BULTOS_DISPONIBLE"></div>
-            </v-row>
-            <v-row justify="center" align="center" no-gutters>
-              <div v-text="item.CANT3"></div>
-            </v-row>
-          </v-col>
-        </v-row>
-      </v-card>
+      <template v-for="(item, i) in stocklist">
+        <v-card v-if="item.LINALLOW != 'H'" :key="i" tile class="mx-auto mb-2">
+          <v-row justify="center" align="center" dense no-gutters>
+            <v-btn
+              text
+              :disabled="item.LINALLOW == 'D'"
+              class="mb-0"
+              color="primary"
+              block
+            >
+              {{ item.UBIX }}
+            </v-btn>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-row justify="center" align="center" dense no-gutters>
+                <div
+                  class="text-caption font-weight-medium"
+                  v-text="$vuetify.breakpoint.mobile ? 'FIS' : 'FISICO'"
+                ></div>
+              </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div v-text="item.BULTOS_FISICO"></div>
+              </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div v-text="item.CANT1"></div>
+              </v-row>
+            </v-col>
+            <v-col>
+              <v-row justify="center" align="center" dense no-gutters>
+                <div
+                  class="text-caption font-weight-medium"
+                  v-text="$vuetify.breakpoint.mobile ? 'RES' : 'RESERVADO'"
+                ></div>
+              </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div v-text="item.BULTOS_RESERVA"></div>
+              </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div v-text="item.CANT2"></div>
+              </v-row>
+            </v-col>
+            <v-col>
+              <v-row justify="center" align="center" dense no-gutters>
+                <div
+                  class="text-caption font-weight-medium"
+                  v-text="$vuetify.breakpoint.mobile ? 'DIS' : 'DISPONIBLE'"
+                ></div>
+              </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div v-text="item.BULTOS_DISPONIBLE"></div>
+              </v-row>
+              <v-row justify="center" align="center" no-gutters>
+                <div v-text="item.CANT3"></div>
+              </v-row>
+            </v-col>
+          </v-row>
+        </v-card>
+      </template>
       <v-row justify="center" align="center">
         <VueBarcode :value="product.barcode" height="50">No barcode</VueBarcode>
       </v-row>
@@ -141,7 +149,7 @@ import ImgForGrid from '~/components/utilities/ImgForGrid'
 
 const product = {
   sku: '*****',
-  barcode: '000000000000',
+  barcode: '0000000000000',
   descrip: 'PRODUCT',
   precio: '0',
   disponible: 'NON',
@@ -200,9 +208,9 @@ export default {
                 this.stocklist = response.data
               } else {
                 const prod = {
-                  sku: '*SKU*',
-                  barcode: '000000000000',
-                  descrip: 'PRODUCT',
+                  sku: '*****',
+                  barcode: '0000000000000',
+                  descrip: 'NO DISPONIBLE',
                   precio: '0',
                   disponible: 'NON',
                   reservado: '0 / 0',
