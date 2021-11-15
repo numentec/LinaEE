@@ -51,18 +51,20 @@ class QryStockExtAPIView(APIView):
         # p01 - Código de barra o SKU
         # p02 - Tipo de dato (BC o SKU)
         # p03 - Compañía
+        # p04 - D = Disponible / T = Todo
         
         p01 = str(request.query_params.get('p01', '0')).lower().strip()
         p02 = str(request.query_params.get('p02', 'BC')).strip()
         p03 = str(request.query_params.get('p03', '01')).strip()
+        p04 = str(request.query_params.get('p04', 'T')).strip()
 
-        pvals = p01 + p02 + p03
+        pvals = p01 + p02 + p03 + p04
 
-        if pvals == '0BC01':
+        if pvals == '0BC01T':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
 
-        params = [p01, p02, p03]
+        params = [p01, p02, p03, p04]
 
         result = []
 

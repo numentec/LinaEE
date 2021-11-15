@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex align-content-start flex-wrap">
-    <v-card max-width="600" class="mx-auto">
+    <v-card width="600" class="mx-auto">
       <v-card-title>
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
@@ -35,7 +35,7 @@
           <v-col cols="12">
             <v-row justify="start" align="center" dense>
               <v-card-title class="my-0 py-0 px-2">
-                {{ `SKU: ${product.sku}` }}
+                {{ `SKU: ${product.sku} (${product.um})` }}
               </v-card-title>
             </v-row>
             <v-row justify="start" align="center" dense>
@@ -66,14 +66,14 @@
               <v-row justify="center" align="center" dense no-gutters>
                 <div
                   class="text-caption font-weight-medium"
-                  v-text="$vuetify.breakpoint.mobile ? 'FIS' : 'FISICO'"
+                  v-text="$vuetify.breakpoint.mobile ? 'EXI' : 'EXISTENCIA'"
                 ></div>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div v-text="item.BULTOS_FISICO"></div>
+                <div v-text="item.CANT1"></div>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div v-text="item.CANT1"></div>
+                <div v-text="item.BULTOS_FISICO"></div>
               </v-row>
             </v-col>
             <v-col>
@@ -84,10 +84,10 @@
                 ></div>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div v-text="item.BULTOS_RESERVA"></div>
+                <div v-text="item.CANT2"></div>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div v-text="item.CANT2"></div>
+                <div v-text="item.BULTOS_RESERVA"></div>
               </v-row>
             </v-col>
             <v-col>
@@ -98,10 +98,10 @@
                 ></div>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div v-text="item.BULTOS_DISPONIBLE"></div>
+                <div v-text="item.CANT3"></div>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div v-text="item.CANT3"></div>
+                <div v-text="item.BULTOS_DISPONIBLE"></div>
               </v-row>
             </v-col>
           </v-row>
@@ -151,6 +151,7 @@ const product = {
   sku: '*****',
   barcode: '0000000000000',
   descrip: 'PRODUCT',
+  um: 'UNI',
   precio: '0',
   disponible: 'NON',
   reservado: '0 / 0',
@@ -192,7 +193,7 @@ export default {
         const keyType = this.useBC ? 'BC' : 'SKU'
         await this.$axios
           .get('wms/qrystockext/', {
-            params: { p01: this.productID, p02: keyType, p03: '01' },
+            params: { p01: this.productID, p02: keyType, p03: '01', p04: 'T' },
           })
           .then((response) => {
             if (response.data) {
@@ -201,6 +202,7 @@ export default {
                 this.product.sku = curProd.SKU
                 this.product.barcode = curProd.BARCODE
                 this.product.descrip = curProd.DESCRIP
+                this.product.um = curProd.UM
                 this.product.disponible = 'NON'
                 this.product.precio = 0
                 this.product.foto = this.$config.fotosURL + curProd.FOTO
@@ -211,6 +213,7 @@ export default {
                   sku: '*****',
                   barcode: '0000000000000',
                   descrip: 'NO DISPONIBLE',
+                  um: 'UNI',
                   precio: '0',
                   disponible: 'NON',
                   reservado: '0 / 0',

@@ -86,7 +86,7 @@
                 </v-col>
               </v-row>
               <v-row justify="center" align="center" no-gutters>
-                <div class="text-h6" v-text="`SKU: ${curSKU}`"></div>
+                <div class="text-h6" v-text="`SKU: ${curSKU} (${curUM})`"></div>
               </v-row>
               <v-divider></v-divider>
               <v-row>
@@ -103,15 +103,28 @@
                     @item-click="onItemClick"
                   >
                     <template #item="{ data: item }">
-                      <div>
-                        <div class="ubix-container">
-                          <div class="ubix">{{ item.UBIX }}</div>
-                          <div class="ubixbc">{{ `${item.UBIXBC}` }}</div>
-                        </div>
-                        <div class="stock-container">
-                          <div class="stock">{{ item.CANT1 }}</div>
-                        </div>
-                      </div>
+                      <v-card flat tile class="mx-auto">
+                        <v-row justify="center" align="center" no-gutter>
+                          <div class="ubix-container">
+                            <div class="ubix">{{ item.UBIX }}</div>
+                          </div>
+                        </v-row>
+                        <v-row justify="center" align="center" no-gutter>
+                          <div class="ubix-container">
+                            <div class="ubixbc">{{ `${item.UBIXBC}` }}</div>
+                          </div>
+                        </v-row>
+                        <v-row justify="center" align="center">
+                          <div class="stock-container">
+                            <div class="stock">
+                              {{
+                                `${item.CANT3}  (Bultos: ${item.BULTOS_DISPONIBLE})`
+                              }}
+                            </div>
+                          </div>
+                        </v-row>
+                        <v-divider></v-divider>
+                      </v-card>
                     </template>
                   </DxList>
                 </div>
@@ -214,13 +227,14 @@ export default {
   data() {
     return {
       curStep: 1,
-      useBC1: true,
+      useBC1: false,
       useBC2: true,
       productID: '',
       origen: '',
       destino: '',
       dataSource: null,
       curSKU: '###',
+      curUM: 'UNI',
       selectedKeys: [],
       selectedLoc: {},
       cantSelectedLoc: { empaq: 0, uni: 0 },
@@ -250,7 +264,7 @@ export default {
 
         await this.$axios
           .get('wms/qrystockext/', {
-            params: { p01: this.productID, p02: keyType, p03: '01' },
+            params: { p01: this.productID, p02: keyType, p03: '01', p04: 'D' },
           })
           .then((response) => {
             let ds = null
@@ -263,8 +277,10 @@ export default {
                     data: response.data,
                   },
                   searchExpr: ['UBIXBC', 'UBIX'],
+                  filter: [['DISP', '>', 0], 'and', ['LINALLOW', '=', 'A']],
                 })
                 this.curSKU = response.data[0].SKU
+                this.curUM = response.data[0].UM
 
                 this.dataSource = ds
 
@@ -276,7 +292,17 @@ export default {
                 this.curStep = 2
                 this.$nextTick(() => this.$refs.txtOrigen.focus())
               } else {
-                this.msgReloc = 'Producto no disponible'
+                this.curSKU = '###'
+                this.curUM = 'UNI'
+                this.cantidad.empaq = 0
+                this.cantidad.uni = 0
+
+                this.editSteps.s1 = true
+                this.editSteps.s2 = false
+                this.editSteps.s3 = false
+                this.editSteps.s4 = false
+
+                this.msgReloc = 'No disponible para reubicar'
                 this.msgColor = 'yellow'
                 this.snackbar = true
               }
@@ -291,19 +317,19 @@ export default {
         this.origen = this.selectedLoc.UBIXBC
 
         if (this.selectedLoc.SEPARADOR) {
-          const i = this.selectedLoc.CANT1.indexOf(this.selectedLoc.SEPARADOR)
+          const i = this.selectedLoc.CANT3.indexOf(this.selectedLoc.SEPARADOR)
 
           this.cantSelectedLoc.empaq = Number(
-            this.selectedLoc.CANT1.substring(0, i - 1).trim()
+            this.selectedLoc.CANT3.substring(0, i - 1).trim()
           )
           this.cantSelectedLoc.uni = Number(
-            this.selectedLoc.CANT1.substring(i + 1).trim()
+            this.selectedLoc.CANT3.substring(i + 1).trim()
           )
 
           this.showEmpaques = true
         } else {
           this.cantSelectedLoc.empaq = 0
-          this.cantSelectedLoc.uni = Number(this.selectedLoc.CANT1.trim())
+          this.cantSelectedLoc.uni = Number(this.selectedLoc.CANT3.trim())
           this.showEmpaques = false
         }
 
@@ -464,6 +490,7 @@ export default {
       this.destino = ''
       this.dataSource = null
       this.curSKU = '###'
+      this.curUM = 'UNI'
       this.selectedKeys = []
       this.selectedLoc = {}
       this.cantSelectedLoc = { empaq: 0, uni: 0 }
