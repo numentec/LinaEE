@@ -77,6 +77,12 @@ export default {
             this.$router.push({ path: '/wms/tools/relocate' })
           },
         },
+        {
+          text: 'Conteo Físico',
+          onClick: () => {
+            this.$router.push({ path: '/wms/tools/countprods' })
+          },
+        },
       ],
       isActionSheetVisible: false,
     }
