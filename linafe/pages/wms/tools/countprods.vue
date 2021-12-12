@@ -11,6 +11,25 @@
           <span>Volver a vista anterior</span>
         </v-tooltip>
         <span>Conteo físico</span>
+        <v-spacer></v-spacer>
+        <v-menu bottom left>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" color="primary" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item link>
+              <v-list-item-title>Ver conteo</v-list-item-title>
+            </v-list-item>
+            <v-list-item link>
+              <v-list-item-title>Limpiar conteo</v-list-item-title>
+            </v-list-item>
+            <v-list-item link @click.stop="showConfig = true">
+              <v-list-item-title>Configuración</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-card-title>
       <v-card-text>
         <v-row dense>
@@ -21,14 +40,15 @@
             <v-text-field
               ref="txtUbicacionID"
               v-model="ubicacionID"
+              :disabled="fijarUbicacion"
               :rules="[rules.required]"
               :append-outer-icon="'mdi-send'"
               clearable
               placeholder="Ubicación"
               type="text"
               class="mx-2"
-              @keydown.enter="findLocations"
-              @click:append-outer="findLocations"
+              @keydown.enter="loadProdsPerLocation"
+              @click:append-outer="loadProdsPerLocation"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -43,10 +63,11 @@
               :append-outer-icon="'mdi-send'"
               clearable
               placeholder="Producto"
+              :disabled="countDisabled"
               type="text"
               class="mx-2"
-              @keydown.enter="findLocations"
-              @click:append-outer="findLocations"
+              @keydown.enter="findProduct"
+              @click:append-outer="findProduct"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -77,6 +98,48 @@
                 {{ `Físico: ${product.disponible}` }}
               </v-chip>
             </v-row>
+          </v-col>
+        </v-row>
+        <v-divider></v-divider>
+        <v-row
+          v-show="showPackageCount"
+          justify="space-around"
+          align="center"
+          dense
+        >
+          <v-col cols="3" class="d-flex justify-center shrink">
+            <v-btn
+              class="ma-2"
+              outlined
+              fab
+              small
+              color="primary"
+              @click="countPackage('plus')"
+            >
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </v-col>
+          <v-col cols="6" class="d-flex justify-center shrink">
+            <v-text-field
+              ref="txtPackageCount"
+              v-model="packageCount"
+              label="Bultos"
+              placeholder="Bultos"
+              type="text"
+              class="centered-input"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="3" class="d-flex justify-center shrink">
+            <v-btn
+              class="ma-2"
+              outlined
+              fab
+              small
+              color="primary"
+              @click="countPackage('minus')"
+            >
+              <v-icon>mdi-minus</v-icon>
+            </v-btn>
           </v-col>
         </v-row>
         <v-divider></v-divider>
@@ -182,6 +245,41 @@
         </v-card>
       </template>
     </v-card>
+    <v-dialog v-model="showConfig" max-width="300">
+      <v-card>
+        <v-card-title class="text-h5"> Configuración </v-card-title>
+        <v-divider />
+        <v-card-text>
+          <v-row no-gutters>
+            <v-switch
+              v-model="fijarUbicacion"
+              label="Fijar Ubicación"
+            ></v-switch>
+          </v-row>
+          <v-row no-gutters>
+            <v-switch
+              v-model="countPerPackage"
+              label="Contar por bulto"
+              @click="!countPerPackage ? (showPackageCount = false) : null"
+            ></v-switch>
+          </v-row>
+          <v-row no-gutters>
+            <v-switch
+              v-model="showPackageCount"
+              label="Ver conteo de bultos"
+              :disabled="!countPerPackage"
+            ></v-switch>
+          </v-row>
+        </v-card-text>
+        <v-divider />
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green darken-1" text @click="showConfig = false">
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" timeout="3000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
@@ -219,8 +317,15 @@ export default {
       useBC2: true,
       productID: '',
       ubicacionID: '',
-      countEmpaq: 1,
-      countUni: 0,
+      prodsPerLocation: [],
+      fijarUbicacion: false,
+      countDisabled: true,
+      countPerPackage: false,
+      showPackageCount: false,
+      showConfig: false,
+      packageCount: 1, // Cuenta de bultos
+      packingCount: 1, // Cuenta de empaques
+      uniCount: 0, // Cuenta de unidades
       xpos1: 0,
       xpos2: 0,
       cE: true,
@@ -229,7 +334,7 @@ export default {
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
-      product,
+      product: Object.assign({}, product),
       stocklist: [],
       selectedItem: 0,
       showImg: false,
@@ -240,13 +345,13 @@ export default {
   },
   computed: {
     curCount() {
-      const cE = this.countEmpaq
-      const cU = this.countUni
+      const cE = this.packingCount
+      const cU = this.uniCount
       return `${cE} / ${cU}`
     },
   },
   mounted() {
-    this.$nextTick(() => this.$refs.txtProdID.focus())
+    this.$nextTick(() => this.$refs.txtUbicacionID.focus())
   },
   methods: {
     async findLocations() {
@@ -291,21 +396,98 @@ export default {
           })
       }
     },
+    findProduct() {
+      if (!this.fijarUbicacion) {
+        if (this.prodsPerLocation.length > 0) {
+          const xProd = () => {
+            if (this.useBC2) {
+              return this.prodsPerLocation.find(
+                (o) => o.BARCODE === this.productID
+              )
+            } else {
+              return this.prodsPerLocation.find((o) => o.SKU === this.productID)
+            }
+          }
+
+          const p = xProd()
+
+          if (p) {
+            this.product.sku = p.SKU
+            this.product.barcode = p.BARCODE
+            this.product.descrip = p.DESCRIP
+            this.product.um = p.UM
+            this.product.disponible = p.CANT1
+            this.product.precio = 0
+            this.product.foto = this.$config.fotosURL + p.FOTO
+          } else {
+            this.product = Object.assign({}, product)
+            this.msgReloc = `El producto ${this.productID} no debe estar en esta ubicación`
+            this.msgColor = 'red'
+            this.snackbar = true
+          }
+
+          this.productID = ''
+          this.$nextTick(() => this.$refs.txtProdID.focus())
+        }
+      }
+    },
+    async loadProdsPerLocation() {
+      if (this.ubicacionID) {
+        const keyType = this.useBC1 ? 'BC' : 'SKU'
+        await this.$axios
+          .get('wms/prodsperloc/', {
+            params: {
+              p01: this.ubicacionID,
+              p02: keyType,
+              p03: '01',
+            },
+          })
+          .then((response) => {
+            if (response.data) {
+              if (response.data.length > 0) {
+                this.prodsPerLocation = response.data
+                this.countDisabled = false
+                this.product = Object.assign({}, product)
+                this.$nextTick(() => this.$refs.txtProdID.focus())
+                this.msgReloc = 'Ubicación cargada con éxito'
+                this.msgColor = 'green'
+                this.snackbar = true
+              } else {
+                this.prodsPerLocation = []
+                this.countDisabled = true
+                this.product = Object.assign({}, product)
+                this.msgReloc = 'Ubicación no encontrada'
+                this.msgColor = 'red'
+                this.snackbar = true
+              }
+            }
+          })
+      }
+    },
+    countPackage(opc) {
+      if (opc === 'plus') {
+        this.packageCount++
+      }
+
+      if (opc === 'minus') {
+        if (this.packageCount > 0) this.packageCount--
+      }
+    },
     countProds(opc) {
       if (opc === 'plus') {
         if (this.xpos1 <= this.xpos2) {
-          this.countEmpaq++
+          this.packingCount++
         } else {
-          this.countUni++
+          this.uniCount++
         }
       }
 
       if (opc === 'minus') {
         if (this.xpos1 <= this.xpos2) {
-          if (this.countEmpaq > 1) this.countEmpaq--
+          if (this.packingCount > 1) this.packingCount--
         } else {
-          this.countUni--
-          if (this.countUni < 1) this.countUni = 0
+          this.uniCount--
+          if (this.uniCount < 1) this.uniCount = 0
         }
       }
     },

@@ -326,13 +326,16 @@
                         ></v-text-field>
                       </v-row>
                       <v-row>
-                        <v-text-field
+                        <v-select
                           v-model="curUser.extrel"
-                          name="extrel"
+                          :items="extrelList"
+                          item-text="NAME"
+                          item-value="ID"
+                          prepend-icon="mdi-account-multiple-check-outline"
                           :readonly="modo == 'r'"
                           label="Relación externa"
-                          dense
-                        ></v-text-field>
+                        >
+                        </v-select>
                       </v-row>
                     </v-col>
                   </v-row>
@@ -489,22 +492,27 @@ export default {
     RenewPassword,
   },
 
-  async fetch() {
-    // Lista de grupos
+  async asyncData({ $axios, error }) {
+    // Lista de grupos y de relación externa para usuarios
     try {
-      this.userGroups = await this.$axios
-        .get('groups/')
-        .then((response) => response.data)
+      const [resp1, resp2] = await Promise.all([
+        $axios.get('groups/'),
+        $axios.get('usrextrel/'),
+      ])
+      return {
+        userGroups: resp1.data,
+        extrelList: resp2.data,
+      }
     } catch (err) {
       if (err.response) {
-        this.error({
+        error({
           statusCode: err.response.status,
           message: err.response.data.detail,
         })
       } else {
-        this.error({
+        error({
           statusCode: 503,
-          message: 'No se pudo cargar la lista de grupos. Intente luego',
+          message: 'No se pudieron cargar todas las listas. Intente luego',
         })
       }
     }
@@ -516,7 +524,7 @@ export default {
       searchList,
       curUser: {},
       listSelectedKeys: [],
-      userGroups: [],
+      errorx: {},
       toolbar_title: 'Perfil - Consultar',
       cols_mainbody: 9,
       cols_serchtool: 3,

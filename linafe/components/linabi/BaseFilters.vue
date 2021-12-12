@@ -492,12 +492,12 @@
 
 <script>
 import { mapGetters } from 'vuex'
-const countChips = 7
+const countChips = 3
 
 const rules = {
   required: true || 'Requerido.',
   isEmpty: true || 'Proporcione al menos un parámetro más',
-  maxchips: true || 'Max selection 7',
+  maxchips: true || 'Max selection 3',
   checkPeriod: true || 'Proporcione un periodo correcto',
 }
 
@@ -860,7 +860,7 @@ export default {
           isEmpty: () =>
             this.checkEmpty() || 'Proporcione al menos un parámetro más',
           maxchips: (v) =>
-            (v ? v.length <= countChips : true) || 'Max selection 7',
+            (v ? v.length <= countChips : true) || 'Max selection 3',
           checkPeriod: (v) =>
             ((v ? v.length > 0 : false) ? this.checkPeriod(v) : true) ||
             'Proporcione un periodo válido',

@@ -174,7 +174,7 @@ export default {
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
-      product,
+      product: Object.assign({}, product),
       stocklist: [],
       selectedItem: 0,
       showImg: false,
@@ -209,18 +209,7 @@ export default {
 
                 this.stocklist = response.data
               } else {
-                const prod = {
-                  sku: '*****',
-                  barcode: '0000000000000',
-                  descrip: 'NO DISPONIBLE',
-                  um: 'UNI',
-                  precio: '0',
-                  disponible: 'NON',
-                  reservado: '0 / 0',
-                  stock: '0 / 0',
-                  foto: '/no_image.png',
-                }
-                this.product = Object.assign({}, prod)
+                this.product = Object.assign({}, product)
                 this.stocklist = []
                 this.msgReloc = 'Producto no disponible'
                 this.msgColor = 'yellow'

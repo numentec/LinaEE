@@ -13,4 +13,5 @@ urlpatterns = [
     path('qrystockext/', views.QryStockExtAPIView.as_view(), name='qrystockext'),
     path('relocatext/', views.RelocateExtAPIView.as_view(), name='relocatext'),
     path('qryoneprod/', views.QryOneProdAPIView.as_view(), name='qryoneprod'),
+    path('prodsperloc/', views.ProdsPerLocAPIView.as_view(), name='prodsperloc'),
 ]

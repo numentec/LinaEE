@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.shortcuts import render
+from django.db import connections
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.sessions.serializers import  JSONSerializer
@@ -472,6 +473,33 @@ class SQLQueryViewSet(CommonViewSet):
     def get_queryset(self):
         return models.SQLQuery.objects.all()
 
+
+class UsrExtRelListAPIView(APIView):
+    """Relación externa para los usuarios."""
+    # Vista 27
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+
+        result = []
+
+        # query = SQLQuery.objects.get(vista = 19, ordinal = 1)
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.USREXTREL', [refCursor])
+            #cursor.callproc(query.content, [p01, refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
 
 # class VistaElementViewSet(CommonViewSet):
 #     """ViewSet de elementos de vista"""

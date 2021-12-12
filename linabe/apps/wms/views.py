@@ -172,3 +172,44 @@ class QryOneProdAPIView(APIView):
 
         return Response(result, status=status.HTTP_200_OK)
 
+class ProdsPerLocAPIView(APIView):
+    """Productos en una ubicación dada"""
+    # Vista 28
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - Código de barra de la ubicación (BINLOCATION)
+        # p02 - Tipo de dato (BC o CODIGO)
+        # p03 - Compañía
+
+        p01 = str(request.query_params.get('p01', '0')).lower().strip()
+        p02 = str(request.query_params.get('p02', 'BC')).strip()
+        p03 = str(request.query_params.get('p03', '01')).strip()
+
+        pvals = p01 + p02 + p03
+
+        if pvals == '0BC01':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        params = [p01, p02, p03]
+
+        result = []
+
+        # qrys = SQLQuery.objects.filter(vista=27)
+        # qrycalling = qrys[0].content    # 'DMC.LINAEE_PRODSXLOC'
+        qrycalling = 'DMC.LINAEE_PRODSXLOC'
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc(qrycalling, params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)

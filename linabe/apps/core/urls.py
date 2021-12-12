@@ -35,4 +35,5 @@ urlpatterns = [
     path('groups/', views.GroupsList.as_view(), name='groups'),
     path('modul-actives/', views.ModulosActivosList.as_view(), name='modul-actives'),
     path('accviewconf-list/', views.VistaConfigAccList.as_view(), name='accviewconf-list'),
+    path('usrextrel/', views.UsrExtRelListAPIView.as_view(), name='usrextrel'),
 ]
