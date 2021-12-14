@@ -19,11 +19,11 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item link>
+            <v-list-item link @click.stop="showCount = true">
               <v-list-item-title>Ver conteo</v-list-item-title>
             </v-list-item>
             <v-list-item link>
-              <v-list-item-title>Limpiar conteo</v-list-item-title>
+              <v-list-item-title>Limpiar sesión</v-list-item-title>
             </v-list-item>
             <v-list-item link @click.stop="showConfig = true">
               <v-list-item-title>Configuración</v-list-item-title>
@@ -280,7 +280,45 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar v-model="snackbar" timeout="3000">
+    <v-dialog v-model="showCount" max-width="400">
+      <v-card min-height="250">
+        <v-toolbar color="secondary" dark>Conteo en proceso</v-toolbar>
+        <div class="list-container">
+          <DxList
+            :data-source="listDataSource"
+            height="300"
+            :allow-item-deleting="true"
+            item-delete-mode="swipe"
+          >
+            <template #item="{ data: item }">
+              <div>
+                <div class="conteo">
+                  <div class="cuentasku">{{ `SKU: ${item.SKU}` }}</div>
+                  <div class="cuentacant">{{ `Bultos: ${item.PACKAGE}` }}</div>
+                  <div class="cuentacant">
+                    {{ `Cantidad: ${item.PACKING} / ${item.UNI}` }}
+                  </div>
+                </div>
+                <div class="dt-container">
+                  <div class="dt">{{ item.TIME }}</div>
+                </div>
+              </div>
+            </template>
+          </DxList>
+        </div>
+        <v-divider />
+        <v-card-actions>
+          <v-btn text color="green darken-1" @click="showCount = false">
+            Enviar
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn text color="red darken-1" @click="showCount = false">
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-snackbar v-model="snackbar" timeout="5000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
         <v-btn :color="msgColor" text v-bind="attrs" @click="snackbar = false">
@@ -292,6 +330,9 @@
 </template>
 
 <script>
+import DxList from 'devextreme-vue/list'
+import ArrayStore from 'devextreme/data/array_store'
+import DataSource from 'devextreme/data/data_source'
 import ImgForGrid from '~/components/utilities/ImgForGrid'
 
 const product = {
@@ -306,8 +347,18 @@ const product = {
   foto: '/no_image.png',
 }
 
+const getTime = () => {
+  const curDT = new Date()
+  const date = `${curDT.getFullYear()}-${
+    curDT.getMonth() + 1
+  }-${curDT.getDate()}`
+  const time = `${curDT.getHours()}:${curDT.getMinutes()}:${curDT.getSeconds()}`
+  return `${date} ${time}`
+}
+
 export default {
   components: {
+    DxList,
     ImgForGrid,
   },
 
@@ -319,13 +370,17 @@ export default {
       ubicacionID: '',
       prodsPerLocation: [],
       fijarUbicacion: false,
+      curIndex: -1,
       countDisabled: true,
-      countPerPackage: false,
+      countPerPackage: true,
       showPackageCount: false,
       showConfig: false,
-      packageCount: 1, // Cuenta de bultos
-      packingCount: 1, // Cuenta de empaques
+      showCount: false,
+      packageCount: 0, // Cuenta de bultos
+      packingCount: 0, // Cuenta de empaques
       uniCount: 0, // Cuenta de unidades
+      packingPerPackage: 1,
+      listProdsCounted: [],
       xpos1: 0,
       xpos2: 0,
       cE: true,
@@ -348,6 +403,36 @@ export default {
       const cE = this.packingCount
       const cU = this.uniCount
       return `${cE} / ${cU}`
+    },
+    listDataSource() {
+      const aStore = new ArrayStore({
+        data: this.listProdsCounted,
+        key: 'SKU',
+      })
+
+      return new DataSource({ store: aStore, sort: 'TIME' })
+    },
+  },
+  watch: {
+    packageCount(newVal) {
+      if (this.curIndex >= 0) {
+        if (this.countPerPackage) {
+          this.listProdsCounted[this.curIndex].PACKAGE = newVal
+          this.listProdsCounted[this.curIndex].TIME = getTime()
+        }
+      }
+    },
+    packingCount(newVal) {
+      if (this.curIndex >= 0) {
+        this.listProdsCounted[this.curIndex].PACKING = newVal
+        this.listProdsCounted[this.curIndex].TIME = getTime()
+      }
+    },
+    uniCount(newVal) {
+      if (this.curIndex >= 0) {
+        this.listProdsCounted[this.curIndex].UNI = newVal
+        this.listProdsCounted[this.curIndex].TIME = getTime()
+      }
     },
   },
   mounted() {
@@ -419,7 +504,82 @@ export default {
             this.product.disponible = p.CANT1
             this.product.precio = 0
             this.product.foto = this.$config.fotosURL + p.FOTO
+
+            let indx = -1
+
+            if (this.listProdsCounted.length > 0) {
+              indx = this.listProdsCounted.findIndex((obj) => obj.SKU === p.SKU)
+
+              if (indx >= 0) {
+                this.curIndex = indx
+                let packageC = this.listProdsCounted[indx].PACKAGE
+                let packingC = this.listProdsCounted[indx].PACKING
+                let uniC = this.listProdsCounted[indx].UNI
+                this.packingPerPackage = this.listProdsCounted[indx].CANTXBULTO
+
+                if (!this.cE) {
+                  uniC++
+                } else if (this.countPerPackage) {
+                  packageC++
+                  packingC += this.packingPerPackage
+                } else {
+                  packingC++
+                }
+
+                if (this.countPerPackage) this.packageCount = packageC
+                this.packingCount = packingC
+                this.uniCount = uniC
+
+                if (this.countPerPackage) {
+                  this.listProdsCounted[indx].PACKAGE = this.packageCount
+                }
+                this.listProdsCounted[indx].PACKING = this.packingCount
+                this.listProdsCounted[indx].UNI = this.uniCount
+                this.listProdsCounted[indx].TIME = getTime()
+              }
+            }
+
+            // Add product to list
+            if (indx < 0) {
+              let packageC = 0
+              let packingC = 0
+              let uniC = 0
+              this.packingPerPackage = p.CANTXBULTO
+
+              const pc = {
+                SKU: p.SKU,
+                PACKAGE: 0,
+                PACKING: 0,
+                UNI: 0,
+                CANTXBULTO: this.packingPerPackage,
+                TIME: getTime(),
+              }
+
+              indx = this.listProdsCounted.push(pc) - 1
+              this.curIndex = indx
+
+              if (!this.cE) {
+                uniC++
+              } else if (this.countPerPackage) {
+                packageC++
+                packingC += this.packingPerPackage
+              } else {
+                packingC++
+              }
+
+              if (this.countPerPackage) this.packageCount = packageC
+              this.packingCount = packingC
+              this.uniCount = uniC
+
+              if (this.countPerPackage) {
+                this.listProdsCounted[indx].PACKAGE = this.packageCount
+              }
+              this.listProdsCounted[indx].PACKING = this.packingCount
+              this.listProdsCounted[indx].UNI = this.uniCount
+              // this.listProdsCounted[indx].TIME = getTime()
+            }
           } else {
+            this.curIndex = -1
             this.product = Object.assign({}, product)
             this.msgReloc = `El producto ${this.productID} no debe estar en esta ubicación`
             this.msgColor = 'red'
@@ -455,6 +615,10 @@ export default {
               } else {
                 this.prodsPerLocation = []
                 this.countDisabled = true
+                this.curIndex = -1
+                this.packageCount = 0
+                this.packingCount = 0
+                this.uniCount = 0
                 this.product = Object.assign({}, product)
                 this.msgReloc = 'Ubicación no encontrada'
                 this.msgColor = 'red'
@@ -467,16 +631,25 @@ export default {
     countPackage(opc) {
       if (opc === 'plus') {
         this.packageCount++
+        this.packingCount += this.packingPerPackage
       }
 
       if (opc === 'minus') {
-        if (this.packageCount > 0) this.packageCount--
+        if (this.packageCount > 0) {
+          this.packageCount--
+          this.packingCount -= this.packingPerPackage
+          if (this.packingCount < 0) this.packingCount = 0
+        }
       }
     },
     countProds(opc) {
       if (opc === 'plus') {
         if (this.xpos1 <= this.xpos2) {
-          this.packingCount++
+          if (this.countPerPackage) {
+            this.packingCount += this.packingPerPackage
+          } else {
+            this.packingCount++
+          }
         } else {
           this.uniCount++
         }
@@ -484,7 +657,13 @@ export default {
 
       if (opc === 'minus') {
         if (this.xpos1 <= this.xpos2) {
-          if (this.packingCount > 1) this.packingCount--
+          if (this.packingCount > 1) {
+            if (this.countPerPackage) {
+              this.packingCount -= this.packingPerPackage
+            } else {
+              this.packingCount--
+            }
+          }
         } else {
           this.uniCount--
           if (this.uniCount < 1) this.uniCount = 0
@@ -511,5 +690,34 @@ export default {
 .centered-input >>> input {
   text-align: center;
   font-size: 1.5rem;
+}
+.list-container {
+  min-height: 200px;
+  max-height: 300px;
+  height: auto;
+}
+.conteo {
+  float: left;
+}
+.conteo .cuentasku {
+  font-weight: bold;
+}
+.cuentasku {
+  font-size: 18px;
+  font-weight: bold;
+}
+.cuentacant {
+  font-size: 18px;
+  opacity: 0.7;
+}
+.dt-container {
+  float: right;
+  padding-top: 13px;
+}
+.dt-container > div {
+  display: inline-block;
+}
+.dt-container .dt {
+  font-size: 14px;
 }
 </style>
