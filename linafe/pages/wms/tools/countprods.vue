@@ -123,6 +123,7 @@
               fab
               small
               color="primary"
+              :disabled="countDisabled"
               @click="countPackage('plus')"
             >
               <v-icon>mdi-plus</v-icon>
@@ -136,6 +137,7 @@
               placeholder="Bultos"
               type="text"
               class="centered-input"
+              :disabled="countDisabled"
             ></v-text-field>
           </v-col>
           <v-col cols="3" class="d-flex justify-center shrink">
@@ -145,6 +147,7 @@
               fab
               small
               color="primary"
+              :disabled="countDisabled"
               @click="countPackage('minus')"
             >
               <v-icon>mdi-minus</v-icon>
@@ -160,6 +163,7 @@
               fab
               small
               color="primary"
+              :disabled="countDisabled"
               @click="countProds('plus')"
             >
               <v-icon>mdi-plus</v-icon>
@@ -172,6 +176,7 @@
               placeholder="Cuenta"
               type="text"
               class="centered-input"
+              :disabled="countDisabled"
               :prepend-inner-icon="cE ? 'mdi-map-marker' : null"
               :append-icon="!cE ? 'mdi-map-marker' : null"
               @click="setPos"
@@ -184,6 +189,7 @@
               fab
               small
               color="primary"
+              :disabled="countDisabled"
               @click="countProds('minus')"
             >
               <v-icon>mdi-minus</v-icon>
@@ -492,10 +498,20 @@ export default {
 
       return ubix
     },
-    curCount() {
-      const cE = this.packingCount
-      const cU = this.uniCount
-      return `${cE} / ${cU}`
+    curCount: {
+      get() {
+        const cE = this.packingCount
+        const cU = this.uniCount
+        return `${cE} / ${cU}`
+      },
+      set(newVal) {
+        const newCount = newVal.split('/')
+        const packingC = Number(newCount[0].trim())
+        const uniC = Number(newCount[1].trim())
+
+        this.packingCount = isNaN(packingC) ? 0 : packingC
+        this.uniCount = isNaN(uniC) ? 0 : uniC
+      },
     },
     listDataSource() {
       const aStore = new ArrayStore({
@@ -518,15 +534,21 @@ export default {
     packageCount(newVal) {
       if (this.curIndex >= 0) {
         if (this.countPerPackage) {
-          this.listProdsCounted[this.curIndex].PACKAGE = newVal
+          this.listProdsCounted[this.curIndex].PACKAGE = isNaN(newVal)
+            ? 0
+            : newVal
+          this.packingCount = this.packageCount * this.packingPerPackage
+          this.listProdsCounted[this.curIndex].PACKING = this.packingCount
           this.listProdsCounted[this.curIndex].TIME = getTime()
         }
       }
     },
     packingCount(newVal) {
       if (this.curIndex >= 0) {
-        this.listProdsCounted[this.curIndex].PACKING = newVal
-        this.listProdsCounted[this.curIndex].TIME = getTime()
+        if (!this.countPerPackage) {
+          this.listProdsCounted[this.curIndex].PACKING = newVal
+          this.listProdsCounted[this.curIndex].TIME = getTime()
+        }
       }
     },
     uniCount(newVal) {

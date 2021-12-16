@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex align-content-start flex-wrap">
-    <v-card max-width="600" class="mx-auto">
+    <v-card max-width="600" class="mx-auto" :loading="loadingView">
       <v-card-title>
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
@@ -126,6 +126,7 @@ export default {
       product: Object.assign({}, product),
       stocklist: [],
       selectedItem: 0,
+      loadingView: false,
       rules: {
         required: (v) => !!v || 'Requerido',
       },
@@ -139,6 +140,7 @@ export default {
     async qryProd() {
       if (this.productID) {
         const keyType = this.useBC ? 'BC' : 'SKU'
+        this.loadingView = true
         await this.$axios
           .get('wms/qryoneprod/', {
             params: { p01: this.productID, p02: keyType, p03: '01' },
@@ -167,6 +169,7 @@ export default {
                 this.snackbar = true
               }
             }
+            this.loadingView = false
           })
       }
     },

@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex align-content-start flex-wrap">
-    <v-card width="600" class="mx-auto">
+    <v-card width="600" class="mx-auto" :loading="loadingView">
       <v-card-title>
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
@@ -178,6 +178,7 @@ export default {
       stocklist: [],
       selectedItem: 0,
       showImg: false,
+      loadingView: false,
       rules: {
         required: (v) => !!v || 'Requerido',
       },
@@ -190,6 +191,7 @@ export default {
   methods: {
     async findLocations() {
       if (this.productID) {
+        this.loadingView = true
         const keyType = this.useBC ? 'BC' : 'SKU'
         await this.$axios
           .get('wms/qrystockext/', {
@@ -216,6 +218,7 @@ export default {
                 this.snackbar = true
               }
             }
+            this.loadingView = false
           })
       }
     },
