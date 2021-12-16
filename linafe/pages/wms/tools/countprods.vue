@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex align-content-start flex-wrap">
-    <v-card width="600" class="mx-auto">
+    <v-card width="600" class="mx-auto" :loading="loadingView">
       <v-card-title>
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
@@ -22,8 +22,16 @@
             <v-list-item link @click.stop="showCount = true">
               <v-list-item-title>Ver conteo</v-list-item-title>
             </v-list-item>
-            <v-list-item link>
-              <v-list-item-title>Limpiar sesión</v-list-item-title>
+            <v-list-item link @click="clearForm(1)">
+              <v-list-item-title>Limpiar</v-list-item-title>
+            </v-list-item>
+            <v-list-item link @click.stop="showProdsPerLocarion = true">
+              <v-list-item-content>
+                <v-list-item-title>Ver productos</v-list-item-title>
+                <v-list-item-subtitle>
+                  Productos de la ubicación
+                </v-list-item-subtitle>
+              </v-list-item-content>
             </v-list-item>
             <v-list-item link @click.stop="showConfig = true">
               <v-list-item-title>Configuración</v-list-item-title>
@@ -49,6 +57,7 @@
               class="mx-2"
               @keydown.enter="loadProdsPerLocation"
               @click:append-outer="loadProdsPerLocation"
+              @click:clear="clearForm"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -280,13 +289,65 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="showProdsPerLocarion" max-width="400">
+      <v-card min-height="250">
+        <v-toolbar color="secondary" dark>
+          <v-toolbar-title>Productos en la ubicación</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showProdsPerLocarion = false">
+            <v-icon>mdi-window-close</v-icon>
+          </v-btn>
+        </v-toolbar>
+        <v-row justify="center" align="center" no-gutters>
+          <div class="ubix">{{ curUBIX }}</div>
+        </v-row>
+        <v-divider />
+        <div class="list-container">
+          <DxList :data-source="prodsPerLocation" height="300">
+            <template #item="{ data: item }">
+              <div>
+                <div class="conteo">
+                  <div class="cuentasku">{{ `SKU: ${item.SKU}` }}</div>
+                  <div class="cuentacant">{{ item.DESCRIP }}</div>
+                  <div class="cuentacant">
+                    {{ `Cantidad: ${item.CANT1}` }}
+                  </div>
+                </div>
+                <div class="dt-container">
+                  <div class="bultos">{{ item.BULTOS }}</div>
+                  <div class="caption">bultos</div>
+                </div>
+              </div>
+            </template>
+          </DxList>
+        </div>
+        <v-divider />
+        <v-card-actions>
+          <v-btn
+            text
+            block
+            color="primary"
+            @click="showProdsPerLocarion = false"
+          >
+            Aceptar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="showCount" max-width="400">
       <v-card min-height="250">
-        <v-toolbar color="secondary" dark>Conteo en proceso</v-toolbar>
+        <v-toolbar color="secondary" dark>
+          <v-toolbar-title>Conteo en proceso</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="askClearList = true">
+            <v-icon>mdi-delete-sweep-outline</v-icon>
+          </v-btn>
+        </v-toolbar>
         <div class="list-container">
           <DxList
             :data-source="listDataSource"
             height="300"
+            :grouped="true"
             :allow-item-deleting="true"
             item-delete-mode="swipe"
           >
@@ -304,6 +365,9 @@
                 </div>
               </div>
             </template>
+            <template #group="{ data: item }">
+              <div>{{ item.key }}</div>
+            </template>
           </DxList>
         </div>
         <v-divider />
@@ -314,6 +378,21 @@
           <v-spacer></v-spacer>
           <v-btn text color="red darken-1" @click="showCount = false">
             Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="askClearList" max-width="300">
+      <v-card>
+        <v-card-title class="text-h5"> Limpiar lista de conteo </v-card-title>
+        <v-card-text>{{ msgClearList }}</v-card-text>
+        <v-card-actions>
+          <v-btn color="green darken-1" text @click.stop="clearList">
+            Aceptar
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="red darken-1" text @click="askClearList = false">
+            Cancelar
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -376,6 +455,8 @@ export default {
       showPackageCount: false,
       showConfig: false,
       showCount: false,
+      showProdsPerLocarion: false,
+      askClearList: false,
       packageCount: 0, // Cuenta de bultos
       packingCount: 0, // Cuenta de empaques
       uniCount: 0, // Cuenta de unidades
@@ -393,12 +474,24 @@ export default {
       stocklist: [],
       selectedItem: 0,
       showImg: false,
+      loadingView: false,
       rules: {
         required: (v) => !!v || 'Requerido',
       },
     }
   },
   computed: {
+    curUBIX() {
+      let ubix = 'UBIX'
+
+      if (this.prodsPerLocation) {
+        if (this.prodsPerLocation.length > 0) {
+          ubix = this.prodsPerLocation[0].UBIX
+        }
+      }
+
+      return ubix
+    },
     curCount() {
       const cE = this.packingCount
       const cU = this.uniCount
@@ -410,7 +503,15 @@ export default {
         key: 'SKU',
       })
 
-      return new DataSource({ store: aStore, sort: 'TIME' })
+      return new DataSource({ store: aStore, group: 'UBIX', sort: 'TIME' })
+    },
+    msgClearList() {
+      let msg =
+        'Pulse ACEPTAR si realmente desea borrar la lista de conteo en curso'
+      if (this.listProdsCounted.length === 0) {
+        msg = 'LA LISTA ESTÁ VACIA'
+      }
+      return msg
     },
   },
   watch: {
@@ -432,6 +533,12 @@ export default {
       if (this.curIndex >= 0) {
         this.listProdsCounted[this.curIndex].UNI = newVal
         this.listProdsCounted[this.curIndex].TIME = getTime()
+      }
+    },
+    ubicacionID(newVal) {
+      if (!newVal) {
+        this.prodsPerLocation = []
+        this.countDisabled = true
       }
     },
   },
@@ -460,18 +567,18 @@ export default {
 
                 this.stocklist = response.data
               } else {
-                const prod = {
-                  sku: '*****',
-                  barcode: '0000000000000',
-                  descrip: 'NO DISPONIBLE',
-                  um: 'UNI',
-                  precio: '0',
-                  disponible: 'NON',
-                  reservado: '0 / 0',
-                  stock: '0 / 0',
-                  foto: '/no_image.png',
-                }
-                this.product = Object.assign({}, prod)
+                // const prod = {
+                //   sku: '*****',
+                //   barcode: '0000000000000',
+                //   descrip: 'NO DISPONIBLE',
+                //   um: 'UNI',
+                //   precio: '0',
+                //   disponible: 'NON',
+                //   reservado: '0 / 0',
+                //   stock: '0 / 0',
+                //   foto: '/no_image.png',
+                // }
+                this.product = Object.assign({}, product)
                 this.stocklist = []
                 this.msgReloc = 'Producto no disponible'
                 this.msgColor = 'yellow'
@@ -484,6 +591,7 @@ export default {
     findProduct() {
       if (!this.fijarUbicacion) {
         if (this.prodsPerLocation.length > 0) {
+          this.loadingView = true
           const xProd = () => {
             if (this.useBC2) {
               return this.prodsPerLocation.find(
@@ -552,6 +660,8 @@ export default {
                 PACKING: 0,
                 UNI: 0,
                 CANTXBULTO: this.packingPerPackage,
+                UBIX: p.UBIX,
+                UBIXBC: p.UBIXBC,
                 TIME: getTime(),
               }
 
@@ -586,6 +696,8 @@ export default {
             this.snackbar = true
           }
 
+          this.loadingView = false
+
           this.productID = ''
           this.$nextTick(() => this.$refs.txtProdID.focus())
         }
@@ -594,6 +706,7 @@ export default {
     async loadProdsPerLocation() {
       if (this.ubicacionID) {
         const keyType = this.useBC1 ? 'BC' : 'SKU'
+        this.loadingView = true
         await this.$axios
           .get('wms/prodsperloc/', {
             params: {
@@ -625,6 +738,7 @@ export default {
                 this.snackbar = true
               }
             }
+            this.loadingView = false
           })
       }
     },
@@ -680,7 +794,20 @@ export default {
       } else {
         this.cE = false
       }
-      // console.log(`XSTR: ${xstr}  XPOS1 ${this.xpos1}  XPOS2 ${this.xpos2}`)
+    },
+    clearForm(opc = 0) {
+      this.product = Object.assign({}, product)
+      this.curIndex = -1
+      this.productID = ''
+      this.packageCount = 0
+      this.packingCount = 0
+      this.uniCount = 0
+      if (opc === 1) this.ubicacionID = ''
+    },
+    clearList() {
+      this.listProdsCounted = []
+      this.clearForm()
+      this.askClearList = false
     },
   },
 }
@@ -719,5 +846,20 @@ export default {
 }
 .dt-container .dt {
   font-size: 14px;
+}
+.dt-container .bultos {
+  font-size: 18px;
+}
+.dt-container .caption {
+  font-size: 11px;
+  line-height: 12px;
+  padding-left: 6px;
+  opacity: 0.7;
+}
+.ubix {
+  padding-top: 10px;
+  font-weight: bold;
+  font-size: 20px;
+  color: rgb(136, 7, 33);
 }
 </style>

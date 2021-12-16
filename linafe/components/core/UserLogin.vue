@@ -16,6 +16,10 @@
         {{ `${error.message} (codigo: ${error.statusCode})` }}
       </v-alert>
       <v-card max-width="400" class="mx-auto mt-16">
+        <v-overlay :absolute="true" :value="overlay">
+          <v-progress-circular indeterminate size="50" width="5">
+          </v-progress-circular>
+        </v-overlay>
         <LinaLogo logosize="xstr" class="text-center logo_stack" />
         <v-card-text>
           <v-form
@@ -102,6 +106,7 @@ export default {
     show1: false,
     showAlert: false,
     showdb: false,
+    overlay: false,
     rules: {
       required: (value) => !!value || 'Requerido.',
       min: (v) => (v && v.length >= 8) || 'Min 8 caracteres',
@@ -113,6 +118,7 @@ export default {
   watch: {
     error(newVal) {
       const errcode = this.error.statusCode
+      this.overlay = false
       if (errcode !== 0) {
         this.showAlert = true
       }
@@ -130,7 +136,9 @@ export default {
 
     async userLogin() {
       if (this.$refs.login_form.validate()) {
+        this.overlay = true
         await this.$store.dispatch('sistema/userLogin', this.login).then(() => {
+          this.overlay = false
           this.$router.push('/')
         })
       }
