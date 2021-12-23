@@ -190,7 +190,7 @@ class CiaViewSet(CommonViewSet):
         action = self.action
         
         if (action == 'list'):
-            context['fields'] = ('id', 'codigo', 'nombre_corto', 'ruc', 'tel1', 'email', 'is_active')
+            context['fields'] = ('id', 'codigo', 'nombre_corto', 'ruc', 'tel1', 'email', 'extrel', 'default', 'is_active')
         # elif (action == 'create'):
         #     context['fields'] = ('id',)
         # elif (action == 'retrieve'):

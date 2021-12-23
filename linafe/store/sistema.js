@@ -8,6 +8,7 @@ export const state = () => ({
   users: [],
   isLoading: false,
   error: { statusCode: 0, message: '' },
+  curCia: null,
 })
 
 export const mutations = {
@@ -28,6 +29,9 @@ export const mutations = {
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
+  },
+  SET_CURCIA(state, payload) {
+    state.curCia = Object.assign({}, payload)
   },
 }
 
@@ -140,10 +144,17 @@ export const actions = {
 
     return store
   },
+
+  setCurCia({ commit }, payload) {
+    commit('SET_CURCIA', payload)
+  },
 }
 
 export const getters = {
   getUsers(state) {
     return state.users
+  },
+  getCurCia(state) {
+    return state.curCia
   },
 }

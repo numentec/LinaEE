@@ -83,6 +83,12 @@ export default {
             this.$router.push({ path: '/wms/tools/countprods' })
           },
         },
+        {
+          text: 'Conteo por Marbete',
+          onClick: () => {
+            this.$router.push({ path: '/wms/tools/countmarbete' })
+          },
+        },
       ],
       isActionSheetVisible: false,
     }

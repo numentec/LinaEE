@@ -14,4 +14,6 @@ urlpatterns = [
     path('relocatext/', views.RelocateExtAPIView.as_view(), name='relocatext'),
     path('qryoneprod/', views.QryOneProdAPIView.as_view(), name='qryoneprod'),
     path('prodsperloc/', views.ProdsPerLocAPIView.as_view(), name='prodsperloc'),
+    path('extmarbete/', views.ProdsPerMarbeteAPIView.as_view(), name='extmarbete'),
+    path('extcountedprods/', views.ExtCountedProdsAPIView.as_view(), name='extcountedprods'),
 ]

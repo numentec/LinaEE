@@ -132,11 +132,12 @@
           <v-col cols="6" class="d-flex justify-center shrink">
             <v-text-field
               ref="txtPackageCount"
-              v-model="packageCount"
+              v-model.number="packageCount"
               label="Bultos"
               placeholder="Bultos"
-              type="text"
+              type="number"
               class="centered-input"
+              :rules="[rules.positiveNumber]"
               :disabled="countDisabled"
             ></v-text-field>
           </v-col>
@@ -174,7 +175,6 @@
               ref="txtCurCount"
               v-model="curCount"
               placeholder="Cuenta"
-              type="text"
               class="centered-input"
               :disabled="countDisabled"
               :prepend-inner-icon="cE ? 'mdi-map-marker' : null"
@@ -285,6 +285,9 @@
               :disabled="!countPerPackage"
             ></v-switch>
           </v-row>
+          <v-row no-gutters>
+            <v-switch v-model="useMarbete" label="Requerir marbete"></v-switch>
+          </v-row>
         </v-card-text>
         <v-divider />
         <v-card-actions>
@@ -378,7 +381,12 @@
         </div>
         <v-divider />
         <v-card-actions>
-          <v-btn text color="green darken-1" @click="showCount = false">
+          <v-btn
+            text
+            color="green darken-1"
+            :disabled="listProdsCounted.length == 0"
+            @click="sendCount"
+          >
             Enviar
           </v-btn>
           <v-spacer></v-spacer>
@@ -393,7 +401,12 @@
         <v-card-title class="text-h5"> Limpiar lista de conteo </v-card-title>
         <v-card-text>{{ msgClearList }}</v-card-text>
         <v-card-actions>
-          <v-btn color="green darken-1" text @click.stop="clearList">
+          <v-btn
+            color="green darken-1"
+            text
+            :disabled="listProdsCounted.length == 0"
+            @click.stop="clearList"
+          >
             Aceptar
           </v-btn>
           <v-spacer></v-spacer>
@@ -458,10 +471,11 @@ export default {
       curIndex: -1,
       countDisabled: true,
       countPerPackage: true,
-      showPackageCount: false,
+      showPackageCount: true,
       showConfig: false,
       showCount: false,
       showProdsPerLocarion: false,
+      useMarbete: false,
       askClearList: false,
       packageCount: 0, // Cuenta de bultos
       packingCount: 0, // Cuenta de empaques
@@ -483,6 +497,7 @@ export default {
       loadingView: false,
       rules: {
         required: (v) => !!v || 'Requerido',
+        positiveNumber: (v) => v >= 0 || 'La cantidad no puede ser negativa',
       },
     }
   },
@@ -536,7 +551,7 @@ export default {
         if (this.countPerPackage) {
           this.listProdsCounted[this.curIndex].PACKAGE = isNaN(newVal)
             ? 0
-            : newVal
+            : Number(newVal)
           this.packingCount = this.packageCount * this.packingPerPackage
           this.listProdsCounted[this.curIndex].PACKING = this.packingCount
           this.listProdsCounted[this.curIndex].TIME = getTime()
@@ -546,14 +561,14 @@ export default {
     packingCount(newVal) {
       if (this.curIndex >= 0) {
         if (!this.countPerPackage) {
-          this.listProdsCounted[this.curIndex].PACKING = newVal
+          this.listProdsCounted[this.curIndex].PACKING = Number(newVal)
           this.listProdsCounted[this.curIndex].TIME = getTime()
         }
       }
     },
     uniCount(newVal) {
       if (this.curIndex >= 0) {
-        this.listProdsCounted[this.curIndex].UNI = newVal
+        this.listProdsCounted[this.curIndex].UNI = Number(newVal)
         this.listProdsCounted[this.curIndex].TIME = getTime()
       }
     },
@@ -568,48 +583,6 @@ export default {
     this.$nextTick(() => this.$refs.txtUbicacionID.focus())
   },
   methods: {
-    async findLocations() {
-      if (this.productID) {
-        const keyType = this.useBC1 ? 'BC' : 'SKU'
-        await this.$axios
-          .get('wms/qrystockext/', {
-            params: { p01: this.productID, p02: keyType, p03: '01', p04: 'T' },
-          })
-          .then((response) => {
-            if (response.data) {
-              if (response.data.length > 0) {
-                const curProd = response.data[0]
-                this.product.sku = curProd.SKU
-                this.product.barcode = curProd.BARCODE
-                this.product.descrip = curProd.DESCRIP
-                this.product.um = curProd.UM
-                this.product.disponible = 'NON'
-                this.product.precio = 0
-                this.product.foto = this.$config.fotosURL + curProd.FOTO
-
-                this.stocklist = response.data
-              } else {
-                // const prod = {
-                //   sku: '*****',
-                //   barcode: '0000000000000',
-                //   descrip: 'NO DISPONIBLE',
-                //   um: 'UNI',
-                //   precio: '0',
-                //   disponible: 'NON',
-                //   reservado: '0 / 0',
-                //   stock: '0 / 0',
-                //   foto: '/no_image.png',
-                // }
-                this.product = Object.assign({}, product)
-                this.stocklist = []
-                this.msgReloc = 'Producto no disponible'
-                this.msgColor = 'yellow'
-                this.snackbar = true
-              }
-            }
-          })
-      }
-    },
     findProduct() {
       if (!this.fijarUbicacion) {
         if (this.prodsPerLocation.length > 0) {
@@ -684,6 +657,7 @@ export default {
                 CANTXBULTO: this.packingPerPackage,
                 UBIX: p.UBIX,
                 UBIXBC: p.UBIXBC,
+                MARBETE: '0000',
                 TIME: getTime(),
               }
 
@@ -805,6 +779,56 @@ export default {
           if (this.uniCount < 1) this.uniCount = 0
         }
       }
+    },
+    async sendCount() {
+      const curlPC = JSON.stringify(this.listProdsCounted)
+
+      this.showCount = false
+      this.loadingView = true
+
+      await this.$axios
+        .post('wms/extcountedprods/', {
+          items: curlPC,
+          cia: '01',
+        })
+        .then((response) => {
+          if (response.data) {
+            this.msgReloc = response.data.msg // 'Cuenta enviada con éxito'
+            this.msgColor = 'green'
+            this.snackbar = true
+          } else {
+            this.msgReloc = 'Error al enviar la cuenta en curso'
+            this.msgColor = 'red'
+            this.snackbar = true
+          }
+        })
+        .catch((err) => {
+          if (err.response) {
+            let msgerr = 'X'
+            if (err.response.data.non_field_errors) {
+              msgerr = err.response.data.non_field_errors[0]
+            } else if (err.response.data.detail) {
+              msgerr = err.response.data.detail
+            } else {
+              msgerr = err.response.statusText
+            }
+            this.$nuxt.context.error({
+              statusCode: err.response.status,
+              message: msgerr,
+            })
+          } else if (err.request) {
+            this.$nuxt.context.error({
+              statusCode: 503,
+              message: 'No hubo respuesta del servidor',
+            })
+          } else {
+            this.$nuxt.context.error({
+              statusCode: 1000,
+              message: err.message,
+            })
+          }
+        })
+      this.loadingView = false
     },
     setPos() {
       const txt = this.$refs.txtCurCount.$refs.input
