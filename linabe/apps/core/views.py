@@ -490,7 +490,7 @@ class UsrExtRelListAPIView(APIView):
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.USREXTREL', [refCursor])
+            cursor.callproc('DMC.LINAEE_USREXTREL', [refCursor])
             #cursor.callproc(query.content, [p01, refCursor])
 
             descrip = refCursor.description

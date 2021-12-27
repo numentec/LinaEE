@@ -243,9 +243,9 @@
                 <div class="conteo">
                   <div class="cuentasku">{{ `MAR: ${item.MARBETE}` }}</div>
                   <div class="cuentacant">{{ `SKU: ${item.SKU}` }}</div>
-                  <div class="cuentacant">{{ `Bultos: ${item.PACKAGE}` }}</div>
+                  <div class="cuentacant">{{ `Bultos: ${item.PACKAGEC}` }}</div>
                   <div class="cuentacant">
-                    {{ `Cantidad: ${item.PACKINGTOT} / ${item.UNI}` }}
+                    {{ `Cantidad: ${item.PACKINGTOTC} / ${item.UNI}` }}
                   </div>
                 </div>
                 <div class="dt-container">
@@ -334,9 +334,9 @@ const marbete = {
   CANTXBULTO: 1,
   UBIX: 'UBIX',
   UBIXBC: 'UBIXBC',
-  PACKAGE: 0,
-  PACKING: 0,
-  PACKINGTOT: 0,
+  PACKAGEC: 0,
+  PACKINGC: 0,
+  PACKINGTOTC: 0,
   UNI: 0,
   CTIME: getTime(),
   NUMINV: 0,
@@ -425,9 +425,9 @@ export default {
 
         const curinx = this.curIndex
 
-        this.listProdsCounted[curinx].PACKING = this.packingCount
-        this.listProdsCounted[curinx].PACKAGE = this.packageCount
-        this.listProdsCounted[curinx].PACKINGTOT = isNaN(pCTot) ? 0 : pCTot
+        this.listProdsCounted[curinx].PACKINGC = this.packingCount
+        this.listProdsCounted[curinx].PACKAGEC = this.packageCount
+        this.listProdsCounted[curinx].PACKINGTOTC = isNaN(pCTot) ? 0 : pCTot
         this.listProdsCounted[curinx].UNI = isNaN(uniC) ? 0 : uniC
         this.listProdsCounted[curinx].CTIME = getTime()
       }
@@ -474,8 +474,8 @@ export default {
 
                   if (indx >= 0) {
                     this.curIndex = indx
-                    this.packageCount = this.listProdsCounted[indx].PACKAGE
-                    this.packingCount = this.listProdsCounted[indx].PACKING
+                    this.packageCount = this.listProdsCounted[indx].PACKAGEC
+                    this.packingCount = this.listProdsCounted[indx].PACKINGC
                     this.uniCount = this.listProdsCounted[indx].UNI
                     this.packingPerPackage = this.listProdsCounted[
                       indx

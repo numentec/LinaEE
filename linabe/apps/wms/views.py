@@ -302,9 +302,9 @@ class ExtCountedProdsAPIView(APIView):
                         item['NUMINV'],
                         item['MARBETE'],
                         item['SKU'],
-                        item['PACKAGE'],
-                        item['PACKING'],
-                        item['PACKINGTOT'],
+                        item['PACKAGEC'],
+                        item['PACKINGC'],
+                        item['PACKINGTOTC'],
                         item['UNI'],
                         item['MULTIPLO'],
                         item['UBIX'],
@@ -312,16 +312,28 @@ class ExtCountedProdsAPIView(APIView):
                         item['CTIME'],
                     ])
 
+            msg = "Conteo enviado con éxito"
+
             with connections['extdb1'].cursor() as cursor:
 
                 refCursor = cursor.connection.cursor()
-                    
+
                 refCursor.executemany(
                     "INSERT INTO DMC.LINAEE_CONTEO VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14)",
                     data_set
                 )
 
-            response =  Response({"msg": "Conteo enviado con éxito"}, status=status.HTTP_200_OK)
+                outval = cursor.var(str).var
+
+                if (refCursor.rowcount) > 0:
+                    cursor.callproc('DMC.LINAEE_CONTEO_TEST', [sessionID, outval])
+
+                outv = outval.getvalue()
+
+                if outv.startswith('ERRDB'):
+                    msg = outv
+
+            response =  Response({"msg": msg}, status=status.HTTP_200_OK)
 
         except Exception as exc:
             response = self.handle_exception(exc)
