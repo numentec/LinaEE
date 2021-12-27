@@ -586,6 +586,7 @@ export default {
             this.msgReloc = response.data.msg // 'Cuenta enviada con éxito'
             this.msgColor = 'green'
             this.snackbar = true
+            this.clearList()
           } else {
             this.msgReloc = 'Error al enviar la cuenta en curso'
             this.msgColor = 'red'

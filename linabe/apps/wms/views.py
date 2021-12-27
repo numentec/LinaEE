@@ -309,17 +309,21 @@ class ExtCountedProdsAPIView(APIView):
                         item['MULTIPLO'],
                         item['UBIX'],
                         item['UBIXBC'],
+                        item['UBIX1'],
+                        item['UBIX2'],
+                        item['UBIX3'],
+                        item['UBIX4'],
                         item['CTIME'],
                     ])
 
-            msg = "Conteo enviado con éxito"
+            msg = "Conteo procesado con éxito"
 
             with connections['extdb1'].cursor() as cursor:
 
                 refCursor = cursor.connection.cursor()
 
                 refCursor.executemany(
-                    "INSERT INTO DMC.LINAEE_CONTEO VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14)",
+                    "INSERT INTO DMC.LINAEE_CONTEO VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18)",
                     data_set
                 )
 
@@ -339,4 +343,3 @@ class ExtCountedProdsAPIView(APIView):
             response = self.handle_exception(exc)
 
         return response
-
