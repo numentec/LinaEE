@@ -120,6 +120,15 @@
 </template>
 
 <script>
+const usrToReg = {
+  username: '',
+  password: '',
+  first_name: '',
+  last_name: '',
+  email: '',
+  groups: [],
+}
+
 export default {
   name: 'UserRegister',
   props: {
@@ -150,14 +159,7 @@ export default {
   data: () => ({
     valid: true,
     userGroups: [],
-    user_to_reg: {
-      username: '',
-      password: '',
-      first_name: '',
-      last_name: '',
-      email: '',
-      groups: [],
-    },
+    user_to_reg: Object.assign({}, usrToReg),
     verify: '',
     emailRules: [
       (v) => !!v || 'Required',
@@ -196,6 +198,7 @@ export default {
             .then(() => {
               this.reset()
               this.closeDialog(true)
+              this.user_to_reg = Object.assign({}, usrToReg)
             })
         } catch (err) {
           if (err.response) {

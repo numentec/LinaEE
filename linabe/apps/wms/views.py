@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from rest_framework import authentication, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import NotFound
 from . import models, serializers
 from ..core.views import CommonViewSet
 from ..core.models import SQLQuery
@@ -257,11 +258,23 @@ class ProdsPerMarbeteAPIView(APIView):
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc(qrycalling, params + [refCursor])
+            outval = cursor.var(str).var
+
+            cursor.callproc(qrycalling, params + [outval, refCursor])
+
+            outv = outval.getvalue()
 
             descrip = refCursor.description
 
             rows = refCursor.fetchall()
+
+            # SI NO SE ENCONTRARON REGISTROS
+            if (refCursor.rowcount) == 0:
+                raise NotFound(outv)
+
+            # SE ENCONTRÓ EL MARBETE, PERO YA FUE PROCESADO
+            if outv.startswith('ERR02'):
+                raise NotFound(outv)
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 

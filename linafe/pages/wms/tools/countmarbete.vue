@@ -437,74 +437,77 @@ export default {
             },
           })
           .then((response) => {
-            let curErr = false
-
             if (response.data) {
-              if (response.data.length > 0) {
-                const data = response.data
+              const data = response.data
 
-                this.curMarbete = Object.assign({}, data[0])
+              this.curMarbete = Object.assign({}, data[0])
 
-                const cM = this.curMarbete.MARBETE
+              const cM = this.curMarbete.MARBETE
 
-                let indx = -1
+              let indx = -1
 
-                if (this.listProdsCounted.length > 0) {
-                  indx = this.listProdsCounted.findIndex(
-                    (obj) => obj.MARBETE === cM
-                  )
+              if (this.listProdsCounted.length > 0) {
+                indx = this.listProdsCounted.findIndex(
+                  (obj) => obj.MARBETE === cM
+                )
 
-                  if (indx >= 0) {
-                    this.curIndex = indx
-                    this.packageCount = this.listProdsCounted[indx].PACKAGEC
-                    this.packingCount = this.listProdsCounted[indx].PACKINGC
-                    this.uniCount = this.listProdsCounted[indx].UNI
-                    this.packingPerPackage = this.listProdsCounted[indx].PPP
-                  }
-                }
-
-                // Add marbete to list
-                if (indx < 0) {
-                  if (this.curIndex >= 0) {
-                    const ptot =
-                      this.packageCount + this.packingCount + this.uniCount
-
-                    if (ptot === 0) {
-                      this.listProdsCounted.splice(this.curIndex, 1)
-                    }
-                  }
-
-                  indx = this.listProdsCounted.push(this.curMarbete) - 1
+                if (indx >= 0) {
                   this.curIndex = indx
+                  this.packageCount = this.listProdsCounted[indx].PACKAGEC
+                  this.packingCount = this.listProdsCounted[indx].PACKINGC
+                  this.uniCount = this.listProdsCounted[indx].UNI
+                  this.packingPerPackage = this.listProdsCounted[indx].PPP
+                }
+              }
 
-                  this.packingPerPackage = this.curMarbete.PPP
-                  this.packageCount = 0
-                  this.packingCount = 0
-                  this.uniCount = 0
+              // Add marbete to list
+              if (indx < 0) {
+                if (this.curIndex >= 0) {
+                  const ptot =
+                    this.packageCount + this.packingCount + this.uniCount
+
+                  if (ptot === 0) {
+                    this.listProdsCounted.splice(this.curIndex, 1)
+                  }
                 }
 
-                this.countDisabled = false
-              } else {
-                curErr = true
-                this.msgReloc = 'Marbete no encontrado'
-              }
-            } else {
-              curErr = true
-              this.msgReloc = 'Error cargando marbete'
-            }
+                indx = this.listProdsCounted.push(this.curMarbete) - 1
+                this.curIndex = indx
 
-            if (curErr) {
+                this.packingPerPackage = this.curMarbete.PPP
+                this.packageCount = 0
+                this.packingCount = 0
+                this.uniCount = 0
+              }
+
+              this.countDisabled = false
+            } else {
               this.countDisabled = true
               this.curIndex = -1
               this.packageCount = 0
               this.packingCount = 0
               this.uniCount = 0
               this.curMarbete = Object.assign({}, marbete)
+              this.msgReloc = 'Error cargando marbete'
               this.msgColor = 'red'
               this.snackbar = true
             }
 
             this.loadingView = false
+          })
+          .catch((e) => {
+            this.loadingView = false
+
+            this.countDisabled = true
+            this.curIndex = -1
+            this.packageCount = 0
+            this.packingCount = 0
+            this.uniCount = 0
+            this.curMarbete = Object.assign({}, marbete)
+
+            this.msgReloc = e.response.data.detail
+            this.msgColor = 'red'
+            this.snackbar = true
           })
       }
     },
