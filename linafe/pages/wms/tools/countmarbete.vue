@@ -51,14 +51,14 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="4" class="d-flex justify-center shrink">
+          <!-- <v-col cols="4" class="d-flex justify-center shrink">
             <ImgForGrid
               :img-file="curMarbete.FOTO"
               :swidth="100"
               :lwidth="200"
             />
-          </v-col>
-          <v-col cols="8">
+          </v-col> -->
+          <v-col cols>
             <v-row justify="start" align="center" dense>
               <v-card-title class="my-0 py-0 px-2">
                 {{ curMarbete.MARBETE }}
@@ -146,47 +146,6 @@
               x-small
               color="primary"
               :disabled="countDisabled"
-              @click="countPacking('plus')"
-            >
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </v-col>
-          <v-col cols="6" class="d-flex justify-center shrink">
-            <v-text-field
-              ref="txtPackingCount"
-              v-model.number="packingCount"
-              :label="`${curMarbete.UM} (Excepción)`"
-              :placeholder="`${curMarbete.UM} (Excepción)`"
-              type="number"
-              class="centered-input"
-              :rules="[rules.positiveNumber]"
-              :disabled="countDisabled"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="3" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              outlined
-              fab
-              x-small
-              color="primary"
-              :disabled="countDisabled"
-              @click="countPacking('minus')"
-            >
-              <v-icon>mdi-minus</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row justify="space-around" align="center" dense>
-          <v-col cols="3" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              outlined
-              fab
-              x-small
-              color="primary"
-              :disabled="countDisabled"
               @click="countProds('plus')"
             >
               <v-icon>mdi-plus</v-icon>
@@ -194,10 +153,10 @@
           </v-col>
           <v-col cols="6" class="d-flex justify-center shrink">
             <v-text-field
-              ref="txtCurCount"
-              v-model="curCount"
-              label="Total"
-              placeholder="Cuenta"
+              ref="txtExcepCount"
+              v-model="excepCount"
+              :label="`${curMarbete.UM} (Excepción)`"
+              :placeholder="`${curMarbete.UM} (Excepción)`"
               class="centered-input"
               :disabled="countDisabled"
               :prepend-inner-icon="cE ? 'mdi-map-marker' : null"
@@ -216,6 +175,22 @@
               @click="countProds('minus')"
             >
               <v-icon>mdi-minus</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-divider></v-divider>
+        <v-row justify="space-around" align="center" dense>
+          <v-col cols="12" class="d-flex justify-center shrink">
+            <v-btn
+              class="ma-2"
+              color="primary"
+              :disabled="countDisabled"
+              block
+              rounded
+              @click="clearForm"
+            >
+              {{ `Tot: ${curCount}` }}
+              <v-icon right dark>mdi-check</v-icon>
             </v-btn>
           </v-col>
         </v-row>
@@ -311,7 +286,7 @@ import { mapGetters } from 'vuex'
 import DxList from 'devextreme-vue/list'
 import ArrayStore from 'devextreme/data/array_store'
 import DataSource from 'devextreme/data/data_source'
-import ImgForGrid from '~/components/utilities/ImgForGrid'
+// import ImgForGrid from '~/components/utilities/ImgForGrid'
 
 const getTime = () => {
   const curDT = new Date()
@@ -328,16 +303,17 @@ const marbete = {
   BARCODE: '0000000000000',
   CODIGO: '0',
   DESCRIP: 'PRODUCT',
-  UM: 'UNI',
-  MULTIPLO: 1,
-  EMPAQUE: 1,
-  CANTXBULTO: 1,
+  UM: 'UNI', // Descripción de unidad de medida
+  UMBC: '1', // Barcode o código de UM
+  MULTIPLO: 1, // Múltiplo de UM
+  EMPAQUE: '1',
   UBIX: 'UBIX',
   UBIXBC: 'UBIXBC',
   PACKAGEC: 0,
   PACKINGC: 0,
   PACKINGTOTC: 0,
   UNI: 0,
+  PPP: 1, // Packings Per Package
   CTIME: getTime(),
   NUMINV: 0,
   FOTO: '/no_image.png',
@@ -347,7 +323,7 @@ const marbete = {
 export default {
   components: {
     DxList,
-    ImgForGrid,
+    // ImgForGrid,
   },
 
   data() {
@@ -383,21 +359,27 @@ export default {
   },
   computed: {
     ...mapGetters('sistema', ['getCurCia']),
-    curCount: {
+    excepCount: {
       get() {
-        // Cuenta de empaques (paking) total
-        const pCT =
-          this.packageCount * this.packingPerPackage + this.packingCount
+        // Cuenta de empaques y unidades de excepción
+        const pC = this.packingCount
         const uC = this.uniCount
-        return `${pCT} / ${uC}`
+        return `${pC} / ${uC}`
       },
       set(newVal) {
         const newCount = newVal.split('/')
-        // const pCTot = Number(newCount[0].trim())
-        const uniC = Number(newCount[1].trim())
+        const pC = Number(newCount[0].trim())
+        const uC = Number(newCount[1].trim())
 
-        this.uniCount = isNaN(uniC) ? 0 : uniC
+        this.packingCount = isNaN(pC) ? 0 : pC
+        this.uniCount = isNaN(uC) ? 0 : uC
       },
+    },
+    curCount() {
+      // Cuenta total de empaques y unidades
+      const pC = this.packageCount * this.packingPerPackage + this.packingCount
+      const uC = this.uniCount
+      return `${pC} / ${uC}`
     },
     listDataSource() {
       const aStore = new ArrayStore({
@@ -477,9 +459,7 @@ export default {
                     this.packageCount = this.listProdsCounted[indx].PACKAGEC
                     this.packingCount = this.listProdsCounted[indx].PACKINGC
                     this.uniCount = this.listProdsCounted[indx].UNI
-                    this.packingPerPackage = this.listProdsCounted[
-                      indx
-                    ].CANTXBULTO
+                    this.packingPerPackage = this.listProdsCounted[indx].PPP
                   }
                 }
 
@@ -497,7 +477,7 @@ export default {
                   indx = this.listProdsCounted.push(this.curMarbete) - 1
                   this.curIndex = indx
 
-                  this.packingPerPackage = this.curMarbete.CANTXBULTO
+                  this.packingPerPackage = this.curMarbete.PPP
                   this.packageCount = 0
                   this.packingCount = 0
                   this.uniCount = 0
@@ -536,17 +516,6 @@ export default {
       if (opc === 'minus') {
         if (this.packageCount > 0) {
           this.packageCount--
-        }
-      }
-    },
-    countPacking(opc) {
-      if (opc === 'plus') {
-        this.packingCount++
-      }
-
-      if (opc === 'minus') {
-        if (this.packingCount > 0) {
-          this.packingCount--
         }
       }
     },
@@ -622,7 +591,7 @@ export default {
       this.loadingView = false
     },
     setPos() {
-      const txt = this.$refs.txtCurCount.$refs.input
+      const txt = this.$refs.txtExcepCount.$refs.input
       const xstr = txt.value
       this.xpos1 = txt.selectionStart
       this.xpos2 = xstr.indexOf('/')
@@ -647,6 +616,11 @@ export default {
       this.packingCount = 0
       this.uniCount = 0
       this.countDisabled = true
+
+      this.$refs.txtMarbeteID.scrollTop = 0
+      // document.body.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // window.scrollTo({ top: 0, behavior: 'smooth' })
+      this.$nextTick(() => this.$refs.txtMarbeteID.focus())
     },
     clearList() {
       this.listProdsCounted = []

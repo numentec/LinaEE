@@ -304,8 +304,9 @@ class ExtCountedProdsAPIView(APIView):
                         item['SKU'],
                         item['PACKAGEC'],
                         item['PACKINGC'],
-                        item['PACKINGTOTC'],
+                        item['PPP'],
                         item['UNI'],
+                        item['UMBC'],
                         item['MULTIPLO'],
                         item['UBIX'],
                         item['UBIXBC'],
@@ -323,7 +324,8 @@ class ExtCountedProdsAPIView(APIView):
                 refCursor = cursor.connection.cursor()
 
                 refCursor.executemany(
-                    "INSERT INTO DMC.LINAEE_CONTEO VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18)",
+                    "INSERT INTO DMC.LINAEE_CONTEO VALUES " + 
+                    "(:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)",
                     data_set
                 )
 
