@@ -170,7 +170,7 @@
           <v-stepper-content step="4" class="px-0">
             <v-card class="px-4" min-height="200px" flat tile>
               <v-switch v-model="useBC2" label="Use Barcode"></v-switch>
-              <v-row>
+              <v-row no-gutters>
                 <v-col cols="12">
                   <v-text-field
                     ref="txtDestino"
@@ -180,9 +180,28 @@
                     clearable
                     :placeholder="useBC2 ? 'Destino (Barcode)' : 'Destino (ID)'"
                     type="text"
-                    @keydown.enter="relocate"
-                    @click:append-outer="relocate"
+                    @keydown.enter="validDestino"
+                    @click:append-outer="validDestino"
                   ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row no-gutters>
+                <v-col cols="12" class="d-flex justify-center shrink">
+                  <v-card-title
+                    ref="lblDestino"
+                    class="red--text text--darken-4"
+                  >
+                    {{ destinoDescrip }}
+                  </v-card-title>
+                </v-col>
+              </v-row>
+              <v-row no-gutters>
+                <v-col cols="12">
+                  <v-card-actions>
+                    <v-btn color="primary" :disabled="!relocate" block>
+                      Reubicar
+                    </v-btn>
+                  </v-card-actions>
                 </v-col>
               </v-row>
             </v-card>
@@ -215,6 +234,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import DxList from 'devextreme-vue/list'
 import DataSource from 'devextreme/data/data_source'
 import MobileSteps from '~/components/utilities/MobileSteps'
@@ -232,6 +252,8 @@ export default {
       productID: '',
       origen: '',
       destino: '',
+      destinoDescrip: '',
+      relocate: false,
       dataSource: null,
       curSKU: '###',
       curUM: 'UNI',
@@ -251,7 +273,17 @@ export default {
       },
     }
   },
-  computed: {},
+  computed: {
+    ...mapGetters('sistema', ['getCurCia']),
+  },
+  watch: {
+    destino(newVal) {
+      if (!newVal) {
+        this.relocate = false
+        this.destinoDescrip = ''
+      }
+    },
+  },
   mounted() {
     this.$nextTick(() => this.$refs.txtProdID.focus())
   },
@@ -421,7 +453,78 @@ export default {
         this.snackbar = true
       }
     },
-    async relocate() {
+    async validDestino() {
+      const e = this.cantidad.empaq
+      const u = this.cantidad.uni
+
+      let cantidad = u
+
+      if (this.selectedLoc.SEPARADOR) {
+        const sep = this.selectedLoc.SEPARADOR
+        cantidad = `${e} ${sep} ${u}`
+      }
+
+      if (this.destino) {
+        await this.$axios
+          .get('wms/relocatext/', {
+            params: {
+              p01: 'VALIDUBIX',
+              p02: 'O',
+              p03: this.destino,
+              p04: cantidad,
+              p05: this.getCurCia.extrel,
+            },
+          })
+          .then((response) => {
+            if (response.data) {
+              if (response.data.length > 0) {
+                const numerr = response.data[0].status.substring(0, 5)
+                const msgerr = response.data[0].status.substring(6)
+                this.msgReloc = msgerr
+
+                if (numerr.startsWith('EOK')) {
+                  this.relocate = true
+                  this.msgReloc = 'UBICACION VALIDA'
+                  this.destinoDescrip = msgerr
+                } else {
+                  this.relocate = false
+                  this.destinoDescrip = ''
+                }
+
+                this.msgColor = numerr.startsWith('EOK') ? 'green' : 'red'
+                this.snackbar = true
+              } else {
+                this.msgReloc = 'SIN RESPUESTA DE LA BASE DE DATOS'
+                this.msgColor = 'yellow'
+                this.snackbar = true
+              }
+            }
+          })
+          .catch((err) => {
+            let stcode = 0
+            let msg = ''
+            if (err.response) {
+              stcode = err.response.status
+              msg = err.response.data.message
+            } else if (err.request) {
+              stcode = 503
+              msg = err.response.data.message
+            } else {
+              stcode = 1010
+              msg = err.message
+            }
+
+            this.msgReloc = `${stcode} - ${msg}`
+            this.msgColor = 'red'
+            this.snackbar = true
+          })
+      } else {
+        this.msgReloc = 'Proporcione ubicación destino'
+        this.msgColor = 'red'
+        this.snackbar = true
+      }
+    },
+    async execRelocation() {
       const e = this.cantidad.empaq
       const u = this.cantidad.uni
 
@@ -448,7 +551,7 @@ export default {
                 const numerr = response.data[0].status.substring(0, 5)
                 const msgerr = response.data[0].status.substring(6)
                 this.msgReloc = msgerr
-                this.msgColor = numerr === 'EOK - ' ? 'green' : 'red'
+                this.msgColor = numerr.startsWith('EOK') ? 'green' : 'red'
                 this.snackbar = true
               } else {
                 this.msgReloc = 'SIN RESPUESTA DE LA BASE DE DATOS'
