@@ -290,8 +290,8 @@ class ExtCountedProdsAPIView(APIView):
     def post(self, request):
         # items - Registros a insertar
         # cia - Compañía
-        # usr = curUser(request.user)
-        usr = request.user
+        usr = curUser(request.user)
+        # usr = request.user
 
         try:
             data = request.data
@@ -311,7 +311,7 @@ class ExtCountedProdsAPIView(APIView):
                 data_set.append(
                     [
                         cia,
-                        usr,
+                        usr.username,
                         sessionID,
                         item['NUMINV'],
                         item['MARBETE'],
