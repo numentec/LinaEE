@@ -208,23 +208,25 @@
         <div class="list-container">
           <DxList
             :data-source="listDataSource"
-            height="300"
+            height="200"
             :grouped="true"
             :allow-item-deleting="true"
-            item-delete-mode="swipe"
+            item-delete-mode="slideItem"
           >
             <template #item="{ data: item }">
               <div>
                 <div class="conteo">
                   <div class="cuentasku">{{ `MAR: ${item.MARBETE}` }}</div>
-                  <div class="cuentacant">{{ `SKU: ${item.SKU}` }}</div>
+                  <div class="cuentacant">{{ item.SKU }}</div>
                   <div class="cuentacant">{{ `Bultos: ${item.PACKAGEC}` }}</div>
                   <div class="cuentacant">
                     {{ `Cantidad: ${item.PACKINGTOTC} / ${item.UNI}` }}
                   </div>
                 </div>
                 <div class="dt-container">
-                  <div class="dt">{{ item.CTIME }}</div>
+                  <div class="dt">{{ cTime(item.CTIME, 0) }}</div>
+                  <br />
+                  <div class="dt">{{ cTime(item.CTIME, 1) }}</div>
                 </div>
               </div>
             </template>
@@ -252,7 +254,7 @@
     </v-dialog>
     <v-dialog v-model="askClearList" max-width="300">
       <v-card>
-        <v-card-title class="text-h5"> Limpiar lista de conteo </v-card-title>
+        <v-card-title class="text-h5"> Limpiar lista </v-card-title>
         <v-card-text>{{ msgClearList }}</v-card-text>
         <v-card-actions>
           <v-btn
@@ -286,14 +288,30 @@ import { mapGetters } from 'vuex'
 import DxList from 'devextreme-vue/list'
 import ArrayStore from 'devextreme/data/array_store'
 import DataSource from 'devextreme/data/data_source'
+import { locale, loadMessages } from 'devextreme/localization'
 // import ImgForGrid from '~/components/utilities/ImgForGrid'
+
+loadMessages({
+  // Replace "en" with the target locale of the dictionary
+  es: {
+    'dxListEditDecorator-delete': 'Borrar',
+    'dxListEditDecorator-more': 'Más',
+  },
+})
+
+locale(navigator.language)
 
 const getTime = () => {
   const curDT = new Date()
-  const date = `${curDT.getFullYear()}-${
-    curDT.getMonth() + 1
-  }-${curDT.getDate()}`
-  const time = `${curDT.getHours()}:${curDT.getMinutes()}:${curDT.getSeconds()}`
+  const Y = curDT.getFullYear()
+  const M = (curDT.getMonth() + 1).toString().padStart(2, '0')
+  const D = curDT.getDate().toString().padStart(2, '0')
+  const date = `${Y}-${M}-${D}`
+
+  const hh = curDT.getHours().toString().padStart(2, '0')
+  const mm = curDT.getMinutes().toString().padStart(2, '0')
+  const ss = curDT.getSeconds().toString().padStart(2, '0')
+  const time = `${hh}:${mm}:${ss}`
   return `${date} ${time}`
 }
 
@@ -631,6 +649,10 @@ export default {
       this.clearForm()
       this.askClearList = false
     },
+    cTime(item, inx) {
+      const timepart = item.split(' ')
+      return timepart[inx].trim()
+    },
   },
 }
 </script>
@@ -661,13 +683,14 @@ export default {
 }
 .dt-container {
   float: right;
-  padding-top: 2px;
+  text-align: right;
+  padding-top: 30px;
 }
 .dt-container > div {
   display: inline-block;
 }
 .dt-container .dt {
-  font-size: 14px;
+  font-size: 12px;
 }
 .dt-container .bultos {
   font-size: 18px;

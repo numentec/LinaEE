@@ -198,7 +198,12 @@
               <v-row no-gutters>
                 <v-col cols="12">
                   <v-card-actions>
-                    <v-btn color="primary" :disabled="!relocate" block>
+                    <v-btn
+                      color="primary"
+                      :disabled="!relocate"
+                      block
+                      @click="execRelocation"
+                    >
                       Reubicar
                     </v-btn>
                   </v-card-actions>
