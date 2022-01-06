@@ -1,286 +1,295 @@
 <template>
-  <div class="d-flex align-content-start flex-wrap">
-    <v-card width="600" class="mx-auto" :loading="loadingView">
-      <v-card-title>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn icon v-bind="attrs" v-on="on" @click="$router.back()">
-              <v-icon large color="primary">mdi-chevron-left</v-icon>
-            </v-btn>
-          </template>
-          <span>Volver a vista anterior</span>
-        </v-tooltip>
-        <span>Conteo físico</span>
-        <v-spacer></v-spacer>
-        <v-menu bottom left>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn icon v-bind="attrs" color="primary" v-on="on">
-              <v-icon>mdi-dots-vertical</v-icon>
-            </v-btn>
-          </template>
-          <v-list>
-            <v-list-item link @click.stop="showCount = true">
-              <v-list-item-title>Ver conteo</v-list-item-title>
-            </v-list-item>
-            <v-list-item link @click="clearForm">
-              <v-list-item-title>Limpiar</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-      </v-card-title>
-      <v-card-text>
-        <v-row dense>
-          <!-- <v-col cols="3">
-            <v-switch v-model="useBC1" label="BC" class="mx-2" />
-          </v-col> -->
-          <v-col cols="12">
-            <v-text-field
-              ref="txtMarbeteID"
-              v-model="marbeteID"
-              :rules="[rules.required]"
-              :append-outer-icon="'mdi-send'"
-              clearable
-              label="Marbete"
-              placeholder="Marbete"
-              type="text"
-              class="mx-2"
-              @keydown.enter="loadMarbete"
-              @click:append-outer="loadMarbete"
-              @click:clear="clearForm"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-        <v-row>
-          <!-- <v-col cols="4" class="d-flex justify-center shrink">
-            <ImgForGrid
-              :img-file="curMarbete.FOTO"
-              :swidth="100"
-              :lwidth="200"
-            />
-          </v-col> -->
-          <v-col cols>
-            <v-row justify="start" align="center" dense>
-              <v-card-title class="my-0 py-0 px-2">
-                {{ curMarbete.MARBETE }}
-              </v-card-title>
-            </v-row>
-            <v-row justify="start" align="center" dense>
-              <v-card-text class="my-0 pt-0 px-2">
-                <div class="text-subtitle-1">
-                  {{ `SKU: ${curMarbete.SKU}` }}
-                </div>
-              </v-card-text>
-            </v-row>
-            <v-row justify="start" align="center" dense>
-              <v-card-text class="my-0 pt-0 px-2">
-                <div class="text-subtitle-1">
-                  {{ curMarbete.DESCRIP }}
-                </div>
-              </v-card-text>
-            </v-row>
-            <v-row justify="start" align="center" dense>
-              <v-card-text class="my-0 py-0 px-2">
-                {{ curMarbete.BARCODE }}
-              </v-card-text>
-            </v-row>
-            <v-row justify="start" align="center" dense>
-              <v-card-title class="my-0 py-0 px-2">
-                {{ curMarbete.UBIX }}
-              </v-card-title>
-            </v-row>
-            <v-row justify="start" align="center">
-              <v-chip color="light-blue" text-color="white" class="mx-2">
-                {{ `Empaque: ${curMarbete.EMPAQUE}` }}
-              </v-chip>
-            </v-row>
-          </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row justify="space-around" align="center" dense>
-          <v-col cols="3" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              outlined
-              fab
-              x-small
-              color="primary"
-              :disabled="countDisabled"
-              @click="countPackage('plus')"
-            >
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </v-col>
-          <v-col cols="6" class="d-flex justify-center shrink">
-            <v-text-field
-              ref="txtPackageCount"
-              v-model.number="packageCount"
-              label="Bultos"
-              placeholder="Bultos"
-              type="number"
-              class="centered-input"
-              :rules="[rules.positiveNumber]"
-              :disabled="countDisabled"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="3" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              outlined
-              fab
-              x-small
-              color="primary"
-              :disabled="countDisabled"
-              @click="countPackage('minus')"
-            >
-              <v-icon>mdi-minus</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row justify="space-around" align="center" dense>
-          <v-col cols="3" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              outlined
-              fab
-              x-small
-              color="primary"
-              :disabled="countDisabled"
-              @click="countProds('plus')"
-            >
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </v-col>
-          <v-col cols="6" class="d-flex justify-center shrink">
-            <v-text-field
-              ref="txtExcepCount"
-              v-model="excepCount"
-              :label="`${curMarbete.UM} (Excepción)`"
-              :placeholder="`${curMarbete.UM} (Excepción)`"
-              class="centered-input"
-              :disabled="countDisabled"
-              :prepend-inner-icon="cE ? 'mdi-map-marker' : null"
-              :append-icon="!cE ? 'mdi-map-marker' : null"
-              @click="setPos"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="3" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              outlined
-              fab
-              x-small
-              color="primary"
-              :disabled="countDisabled"
-              @click="countProds('minus')"
-            >
-              <v-icon>mdi-minus</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-        <v-divider></v-divider>
-        <v-row justify="space-around" align="center" dense>
-          <v-col cols="12" class="d-flex justify-center shrink">
-            <v-btn
-              class="ma-2"
-              color="primary"
-              :disabled="countDisabled"
-              block
-              rounded
-              @click="clearForm"
-            >
-              {{ `Tot: ${curCount}` }}
-              <v-icon right dark>mdi-check</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
-    <v-dialog v-model="showCount" max-width="400">
-      <v-card min-height="250">
-        <v-toolbar color="secondary" dark>
-          <v-toolbar-title>Conteo en proceso</v-toolbar-title>
+  <v-form ref="form" v-model="valid" lazy-validation>
+    <div class="d-flex align-content-start flex-wrap">
+      <v-card width="600" class="mx-auto" :loading="loadingView">
+        <v-card-title>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon v-bind="attrs" v-on="on" @click="$router.back()">
+                <v-icon large color="primary">mdi-chevron-left</v-icon>
+              </v-btn>
+            </template>
+            <span>Volver a vista anterior</span>
+          </v-tooltip>
+          <span>Conteo físico</span>
           <v-spacer></v-spacer>
-          <v-btn icon @click="askClearList = true">
-            <v-icon>mdi-delete-sweep-outline</v-icon>
-          </v-btn>
-        </v-toolbar>
-        <div class="list-container">
-          <DxList
-            :data-source="listDataSource"
-            height="200"
-            :grouped="true"
-            :allow-item-deleting="true"
-            item-delete-mode="slideItem"
-          >
-            <template #item="{ data: item }">
-              <div>
-                <div class="conteo">
-                  <div class="cuentasku">{{ `MAR: ${item.MARBETE}` }}</div>
-                  <div class="cuentacant">{{ item.SKU }}</div>
-                  <div class="cuentacant">{{ `Bultos: ${item.PACKAGEC}` }}</div>
-                  <div class="cuentacant">
-                    {{ `Cantidad: ${item.PACKINGTOTC} / ${item.UNI}` }}
+          <v-menu bottom left>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon v-bind="attrs" color="primary" v-on="on">
+                <v-icon>mdi-dots-vertical</v-icon>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item link @click.stop="showCount = true">
+                <v-list-item-title>Ver conteo</v-list-item-title>
+              </v-list-item>
+              <v-list-item link @click="clearForm">
+                <v-list-item-title>Limpiar</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-card-title>
+        <v-card-text>
+          <v-row dense>
+            <!-- <v-col cols="3">
+              <v-switch v-model="useBC1" label="BC" class="mx-2" />
+            </v-col> -->
+            <v-col cols="12">
+              <v-text-field
+                ref="txtMarbeteID"
+                v-model="marbeteID"
+                :rules="[rules.required]"
+                :append-outer-icon="'mdi-send'"
+                clearable
+                label="Marbete"
+                placeholder="Marbete"
+                type="text"
+                class="mx-2"
+                @keydown.enter="loadMarbete"
+                @click:append-outer="loadMarbete"
+                @click:clear="clearForm"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row>
+            <!-- <v-col cols="4" class="d-flex justify-center shrink">
+              <ImgForGrid
+                :img-file="curMarbete.FOTO"
+                :swidth="100"
+                :lwidth="200"
+              />
+            </v-col> -->
+            <v-col cols>
+              <v-row justify="start" align="center" dense>
+                <v-card-title class="my-0 py-0 px-2">
+                  {{ curMarbete.MARBETE }}
+                </v-card-title>
+              </v-row>
+              <v-row justify="start" align="center" dense>
+                <v-card-text class="my-0 pt-0 px-2">
+                  <div class="text-subtitle-1">
+                    {{ `SKU: ${curMarbete.SKU}` }}
+                  </div>
+                </v-card-text>
+              </v-row>
+              <v-row justify="start" align="center" dense>
+                <v-card-text class="my-0 pt-0 px-2">
+                  <div class="text-subtitle-1">
+                    {{ curMarbete.DESCRIP }}
+                  </div>
+                </v-card-text>
+              </v-row>
+              <v-row justify="start" align="center" dense>
+                <v-card-text class="my-0 py-0 px-2">
+                  {{ curMarbete.BARCODE }}
+                </v-card-text>
+              </v-row>
+              <v-row justify="start" align="center" dense>
+                <v-card-title class="my-0 py-0 px-2">
+                  {{ curMarbete.UBIX }}
+                </v-card-title>
+              </v-row>
+              <v-row justify="start" align="center">
+                <v-chip color="light-blue" text-color="white" class="mx-2">
+                  {{ `Empaque: ${curMarbete.EMPAQUE}` }}
+                </v-chip>
+              </v-row>
+            </v-col>
+          </v-row>
+          <v-divider></v-divider>
+          <v-row justify="space-around" align="center" dense>
+            <v-col cols="3" class="d-flex justify-center shrink">
+              <v-btn
+                class="ma-2"
+                outlined
+                fab
+                x-small
+                color="primary"
+                :disabled="countDisabled"
+                @click="countPackage('plus')"
+              >
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
+            </v-col>
+            <v-col cols="6" class="d-flex justify-center shrink">
+              <v-text-field
+                ref="txtPackageCount"
+                v-model.number="packageCount"
+                label="Bultos"
+                placeholder="Bultos"
+                type="number"
+                class="centered-input"
+                :rules="[rules.positiveNumber]"
+                :disabled="countDisabled"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="3" class="d-flex justify-center shrink">
+              <v-btn
+                class="ma-2"
+                outlined
+                fab
+                x-small
+                color="primary"
+                :disabled="countDisabled"
+                @click="countPackage('minus')"
+              >
+                <v-icon>mdi-minus</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-divider></v-divider>
+          <v-row justify="space-around" align="center" dense>
+            <v-col cols="3" class="d-flex justify-center shrink">
+              <v-btn
+                class="ma-2"
+                outlined
+                fab
+                x-small
+                color="primary"
+                :disabled="countDisabled"
+                @click="countProds('plus')"
+              >
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
+            </v-col>
+            <v-col cols="6" class="d-flex justify-center shrink">
+              <v-text-field
+                ref="txtExcepCount"
+                v-model="excepCount"
+                :label="`${curMarbete.UM} (Excepción)`"
+                :placeholder="`${curMarbete.UM} (Excepción)`"
+                class="centered-input"
+                :disabled="countDisabled"
+                :prepend-inner-icon="cE ? 'mdi-map-marker' : null"
+                :append-icon="!cE ? 'mdi-map-marker' : null"
+                @click="setPos"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="3" class="d-flex justify-center shrink">
+              <v-btn
+                class="ma-2"
+                outlined
+                fab
+                x-small
+                color="primary"
+                :disabled="countDisabled"
+                @click="countProds('minus')"
+              >
+                <v-icon>mdi-minus</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-divider></v-divider>
+          <v-row justify="space-around" align="center" dense>
+            <v-col cols="12" class="d-flex justify-center shrink">
+              <v-btn
+                class="ma-2"
+                color="primary"
+                :disabled="countDisabled"
+                block
+                rounded
+                @click="clearForm"
+              >
+                {{ `Tot: ${curCount}` }}
+                <v-icon right dark>mdi-check</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+      <v-dialog v-model="showCount" max-width="400">
+        <v-card min-height="250">
+          <v-toolbar color="secondary" dark>
+            <v-toolbar-title>Conteo en proceso</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn icon @click="askClearList = true">
+              <v-icon>mdi-delete-sweep-outline</v-icon>
+            </v-btn>
+          </v-toolbar>
+          <div class="list-container">
+            <DxList
+              :data-source="listDataSource"
+              height="200"
+              :grouped="true"
+              :allow-item-deleting="true"
+              item-delete-mode="slideItem"
+            >
+              <template #item="{ data: item }">
+                <div>
+                  <div class="conteo">
+                    <div class="cuentasku">{{ `MAR: ${item.MARBETE}` }}</div>
+                    <div class="cuentacant">{{ item.SKU }}</div>
+                    <div class="cuentacant">
+                      {{ `Bultos: ${item.PACKAGEC}` }}
+                    </div>
+                    <div class="cuentacant">
+                      {{ `Cantidad: ${item.PACKINGTOTC} / ${item.UNI}` }}
+                    </div>
+                  </div>
+                  <div class="dt-container">
+                    <div class="dt">{{ cTime(item.CTIME, 0) }}</div>
+                    <br />
+                    <div class="dt">{{ cTime(item.CTIME, 1) }}</div>
                   </div>
                 </div>
-                <div class="dt-container">
-                  <div class="dt">{{ cTime(item.CTIME, 0) }}</div>
-                  <br />
-                  <div class="dt">{{ cTime(item.CTIME, 1) }}</div>
-                </div>
-              </div>
-            </template>
-            <template #group="{ data: item }">
-              <div>{{ item.key }}</div>
-            </template>
-          </DxList>
-        </div>
-        <v-divider />
-        <v-card-actions>
+              </template>
+              <template #group="{ data: item }">
+                <div>{{ item.key }}</div>
+              </template>
+            </DxList>
+          </div>
+          <v-divider />
+          <v-card-actions>
+            <v-btn
+              text
+              color="green darken-1"
+              :disabled="listProdsCounted.length == 0"
+              @click="sendCount"
+            >
+              Enviar
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn text color="red darken-1" @click="showCount = false">
+              Cerrar
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-model="askClearList" max-width="300">
+        <v-card>
+          <v-card-title class="text-h5"> Limpiar lista </v-card-title>
+          <v-card-text>{{ msgClearList }}</v-card-text>
+          <v-card-actions>
+            <v-btn
+              color="green darken-1"
+              text
+              :disabled="listProdsCounted.length == 0"
+              @click.stop="clearList"
+            >
+              Aceptar
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn color="red darken-1" text @click="askClearList = false">
+              Cancelar
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-snackbar v-model="snackbar" timeout="5000">
+        {{ msgReloc }}
+        <template v-slot:action="{ attrs }">
           <v-btn
+            :color="msgColor"
             text
-            color="green darken-1"
-            :disabled="listProdsCounted.length == 0"
-            @click="sendCount"
+            v-bind="attrs"
+            @click="snackbar = false"
           >
-            Enviar
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn text color="red darken-1" @click="showCount = false">
             Cerrar
           </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="askClearList" max-width="300">
-      <v-card>
-        <v-card-title class="text-h5"> Limpiar lista </v-card-title>
-        <v-card-text>{{ msgClearList }}</v-card-text>
-        <v-card-actions>
-          <v-btn
-            color="green darken-1"
-            text
-            :disabled="listProdsCounted.length == 0"
-            @click.stop="clearList"
-          >
-            Aceptar
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn color="red darken-1" text @click="askClearList = false">
-            Cancelar
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-snackbar v-model="snackbar" timeout="5000">
-      {{ msgReloc }}
-      <template v-slot:action="{ attrs }">
-        <v-btn :color="msgColor" text v-bind="attrs" @click="snackbar = false">
-          Cerrar
-        </v-btn>
-      </template>
-    </v-snackbar>
-  </div>
+        </template>
+      </v-snackbar>
+    </div>
+  </v-form>
 </template>
 
 <script>
@@ -364,6 +373,7 @@ export default {
       cE: true,
       dataSource: null,
       selectedKeys: [],
+      valid: true,
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
@@ -385,12 +395,18 @@ export default {
         return `${pC} / ${uC}`
       },
       set(newVal) {
-        const newCount = newVal.split('/')
-        const pC = Number(newCount[0].trim())
-        const uC = Number(newCount[1].trim())
+        if (newVal) {
+          const newCount = newVal.split('/')
 
-        this.packingCount = isNaN(pC) ? 0 : pC
-        this.uniCount = isNaN(uC) ? 0 : uC
+          const pC = newCount[0] ? Number(newCount[0].trim()) : 0
+          const uC = newCount[1] ? Number(newCount[1].trim()) : 0
+
+          this.packingCount = isNaN(pC) ? 0 : pC
+          this.uniCount = isNaN(uC) ? 0 : uC
+        } else {
+          this.packingCount = 0
+          this.uniCount = 0
+        }
       },
     },
     curCount() {
@@ -502,10 +518,11 @@ export default {
             } else {
               this.countDisabled = true
               this.curIndex = -1
+              this.curMarbete = Object.assign({}, marbete)
               this.packageCount = 0
               this.packingCount = 0
               this.uniCount = 0
-              this.curMarbete = Object.assign({}, marbete)
+
               this.msgReloc = 'Error cargando marbete'
               this.msgColor = 'red'
               this.snackbar = true
@@ -518,10 +535,10 @@ export default {
 
             this.countDisabled = true
             this.curIndex = -1
+            this.curMarbete = Object.assign({}, marbete)
             this.packageCount = 0
             this.packingCount = 0
             this.uniCount = 0
-            this.curMarbete = Object.assign({}, marbete)
 
             this.msgReloc = e.response.data.detail
             this.msgColor = 'red'
@@ -631,11 +648,17 @@ export default {
         this.curIndex = -1
       }
 
-      this.curMarbete = Object.assign({}, marbete)
       if (this.marbeteID !== '') this.marbeteID = ''
+      // this.reset()
+      this.resetValidation()
+
+      this.curMarbete = Object.assign({}, marbete)
+      // setTimeout(() => {
       this.packageCount = 0
       this.packingCount = 0
       this.uniCount = 0
+      //   this.$refs.txtExcepCount.$refs.input.value = '0 / 0'
+      // }, 0)
       this.countDisabled = true
 
       this.$refs.txtMarbeteID.scrollTop = 0
@@ -652,6 +675,12 @@ export default {
     cTime(item, inx) {
       const timepart = item.split(' ')
       return timepart[inx].trim()
+    },
+    reset() {
+      this.$refs.form.reset()
+    },
+    resetValidation() {
+      this.$refs.form.resetValidation()
     },
   },
 }

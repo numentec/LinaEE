@@ -26,25 +26,26 @@
         <v-icon color="yellow darken-2">mdi-star</v-icon>
       </v-btn>
     </v-bottom-navigation>
-    <DxActionSheet
-      v-model="isActionSheetVisible"
-      :data-source="dataSource"
-      :visible="isActionSheetVisible"
-      :show-title="false"
-      :show-cancel-button="true"
-      cancel-text="Cancelar"
-      title="Quick tools"
-      @cancelClick="isActionSheetVisible = false"
-      @itemClick="loadTool($event.itemData)"
-    />
-    <!-- <v-footer v-else color="asgrey lighten-3" fixed app>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer> -->
+    <v-bottom-sheet v-model="isActionSheetVisible">
+      <v-sheet class="text-center">
+        <v-btn
+          v-for="(item, i) in dataSource"
+          :key="i"
+          text
+          color="primary"
+          :class="{ 'mt-4': i > 0 }"
+          block
+          @click="loadTool(i)"
+        >
+          {{ item.text }}
+        </v-btn>
+      </v-sheet>
+    </v-bottom-sheet>
   </v-app>
 </template>
 
 <script>
-import DxActionSheet from 'devextreme-vue/action-sheet'
+// import DxActionSheet from 'devextreme-vue/action-sheet'
 const CoreDrawer = () => import('../components/core/Drawer')
 const CoreDrawerMobile = () => import('../components/core/DrawerMobile')
 
@@ -52,7 +53,6 @@ export default {
   name: 'LinaHome',
   components: {
     CoreAppBar: () => import('../components/core/AppBar'),
-    DxActionSheet,
   },
   data() {
     return {
@@ -60,13 +60,13 @@ export default {
       bar: true,
       dataSource: [
         {
-          text: 'Producto - Consultar',
+          text: 'Consultar Producto',
           onClick: () => {
             this.$router.push({ path: '/ventas/tools/qryprod' })
           },
         },
         {
-          text: 'Producto - Ubicaciones',
+          text: 'Ubicaciones de Producto',
           onClick: () => {
             this.$router.push({ path: '/wms/tools/qryprod' })
           },
@@ -78,7 +78,7 @@ export default {
           },
         },
         {
-          text: 'Conteo Físico',
+          text: 'Conteo por SKU',
           onClick: () => {
             this.$router.push({ path: '/wms/tools/countprods' })
           },
@@ -103,12 +103,13 @@ export default {
     },
   },
   mounted() {
-    this.$root.$on('home', this.goHome)
-    this.$root.$on('qtools', this.qTools)
-    this.$root.$on('fav', this.goFav)
+    // this.$root.$on('home', this.goHome)
+    // this.$root.$on('qtools', this.qTools)
+    // this.$root.$on('fav', this.goFav)
   },
   methods: {
-    loadTool(name) {
+    loadTool(indx) {
+      this.dataSource[indx].onClick()
       this.isActionSheetVisible = false
     },
     goHome() {
