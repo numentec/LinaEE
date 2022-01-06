@@ -2,6 +2,7 @@
   <client-only>
     <div>
       <v-alert
+        ref="errAlert"
         v-model="showAlert"
         type="error"
         text
@@ -121,6 +122,7 @@ export default {
       this.overlay = false
       if (errcode !== 0) {
         this.showAlert = true
+        this.$refs.errAlert.scrollTop = 0
       }
     },
   },
