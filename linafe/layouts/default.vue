@@ -113,7 +113,10 @@ export default {
       let aT2 = []
       let aT3 = []
 
-      if (this.curuser.ugroups.includes('ventas')) {
+      if (
+        this.curuser.ugroups.includes('ventas') ||
+        this.curuser.ugroups.includes('ventasadmin')
+      ) {
         aT1 = [0, 1]
       }
       if (this.curuser.ugroups.includes('bodega')) {
