@@ -14,7 +14,7 @@
         <v-icon>mdi-home</v-icon>
       </v-btn>
 
-      <v-btn @click="qTools">
+      <v-btn v-if="allowedTools.length > 0" @click="qTools">
         <span>Quick Tools</span>
 
         <v-icon>mdi-tools</v-icon>
@@ -28,24 +28,27 @@
     </v-bottom-navigation>
     <v-bottom-sheet v-model="isActionSheetVisible">
       <v-sheet class="text-center">
-        <v-btn
-          v-for="(item, i) in dataSource"
-          :key="i"
-          text
-          color="primary"
-          :class="{ 'mt-4': i > 0 }"
-          block
-          @click="loadTool(i)"
-        >
-          {{ item.text }}
-        </v-btn>
+        <template v-for="(item, i) in dataSource">
+          <v-btn
+            v-if="allowedTools.includes(i)"
+            :key="i"
+            text
+            color="primary"
+            :class="{ 'mt-4': i > allowedTools[0] }"
+            block
+            @click="loadTool(i)"
+          >
+            {{ item.text }}
+          </v-btn>
+        </template>
       </v-sheet>
     </v-bottom-sheet>
   </v-app>
 </template>
 
 <script>
-// import DxActionSheet from 'devextreme-vue/action-sheet'
+import { mapState } from 'vuex'
+
 const CoreDrawer = () => import('../components/core/Drawer')
 const CoreDrawerMobile = () => import('../components/core/DrawerMobile')
 
@@ -58,6 +61,7 @@ export default {
     return {
       mobileNav: 0,
       bar: true,
+      allowedTools: [0, 1, 2, 3, 4],
       dataSource: [
         {
           text: 'Consultar Producto',
@@ -94,6 +98,7 @@ export default {
     }
   },
   computed: {
+    ...mapState('sistema', ['curuser']),
     useDrawer() {
       if (this.$vuetify.breakpoint.mobile) {
         return CoreDrawerMobile
@@ -103,6 +108,23 @@ export default {
     },
   },
   mounted() {
+    if (!this.curuser.is_superuser) {
+      let aT1 = []
+      let aT2 = []
+      let aT3 = []
+
+      if (this.curuser.ugroups.includes('ventas')) {
+        aT1 = [0, 1]
+      }
+      if (this.curuser.ugroups.includes('bodega')) {
+        aT2 = [1, 2, 3, 4]
+      }
+      if (this.curuser.ugroups.includes('gerencia')) {
+        aT3 = [0, 1, 2, 3, 4]
+      }
+
+      this.allowedTools = [...aT1, ...aT2, ...aT3]
+    }
     // this.$root.$on('home', this.goHome)
     // this.$root.$on('qtools', this.qTools)
     // this.$root.$on('fav', this.goFav)

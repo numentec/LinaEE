@@ -484,14 +484,14 @@ class UsrExtRelListAPIView(APIView):
 
         result = []
 
-        # query = SQLQuery.objects.get(vista = 19, ordinal = 1)
+        qry = models.SQLQuery.objects.get(vista = 27, ordinal = 1)
 
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc('DMC.LINAEE_USREXTREL', [refCursor])
-            #cursor.callproc(query.content, [p01, refCursor])
+            # cursor.callproc('DMC.LINAEE_USREXTREL', [refCursor])
+            cursor.callproc(qry.content, [refCursor])
 
             descrip = refCursor.description
 

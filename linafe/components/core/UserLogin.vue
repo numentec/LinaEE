@@ -122,7 +122,9 @@ export default {
       this.overlay = false
       if (errcode !== 0) {
         this.showAlert = true
-        this.$refs.errAlert.scrollTop = 0
+        const top = this.$refs.errAlert.offsetTop
+        window.scrollTo(0, top)
+        // this.$refs.errAlert.scrollTop = 0
       }
     },
   },

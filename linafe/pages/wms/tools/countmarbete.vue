@@ -198,7 +198,7 @@
         </v-card-text>
       </v-card>
       <v-dialog v-model="showCount" max-width="400">
-        <v-card min-height="250">
+        <v-card min-height="300">
           <v-toolbar color="secondary" dark>
             <v-toolbar-title>Conteo en proceso</v-toolbar-title>
             <v-spacer></v-spacer>
@@ -209,10 +209,11 @@
           <div class="list-container">
             <DxList
               :data-source="listDataSource"
-              height="200"
+              height="250"
               :grouped="true"
               :allow-item-deleting="true"
               item-delete-mode="slideItem"
+              @item-deleted="onlistDataSourceDelete"
             >
               <template #item="{ data: item }">
                 <div>
@@ -671,6 +672,9 @@ export default {
       this.curIndex = -1
       this.clearForm()
       this.askClearList = false
+    },
+    onlistDataSourceDelete(e) {
+      this.clearForm()
     },
     cTime(item, inx) {
       const timepart = item.split(' ')

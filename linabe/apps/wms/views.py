@@ -183,6 +183,7 @@ class QryOneProdAPIView(APIView):
 
         return Response(result, status=status.HTTP_200_OK)
 
+
 class ProdsPerLocAPIView(APIView):
     """Productos en una ubicación dada"""
     # Vista 28
@@ -207,15 +208,13 @@ class ProdsPerLocAPIView(APIView):
 
         result = []
 
-        # qrys = SQLQuery.objects.filter(vista=27)
-        # qrycalling = qrys[0].content    # 'DMC.LINAEE_PRODSXLOC'
-        qrycalling = 'DMC.LINAEE_PRODSXLOC'
+        query = SQLQuery.objects.get(vista = 28, ordinal = 1)
 
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()
 
-            cursor.callproc(qrycalling, params + [refCursor])
+            cursor.callproc(query.content, params + [refCursor])
 
             descrip = refCursor.description
 
@@ -250,9 +249,8 @@ class ProdsPerMarbeteAPIView(APIView):
 
         result = []
 
-        # qrys = SQLQuery.objects.filter(vista=27)
-        # qrycalling = qrys[0].content    # 'DMC.LINAEE_PRODSXMARBETE'
-        qrycalling = 'DMC.LINAEE_PRODSXMARBETE'
+        # DMC.LINAEE_PRODSXMARBETE
+        qry = SQLQuery.objects.get(vista = 29, ordinal = 1)
 
         with connections['extdb1'].cursor() as cursor:
 
@@ -260,7 +258,7 @@ class ProdsPerMarbeteAPIView(APIView):
 
             outval = cursor.var(str).var
 
-            cursor.callproc(qrycalling, params + [outval, refCursor])
+            cursor.callproc(qry.content, params + [outval, refCursor])
 
             outv = outval.getvalue()
 
@@ -333,20 +331,20 @@ class ExtCountedProdsAPIView(APIView):
 
             msg = "Conteo procesado con éxito"
 
+            qrys = SQLQuery.objects.filter(vista=30)
+
             with connections['extdb1'].cursor() as cursor:
 
                 refCursor = cursor.connection.cursor()
 
-                refCursor.executemany(
-                    "INSERT INTO DMC.LINAEE_CONTEO VALUES " + 
-                    "(:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)",
-                    data_set
-                )
+                # INSERT INTO DMC.LINAEE_CONTEO VALUES 
+                # (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)
+                refCursor.executemany(qrys[0].content, data_set)
 
                 outval = cursor.var(str).var
 
-                if (refCursor.rowcount) > 0:
-                    cursor.callproc('DMC.LINAEE_CONTEO_TEST', [sessionID, outval])
+                # DMC.LINAEE_CONTEO_TEST
+                if (refCursor.rowcount) > 0: cursor.callproc(qrys[1].content, [sessionID, outval])
 
                 outv = outval.getvalue()
 
