@@ -243,70 +243,6 @@
             <v-icon right dark>mdi-check</v-icon>
           </v-btn>
         </v-card-actions>
-        <template v-for="(item, i) in stocklist">
-          <v-card
-            v-if="item.LINALLOW != 'H'"
-            :key="i"
-            tile
-            class="mx-auto mb-2"
-          >
-            <v-row justify="center" align="center" dense no-gutters>
-              <v-btn
-                text
-                :disabled="item.LINALLOW == 'D'"
-                class="mb-0"
-                color="primary"
-                block
-              >
-                {{ item.UBIX }}
-              </v-btn>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-row justify="center" align="center" dense no-gutters>
-                  <div
-                    class="text-caption font-weight-medium"
-                    v-text="$vuetify.breakpoint.mobile ? 'EXI' : 'EXISTENCIA'"
-                  ></div>
-                </v-row>
-                <v-row justify="center" align="center" no-gutters>
-                  <div v-text="item.CANT1"></div>
-                </v-row>
-                <v-row justify="center" align="center" no-gutters>
-                  <div v-text="item.BULTOS_FISICO"></div>
-                </v-row>
-              </v-col>
-              <v-col>
-                <v-row justify="center" align="center" dense no-gutters>
-                  <div
-                    class="text-caption font-weight-medium"
-                    v-text="$vuetify.breakpoint.mobile ? 'RES' : 'RESERVADO'"
-                  ></div>
-                </v-row>
-                <v-row justify="center" align="center" no-gutters>
-                  <div v-text="item.CANT2"></div>
-                </v-row>
-                <v-row justify="center" align="center" no-gutters>
-                  <div v-text="item.BULTOS_RESERVA"></div>
-                </v-row>
-              </v-col>
-              <v-col>
-                <v-row justify="center" align="center" dense no-gutters>
-                  <div
-                    class="text-caption font-weight-medium"
-                    v-text="$vuetify.breakpoint.mobile ? 'DIS' : 'DISPONIBLE'"
-                  ></div>
-                </v-row>
-                <v-row justify="center" align="center" no-gutters>
-                  <div v-text="item.CANT3"></div>
-                </v-row>
-                <v-row justify="center" align="center" no-gutters>
-                  <div v-text="item.BULTOS_DISPONIBLE"></div>
-                </v-row>
-              </v-col>
-            </v-row>
-          </v-card>
-        </template>
       </v-card>
       <v-dialog v-model="showConfig" max-width="300">
         <v-card>
@@ -319,13 +255,14 @@
                 label="Contar por bultos"
               ></v-switch>
             </v-row>
-            <!-- <v-row no-gutters>
-              <v-switch
-                v-model="showPackageCount"
-                label="Ver conteo de bultos"
-                :disabled="!countPerPackage"
-              ></v-switch>
-            </v-row> -->
+            <v-row no-gutters>
+              <v-text-field
+                v-model="preUBIX"
+                label="Prefijo de ubicación"
+                hint="Prefijo que se repite en cada consulta"
+                persistent-hint
+              ></v-text-field>
+            </v-row>
           </v-card-text>
           <v-divider />
           <v-card-actions>
@@ -504,11 +441,6 @@ const curProd = {
   um: 'UNI',
   empaque: 'UNI',
   ppp: 1,
-  // PACKAGEC: 0,
-  // PACKINGC: 0,
-  // PACKINGTOTC: 0,
-  // UNI: 0,
-  // CTIME: getTime(),
   precio: '0',
   disponible: 'NON',
   reservado: '0 / 0',
@@ -527,6 +459,7 @@ export default {
       useBC1: true,
       useBC: true,
       lockUbix: true,
+      preUBIX: '',
       productID: '',
       prodIDDisabled: true,
       ubicacionID: '',
@@ -548,14 +481,11 @@ export default {
       xpos2: 0,
       cE: true,
       dataSource: null,
-      selectedKeys: [],
       valid: true,
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
       curProd: Object.assign({}, curProd),
-      stocklist: [],
-      selectedItem: 0,
       showImg: 12,
       loadingView: false,
       rules: {
@@ -827,7 +757,7 @@ export default {
       await this.$axios
         .get('wms/prodsperloc/', {
           params: {
-            p01: this.ubicacionID,
+            p01: this.preUBIX + this.ubicacionID.trim(),
             p02: this.useBC ? 'BC' : 'SKU',
             p03: this.getCurCia.extrel,
             p04: this.productID,
@@ -909,7 +839,7 @@ export default {
           await this.$axios
             .get('wms/prodsperloc/', {
               params: {
-                p01: this.ubicacionID,
+                p01: this.preUBIX + this.ubicacionID.trim(),
                 p02: 'BC',
                 p03: this.getCurCia.extrel,
               },
@@ -922,7 +852,7 @@ export default {
                   // this.countDisabled = false
                   this.curProd = Object.assign({}, curProd)
                   this.$nextTick(() => this.$refs.txtProdID.focus())
-                  this.msgReloc = 'Ubicación cargada con éxito'
+                  this.msgReloc = `Ubicación ${this.prodsPerLocation[0].UBIX} cargada con éxito`
                   this.msgColor = 'green'
                   this.snackbar = true
                 } else {
@@ -986,7 +916,7 @@ export default {
       await this.$axios
         .post('wms/extcountedprods/', {
           items: curlPC,
-          cia: '01',
+          cia: this.getCurCia.extrel,
         })
         .then((response) => {
           if (response.data) {
@@ -998,6 +928,7 @@ export default {
             this.msgColor = 'red'
             this.snackbar = true
           }
+          this.loadingView = false
         })
         .catch((err) => {
           if (err.response) {
@@ -1024,17 +955,18 @@ export default {
               message: err.message,
             })
           }
+          this.loadingView = false
         })
-      this.loadingView = false
     },
     async validDestino() {
       if (this.ubicacionID) {
+        this.loadingView = true
         await this.$axios
           .get('wms/relocatext/', {
             params: {
               p01: 'VALIDUBIX',
               p02: 'O',
-              p03: this.ubicacionID,
+              p03: this.preUBIX + this.ubicacionID.trim(),
               p04: 0,
               p05: this.getCurCia.extrel,
             },
@@ -1044,10 +976,9 @@ export default {
               if (response.data.length > 0) {
                 const numerr = response.data[0].status.substring(0, 5)
                 const msgerr = response.data[0].status.substring(6)
-                this.msgReloc = msgerr
 
                 if (numerr.startsWith('EOK')) {
-                  this.msgReloc = 'UBICACION VALIDA'
+                  this.msgReloc = `UBICACION ${msgerr} VALIDA`
                 } else {
                   this.msgReloc = 'NO SE PUDO VALIDAR LA UBICACION'
                 }
@@ -1061,7 +992,13 @@ export default {
                 this.msgColor = 'yellow'
                 this.snackbar = true
               }
+            } else {
+              this.$nuxt.context.error({
+                statusCode: 503,
+                message: 'No hubo respuesta del servidor',
+              })
             }
+            this.loadingView = false
           })
           .catch((err) => {
             let stcode = 0
@@ -1080,6 +1017,7 @@ export default {
             this.msgReloc = `${stcode} - ${msg}`
             this.msgColor = 'red'
             this.snackbar = true
+            this.loadingView = false
           })
       } else {
         this.msgReloc = 'Proporcione ubicación destino'

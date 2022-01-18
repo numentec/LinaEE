@@ -11,6 +11,25 @@
           <span>Volver a vista anterior</span>
         </v-tooltip>
         <span>Reubicar producto</span>
+        <v-spacer></v-spacer>
+        <v-menu bottom left>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" color="primary" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item link>
+              <v-list-item-title>Historial</v-list-item-title>
+            </v-list-item>
+            <v-list-item link @click.stop="showConfig = true">
+              <v-list-item-title>Configuración</v-list-item-title>
+            </v-list-item>
+            <v-list-item link @click="cancelStepper">
+              <v-list-item-title>Cancelar</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-card-title>
       <v-stepper v-model="curStep" alt-labels flat tile>
         <v-stepper-header class="hidden-sm-and-down px-1">
@@ -227,6 +246,35 @@
         />
       </v-card-actions>
     </v-card>
+    <v-dialog v-model="showConfig" max-width="300">
+      <v-card>
+        <v-card-title class="text-h5"> Configuración </v-card-title>
+        <v-divider />
+        <v-card-text>
+          <v-row no-gutters>
+            <v-switch
+              v-model="countPerPackage"
+              label="Contar por bultos"
+            ></v-switch>
+          </v-row>
+          <v-row no-gutters>
+            <v-text-field
+              v-model="preUBIX"
+              label="Prefijo de ubicación destino"
+              hint="Prefijo que se repite en cada consulta"
+              persistent-hint
+            ></v-text-field>
+          </v-row>
+        </v-card-text>
+        <v-divider />
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green darken-1" text @click="showConfig = false">
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" timeout="5000">
       {{ msgReloc }}
       <template v-slot:action="{ attrs }">
@@ -268,6 +316,9 @@ export default {
       cantidad: { empaq: 0, uni: 0 },
       showEmpaques: false,
       editSteps: { s1: true, s2: false, s3: false, s4: false },
+      showConfig: false,
+      countPerPackage: true,
+      preUBIX: '',
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
@@ -475,7 +526,7 @@ export default {
             params: {
               p01: 'VALIDUBIX',
               p02: 'O',
-              p03: this.destino,
+              p03: this.preUBIX + this.destino.trim(),
               p04: cantidad,
               p05: this.getCurCia.extrel,
             },
@@ -546,7 +597,7 @@ export default {
             params: {
               p01: this.selectedLoc.SKU,
               p02: this.origen,
-              p03: this.destino,
+              p03: this.preUBIX + this.destino.trim(),
               p04: cantidad,
             },
           })
