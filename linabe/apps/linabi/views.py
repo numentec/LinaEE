@@ -478,3 +478,62 @@ class BIXLSXTemplateColModelViewset(CommonViewSet):
     serializer_class = serializers.BIXLSXTemplateColSerializer
 
     queryset = models.BIXLSXTemplateCol.objects.all()
+
+
+class BIDashboardExt(APIView):
+    """Consultas externas para el Dashboard de Lina BI"""
+    # Vista 31
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - Switch par seleccionar consulta
+        # p02 - Cia en curso
+        # p03 - Fecha inicial del periodo a consultar
+        # p04 - Fecha final del periodo a consultar
+        # p05 - Cantidad de registros a recuperar (SQL LIMIT)
+        
+        p01 = str(request.query_params.get('p01', '1')).lower().strip()
+        p02 = str(request.query_params.get('p02', '01')).lower().strip()
+        p03 = str(request.query_params.get('p03', '2022-01-01')).strip()
+        p04 = str(request.query_params.get('p04', '2022-03-31')).strip()
+        p05 = str(request.query_params.get('p05', '1000')).strip()
+
+        pvals = p01 + p02 + p03 + p04 + p05
+
+        if pvals == '1012022-01-012022-03-311000':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        qrys = SQLQuery.objects.filter(vista=31)
+
+        # Preparar parametros
+        if p01 != '0':
+            params = [p01, p02, p03, p04]
+            qrycalling = qrys[0].content
+        else:
+            params = [p02, p03, p04]
+            qrycalling = qrys[1].content
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            if p01 != '0':
+                refCursor = cursor.connection.cursor()
+
+                cursor.callproc(qrycalling, params + [refCursor] + [p05])
+
+                descrip = refCursor.description
+
+                rows = refCursor.fetchall()
+
+                result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+            else:
+                r1 = cursor.var(float).var
+                r2 = cursor.var(float).var
+
+                cursor.callproc(qrycalling, params + [r1, r2] )
+
+                result = [dict({'V1': r1.getvalue(), 'V2': r2.getvalue()})]
+
+        return Response(result, status=status.HTTP_200_OK)
