@@ -34,6 +34,7 @@
           </template>
           <v-list-item
             v-for="subitem in item.items"
+            v-show="perms[subitem.perm]"
             :key="subitem.title"
             nuxt
             :to="subitem.to"

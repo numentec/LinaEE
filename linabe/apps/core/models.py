@@ -250,6 +250,17 @@ class Vista(Common):
                             ("acc_linabi_saledocs_datail", "Access to LinaBI Sale Docs Detail view"),
                             ("acc_linabi_sales_detail", "Access to LinaBI  Sales Detail view"),
                             ("acc_linabi_reports", "Access to LinaBI  Reports view"),
+                            ("acc_linabi_panel", "Access to LinaBI Dashboard"),
+                            # ("acc_linabi_panel_e01", "Access to"),
+                            # ("acc_linabi_panel_e02", "Access to"),
+                            # ("acc_linabi_panel_e03", "Access to"),
+                            # ("acc_linabi_panel_e04", "Access to"),
+                            # ("acc_linabi_panel_e05", "Access to"),
+                            # ("acc_linabi_panel_e06", "Access to"),
+                            # ("acc_linabi_panel_e07", "Access to"),
+                            # ("acc_linabi_panel_e08", "Access to"),
+                            # ("acc_linabi_panel_e09", "Access to"),
+                            # ("acc_linabi_panel_e10", "Access to"),
                             ("acc_linabi_storagexloc", "Access to storage by location"),
                             ("acc_wms_relocate_tool", "Access to relocate tool"),
                             ("acc_wms_qryoneprod_tool", "Access to query one product tool"),
@@ -443,7 +454,7 @@ class SQLQuery(Common):
     name  = models.CharField('Nombre', max_length=25, default='SQL')
     content = models.TextField('Contenido', blank=True, default='')
     ordinal = models.IntegerField('Ordinal', default=1)
-    dbtype = models.CharField('DB Type', max_length=6, choices=DB_CHOICES, default='MARYDB')
+    dbtype = models.CharField('DB Type', max_length=6, choices=DB_CHOICES, default='MARIDB')
     dbuser = models.CharField('DB User', max_length=15, blank=True)
     dbpass = models.CharField('DB Password', max_length=15, blank=True)
     comment = models.CharField('Comentario', max_length=50, blank=True)

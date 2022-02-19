@@ -105,11 +105,7 @@ export default {
       this.snackbar = true
     },
     accReject(perm) {
-      let showv = false
-      if (this.loggedInUser.is_superuser || this.perms[perm]) {
-        showv = true
-      }
-      return showv
+      return this.loggedInUser.is_superuser || this.perms[perm]
     },
   },
   head() {

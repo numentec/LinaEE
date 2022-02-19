@@ -33,6 +33,7 @@ class BIQuery(Common):
         ('qry', 'Query'),
         ('rpt', 'Report'),
         ('tool', 'Tool'),
+        ('dbel', 'Dashboard Element'),
     ]
 
     name = models.CharField("Nombre", max_length=25, unique=True)
@@ -46,6 +47,7 @@ class BIQuery(Common):
     vuextore = models.CharField("Vuex Store", max_length=50, blank=True)
     image = models.ImageField('Imagen', upload_to='images/bifavoritos', \
          blank=True, default='images/bifavoritos/prev1.jpg')
+    qtype = models.CharField('Tipo', max_length=4, choices=QTYPES_CHOICES, default='qry')
     favoritos = models.BooleanField('Favoritos', default=False)
     perm = models.CharField("Permiso", max_length=50, blank = True, help_text='Permiso de acceso relacionado')
 
