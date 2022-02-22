@@ -235,7 +235,9 @@ export default {
       return `${valueText}%`
     },
     customizeTooltip(pointInfo) {
-      const argText = pointInfo.argumentText
+      const argText = new Date(pointInfo.argumentText)
+      let aT = argText.toLocaleString('default', { month: 'long' })
+      aT = aT.toUpperCase()
       const sN0 = pointInfo.points[0].seriesName
       const vT0 = Number(pointInfo.points[0].valueText)
       const vT0x = vT0.toLocaleString('en-US', {
@@ -251,10 +253,10 @@ export default {
         vT1 = pointInfo.point.data.percent
       }
 
-      // console.log('PINFO', pointInfo)
+      // console.log('FECHA', aT)
       return {
         // html: `<b>${pointInfo.argumentText}</b><br>${pointInfo.valueText}%`,
-        html: `<b>${argText}</b><br>${sN0}: ${vT0x}<br>${sN1}: ${vT1}%`,
+        html: `<b>${aT}</b><br>${sN0}: ${vT0x}<br>${sN1}: ${vT1}%`,
       }
     },
     cusLabel(lbl) {

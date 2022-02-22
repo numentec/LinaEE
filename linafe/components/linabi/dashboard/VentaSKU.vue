@@ -6,10 +6,69 @@
     :loading="loadingView"
     color="cyan"
     dark
-    @click="goView"
   >
-    <v-card-title>Ventas por SKU</v-card-title>
-    <v-card-subtitle>{{ curPeriodText }}</v-card-subtitle>
+    <v-app-bar flat dark color="cyan">
+      <v-toolbar-title class="text-h6 white--text pl-0">
+        Ventas por SKU
+      </v-toolbar-title>
+      <v-card-subtitle>{{ curPeriodText }}</v-card-subtitle>
+      <v-spacer></v-spacer>
+      <v-menu
+        ref="menuConf"
+        v-model="menuConfig"
+        :close-on-content-click="false"
+        transition="scale-transition"
+        min-width="auto"
+        left
+        offset-y
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn icon v-bind="attrs" v-on="on">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
+        </template>
+        <v-list nav>
+          <v-list-item link @click="goView">
+            <v-list-item-icon>
+              <v-icon>mdi-open-in-new</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title> Ir a detalle </v-list-item-title>
+          </v-list-item>
+          <v-list-group prepend-icon="mdi-export" no-action>
+            <template v-slot:activator>
+              <v-list-item>
+                <v-list-item-content>
+                  <v-list-item-title>Exportar</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </template>
+            <v-list-item link>
+              <v-list-item-content>
+                <v-list-item-title @click.stop="exportGrid(1)">
+                  Excel
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item link>
+              <v-list-item-content>
+                <v-list-item-title @click.stop="exportGrid(2)">
+                  PDF
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-group>
+          <v-list-item>
+            <v-list-item-action>
+              <v-switch v-model="selQry"></v-switch>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>SKUs de menor venta</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
+    <v-divider />
     <v-card-text>
       <DxDataGrid
         :data-source="dataSource"
@@ -31,30 +90,16 @@
           data-type="string"
           caption="Descripción"
         />
-        <DxColumn
-          data-field="T1"
-          data-type="number"
-          format="#,##0.00"
-          alignment="right"
-        />
-        <DxColumn
-          data-field="T2"
-          data-type="number"
-          format="#,##0.00"
-          alignment="right"
-        />
-        <DxColumn
-          data-field="T3"
-          data-type="number"
-          format="#,##0.00"
-          alignment="right"
-        />
-        <DxColumn
-          data-field="T4"
-          data-type="number"
-          format="#,##0.00"
-          alignment="right"
-        />
+        <template v-for="i in [1, 2, 3, 4]">
+          <DxColumn
+            :key="i"
+            :data-field="`T${i}V`"
+            data-type="number"
+            format="#,##0.00"
+            alignment="right"
+            :caption="`T${i}`"
+          />
+        </template>
         <DxColumn
           data-field="TOT"
           data-type="number"
@@ -138,7 +183,7 @@ export default {
     }
 
     const curparams = {
-      p01: '11',
+      p01: this.selQry ? 12 : 11,
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
@@ -168,12 +213,14 @@ export default {
 
   data() {
     return {
+      selQry: false,
       loadingView: false,
       perms: this.$auth.user.perms,
       dataSource: [],
       umbral: 0,
       curPeriod: [startDate, endDate],
       dateMenu: false,
+      menuConfig: false,
       psize: 10,
     }
   },
@@ -201,13 +248,18 @@ export default {
     this.loadingView = false
   },
   methods: {
-    goView() {},
     refreshData() {
       this.$fetch()
     },
     updatePeriod() {
       this.$refs.dMenu.save(this.curPeriod)
       this.refreshData()
+    },
+    exportGrid(opc) {
+      this.menuConfig = false
+    },
+    goView() {
+      this.$router.push('/linabi/dashboardqueries/skusales')
     },
   },
 }

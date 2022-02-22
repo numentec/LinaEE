@@ -36,7 +36,7 @@
               @change="$emit('set-conf-agrupar')"
             ></v-switch>
           </v-list-item-action>
-          <v-list-item-title>Panel agrupar</v-list-item-title>
+          <v-list-item-title>{{ panelTitle }}</v-list-item-title>
         </v-list-item>
 
         <!-- <v-list-item>
@@ -85,6 +85,10 @@ export default {
     setAgrupar: {
       type: Boolean,
       default: false,
+    },
+    panelTitle: {
+      type: String,
+      default: 'Panel agrupar',
     },
     setFiltros: {
       type: Boolean,
