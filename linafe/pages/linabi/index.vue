@@ -18,7 +18,7 @@
         />
       </v-col>
       <v-col cols="12" md="6">
-        <AuxCard card-color="orange" card-title="Últimas ventas" />
+        <VentasRecientes />
       </v-col>
     </v-row>
     <v-row>
@@ -78,8 +78,9 @@ import VentasPie from '../../components/linabi/dashboard/VentasPie.vue'
 import VentasPorPais from '../../components/linabi/dashboard/VentasPorPais.vue'
 import VentasPorMes from '../../components/linabi/dashboard/VentasPorMes.vue'
 import VentaRendimiento from '../../components/linabi/dashboard/VentaRendimiento.vue'
-import AuxCard from '../../components/linabi/dashboard/AuxCard.vue'
+// import AuxCard from '../../components/linabi/dashboard/AuxCard.vue'
 import VentaSKU from '../../components/linabi/dashboard/VentaSKU.vue'
+import VentasRecientes from '../../components/linabi/dashboard/VentasRecientes.vue'
 
 export default {
   components: {
@@ -88,8 +89,9 @@ export default {
     VentaTot,
     VentasPorMes,
     VentaRendimiento,
-    AuxCard,
+    // AuxCard,
     VentaSKU,
+    VentasRecientes,
   },
   data() {
     return {
@@ -97,5 +99,6 @@ export default {
     }
   },
   created() {},
+  mounted() {},
 }
 </script>

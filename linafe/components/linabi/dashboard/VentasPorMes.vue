@@ -51,6 +51,8 @@
           :customize-tooltip="customizeTooltip"
         />
 
+        <DxExport :enabled="true" />
+
         <DxLegend vertical-alignment="top" horizontal-alignment="center" />
       </DxChart>
     </v-card-text>
@@ -100,6 +102,7 @@ import DxChart, {
   DxSeries,
   DxTooltip,
   DxValueAxis,
+  DxExport,
 } from 'devextreme-vue/chart'
 
 const startDate = new Date(new Date().getFullYear(), 0, 1)
@@ -119,6 +122,7 @@ export default {
     DxSeries,
     DxTooltip,
     DxValueAxis,
+    DxExport,
   },
   props: {
     cardType: {

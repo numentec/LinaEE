@@ -291,7 +291,7 @@
   </div>
 </template>
 <script>
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import { locale } from 'devextreme/localization'
 import {
   DxDataGrid,
@@ -478,7 +478,6 @@ export default {
     }
   },
   computed: {
-    ...mapState('linabi/favoritos', ['breadCrumbsItems']),
     ...mapGetters('sistema', ['getCurCia']),
     curGrid() {
       return this.$refs[curGridRefKey].instance

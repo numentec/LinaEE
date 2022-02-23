@@ -1,12 +1,6 @@
 /* eslint-disable no-console */
 <template>
-  <v-card
-    class="mx-auto my-4"
-    style="height: 100%"
-    :loading="loadingView"
-    :color="cardColor"
-    dark
-  >
+  <v-card class="mx-auto my-4" :loading="loadingView" :color="cardColor" dark>
     <v-card-title> {{ cardTitle }} </v-card-title>
     <v-divider />
     <v-card-title class="text-h4" v-text="dataSource"></v-card-title>

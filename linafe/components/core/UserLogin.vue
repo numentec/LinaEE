@@ -88,7 +88,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'UserLogin',
@@ -115,6 +115,7 @@ export default {
   }),
   computed: {
     ...mapState('sistema', ['error']),
+    ...mapGetters(['loggedInUser']),
   },
   watch: {
     error(newVal) {
@@ -143,7 +144,13 @@ export default {
         this.overlay = true
         await this.$store.dispatch('sistema/userLogin', this.login).then(() => {
           this.overlay = false
-          this.$router.push('/')
+          if (this.loggedInUser) {
+            if (this.loggedInUser.homelink) {
+              this.$router.push(this.loggedInUser.homelink)
+            } else {
+              this.$router.push('/')
+            }
+          }
         })
       }
     },

@@ -163,7 +163,8 @@ class LinaAuthToken(ObtainAuthToken):
                 'foto': ufoto,
                 'perms': perms,
                 'is_superuser': user.is_superuser,
-                'ugroups': ugroups
+                'ugroups': ugroups,
+                'homelink': user.homelink
             }
         })
 

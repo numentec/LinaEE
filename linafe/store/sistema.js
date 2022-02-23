@@ -8,6 +8,7 @@ export const state = () => ({
   users: [],
   isLoading: false,
   error: { statusCode: 0, message: '' },
+  cias: [],
   curCia: null,
 })
 
@@ -29,6 +30,9 @@ export const mutations = {
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
+  },
+  SET_CIAS(state, payload) {
+    state.cias = payload
   },
   SET_CURCIA(state, payload) {
     state.curCia = Object.assign({}, payload)
@@ -145,6 +149,10 @@ export const actions = {
     return store
   },
 
+  setCias({ commit }, payload) {
+    commit('SET_CIAS', payload)
+  },
+
   setCurCia({ commit }, payload) {
     commit('SET_CURCIA', payload)
   },
@@ -156,5 +164,8 @@ export const getters = {
   },
   getCurCia(state) {
     return state.curCia
+  },
+  getCias(state) {
+    return state.cias
   },
 }

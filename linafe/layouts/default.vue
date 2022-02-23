@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 
 const CoreDrawer = () => import('../components/core/Drawer')
 const CoreDrawerMobile = () => import('../components/core/DrawerMobile')
@@ -57,6 +57,7 @@ export default {
   components: {
     CoreAppBar: () => import('../components/core/AppBar'),
   },
+  middleware: 'setcias',
   data() {
     return {
       mobileNav: 0,
@@ -99,6 +100,7 @@ export default {
   },
   computed: {
     ...mapState('sistema', ['curuser']),
+    ...mapGetters(['loggedInUser']),
     useDrawer() {
       if (this.$vuetify.breakpoint.mobile) {
         return CoreDrawerMobile
@@ -138,7 +140,7 @@ export default {
       this.isActionSheetVisible = false
     },
     goHome() {
-      this.$router.push({ path: '/' })
+      this.$router.push({ path: this.loggedInUser.homelink })
       this.mobileNav = 0
     },
     qTools() {

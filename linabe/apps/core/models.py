@@ -84,6 +84,7 @@ class User(AbstractUser):
     country = models.CharField(blank=True, max_length=100, default='')
 
     extrel = models.CharField('Relación Externa', max_length=20, blank=True)
+    homelink = models.CharField('Default Home', max_length=100, default='/')
 
     modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
 

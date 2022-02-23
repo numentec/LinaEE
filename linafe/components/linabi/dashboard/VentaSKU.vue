@@ -7,7 +7,7 @@
     color="cyan"
     dark
   >
-    <v-app-bar flat dark color="cyan">
+    <v-app-bar flat dense dark color="cyan">
       <v-toolbar-title class="text-h6 white--text pl-0">
         Ventas por SKU
       </v-toolbar-title>

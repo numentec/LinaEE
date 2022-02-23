@@ -8,9 +8,6 @@
     :loading="loadingView"
     @click="goView"
   >
-    <v-card-title> Ventas por País </v-card-title>
-    <v-card-subtitle> {{ curPeriodText }} </v-card-subtitle>
-
     <v-card-text>
       <DxVectorMap
         id="vector-map"
@@ -29,7 +26,11 @@
           element-type="bubble"
           data-field="value"
         />
+        <DxTitle text="Ventas por País">
+          <DxSubtitle :text="curPeriodText" />
+        </DxTitle>
         <DxTooltip :enabled="true" :customize-tooltip="customizeTooltip" />
+        <DxExport :enabled="true" />
       </DxVectorMap>
     </v-card-text>
 
@@ -71,7 +72,14 @@
 <script>
 import { mapGetters } from 'vuex'
 import * as mapsData from 'devextreme/dist/js/vectormap-data/world.js'
-import { DxVectorMap, DxLayer, DxTooltip } from 'devextreme-vue/vector-map'
+import {
+  DxVectorMap,
+  DxLayer,
+  DxSubtitle,
+  DxTitle,
+  DxTooltip,
+  DxExport,
+} from 'devextreme-vue/vector-map'
 
 const typeOpc = {
   map: {
@@ -96,7 +104,10 @@ export default {
   components: {
     DxVectorMap,
     DxLayer,
+    DxSubtitle,
+    DxTitle,
     DxTooltip,
+    DxExport,
   },
   props: {
     cardType: {
@@ -202,4 +213,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped>
+#vector-map {
+  height: 520px;
+}
+</style>
