@@ -263,6 +263,7 @@ class Vista(Common):
                             # ("acc_linabi_panel_e09", "Access to"),
                             # ("acc_linabi_panel_e10", "Access to"),
                             ("acc_linabi_storagexloc", "Access to storage by location"),
+                            ("acc_linabi_listcli", "Access to customer list"),
                             ("acc_wms_relocate_tool", "Access to relocate tool"),
                             ("acc_wms_qryoneprod_tool", "Access to query one product tool"),
                         )

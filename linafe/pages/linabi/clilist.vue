@@ -12,9 +12,7 @@
             </template>
             <span>Volver a vista anterior</span>
           </v-tooltip>
-          <v-toolbar-title>{{
-            `Ventas por SKU (${curPeriodText})`
-          }}</v-toolbar-title>
+          <v-toolbar-title>Lista de Clientes</v-toolbar-title>
           <v-spacer />
           <v-menu
             v-model="menuConf"
@@ -56,7 +54,7 @@
                 <v-list-item-icon>
                   <v-icon>mdi-cloud-download</v-icon>
                 </v-list-item-icon>
-                <v-list-item-title @click.stop="showBaseFilters = true">
+                <v-list-item-title @click.stop="refreshData">
                   Descargar Datos
                 </v-list-item-title>
               </v-list-item>
@@ -181,44 +179,16 @@
           :hover-state-enabled="true"
           :height="tableHeight"
         >
-          <DxColumn data-field="SKU" data-type="string" />
-          <DxColumn
-            data-field="DESCRIP"
-            data-type="string"
-            caption="Descripción"
-          />
-          <template v-for="i in [1, 2, 3, 4]">
-            <DxColumn :key="i" :caption="`Trimestre ${i}`">
-              <DxColumn
-                :data-field="`T${i}V`"
-                data-type="number"
-                format="#,##0.00"
-                alignment="right"
-                caption="Monto"
-              />
-              <DxColumn
-                :data-field="`T${i}E`"
-                data-type="number"
-                format="#,##0"
-                alignment="right"
-                caption="Entero"
-              />
-              <DxColumn
-                :data-field="`T${i}F`"
-                data-type="number"
-                format="#,##0"
-                alignment="right"
-                caption="Frac"
-              />
-            </DxColumn>
-          </template>
-          <DxColumn
-            data-field="TOT"
-            data-type="number"
-            format="#,##0.00"
-            alignment="right"
-            caption="Total"
-          />
+          <DxColumn data-field="NUMCLI" data-type="string" />
+          <DxColumn data-field="NOMCLI" data-type="string" caption="NOMBRE" />
+          <DxColumn data-field="EMAIL" data-type="string" />
+          <DxColumn data-field="PAIS" data-type="string" />
+          <DxColumn data-field="DIRECCION" data-type="string" />
+          <DxColumn data-field="TEL1" data-type="string" />
+          <DxColumn data-field="TEL2" data-type="string" />
+          <DxColumn data-field="TEL3" data-type="string" />
+          <DxColumn data-field="TIPO" data-type="string" />
+          <DxColumn data-field="VENDEDOR" data-type="string" />
           <DxSelection
             select-all-mode="allPages"
             show-check-boxes-mode="always"
@@ -237,21 +207,10 @@
           <DxFilterRow :visible="setConf.filtros" />
           <DxHeaderFilter :visible="true" />
           <DxSummary>
-            <DxTotalItem column="SKU" summary-type="count" />
-            <template v-for="i in [1, 2, 3, 4]">
-              <DxTotalItem
-                :key="`S${i}`"
-                :column="`T${i}V`"
-                summary-type="sum"
-                value-format="#,##0.00"
-                display-format="{0}"
-              />
-            </template>
             <DxTotalItem
-              column="TOT"
-              summary-type="sum"
-              value-format="#,##0.00"
-              display-format="{0}"
+              column="NUMCLI"
+              summary-type="count"
+              display-format="{0} Regs."
             />
           </DxSummary>
           <DxLoadPanel :enable="true" />
@@ -272,27 +231,6 @@
         </v-btn>
       </template>
     </v-snackbar>
-    <v-dialog
-      ref="periodDialog"
-      v-model="showBaseFilters"
-      :return-value.sync="curPeriod"
-      persistent
-      width="290px"
-    >
-      <v-date-picker
-        v-model="curPeriod"
-        range
-        scrollable
-        locale="es-pa"
-        color="blue lighten-1"
-      >
-        <v-spacer></v-spacer>
-        <v-btn text color="primary" @click="showBaseFilters = false">
-          Cancelar
-        </v-btn>
-        <v-btn text color="primary" @click="updatePeriod"> Aceptar </v-btn>
-      </v-date-picker>
-    </v-dialog>
   </div>
 </template>
 <script>
@@ -324,11 +262,6 @@ import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
 
 const curGridRefKey = 'cur-grid'
-
-const startDate = new Date(new Date().getFullYear(), 0, 1)
-  .toISOString()
-  .substring(0, 10)
-const endDate = new Date().toISOString().substring(0, 10)
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -390,30 +323,21 @@ export default {
     LoadingView,
   },
   async fetch() {
-    if (this.curPeriod.length === 1) {
-      this.curPeriod.push(this.curPeriod[0])
-      this.$refs.dMenu.save(this.curPeriod)
-    }
-
     const curparams = {
-      p01: this.selQry ? 12 : 11,
+      p01: 'CLIFULL',
       p02: this.getCurCia.extrel,
-      p03: this.curPeriod[0],
-      p04: this.curPeriod[1],
-      p05: 100000,
     }
 
     // this.loadingView = true
-
     await this.$axios
-      .get('linabi/extbidashboard', {
+      .get('linabi/clists', {
         params: curparams,
       })
       .then((response) => {
         this.dataSource = new DataSource({
           store: {
             type: 'array',
-            key: 'SKU',
+            key: 'ID',
             data: response.data,
           },
         })
@@ -463,8 +387,6 @@ export default {
     return {
       curGridRefKey,
       dataSource: null,
-      curPeriod: [startDate, endDate],
-      setPeriod: false,
       menuConf: false,
       setConf: {
         filtros: false,
@@ -473,7 +395,6 @@ export default {
       colsConfig: [],
       menuFilter: false,
       radioGroup: '1',
-      showBaseFilters: false,
       tableHeight: 0,
       snackbar: false,
       busyWith: false,
@@ -487,16 +408,13 @@ export default {
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
-    curPeriodText() {
-      return this.curPeriod.join(' ~ ')
-    },
   },
   created() {
     locale(navigator.language)
   },
   mounted() {
     this.colsConfig = this.config.filter((e) => e.tipo === 'col')
-    this.setConf.filtros = true
+    this.setConf.filtros = false
     this.setConf.agrupar = true
   },
   activated() {},
@@ -525,9 +443,8 @@ export default {
       this.curGrid.showColumnChooser()
       this.menuConf = false
     },
-    updatePeriod() {
-      this.$refs.periodDialog.save(this.curPeriod)
-      this.showBaseFilters = false
+    refreshData() {
+      this.menuFilter = false
       this.$fetch()
     },
     onResize() {

@@ -131,6 +131,7 @@ class LinaAuthToken(ObtainAuthToken):
             'core.acc_linabi_sales_detail',
             'core.acc_linabi_reports',
             'core.acc_linabi_storagexloc',
+            'core.acc_linabi_listcli',
             'core.acc_linabi_panel',
             'core.ext_acc'
             ]
