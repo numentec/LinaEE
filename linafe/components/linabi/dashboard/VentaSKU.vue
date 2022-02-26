@@ -90,6 +90,7 @@
           data-type="string"
           caption="Descripción"
         />
+        <DxColumn data-field="UM" data-type="string" />
         <template v-for="i in [1, 2, 3, 4]">
           <DxColumn
             :key="i"

@@ -6,6 +6,9 @@ from django.contrib.auth.models import Group
 from apps.core import models
 from .utils import DynamicFieldSerializer
 
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+
 LinaUserModel = get_user_model()
 
 class CommonSerializer(serializers.ModelSerializer):
@@ -43,6 +46,7 @@ class StakeHolderSerializer(DynamicFieldSerializer):
 class UserSerializer(serializers.ModelSerializer):
     
     fullname = serializers.SerializerMethodField()
+    online = serializers.SerializerMethodField()
 
     class Meta:
         model = LinaUserModel
@@ -57,6 +61,29 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_fullname(self, obj):
         return '{} {}'.format(obj.first_name, obj.last_name)
+
+    def get_online(self, obj):
+        on_line = {'is_online': 'OFF', 'last_login': 'NON', 'fromip': '0'}
+
+        sessions = Session.objects.filter(expire_date__gte=timezone.localtime(timezone.now()))
+
+        if sessions.exists():
+            for session in sessions:
+                data = session.get_decoded()
+
+                if obj.id == int(data.get('_auth_user_id')):
+                    uid = data.get('_auth_user_id', None)
+                    fip = data.get('from_IP', None)
+                    ltime = data.get('loggin_time', None)
+
+                    on_line = {
+                        'is_online': 'ON',
+                        'last_login': data.get('loggin_time'),
+                        'fromip': data.get('from_IP'),
+                        }
+
+        return on_line
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     

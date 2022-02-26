@@ -1,8 +1,10 @@
+from lib2to3.pgen2 import token
 from django.conf import settings
 from django.shortcuts import render
 from django.db import connections
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth import user_login_failed, user_logged_in
+from django.contrib.auth.models import Group, update_last_login
 from django.contrib.sessions.serializers import  JSONSerializer
 from .models import Cia, StakeHolder, User, IpWhiteList
 from .serializers import (
@@ -33,6 +35,8 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 
+from django.core import serializers as srlzrs
+from django.contrib.sessions.backends.db import SessionStore
 import json
 import datetime
 from socket import error as SocketError
@@ -42,21 +46,39 @@ from ipware import get_client_ip
 
 LinaUserModel = get_user_model()
 
+# def lina_update_last_login(sender, user, **kwargs):
+#     # user.app_last_login = timezone.localtime(timezone.now()).strftime("%Y-%m-%d %H:%M:%S")
+#     curtime = timezone.localtime(timezone.now()).strftime("%Y-%m-%d %H:%M:%S")
+#     user.app_last_login = curtime
+#     user.save(update_fields=['app_last_login'])
+
 # Listar usuarios con sesión iniciada
-def get_all_logged_in_users():
+def get_all_logged_in_users(opc = 1):
     # Query all non-expired sessions
-    # use timezone.now() instead of datetime.now() in latest versions of Django
     # sessions = Session.objects.filter(expire_date__gte=timezone.now())
-    sessions = Session.objects.filter(expire_date__gte=datetime.datetime.now())
+    sessions = Session.objects.filter(expire_date__gte=timezone.localtime(timezone.now()))
     uid_list = []
+    udata_list = []
 
     # Build a list of user ids from that query
     for session in sessions:
         data = session.get_decoded()
-        uid_list.append(data.get('_auth_user_id', None))
 
-    # Query all logged in users based on id list
-    return LinaUserModel.objects.filter(id__in=uid_list)
+        uid = data.get('_auth_user_id', None)
+        fip = data.get('from_IP', None)
+        ltime = data.get('loggin_time', None)
+        uname = data.get('auth_username', None)
+        fname = data.get('fullname', None)
+
+        el = {'id': uid, 'username': uname, 'fullname': fname, 'fromip': fip, 'last_login': ltime}
+
+        uid_list.append(uid)
+        udata_list.append(el)
+
+    if opc == 1:
+        return LinaUserModel.objects.filter(id__in=uid_list).values('id', 'username', 'last_login')
+    else:
+        return udata_list
 
 
 class LinaAuthToken(ObtainAuthToken):
@@ -74,13 +96,14 @@ class LinaAuthToken(ObtainAuthToken):
 
         client_ip, is_routable = get_client_ip(request, proxy_count=pc, proxy_trusted_ips=ptips)
 
+        nowtime = timezone.localtime(timezone.now()).strftime("%H:%M:%S")
+
         if client_ip is None:
             # Unable to get the client's IP address
             raise PermissionDenied("No se pudo comprobar la dirección de origen")
         else:
             # We got the client's IP address
             try:
-                nowtime = datetime.datetime.now().strftime("%H:%M:%S")
                 ipwl = IpWhiteList.objects.get(
                     ip_address=client_ip,
                     hora_ini__lt=nowtime,
@@ -102,6 +125,12 @@ class LinaAuthToken(ObtainAuthToken):
         token, created = Token.objects.get_or_create(user=user)
 
         fullname = '{} {}'.format(user.first_name, user.last_name)
+
+        request.session['_auth_user_id'] = user.id
+        request.session['auth_username'] = user.username
+        request.session['fullname'] = fullname
+        request.session['from_IP'] = client_ip
+        request.session['loggin_time'] = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
 
         # groups = serializers.SlugRelatedField(
         #     many=True,
@@ -152,6 +181,8 @@ class LinaAuthToken(ObtainAuthToken):
         else:
             ugroups = []
 
+        update_last_login(None, user)
+
         return Response({
             'token': token.key,
             'user': {
@@ -168,6 +199,36 @@ class LinaAuthToken(ObtainAuthToken):
                 'homelink': user.homelink
             }
         })
+# user_logged_in.disconnect(update_last_login, dispatch_uid='update_last_login')
+# user_logged_in.connect(lina_update_last_login, dispatch_uid='lina_update_last_login')
+
+class LogOut(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user = request.user
+            token = Token.objects.filter(user=user).first()
+
+            if token:
+                sessions = Session.objects.filter(expire_date__gte=timezone.localtime(timezone.now()))
+                if sessions.exists():
+                    for session in sessions:
+                        data = session.get_decoded()
+
+                        if user.id == int(data.get('_auth_user_id')):
+                            session.delete()
+
+                if not user.is_superuser:
+                    token.delete()
+
+                return Response({'message': 'Sesion finalizada'}, status = status.HTTP_200_OK)
+
+            return Response({'error': 'Credenciales inválidas'}, status = status.HTTP_400_BAD_REQUEST)
+
+        except:
+            return Response({'error': 'Error finalizando sesión'}, status = status.HTTP_409_CONFLICT)
 
 
 class CommonViewSet(viewsets.ModelViewSet):
@@ -259,27 +320,12 @@ class UserList(ListAPIView):
         return userslist
 
 
-class LoggedInUserList(APIView):
-    # Codigo correcto, pero las sesiones no se registran en la tabla django_sessions
-    # a menos que se inicie sesión desde el admin de Django
+class LoggedInUsers(APIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
-        sessions = Session.objects.filter(expire_date__gte=datetime.datetime.now())
-        uid_list = []
-
-        # Build a list of user ids from that query
-        for session in sessions:
-            data = session.get_decoded()
-            uid_list.append(data.get('_auth_user_id', None))
-
-        # print('UID_LIST', uid_list)
-        # print('AT', datetime.datetime.now())
-
-        # Query all logged in users based on id list
-        result = LinaUserModel.objects.filter(id__in=uid_list)
-        # print('USERS_RESULT', result)
+        result = get_all_logged_in_users(2)
         return Response(result, status=status.HTTP_200_OK)
 
 

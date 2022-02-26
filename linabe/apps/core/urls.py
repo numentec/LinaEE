@@ -21,6 +21,7 @@ router.register(r'sqlqueries', views.SQLQueryViewSet, basename='sqlqueries')
 
 urlpatterns = [
     path('login/', views.LinaAuthToken.as_view(), name='login'),
+    path('logout/', views.LogOut.as_view(), name='logout'),
     path('loginjwt/', TokenObtainPairView.as_view(), name='loginjwt'),
     path('loginjwt_refresh/', TokenRefreshView.as_view(), name='loginjwt_refresh'),
     path('', include(router.urls)),
@@ -31,7 +32,7 @@ urlpatterns = [
     path('user/<pk>/', views.UserDetail.as_view(), name='user'),
     path('user_perms/<pk>/', views.UserPermsDetail.as_view(), name='user_perms'),
     path('user_register/', views.UserRegister.as_view(), name='user_register'),
-    path('loggedinusers/', views.LoggedInUserList.as_view(), name='loggedinusers'),
+    path('loggedinusers/', views.LoggedInUsers.as_view(), name='loggedinusers'),
     path('groups/', views.GroupsList.as_view(), name='groups'),
     path('modul-actives/', views.ModulosActivosList.as_view(), name='modul-actives'),
     path('accviewconf-list/', views.VistaConfigAccList.as_view(), name='accviewconf-list'),

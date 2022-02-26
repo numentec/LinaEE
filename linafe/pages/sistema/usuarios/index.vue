@@ -94,6 +94,14 @@
                   </v-list-item-content>
                 </v-list-item>
               </v-list-group>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-table-refresh</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click="$fetch">
+                  Actualizar
+                </v-list-item-title>
+              </v-list-item>
               <v-list-group prepend-icon="mdi-cog" no-action>
                 <template v-slot:activator>
                   <v-list-item>
@@ -165,7 +173,21 @@
             :allow-sorting="xcol.s"
           >
           </DxColumn>
-          <DxColumn :width="75" caption="Perfil" cell-template="btnPerfil" />
+          <DxColumn
+            :width="100"
+            data-field="online.is_online"
+            caption="OnLine"
+            cell-template="icoOnline"
+            alignment="center"
+            :allow-sorting="true"
+          />
+          <DxColumn
+            :width="75"
+            caption="Perfil"
+            cell-template="btnPerfil"
+            alignment="center"
+            :allow-sorting="false"
+          />
           <DxSearchPanel :visible="true" :highlight-case-sensitive="true" />
           <DxColumnChooser
             mode="select"
@@ -181,6 +203,47 @@
             show-check-boxes-mode="always"
             mode="multiple"
           />
+          <template #icoOnline="{ data: cellData }">
+            <v-menu open-on-hover top offset-y :nudge-width="100">
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn icon>
+                  <v-icon
+                    v-if="cellData.data.online.is_online == 'ON'"
+                    color="green lightn-2"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    mdi-account-network-outline
+                  </v-icon>
+                  <v-icon v-else color="grey"> mdi-connection </v-icon>
+                </v-btn>
+              </template>
+              <v-card>
+                <v-list>
+                  <v-list-item>
+                    <v-list-item-content>
+                      <v-list-item-title>
+                        {{ cellData.data.fullname }}
+                      </v-list-item-title>
+                      <v-list-item-subtitle>
+                        {{ cellData.data.username }}
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>
+                      {{ `Inicio: ${cellData.data.online.last_login}` }}
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>
+                      {{ `Origen: ${cellData.data.online.fromip}` }}
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-card>
+            </v-menu>
+          </template>
           <template #btnPerfil="{ data: cellData }">
             <v-btn icon @click="showProfile(cellData)">
               <v-icon color="primary lightn-2">mdi-account-details</v-icon>
@@ -284,6 +347,7 @@ export default {
   methods: {
     ...mapActions('sistema', ['fetchUsers']),
     showProfile(data) {
+      console.log('***** DATA *****', data)
       this.$router.push({ path: 'usuarios/' + data.key })
     },
     refreshItems() {

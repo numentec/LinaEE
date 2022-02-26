@@ -176,13 +176,13 @@ SIMPLE_JWT = {
 LANGUAGE_CODE = environ.get("LOC_LG").lower().replace('/', '-')
 #LANGUAGE_CODE = 'es-pa'
 
+USE_TZ = True
 TIME_ZONE = environ.get("LOC_TZ")
+# TIME_ZONE = 'America/Panama'
 
 USE_I18N = True
 
 USE_L10N = True
-
-USE_TZ = True
 
 AUTH_USER_MODEL = 'core.User'
 

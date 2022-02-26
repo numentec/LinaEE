@@ -61,7 +61,7 @@ export default {
         endpoints: {
           login: { url: 'login/', method: 'post' },
           user: { url: 'user_perms/cur', method: 'get' },
-          logout: false,
+          logout: { url: 'logout/', method: 'post' },
         },
         autoFetchUser: false,
         tokenType: 'Token',
