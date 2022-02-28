@@ -147,6 +147,10 @@
           <v-btn text color="primary" @click="updatePeriod"> Aceptar </v-btn>
         </v-date-picker>
       </v-menu>
+      <v-spacer></v-spacer>
+      <v-btn icon color="white" @click="goView">
+        <v-icon>mdi-open-in-new</v-icon>
+      </v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -217,7 +221,7 @@ export default {
       selQry: false,
       loadingView: false,
       perms: this.$auth.user.perms,
-      dataSource: [],
+      dataSource: null,
       umbral: 0,
       curPeriod: [startDate, endDate],
       dateMenu: false,
@@ -260,7 +264,7 @@ export default {
       this.menuConfig = false
     },
     goView() {
-      this.$router.push('/linabi/dashboardqueries/skusales')
+      this.$router.push('/linabi/dashboardqueries/skusales/')
     },
   },
 }

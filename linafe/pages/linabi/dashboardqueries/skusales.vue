@@ -187,6 +187,12 @@
             data-type="string"
             caption="Descripción"
           />
+          <DxColumn
+            data-field="MARCA"
+            data-type="string"
+            caption="Marca"
+            :visible="false"
+          />
           <DxColumn data-field="UM" data-type="string" />
           <template v-for="i in [1, 2, 3, 4]">
             <DxColumn :key="i" :caption="`Trimestre ${i}`">
@@ -407,7 +413,7 @@ export default {
     // this.loadingView = true
 
     await this.$axios
-      .get('linabi/extbidashboard', {
+      .get('linabi/extbidashboard/', {
         params: curparams,
       })
       .then((response) => {
@@ -599,7 +605,7 @@ export default {
           },
         },
       }).then(() => {
-        pdfDoc.save('detalle_de_ventas.pdf')
+        pdfDoc.save('ventas_por_sku.pdf')
         this.busyWith = false
       })
     },
@@ -640,7 +646,7 @@ export default {
           workbook.xlsx.writeBuffer().then((buffer) => {
             saveAs(
               new Blob([buffer], { type: 'application/octet-stream' }),
-              'detalle_de_ventas.xlsx'
+              'ventas_por_sku.xlsx'
             )
             this.busyWith = false
           })

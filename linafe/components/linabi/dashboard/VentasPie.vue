@@ -6,7 +6,6 @@
     style="height: 100%"
     :shaped="false"
     :loading="loadingView"
-    @click="goView"
   >
     <v-card-text>
       <DxPieChart
@@ -14,6 +13,8 @@
         :data-source="dataSource"
         :palette="piePalette"
         :title="setTitle"
+        @point-click="pointClickHandler($event)"
+        @legend-click="legendClickHandler($event)"
       >
         <DxSeries :argument-field="argField" :value-field="valField">
           <DxLabel :visible="false" :customize-text="formatLabel">
@@ -70,6 +71,13 @@
       <v-spacer></v-spacer>
       <v-btn icon color="success" @click.stop="showLegend = !showLegend">
         <v-icon>mdi-view-gallery-outline</v-icon>
+      </v-btn>
+      <v-btn
+        icon
+        color="success"
+        @click.stop="$emit('goView', { argField, curPeriod })"
+      >
+        <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -202,10 +210,6 @@ export default {
     this.loadingView = false
   },
   methods: {
-    goView() {
-      // this.loadingView = true
-      // this.$router.push(this.el.link)
-    },
     refreshData() {
       this.$fetch()
     },
@@ -222,6 +226,18 @@ export default {
     },
     formatLabel(pointInfo) {
       return `${pointInfo.valueText} (${pointInfo.percentText})`
+    },
+    pointClickHandler(e) {
+      this.toggleVisibility(e.target)
+    },
+    legendClickHandler(e) {
+      const arg = e.target
+      const item = e.component.getAllSeries()[0].getPointsByArg(arg)[0]
+
+      this.toggleVisibility(item)
+    },
+    toggleVisibility(item) {
+      item.isVisible() ? item.hide() : item.show()
     },
   },
 }

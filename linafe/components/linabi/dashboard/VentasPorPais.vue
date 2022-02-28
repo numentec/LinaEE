@@ -6,7 +6,6 @@
     style="height: 100%"
     :shaped="false"
     :loading="loadingView"
-    @click="goView"
   >
     <v-card-text>
       <DxVectorMap
@@ -65,6 +64,14 @@
           <v-btn text color="primary" @click="updatePeriod"> Aceptar </v-btn>
         </v-date-picker>
       </v-menu>
+      <v-spacer></v-spacer>
+      <v-btn
+        icon
+        color="success"
+        @click.stop="$emit('goView', { argField: 'PAIS', curPeriod })"
+      >
+        <v-icon>mdi-open-in-new</v-icon>
+      </v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -192,10 +199,6 @@ export default {
     this.loadingView = false
   },
   methods: {
-    goView() {
-      // this.loadingView = true
-      // this.$router.push(this.el.link)
-    },
     customizeTooltip(info) {
       if (info.layer.type === 'marker') {
         return { text: info.attribute('tooltip') }

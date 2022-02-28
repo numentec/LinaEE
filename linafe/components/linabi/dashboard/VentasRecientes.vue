@@ -40,7 +40,7 @@
           format="#,##0.00"
           alignment="right"
         />
-        <DxColumn data-field="CLIENTE" data-type="string" />
+        <DxColumn data-field="NOMCLI" data-type="string" />
         <DxColumn data-field="VENDEDOR" data-type="string" />
         <DxColumn data-field="IDDOC" data-type="string" />
         <DxColumn data-field="FECHA" data-type="date" format="dd/MM/yyyy" />

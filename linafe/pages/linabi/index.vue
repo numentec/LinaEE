@@ -38,6 +38,7 @@
           qry-sel="2"
           arg-field="MARCA"
           val-field="VENTA_TOTAL"
+          @goView="goView"
         />
       </v-col>
       <v-col cols="12" md="4">
@@ -48,6 +49,7 @@
           qry-sel="4"
           arg-field="VENDEDOR"
           val-field="VENTA_TOTAL"
+          @goView="goView"
         />
       </v-col>
       <v-col cols="12" md="4">
@@ -56,14 +58,15 @@
           pie-title="Ventas por Cliente"
           pie-palette="Dark Moon"
           qry-sel="6"
-          arg-field="NOMCLI"
+          arg-field="CLIENTE"
           val-field="VENTA_TOTAL"
+          @goView="goView"
         />
       </v-col>
     </v-row>
     <v-row>
       <v-col cols="12" md="4">
-        <ventas-por-pais />
+        <ventas-por-pais @goView="goView" />
       </v-col>
       <v-col cols="12" md="8">
         <VentaSKU />
@@ -100,5 +103,13 @@ export default {
   },
   created() {},
   mounted() {},
+  methods: {
+    goView(obj) {
+      Promise.all([
+        this.$store.dispatch('linabi/pivotsales/setRow', obj.argField),
+        this.$store.dispatch('linabi/pivotsales/setPeriod', obj.curPeriod),
+      ]).then(() => this.$router.push('/linabi/dashboardqueries/pivotsales/'))
+    },
+  },
 }
 </script>

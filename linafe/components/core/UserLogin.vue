@@ -143,7 +143,6 @@ export default {
       if (this.$refs.login_form.validate()) {
         this.overlay = true
         await this.$store.dispatch('sistema/userLogin', this.login).then(() => {
-          this.overlay = false
           if (this.loggedInUser) {
             if (this.loggedInUser.homelink) {
               this.$router.push(this.loggedInUser.homelink)
@@ -151,6 +150,7 @@ export default {
               this.$router.push('/')
             }
           }
+          this.overlay = false
         })
       }
     },
