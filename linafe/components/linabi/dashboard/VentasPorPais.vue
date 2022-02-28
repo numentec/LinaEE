@@ -44,10 +44,20 @@
         offset-y
         min-width="auto"
       >
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn icon v-bind="attrs" color="success" v-on="on">
-            <v-icon>mdi-calendar-refresh-outline</v-icon>
-          </v-btn>
+        <template v-slot:activator="{ on: menu, attrs }">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-btn
+                icon
+                v-bind="attrs"
+                color="success"
+                v-on="{ ...tooltip, ...menu }"
+              >
+                <v-icon>mdi-calendar-refresh-outline</v-icon>
+              </v-btn>
+            </template>
+            <span>Establecer periodo</span>
+          </v-tooltip>
         </template>
         <v-date-picker
           v-model="curPeriod"
@@ -65,13 +75,20 @@
         </v-date-picker>
       </v-menu>
       <v-spacer></v-spacer>
-      <v-btn
-        icon
-        color="success"
-        @click.stop="$emit('goView', { argField: 'PAIS', curPeriod })"
-      >
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            color="success"
+            v-bind="attrs"
+            v-on="on"
+            @click.stop="$emit('goView', { argField: 'PAIS', curPeriod })"
+          >
+            <v-icon>mdi-open-in-new</v-icon>
+          </v-btn>
+        </template>
+        <span>Ir a tabla</span>
+      </v-tooltip>
     </v-card-actions>
   </v-card>
 </template>

@@ -127,10 +127,15 @@
         offset-y
         min-width="auto"
       >
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn icon v-bind="attrs" v-on="on">
-            <v-icon>mdi-calendar-refresh-outline</v-icon>
-          </v-btn>
+        <template v-slot:activator="{ on: menu, attrs }">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-btn icon v-bind="attrs" v-on="{ ...tooltip, ...menu }">
+                <v-icon>mdi-calendar-refresh-outline</v-icon>
+              </v-btn>
+            </template>
+            <span>Establecer periodo</span>
+          </v-tooltip>
         </template>
         <v-date-picker
           v-model="curPeriod"
@@ -148,9 +153,14 @@
         </v-date-picker>
       </v-menu>
       <v-spacer></v-spacer>
-      <v-btn icon color="white" @click="goView">
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn icon color="white" v-bind="attrs" v-on="on" @click="goView">
+            <v-icon>mdi-open-in-new</v-icon>
+          </v-btn>
+        </template>
+        <span>Ir a detalle</span>
+      </v-tooltip>
     </v-card-actions>
   </v-card>
 </template>

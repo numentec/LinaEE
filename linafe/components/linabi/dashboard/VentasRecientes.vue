@@ -6,9 +6,20 @@
         Ventas más recientes
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon color="orange darken-3" @click="refreshData">
-        <v-icon>mdi-table-refresh</v-icon>
-      </v-btn>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            color="orange darken-3"
+            v-bind="attrs"
+            v-on="on"
+            @click="refreshData"
+          >
+            <v-icon>mdi-table-refresh</v-icon>
+          </v-btn>
+        </template>
+        <span>Actualizar</span>
+      </v-tooltip>
     </v-app-bar>
     <v-divider />
     <v-card-text>

@@ -68,10 +68,20 @@
         offset-y
         min-width="auto"
       >
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn icon v-bind="attrs" color="success" v-on="on">
-            <v-icon>mdi-calendar-refresh-outline</v-icon>
-          </v-btn>
+        <template v-slot:activator="{ on: menu, attrs }">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on: tooltip }">
+              <v-btn
+                icon
+                v-bind="attrs"
+                color="success"
+                v-on="{ ...tooltip, ...menu }"
+              >
+                <v-icon>mdi-calendar-refresh-outline</v-icon>
+              </v-btn>
+            </template>
+            <span>Establecer periodo</span>
+          </v-tooltip>
         </template>
         <v-date-picker
           v-model="curPeriod"
