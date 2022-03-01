@@ -189,7 +189,7 @@ export default {
     this.loadingView = true
 
     await this.$axios
-      .get('linabi/extbidashboard', {
+      .get('linabi/extbidashboard/', {
         params: curparams,
       })
       .then((response) => {

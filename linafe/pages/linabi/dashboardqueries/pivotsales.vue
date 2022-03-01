@@ -147,6 +147,10 @@ const startDate = new Date(new Date().getFullYear(), 0, 1)
   .substring(0, 10)
 const endDate = new Date().toISOString().substring(0, 10)
 
+const arrayEquals = (a, b) => {
+  return a.length === b.length && a.every((v, i) => v === b[i])
+}
+
 export default {
   name: 'PivotSales',
   components: {
@@ -156,9 +160,9 @@ export default {
     LoadingView,
   },
   async fetch() {
-    if (this.getPeriod) {
-      this.curPeriod = this.getPeriod
-    }
+    // if (this.getPeriod) {
+    //   this.curPeriod = this.getPeriod
+    // }
 
     if (this.curPeriod.length === 1) {
       this.curPeriod.push(this.curPeriod[0])
@@ -233,10 +237,6 @@ export default {
   mounted() {},
   activated() {
     if (this.dataSource) {
-      if (this.getPeriod) {
-        this.curPeriod = this.getPeriod
-      }
-
       this.dataSource.fields([
         {
           dataField: this.getRow,
@@ -255,7 +255,22 @@ export default {
           area: 'data',
         },
       ])
-      this.dataSource.load()
+
+      let fetchCalled = false
+      const gP = this.getPeriod
+      const cP = this.curPeriod
+
+      if (gP.length > 0) {
+        if (!arrayEquals(gP, cP)) {
+          this.curPeriod = [...gP]
+          fetchCalled = true
+          this.$fetch()
+        }
+      }
+
+      if (!fetchCalled) {
+        this.dataSource.load()
+      }
     }
   },
   methods: {
