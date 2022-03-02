@@ -95,21 +95,22 @@ export default {
 
     this.loadingView = true
 
-    await this.$axios
+    const res = await this.$axios
       .get('linabi/extbidashboard/', {
         params: curparams,
       })
       .then((response) => {
-        this.dataSource = new DataSource({
-          store: {
-            type: 'array',
-            key: 'ID',
-            data: response.data,
-          },
-        })
-
         this.loadingView = false
+        return response
       })
+
+    this.dataSource = new DataSource({
+      store: {
+        type: 'array',
+        key: 'ID',
+        data: res.data,
+      },
+    })
   },
 
   data() {
@@ -124,6 +125,7 @@ export default {
   computed: {
     ...mapGetters('sistema', ['getCurCia']),
   },
+  mounted() {},
   activated() {
     this.loadingView = false
   },
