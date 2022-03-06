@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 <template>
   <client-only>
     <div>
@@ -88,7 +89,7 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 
 export default {
   name: 'UserLogin',
@@ -120,17 +121,19 @@ export default {
   watch: {
     error(newVal) {
       const errcode = this.error.statusCode
-      this.overlay = false
+
       if (errcode !== 0) {
+        this.overlay = false
         this.showAlert = true
         const top = this.$refs.errAlert.offsetTop
         window.scrollTo(0, top)
         // this.$refs.errAlert.scrollTop = 0
+      } else {
+        this.showAlert = false
       }
     },
   },
   methods: {
-    ...mapActions('sistema', ['setError']),
     reset() {
       this.$refs.login_form.reset()
     },
@@ -150,7 +153,6 @@ export default {
               this.$router.push('/')
             }
           }
-          this.overlay = false
         })
       }
     },

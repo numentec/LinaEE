@@ -13,7 +13,7 @@
             <span>Volver a vista anterior</span>
           </v-tooltip>
           <v-toolbar-title>{{
-            `Ventas por ${getRow} (${curPeriodText})`
+            `Ventas por ${curRow} (${curPeriodText})`
           }}</v-toolbar-title>
           <v-spacer />
           <v-menu
@@ -95,8 +95,11 @@
           <DxFieldChooser :enabled="true" />
         </DxPivotGrid>
       </div>
+      <LoadingView :busy-with="busyWith" :message="loadingMessage" />
+      <v-overlay :absolute="true" :value="$fetchState.pending">
+        <v-progress-circular indeterminate size="64"></v-progress-circular>
+      </v-overlay>
     </MaterialCard>
-    <LoadingView :busy-with="busyWith" :message="loadingMessage" />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -142,13 +145,31 @@ import LoadingView from '~/components/utilities/LoadingView'
 
 const curGridRefKey = 'cur-grid'
 
-const startDate = new Date(new Date().getFullYear(), 0, 1)
-  .toISOString()
-  .substring(0, 10)
-const endDate = new Date().toISOString().substring(0, 10)
-
 const arrayEquals = (a, b) => {
   return a.length === b.length && a.every((v, i) => v === b[i])
+}
+
+const setFields = (row) => {
+  return [
+    {
+      dataField: row,
+      area: 'row',
+      sortBySummaryField: 'MONTO',
+    },
+    {
+      dataField: 'FECHA',
+      dataType: 'date',
+      area: 'column',
+    },
+    {
+      dataField: 'MONTO',
+      dataType: 'number',
+      summaryType: 'sum',
+      format: '#,##0.00',
+      area: 'data',
+      isMeasure: true,
+    },
+  ]
 }
 
 export default {
@@ -160,9 +181,19 @@ export default {
     LoadingView,
   },
   async fetch() {
-    // if (this.getPeriod) {
-    //   this.curPeriod = this.getPeriod
-    // }
+    let fields = []
+
+    if (this.dataSource) {
+      fields = this.dataSource.fields()
+    } else {
+      const fi = this.$route.query.fechini
+      const ff = this.$route.query.fechfin
+      const crow = this.$route.query.row
+
+      this.curPeriod = [fi, ff]
+
+      fields = setFields(crow)
+    }
 
     if (this.curPeriod.length === 1) {
       this.curPeriod.push(this.curPeriod[0])
@@ -176,43 +207,20 @@ export default {
       p04: this.curPeriod[1],
     }
 
-    // const row = this.getRow
-
-    this.loadingMessage = 'Cargando...'
-    this.busyWith = true
-
     await this.renewStore(curparams).then((store) => {
       this.dataSource = new PivotGridDataSource({
         store,
-        fields: [
-          {
-            dataField: this.getRow,
-            area: 'row',
-          },
-          {
-            dataField: 'FECHA',
-            dataType: 'date',
-            area: 'column',
-          },
-          {
-            dataField: 'MONTO',
-            dataType: 'number',
-            summaryType: 'sum',
-            format: '#,##0.00',
-            area: 'data',
-          },
-        ],
+        fields,
       })
-
-      this.busyWith = false
     })
   },
   data() {
     return {
       curGridRefKey,
       dataSource: null,
-      curPeriod: [startDate, endDate],
-      setPeriod: false,
+      curPeriod: [],
+      curRow: '',
+      forceRefresh: false,
       menuFilter: false,
       showSetPeriod: false,
       tableHeight: 0,
@@ -223,7 +231,6 @@ export default {
   },
   computed: {
     ...mapGetters('sistema', ['getCurCia']),
-    ...mapGetters('linabi/pivotsales', ['getRow', 'getPeriod']),
     curGrid() {
       return this.$refs[curGridRefKey].instance
     },
@@ -237,44 +244,53 @@ export default {
   mounted() {},
   activated() {
     if (this.dataSource) {
-      this.dataSource.fields([
-        {
-          dataField: this.getRow,
-          area: 'row',
-        },
-        {
-          dataField: 'FECHA',
-          dataType: 'date',
-          area: 'column',
-        },
-        {
-          dataField: 'MONTO',
-          dataType: 'number',
-          summaryType: 'sum',
-          format: '#,##0.00',
-          area: 'data',
-        },
-      ])
+      const fi = this.$route.query.fechini
+      const ff = this.$route.query.fechfin
+      const crow = this.$route.query.row
 
-      let fetchCalled = false
-      const gP = this.getPeriod
-      const cP = this.curPeriod
+      if (fi && ff && crow) {
+        const qryP = [fi, ff]
+        const cP = this.curPeriod
 
-      if (gP.length > 0) {
-        if (!arrayEquals(gP, cP)) {
-          this.curPeriod = [...gP]
-          fetchCalled = true
+        const fields = setFields(crow)
+        this.dataSource.fields(fields)
+
+        this.curRow = crow
+        this.curPeriod = qryP
+
+        if (!arrayEquals(qryP, cP)) {
           this.$fetch()
+        } else {
+          this.dataSource.load()
         }
-      }
-
-      if (!fetchCalled) {
-        this.dataSource.load()
       }
     }
   },
   methods: {
     ...mapActions('linabi/pivotsales', ['renewStore']),
+    async reloadData(qryP, fields, reload) {
+      if (reload) {
+        const curparams = {
+          p01: 14,
+          p02: this.getCurCia.extrel,
+          p03: qryP[0],
+          p04: qryP[1],
+        }
+
+        this.loadingMessage = 'Cargando...'
+
+        await this.renewStore(curparams).then((store) => {
+          this.dataSource = new PivotGridDataSource({
+            store,
+            fields,
+          })
+        })
+      } else {
+        this.loadingMessage = 'Cargando...'
+        this.dataSource.fields(fields)
+        this.dataSource.load()
+      }
+    },
     goBack() {
       this.$router.back()
     },
@@ -302,7 +318,7 @@ export default {
 
       this.loadingMessage = 'Exportando...'
       this.busyWith = true
-      const rowName = this.getRow
+      const rowName = this.curRow
 
       exportPivotGrid({
         component: this.curGrid,

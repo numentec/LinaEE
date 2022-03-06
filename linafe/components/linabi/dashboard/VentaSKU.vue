@@ -162,6 +162,9 @@
         <span>Ir a detalle</span>
       </v-tooltip>
     </v-card-actions>
+    <v-overlay :absolute="true" :value="$fetchState.pending">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
   </v-card>
 </template>
 
@@ -237,6 +240,7 @@ export default {
       dateMenu: false,
       menuConfig: false,
       psize: 10,
+      path: '/linabi/dashboardqueries/skusales/',
     }
   },
   computed: {
@@ -274,7 +278,13 @@ export default {
       this.menuConfig = false
     },
     goView() {
-      this.$router.push('/linabi/dashboardqueries/skusales/')
+      const curPeriod = this.curPeriod
+      this.$emit('goView', {
+        argField: 'SKU',
+        curPeriod,
+        path: '/linabi/dashboardqueries/skusales/',
+      })
+      // this.$router.push('/linabi/dashboardqueries/skusales/')
     },
   },
 }

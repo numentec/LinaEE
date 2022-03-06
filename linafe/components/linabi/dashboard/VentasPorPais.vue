@@ -82,7 +82,7 @@
             color="success"
             v-bind="attrs"
             v-on="on"
-            @click.stop="$emit('goView', { argField: 'PAIS', curPeriod })"
+            @click.stop="$emit('goView', { argField: 'PAIS', curPeriod, path })"
           >
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
@@ -96,6 +96,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import * as mapsData from 'devextreme/dist/js/vectormap-data/world.js'
+import { locale } from 'devextreme/localization'
 import {
   DxVectorMap,
   DxLayer,
@@ -196,21 +197,35 @@ export default {
       typeOpc,
       curPeriod: [startDate, endDate],
       dateMenu: false,
+      path: '/linabi/dashboardqueries/pivotsales/',
     }
   },
   computed: {
     ...mapGetters('sistema', ['getCurCia']),
     curPeriodText() {
-      // const fini = new Date(this.curPeriod[0] + 'T00:00:00').toLocaleDateString(
-      //   'es-es'
-      // )
-      // const ffin = new Date(this.curPeriod[1] + 'T00:00:00').toLocaleDateString(
-      //   'es-es'
-      // )
+      const fini = new Date(this.curPeriod[0] + 'T00:00:00').toLocaleDateString(
+        'es-es',
+        {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }
+      )
+      const ffin = new Date(this.curPeriod[1] + 'T00:00:00').toLocaleDateString(
+        'es-es',
+        {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }
+      )
 
-      // return fini + ' ~ ' + ffin
-      return this.curPeriod.join(' ~ ')
+      return fini + ' ~ ' + ffin
+      // return this.curPeriod.join(' ~ ')
     },
+  },
+  created() {
+    locale(navigator.language)
   },
   activated() {
     this.loadingView = false

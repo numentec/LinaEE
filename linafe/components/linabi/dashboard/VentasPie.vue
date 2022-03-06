@@ -100,7 +100,7 @@
             color="success"
             v-bind="attrs"
             v-on="on"
-            @click.stop="$emit('goView', { argField, curPeriod })"
+            @click.stop="$emit('goView', { argField, curPeriod, path })"
           >
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
@@ -212,6 +212,7 @@ export default {
       umbral: 0,
       curPeriod: [startDate, endDate],
       dateMenu: false,
+      path: '/linabi/dashboardqueries/pivotsales/',
     }
   },
   computed: {

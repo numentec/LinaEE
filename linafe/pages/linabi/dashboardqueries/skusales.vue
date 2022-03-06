@@ -261,16 +261,18 @@
               display-format="{0}"
             />
           </DxSummary>
-          <DxLoadPanel :enable="true" />
           <DxPager
             :allowed-page-sizes="[5, 10, 20]"
             :show-page-size-selector="true"
           />
           <DxPaging :page-size="psize" />
         </DxDataGrid>
+        <LoadingView
+          :busy-with="busyWith || $fetchState.pending"
+          :message="loadingMessage"
+        />
       </div>
     </MaterialCard>
-    <LoadingView :busy-with="busyWith" :message="loadingMessage" />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -318,7 +320,7 @@ import {
   DxPaging,
   DxSelection,
 } from 'devextreme-vue/data-grid'
-import DxLoadPanel from 'devextreme-vue/load-panel'
+// import DxLoadPanel from 'devextreme-vue/load-panel'
 import saveAs from 'file-saver'
 import { jsPDF as JsPDF } from 'jspdf'
 import 'jspdf-autotable'
@@ -331,11 +333,6 @@ import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
 
 const curGridRefKey = 'cur-grid'
-
-const startDate = new Date(new Date().getFullYear(), 0, 1)
-  .toISOString()
-  .substring(0, 10)
-const endDate = new Date().toISOString().substring(0, 10)
 
 async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
   // url = this.$config.publicURL + url
@@ -373,8 +370,12 @@ async function addImageExcel(url, workbook, worksheet, excelCell, ax, resolve) {
     })
 }
 
-function uniqByKeepLast(data, key) {
+const uniqByKeepLast = (data, key) => {
   return [...new Map(data.map((x) => [key(x), x])).values()]
+}
+
+const arrayEquals = (a, b) => {
+  return a.length === b.length && a.every((v, i) => v === b[i])
 }
 
 export default {
@@ -390,13 +391,20 @@ export default {
     DxHeaderFilter,
     DxPager,
     DxPaging,
-    DxLoadPanel,
+    // DxLoadPanel,
     DxSelection,
     MaterialCard,
     TableSettings,
     LoadingView,
   },
   async fetch() {
+    if (!this.dataSource) {
+      const fi = this.$route.query.fechini
+      const ff = this.$route.query.fechfin
+
+      this.curPeriod = [fi, ff]
+    }
+
     if (this.curPeriod.length === 1) {
       this.curPeriod.push(this.curPeriod[0])
       this.$refs.dMenu.save(this.curPeriod)
@@ -410,7 +418,7 @@ export default {
       p05: 100000,
     }
 
-    // this.loadingView = true
+    this.loadingMessage = 'Cargando...'
 
     await this.$axios
       .get('linabi/extbidashboard/', {
@@ -424,8 +432,6 @@ export default {
             data: response.data,
           },
         })
-
-        // this.loadingView = false
       })
   },
   async asyncData({ $axios, store, error }) {
@@ -470,8 +476,7 @@ export default {
     return {
       curGridRefKey,
       dataSource: null,
-      curPeriod: [startDate, endDate],
-      setPeriod: false,
+      curPeriod: [],
       menuConf: false,
       setConf: {
         filtros: false,
@@ -479,7 +484,6 @@ export default {
       },
       colsConfig: [],
       menuFilter: false,
-      radioGroup: '1',
       showBaseFilters: false,
       tableHeight: 0,
       snackbar: false,
@@ -506,7 +510,22 @@ export default {
     this.setConf.filtros = true
     this.setConf.agrupar = true
   },
-  activated() {},
+  activated() {
+    if (this.dataSource) {
+      const fi = this.$route.query.fechini
+      const ff = this.$route.query.fechfin
+
+      if (fi && ff) {
+        const qryP = [fi, ff]
+        const cP = this.curPeriod
+
+        if (!arrayEquals(qryP, cP)) {
+          this.curPeriod = qryP
+          this.$fetch()
+        }
+      }
+    }
+  },
   methods: {
     goBack() {
       this.$router.back()

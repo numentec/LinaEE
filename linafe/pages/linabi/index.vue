@@ -2,7 +2,7 @@
   <v-container fluid>
     <v-row>
       <v-col cols="12" md="3">
-        <venta-tot
+        <VentaTot
           card-type="V1"
           card-id="V1"
           card-title="Ventas del año"
@@ -10,7 +10,7 @@
         />
       </v-col>
       <v-col cols="12" md="3">
-        <venta-tot
+        <VentaTot
           card-type="V2"
           card-id="V2"
           card-title="Ventas en proceso"
@@ -23,7 +23,7 @@
     </v-row>
     <v-row>
       <v-col cols="12" md="8">
-        <ventas-por-mes arg-field="MES" val-field="VENTA" />
+        <VentasPorMes arg-field="MES" val-field="VENTA" />
       </v-col>
       <v-col cols="12" md="4">
         <venta-rendimiento qry-sel="10" />
@@ -31,7 +31,7 @@
     </v-row>
     <v-row>
       <v-col cols="12" md="4">
-        <ventas-pie
+        <VentasPie
           pie-id="1"
           pie-title="Ventas por Marca"
           pie-palette="Material"
@@ -42,7 +42,7 @@
         />
       </v-col>
       <v-col cols="12" md="4">
-        <ventas-pie
+        <VentasPie
           pie-id="2"
           pie-title="Ventas por Vendedor"
           pie-palette="Violet"
@@ -53,7 +53,7 @@
         />
       </v-col>
       <v-col cols="12" md="4">
-        <ventas-pie
+        <VentasPie
           pie-id="3"
           pie-title="Ventas por Cliente"
           pie-palette="Dark Moon"
@@ -69,7 +69,7 @@
         <ventas-por-pais @goView="goView" />
       </v-col>
       <v-col cols="12" md="8">
-        <VentaSKU />
+        <VentaSKU @goView="goView" />
       </v-col>
     </v-row>
   </v-container>
@@ -105,10 +105,14 @@ export default {
   mounted() {},
   methods: {
     goView(obj) {
-      Promise.all([
-        this.$store.dispatch('linabi/pivotsales/setRow', obj.argField),
-        this.$store.dispatch('linabi/pivotsales/setPeriod', obj.curPeriod),
-      ]).then(() => this.$router.push('/linabi/dashboardqueries/pivotsales/'))
+      this.$router.push({
+        path: obj.path,
+        query: {
+          row: obj.argField,
+          fechini: obj.curPeriod[0],
+          fechfin: obj.curPeriod[1],
+        },
+      })
     },
   },
 }
