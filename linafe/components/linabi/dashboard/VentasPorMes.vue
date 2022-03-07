@@ -1,11 +1,6 @@
 /* eslint-disable no-console */
 <template>
-  <v-card
-    class="mx-auto my-4"
-    style="height: 100%"
-    :loading="loadingView"
-    @click="goView"
-  >
+  <v-card class="mx-auto my-4" style="height: 100%" :loading="loadingView">
     <v-card-text>
       <DxChart
         id="chart"
@@ -188,12 +183,8 @@ export default {
             percent: Math.round((item.VENTA * 100) / totalCount),
           }
         })
-        // ******************************************
+
         this.dataSource = dataSource
-
-        // const xumbral = this.dataSource[10][this.valField]
-
-        // this.umbral = xumbral
 
         this.loadingView = false
       })
@@ -234,7 +225,6 @@ export default {
     this.loadingView = false
   },
   methods: {
-    goView() {},
     refreshData() {
       this.$fetch()
     },
