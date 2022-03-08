@@ -3,7 +3,7 @@ from django.conf import settings
 from django.shortcuts import render
 from django.db import connections
 from django.contrib.auth import get_user_model
-from django.contrib.auth import user_login_failed, user_logged_in
+# from django.contrib.auth import user_login_failed, user_logged_in
 from django.contrib.auth.models import Group, update_last_login
 from django.contrib.sessions.serializers import  JSONSerializer
 from .models import Cia, StakeHolder, User, IpWhiteList
@@ -208,6 +208,13 @@ class LogOut(APIView):
 
     def post(self, request, *args, **kwargs):
         try:
+            # force = int(request.query_params.get('force', '0'))
+            force = 0
+            if request.body:
+                body_unicode = request.body.decode('utf-8')
+                body = json.loads(body_unicode)
+                force = int(body['force'])
+
             user = request.user
             token = Token.objects.filter(user=user).first()
 
@@ -222,6 +229,9 @@ class LogOut(APIView):
 
                 if not user.is_superuser:
                     token.delete()
+
+                if force == 1:
+                    print('***** Fin de sesión forzado *****')
 
                 return Response({'message': 'Sesion finalizada'}, status = status.HTTP_200_OK)
 

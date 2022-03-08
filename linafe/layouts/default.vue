@@ -110,6 +110,8 @@ export default {
     },
   },
   mounted() {
+    window.addEventListener('beforeunload', this.test)
+
     if (!this.curuser.is_superuser) {
       let aT1 = []
       let aT2 = []
@@ -134,6 +136,9 @@ export default {
     // this.$root.$on('qtools', this.qTools)
     // this.$root.$on('fav', this.goFav)
   },
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.test)
+  },
   methods: {
     loadTool(indx) {
       this.dataSource[indx].onClick()
@@ -150,6 +155,9 @@ export default {
     goFav() {
       this.$router.push({ path: '/linabi/favoritos/' })
       this.mobileNav = 2
+    },
+    async test() {
+      await this.$axios.post('logout/', { force: '1' })
     },
   },
 }

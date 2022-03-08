@@ -347,7 +347,6 @@ export default {
   methods: {
     ...mapActions('sistema', ['fetchUsers']),
     showProfile(data) {
-      console.log('***** DATA *****', data)
       this.$router.push({ path: 'usuarios/' + data.key })
     },
     refreshItems() {

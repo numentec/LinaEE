@@ -362,7 +362,7 @@
                       <v-tooltip bottom>
                         <template v-slot:activator="{ on, attrs }">
                           <v-btn
-                            :disabled="curUser.id !== loggedInUser.id"
+                            :disabled="!renewPass"
                             fab
                             large
                             :dark="curUser.id == loggedInUser.id"
@@ -761,6 +761,11 @@ export default {
     },
     closeRenew() {
       this.showRenew = false
+    },
+    renewPass() {
+      return (
+        this.curUser.id === this.loggedInUser.id || this.curUser.is_superuser
+      )
     },
   },
 
