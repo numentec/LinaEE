@@ -108,11 +108,11 @@
           alignment="right"
           caption="Total"
         />
-        <DxPager
+        <!-- <DxPager
           :allowed-page-sizes="[5, 10, 20]"
           :show-page-size-selector="true"
         />
-        <DxPaging :page-size="psize" />
+        <DxPaging :page-size="psize" /> -->
       </DxDataGrid>
     </v-card-text>
 
@@ -173,8 +173,8 @@ import { mapGetters } from 'vuex'
 import {
   DxDataGrid,
   DxColumn,
-  DxPager,
-  DxPaging,
+  // DxPager,
+  // DxPaging,
 } from 'devextreme-vue/data-grid'
 import DataSource from 'devextreme/data/data_source'
 
@@ -189,8 +189,8 @@ export default {
   components: {
     DxDataGrid,
     DxColumn,
-    DxPager,
-    DxPaging,
+    // DxPager,
+    // DxPaging,
   },
   props: {},
 
@@ -205,7 +205,7 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
-      p05: 100,
+      p05: 10,
     }
 
     this.loadingView = true

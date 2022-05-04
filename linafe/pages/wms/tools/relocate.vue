@@ -510,17 +510,29 @@ export default {
       }
     },
     async validDestino() {
-      const e = this.cantidad.empaq
-      const u = this.cantidad.uni
-
-      let cantidad = u
-
-      if (this.selectedLoc.SEPARADOR) {
-        const sep = this.selectedLoc.SEPARADOR
-        cantidad = `${e} ${sep} ${u}`
-      }
-
       if (this.destino) {
+        if (
+          this.destino === this.selectedLoc.UBIX ||
+          this.destino === this.selectedLoc.UBIXBC
+        ) {
+          this.relocate = false
+          this.destinoDescrip = ''
+          this.msgReloc = 'Ubicaciones de origen y destino sobrepuestas'
+          this.msgColor = 'red'
+          this.snackbar = true
+          return true
+        }
+
+        const e = this.cantidad.empaq
+        const u = this.cantidad.uni
+
+        let cantidad = u
+
+        if (this.selectedLoc.SEPARADOR) {
+          const sep = this.selectedLoc.SEPARADOR
+          cantidad = `${e} ${sep} ${u}`
+        }
+
         await this.$axios
           .get('wms/relocatext/', {
             params: {
