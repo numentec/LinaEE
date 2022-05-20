@@ -510,12 +510,13 @@ export default {
       }
     },
     async validDestino() {
+      this.relocate = false
       if (this.destino) {
+        const vdestino = this.destino.toUpperCase()
         if (
-          this.destino === this.selectedLoc.UBIX ||
-          this.destino === this.selectedLoc.UBIXBC
+          vdestino.includes(this.selectedLoc.UBIX) ||
+          vdestino.includes(this.selectedLoc.UBIXBC)
         ) {
-          this.relocate = false
           this.destinoDescrip = ''
           this.msgReloc = 'Ubicaciones de origen y destino sobrepuestas'
           this.msgColor = 'red'
@@ -593,6 +594,8 @@ export default {
       }
     },
     async execRelocation() {
+      this.relocate = false
+
       const e = this.cantidad.empaq
       const u = this.cantidad.uni
 
