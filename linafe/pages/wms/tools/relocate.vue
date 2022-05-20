@@ -218,10 +218,11 @@
                 <v-col cols="12">
                   <v-card-actions>
                     <v-btn
+                      :key="btnkey"
                       color="primary"
                       :disabled="!relocate"
                       block
-                      @click="execRelocation"
+                      @click.once="execRelocation"
                     >
                       Reubicar
                     </v-btn>
@@ -319,6 +320,7 @@ export default {
       showConfig: false,
       countPerPackage: true,
       preUBIX: '',
+      btnkey: 1,
       msgReloc: '',
       msgColor: 'secondary',
       snackbar: false,
@@ -594,8 +596,6 @@ export default {
       }
     },
     async execRelocation() {
-      this.relocate = false
-
       const e = this.cantidad.empaq
       const u = this.cantidad.uni
 
@@ -655,6 +655,9 @@ export default {
         this.msgColor = 'red'
         this.snackbar = true
       }
+
+      this.relocate = false
+      this.btnkey++
     },
     cancelStepper() {
       // this.useBC1 = true
