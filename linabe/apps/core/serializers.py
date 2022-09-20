@@ -225,6 +225,8 @@ class VistaConfigSerializer(serializers.ModelSerializer):
 class VistaSerializer(serializers.ModelSerializer):
 
     configs_x_vista = VistaConfigSerializer(read_only=True, many=True)
+    # configs_x_vista = serializers.PrimaryKeyRelatedField(
+    # read_only=True, many=True, queryset = models.VistaConfig.objects.all())
 
     class Meta:
         model = models.Vista

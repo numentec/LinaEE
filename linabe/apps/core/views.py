@@ -1,4 +1,6 @@
 from lib2to3.pgen2 import token
+from urllib import request
+from django.db.models import Prefetch
 from django.conf import settings
 from django.shortcuts import render
 from django.db import connections
@@ -57,6 +59,7 @@ def get_all_logged_in_users(opc = 1):
     # Query all non-expired sessions
     # sessions = Session.objects.filter(expire_date__gte=timezone.now())
     sessions = Session.objects.filter(expire_date__gte=timezone.localtime(timezone.now()))
+
     uid_list = []
     udata_list = []
 
@@ -74,6 +77,7 @@ def get_all_logged_in_users(opc = 1):
 
         uid_list.append(uid)
         udata_list.append(el)
+        print('***** SESSION *****', session)
 
     if opc == 1:
         return LinaUserModel.objects.filter(id__in=uid_list).values('id', 'username', 'last_login')
@@ -94,7 +98,11 @@ class LinaAuthToken(ObtainAuthToken):
         pc = getattr(settings, 'PROXY_COUNT', 0)
         ptips = getattr(settings, 'PROXY_TRUSTED', [])
 
-        client_ip, is_routable = get_client_ip(request, proxy_count=pc, proxy_trusted_ips=ptips)
+        #client_ip, is_routable = get_client_ip(request, request_header_order=['X_FORWARDED_FOR', 'REMOTE_ADDR'], proxy_count=pc, proxy_trusted_ips=ptips)
+        client_ip, is_routable = get_client_ip(request, request_header_order=['REMOTE_ADDR', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP'])
+        # print('***** REQUEST *****\n', request.META)
+        # print('***** CLIENTIP *****\n', client_ip)
+        # print('***** ISROUTABLE *****\n', is_routable)
 
         nowtime = timezone.localtime(timezone.now()).strftime("%H:%M:%S")
 
@@ -468,13 +476,20 @@ class ModulosActivosList(ListAPIView):
 
 #         return resp
 
+
 class VistaViewSet(CommonViewSet):
     """ViewSet de vistas"""
     serializer_class = serializers.VistaSerializer
     # permission_classes = (CustomDjangoModelPermissions, )
 
+    lookup_value_regex = '\d+'
+
     def get_queryset(self):
-        return models.Vista.objects.all()
+        pk = self.kwargs['pk']
+        colsExcluded = self.request.user.colsToRemoveTmp(pk)
+        queryset = models.Vista.objects.prefetch_related(Prefetch(
+            'configs_x_vista', queryset=models.VistaConfig.objects.exclude(configkey__in = colsExcluded)))
+        return queryset
 
 
 class VistaConfigViewSet(CommonViewSet):

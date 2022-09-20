@@ -208,9 +208,26 @@ class CatalogAPIView(APIView):
 
             descrip = refCursor.description
 
+            colsToRemoveList = request.user.colsToRemoveTmp(14)
+
+            # curgroups = request.user.groups.values_list('id', flat=True)
+
+            # curgroup = 0
+            
+            # if len(curgroups) > 0:
+            #     curgroup = curgroups[0]
+
+            # # Columnas a remover
+            # colsToRemoveStr = 'COSTO_ADM, COSTO_PROM, COSTO_FOB, COSTO_CIF'
+            # colsToRemoveStr = colsToRemoveStr.replace(' ', '')
+            # colsToRemoveList = colsToRemoveStr.split(',')
+
             rows = refCursor.fetchall()
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+            # Remueve las columnas indicadas
+            result = [{key : val for key, val in sub.items() if key not in colsToRemoveList} for sub in result]
 
         return Response(result, status=status.HTTP_200_OK)
 
@@ -519,15 +536,34 @@ class BIDashboardExt(APIView):
         with connections['extdb1'].cursor() as cursor:
 
             if p01 != '0':
-                refCursor = cursor.connection.cursor()
+                if p01 == '13':
+                    refCursor = cursor.connection.cursor()
 
-                cursor.callproc(qrycalling, params + [refCursor] + [p05])
+                    #cursor.callproc(qrycalling, params + [refCursor] + [p05])
+                    oxqry = """
+                    SELECT ROWNUM AS ID, T1.* FROM (SELECT REFERENCIA AS SKU, DESCRIPCION AS DESCRIP, ABREVIATURA AS UM,
+                    CANT_VENDIDA AS CANTIDAD, NVL(PRECIO_VENTA, 0) AS PRECIO, NVL(FACTURA_TOTAL, 0) AS MONTO, CLIENTE, 
+                    NOMBRE_CLIENTE AS NOMCLI, NOM_VENDEDOR AS VENDEDOR, FECHA_FACTURA AS FECHA, NU_FACTURA_COMERCIAL AS IDDOC
+                    FROM DMC.LINAEE_DET_FACTURA_VW WHERE FECHA_FACTURA > TO_DATE(SYSDATE - 2) ORDER BY FECHA_FACTURA DESC,
+                    NU_FACTURA_COMERCIAL DESC) T1 WHERE ROWNUM <= 12"""
+                    #oxqry = oxqry1 + oxqry2 + oxqry3 + oxqry4 + oxqry5
+                    cursor.execute(oxqry)
 
-                descrip = refCursor.description
+                    descrip = refCursor.description
 
-                rows = refCursor.fetchall()
+                    rows = refCursor.fetchall()
 
-                result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+                    result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+                else:
+                    refCursor = cursor.connection.cursor()
+
+                    cursor.callproc(qrycalling, params + [refCursor] + [p05])
+
+                    descrip = refCursor.description
+
+                    rows = refCursor.fetchall()
+
+                    result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
             else:
                 r1 = cursor.var(float).var
                 r2 = cursor.var(float).var

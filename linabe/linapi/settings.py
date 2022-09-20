@@ -23,6 +23,7 @@ SECRET_KEY = environ.get("SECRET_KEY")
 DEBUG = (environ.get("APP_DEBUG", True) == '1')
 
 ALLOWED_HOSTS = ['*']
+# USE_X_FORWARDED_HOST = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -102,6 +103,7 @@ DATABASES = {
         'USER': environ.get('EXTDB1_USER'),
         'PASSWORD': environ.get('EXTDB1_USER_PW'),
         'HOST': environ.get('EXTDB1_HOST'),
+        #'HOST': '201.218.202.45',
         'PORT': environ.get('EXTDB1_PORT'),
     },
 }
@@ -192,6 +194,18 @@ STATIC_ROOT = '/linabe/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/linabe/media/'
+
+# IPWARE_META_PRECEDENCE_ORDER = (
+#     'HTTP_X_FORWARDED_FOR', 'X_FORWARDED_FOR',  # <client>, <proxy1>, <proxy2>
+#     'HTTP_CLIENT_IP',
+#     'HTTP_X_REAL_IP',
+#     'HTTP_X_FORWARDED',
+#     'HTTP_X_CLUSTER_CLIENT_IP',
+#     'HTTP_FORWARDED_FOR',
+#     'HTTP_FORWARDED',
+#     'HTTP_VIA',
+#     'REMOTE_ADDR',
+# )
 
 # PROXY_COUNT = 1
 # PROXY_TRUSTED = ['192.168.15.11']

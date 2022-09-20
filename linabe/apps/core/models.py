@@ -21,6 +21,32 @@ def img_profile_path(instance, filename):
 
     return os.path.join('images/profiles/', filename)
 
+
+# def colsToRemoveOrig(user, idVista):
+#     """Devuelve lista de columnas a excluir de una vista dada
+#     conforme al grupo del usuario en sesión"""
+#     colsToRemoveList = []
+
+#     groups = user.groups.values_list('id', flat=True)
+
+#     curgroups = list(groups)
+
+#     curgroup = 0
+
+#     if len(curgroups) > 0:
+#         curgroup = curgroups[0]
+
+#     if curgroup != 0:
+#         excludedCols = ExcludedCols.objects.filter(group__id = curgroup, vista__id = idVista).first()
+
+#         # Columnas a remover
+#         # colsToRemoveStr = 'COSTO_ADM, COSTO_PROM, COSTO_FOB, COSTO_CIF'
+#         colsToRemoveStr = excludedCols.col_list
+#         colsToRemoveStr = colsToRemoveStr.replace(' ', '')
+#         colsToRemoveList = colsToRemoveStr.split(',')
+
+#     return colsToRemoveList
+
 # Modelo para información de compañías
 class Cia(models.Model):
 
@@ -87,6 +113,43 @@ class User(AbstractUser):
     homelink = models.CharField('Default Home', max_length=100, default='/')
 
     modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
+
+    # def colsToRemove(self, idVista):
+    #     """Devuelve lista de columnas a excluir de una vista dada
+    #     conforme al grupo del usuario en sesión"""
+    #     colsToRemoveList = []
+
+    #     groups = self.groups.values_list('id', flat=True)
+
+    #     curgroups = list(groups)
+
+    #     curgroup = 0
+
+    #     if len(curgroups) > 0:
+    #         curgroup = curgroups[0]
+
+    #     if curgroup != 0:
+    #         excludedCols = ExcludedCols.objects.filter(group__id = curgroup, vista__id = idVista).first()
+
+    #         # Columnas a remover
+    #         # colsToRemoveStr = 'COSTO_ADM, COSTO_PROM, COSTO_FOB, COSTO_CIF'
+    #         colsToRemoveStr = excludedCols.col_list
+    #         colsToRemoveStr = colsToRemoveStr.replace(' ', '')
+    #         colsToRemoveList = colsToRemoveStr.split(',')
+
+    #     return colsToRemoveList
+
+    def colsToRemoveTmp(self, idVista):
+        """Devuelve lista de columnas a excluir de una vista dada
+        conforme al grupo del usuario en sesión"""
+        colsToRemoveStr = 'COSTO_PROM, COSTO_FOB, COSTO_CIF, COSTO_ADM'
+        colsToRemoveStr = colsToRemoveStr.replace(' ', '')
+        colsToRemoveList = colsToRemoveStr.split(',')
+
+        if self.groups.filter(name='gerencia') or self.is_superuser:
+            colsToRemoveList = []
+
+        return colsToRemoveList
 
     def __str__(self):
         return '{}'.format(self.get_username())
@@ -337,6 +400,21 @@ class VistaConfigUser(Common):
         db_table = 'core_vistaconfiguser'
         verbose_name = 'Configuración por Vista y Usuario'
         verbose_name_plural = 'Configuraciones por Vista y Usuario'
+
+# Modelo para indicar que columnas se excluyen por grupo
+class ExcludedCols(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name='Grupo')
+    vista = models.ForeignKey(Vista, on_delete=models.CASCADE, verbose_name='Vista')
+    col_list = models.CharField('Columnas', max_length=100, blank=True)
+    excluir = models.BooleanField('Excluir', default=True)
+
+    def __str__(self):
+        return 'Columnas a excluir para el grupo {} en la vista {}'.format(self.group.name, self.vista.name)
+
+    class Meta:
+        db_table = 'core_excludedcols'
+        verbose_name = 'Lista de columnas a excluir'
+        verbose_name_plural = 'Listas de columnas a excluir'
 
 
 # Modelo para manejo de Clientes, Proveedores, Bancos, Socios y similares
