@@ -141,6 +141,7 @@ class CatalogAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
+        idVista = 14
         # p01 - SKU exacto o parcial con %
         # p02 - Descripción parcial con %
         # p03 - Marca 
@@ -177,7 +178,7 @@ class CatalogAPIView(APIView):
 
         params = [p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12, p13, p14]
 
-        qrys = SQLQuery.objects.filter(vista=14)
+        qrys = SQLQuery.objects.filter(vista=idVista)
 
         result = []
         # qrycalling = 'DMC.LINAEE_QRYCATALOGO'
@@ -208,25 +209,13 @@ class CatalogAPIView(APIView):
 
             descrip = refCursor.description
 
-            colsToRemoveList = request.user.colsToRemoveTmp(14)
-
-            # curgroups = request.user.groups.values_list('id', flat=True)
-
-            # curgroup = 0
-            
-            # if len(curgroups) > 0:
-            #     curgroup = curgroups[0]
-
-            # # Columnas a remover
-            # colsToRemoveStr = 'COSTO_ADM, COSTO_PROM, COSTO_FOB, COSTO_CIF'
-            # colsToRemoveStr = colsToRemoveStr.replace(' ', '')
-            # colsToRemoveList = colsToRemoveStr.split(',')
-
             rows = refCursor.fetchall()
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
-            # Remueve las columnas indicadas
+            # Columnas a remover para esta vista y para el grupo del usuario en curso
+            colsToRemoveList = request.user.colsToRemoveTmp(idVista)
+            # Remueve las columnas indicadas en colsToRemoveList
             result = [{key : val for key, val in sub.items() if key not in colsToRemoveList} for sub in result]
 
         return Response(result, status=status.HTTP_200_OK)
@@ -372,6 +361,7 @@ class SaleDocsDAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
+        idVista = 17
         # p01 - Lista con los números de documentos a consultar
         # p15 - Tipo de documento: Cotización (COT), Pedido cotizado (PEDCOT), pedido confirmado (PEDCONF), factura (FAC)
         
@@ -387,7 +377,7 @@ class SaleDocsDAPIView(APIView):
 
         result = []
 
-        qrys = SQLQuery.objects.filter(vista=17)
+        qrys = SQLQuery.objects.filter(vista=idVista)
         qrycalling = qrys[0].content    # 'DMC.LINA_QRYSALEDOCSD'
 
         with connections['extdb1'].cursor() as cursor:
@@ -402,16 +392,22 @@ class SaleDocsDAPIView(APIView):
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
+            # Columnas a remover para esta vista y para el grupo del usuario en curso
+            colsToRemoveList = request.user.colsToRemoveTmp(idVista)
+            # Remueve las columnas indicadas en colsToRemoveList
+            result = [{key : val for key, val in sub.items() if key not in colsToRemoveList} for sub in result]
+
         return Response(result, status=status.HTTP_200_OK)
 
 
 class SalesDetailAPIView(APIView):
-    """Detalle de ventas"""
+    """Detalle de ventas por SKU"""
     # Vista 18
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
+        idVista = 18
         # p01 - Lista de SKUs
         # p02 - Lista de Marcas
         # p03 - Categoría
@@ -449,7 +445,7 @@ class SalesDetailAPIView(APIView):
 
         result = []
 
-        qrys = SQLQuery.objects.filter(vista=18)
+        qrys = SQLQuery.objects.filter(vista=idVista)
         qrycalling = qrys[0].content
 
         with connections['extdb1'].cursor() as cursor:
@@ -463,6 +459,11 @@ class SalesDetailAPIView(APIView):
             rows = refCursor.fetchall()
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+            # Columnas a remover para esta vista y para el grupo del usuario en curso
+            colsToRemoveList = request.user.colsToRemoveTmp(idVista)
+            # Remueve las columnas indicadas en colsToRemoveList
+            result = [{key : val for key, val in sub.items() if key not in colsToRemoveList} for sub in result]
 
         return Response(result, status=status.HTTP_200_OK)
 
@@ -537,23 +538,24 @@ class BIDashboardExt(APIView):
 
             if p01 != '0':
                 if p01 == '13':
-                    refCursor = cursor.connection.cursor()
+                    # refCursor = cursor.connection.cursor()
 
-                    #cursor.callproc(qrycalling, params + [refCursor] + [p05])
-                    oxqry = """
-                    SELECT ROWNUM AS ID, T1.* FROM (SELECT REFERENCIA AS SKU, DESCRIPCION AS DESCRIP, ABREVIATURA AS UM,
-                    CANT_VENDIDA AS CANTIDAD, NVL(PRECIO_VENTA, 0) AS PRECIO, NVL(FACTURA_TOTAL, 0) AS MONTO, CLIENTE, 
-                    NOMBRE_CLIENTE AS NOMCLI, NOM_VENDEDOR AS VENDEDOR, FECHA_FACTURA AS FECHA, NU_FACTURA_COMERCIAL AS IDDOC
-                    FROM DMC.LINAEE_DET_FACTURA_VW WHERE FECHA_FACTURA > TO_DATE(SYSDATE - 2) ORDER BY FECHA_FACTURA DESC,
-                    NU_FACTURA_COMERCIAL DESC) T1 WHERE ROWNUM <= 12"""
-                    #oxqry = oxqry1 + oxqry2 + oxqry3 + oxqry4 + oxqry5
-                    cursor.execute(oxqry)
+                    # #cursor.callproc(qrycalling, params + [refCursor] + [p05])
+                    # oxqry = """
+                    # SELECT ROWNUM AS ID, T1.* FROM (SELECT REFERENCIA AS SKU, DESCRIPCION AS DESCRIP, ABREVIATURA AS UM,
+                    # CANT_VENDIDA AS CANTIDAD, NVL(PRECIO_VENTA, 0) AS PRECIO, NVL(FACTURA_TOTAL, 0) AS MONTO, CLIENTE, 
+                    # NOMBRE_CLIENTE AS NOMCLI, NOM_VENDEDOR AS VENDEDOR, FECHA_FACTURA AS FECHA, NU_FACTURA_COMERCIAL AS IDDOC
+                    # FROM DMC.LINAEE_DET_FACTURA_VW WHERE FECHA_FACTURA > TO_DATE(SYSDATE - 2) ORDER BY FECHA_FACTURA DESC,
+                    # NU_FACTURA_COMERCIAL DESC) T1 WHERE ROWNUM <= 12"""
+                    # #oxqry = oxqry1 + oxqry2 + oxqry3 + oxqry4 + oxqry5
+                    # cursor.execute(oxqry)
 
-                    descrip = refCursor.description
+                    # descrip = refCursor.description
 
-                    rows = refCursor.fetchall()
+                    # rows = refCursor.fetchall()
 
-                    result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+                    # result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+                    result = []
                 else:
                     refCursor = cursor.connection.cursor()
 
@@ -567,9 +569,10 @@ class BIDashboardExt(APIView):
             else:
                 r1 = cursor.var(float).var
                 r2 = cursor.var(float).var
+                r3 = cursor.var(float).var
 
-                cursor.callproc(qrycalling, params + [r1, r2] )
+                cursor.callproc(qrycalling, params + [r1, r2, r3] )
 
-                result = [dict({'V1': r1.getvalue(), 'V2': r2.getvalue()})]
+                result = [dict({'V1': r1.getvalue(), 'V2': r2.getvalue(), 'V3': r3.getvalue()})]
 
         return Response(result, status=status.HTTP_200_OK)

@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12" md="3">
+      <v-col cols="12" md="4">
         <VentaTot
           card-type="V1"
           card-id="V1"
@@ -9,17 +9,25 @@
           card-color="green"
         />
       </v-col>
-      <v-col cols="12" md="3">
+      <v-col cols="12" md="4">
         <VentaTot
           card-type="V2"
           card-id="V2"
-          card-title="Ventas en proceso"
+          card-title="Costo promedio"
           card-color="blue"
         />
       </v-col>
-      <v-col cols="12" md="6">
-        <VentasRecientes />
+      <v-col cols="12" md="4">
+        <VentaTot
+          card-type="V3"
+          card-id="V3"
+          card-title="Ventas en proceso"
+          card-color="red"
+        />
       </v-col>
+      <!-- <v-col cols="12" md="6">
+        <VentasRecientes />
+      </v-col> -->
     </v-row>
     <v-row>
       <v-col cols="12" md="8">
@@ -83,7 +91,7 @@ import VentasPorMes from '../../components/linabi/dashboard/VentasPorMes.vue'
 import VentaRendimiento from '../../components/linabi/dashboard/VentaRendimiento.vue'
 // import AuxCard from '../../components/linabi/dashboard/AuxCard.vue'
 import VentaSKU from '../../components/linabi/dashboard/VentaSKU.vue'
-import VentasRecientes from '../../components/linabi/dashboard/VentasRecientes.vue'
+// import VentasRecientes from '../../components/linabi/dashboard/VentasRecientes.vue'
 
 export default {
   components: {
@@ -94,7 +102,7 @@ export default {
     VentaRendimiento,
     // AuxCard,
     VentaSKU,
-    VentasRecientes,
+    // VentasRecientes,
   },
   data() {
     return {

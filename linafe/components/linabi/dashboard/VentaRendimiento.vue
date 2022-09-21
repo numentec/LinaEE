@@ -151,7 +151,7 @@ const startDate = new Date(currentYear - 1, 0, 2).toISOString().substring(0, 10)
 const endDate = new Date().toISOString().substring(0, 10)
 
 export default {
-  name: 'VentasPie',
+  name: 'VentaRendimiento',
 
   components: {
     DxCircularGauge,

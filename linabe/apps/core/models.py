@@ -142,7 +142,12 @@ class User(AbstractUser):
     def colsToRemoveTmp(self, idVista):
         """Devuelve lista de columnas a excluir de una vista dada
         conforme al grupo del usuario en sesión"""
-        colsToRemoveStr = 'COSTO_PROM, COSTO_FOB, COSTO_CIF, COSTO_ADM'
+
+        colsToRemoveStr = 'COSTO'
+
+        if idVista == 14:
+            colsToRemoveStr = 'COSTO_PROM, COSTO_FOB, COSTO_CIF, COSTO_ADM'
+
         colsToRemoveStr = colsToRemoveStr.replace(' ', '')
         colsToRemoveList = colsToRemoveStr.split(',')
 

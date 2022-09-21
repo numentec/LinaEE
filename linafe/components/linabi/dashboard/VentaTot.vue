@@ -1,48 +1,62 @@
 /* eslint-disable no-console */
 <template>
   <v-card class="mx-auto my-4" :loading="loadingView" :color="cardColor" dark>
-    <v-card-title> {{ cardTitle }} </v-card-title>
-    <v-divider />
-    <v-card-title class="text-h4" v-text="dataSource"></v-card-title>
-    <v-card-subtitle> {{ curPeriodText }} </v-card-subtitle>
-    <v-divider />
-    <v-card-actions>
-      <v-menu
-        ref="dMenu"
-        v-model="dateMenu"
-        :close-on-content-click="false"
-        :return-value.sync="curPeriod"
-        transition="scale-transition"
-        offset-x
-        offset-y
-        min-width="auto"
-      >
-        <template v-slot:activator="{ on: menu, attrs }">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on: tooltip }">
-              <v-btn icon v-bind="attrs" v-on="{ ...tooltip, ...menu }">
-                <v-icon>mdi-calendar-refresh-outline</v-icon>
-              </v-btn>
+    <v-app-bar flat :color="cardColor">
+      <v-toolbar-title class="text-h6 white--text pl-0">
+        {{ cardTitle }}
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon @click.stop="descrip = !descrip">
+        <v-icon>{{ descrip ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+      </v-btn>
+    </v-app-bar>
+    <v-expand-transition>
+      <div v-show="descrip">
+        <v-divider />
+        <v-card-title class="text-h4" v-text="dataSource"></v-card-title>
+        <v-card-subtitle> {{ curPeriodText }} </v-card-subtitle>
+        <v-divider />
+        <v-card-actions>
+          <v-menu
+            ref="dMenu"
+            v-model="dateMenu"
+            :close-on-content-click="false"
+            :return-value.sync="curPeriod"
+            transition="scale-transition"
+            offset-x
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on: menu, attrs }">
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on: tooltip }">
+                  <v-btn icon v-bind="attrs" v-on="{ ...tooltip, ...menu }">
+                    <v-icon>mdi-calendar-refresh-outline</v-icon>
+                  </v-btn>
+                </template>
+                <span>Establecer periodo</span>
+              </v-tooltip>
             </template>
-            <span>Establecer periodo</span>
-          </v-tooltip>
-        </template>
-        <v-date-picker
-          v-model="curPeriod"
-          range
-          no-title
-          scrollable
-          locale="es-pa"
-          :color="`${cardColor} lighten-1`"
-        >
-          <v-spacer></v-spacer>
-          <v-btn text color="primary" @click="dateMenu = false">
-            Cancelar
-          </v-btn>
-          <v-btn text color="primary" @click="updatePeriod"> Aceptar </v-btn>
-        </v-date-picker>
-      </v-menu>
-    </v-card-actions>
+            <v-date-picker
+              v-model="curPeriod"
+              range
+              no-title
+              scrollable
+              locale="es-pa"
+              :color="`${cardColor} lighten-1`"
+            >
+              <v-spacer></v-spacer>
+              <v-btn text color="primary" @click="dateMenu = false">
+                Cancelar
+              </v-btn>
+              <v-btn text color="primary" @click="updatePeriod">
+                Aceptar
+              </v-btn>
+            </v-date-picker>
+          </v-menu>
+        </v-card-actions>
+      </div>
+    </v-expand-transition>
   </v-card>
 </template>
 
@@ -116,6 +130,7 @@ export default {
       perms: this.$auth.user.perms,
       dataSource: '$0',
       dateMenu: false,
+      descrip: false,
       curPeriod: [startDate, endDate],
     }
   },
