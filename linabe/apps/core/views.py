@@ -482,7 +482,7 @@ class VistaViewSet(CommonViewSet):
     serializer_class = serializers.VistaSerializer
     # permission_classes = (CustomDjangoModelPermissions, )
 
-    # lookup_value_regex = '\d+'
+    lookup_value_regex = '\d+'
 
     def get_queryset(self):
         colsExcluded = []
@@ -490,7 +490,7 @@ class VistaViewSet(CommonViewSet):
         pk = self.kwargs.get('pk')
 
         if pk:
-            colsExcluded = self.request.user.colsToRemoveTmp(pk)
+            colsExcluded = self.request.user.colsToRemoveTmp(int(pk))
 
         queryset = models.Vista.objects.prefetch_related(Prefetch(
             'configs_x_vista', queryset=models.VistaConfig.objects.exclude(configkey__in = colsExcluded)))
