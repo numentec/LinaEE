@@ -87,6 +87,10 @@ export default {
       type: String,
       default: 'green',
     },
+    // setPeriod: {
+    //   type: Array,
+    //   default: () => [startDate, endDate],
+    // },
   },
 
   async fetch() {
@@ -159,12 +163,24 @@ export default {
     refreshData() {
       this.$fetch()
     },
-    updatePeriod() {
-      this.$refs.dMenu.save(this.curPeriod)
+    updatePeriod(cP = this.curPeriod) {
+      if (JSON.stringify(cP) !== JSON.stringify(this.curPeriod)) {
+        this.curPeriod[0] = cP[0]
+        if (cP.length === 2) {
+          this.curPeriod[1] = cP[1]
+        }
+      }
+      this.$refs.dMenu.save(cP)
       this.refreshData()
     },
     formatLabel(pointInfo) {
       return `${pointInfo.valueText} (${pointInfo.percentText})`
+    },
+    updatePeriodExternal(extPeriod) {
+      this.curPeriod = extPeriod
+      this.updatePeriod()
+      // this.$refs.dMenu.save(this.curPeriod)
+      // this.refreshData()
     },
   },
 }

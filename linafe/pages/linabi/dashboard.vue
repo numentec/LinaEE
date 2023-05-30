@@ -1,7 +1,13 @@
 <template>
   <v-container fluid>
     <v-row dense align="start">
-      <v-col></v-col>
+      <v-col>
+        <v-card flat max-height="32" class="my-0 py-0">
+          <v-card-text>
+            <p class="text-h4 text--grey">SALES DASHBOARD</p>
+          </v-card-text>
+        </v-card>
+      </v-col>
       <v-col></v-col>
       <v-col align="end">
         <v-card outlined max-height="32" class="my-0 py-0">
@@ -71,44 +77,9 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="12" md="4">
-        <VentaTot
-          ref="vtot1"
-          card-type="V1"
-          card-id="V1"
-          card-title="Ventas del año"
-          card-color="green"
-        />
-      </v-col>
-      <v-col cols="12" md="4">
-        <VentaTot
-          ref="vtot2"
-          card-type="V2"
-          card-id="V2"
-          card-title="Costo promedio"
-          card-color="blue"
-        />
-      </v-col>
-      <v-col cols="12" md="4">
-        <VentaTot
-          ref="vtot3"
-          card-type="V3"
-          card-id="V3"
-          card-title="Ventas en proceso"
-          card-color="red"
-        />
-      </v-col>
-      <!-- <v-col cols="12" md="6">
-        <VentasRecientes />
-      </v-col> -->
-    </v-row>
-    <v-row>
-      <v-col cols="12" md="8">
-        <VentasPorMes ref="vpmes" arg-field="MES" val-field="VENTA" />
-      </v-col>
-      <v-col cols="12" md="4">
-        <venta-rendimiento ref="vrdto" qry-sel="10" />
-      </v-col>
+      <v-col cols="12" md="4"> </v-col>
+      <v-col cols="12" md="4"> </v-col>
+      <v-col cols="12" md="4"> </v-col>
     </v-row>
     <v-row>
       <v-col cols="12" md="4">
@@ -149,6 +120,14 @@
       </v-col>
     </v-row>
     <v-row>
+      <v-col cols="12" md="8">
+        <VentasPorMes ref="vpmes" arg-field="MES" val-field="VENTA" />
+      </v-col>
+      <v-col cols="12" md="4">
+        <venta-rendimiento ref="vrdto" qry-sel="10" />
+      </v-col>
+    </v-row>
+    <v-row>
       <v-col cols="12" md="4">
         <ventas-por-pais ref="vpais" @goView="goView" />
       </v-col>
@@ -160,7 +139,6 @@
 </template>
 
 <script>
-import VentaTot from '../../components/linabi/dashboard/VentaTot.vue'
 import VentasPie from '../../components/linabi/dashboard/VentasPie.vue'
 import VentasPorPais from '../../components/linabi/dashboard/VentasPorPais.vue'
 import VentasPorMes from '../../components/linabi/dashboard/VentasPorMes.vue'
@@ -178,7 +156,6 @@ export default {
   components: {
     VentasPorPais,
     VentasPie,
-    VentaTot,
     VentasPorMes,
     VentaRendimiento,
     // AuxCard,
