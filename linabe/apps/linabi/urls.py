@@ -21,4 +21,5 @@ urlpatterns = [
     path('clists/', views.CommonListsAPIView.as_view(), name='commonlists'),
     path('tallasbc/', views.TallasBCAPIView.as_view(), name='tallasbc'),
     path('extbidashboard/', views.BIDashboardExt.as_view(), name='extbidashboard'),
+    path('cxcantig/', views.CxCAntigAPIView.as_view(), name='cxcantig'),
 ]

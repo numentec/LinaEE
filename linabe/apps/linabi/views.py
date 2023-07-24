@@ -9,7 +9,7 @@ from . import models
 from . import serializers
 from ..core.views import CommonViewSet
 from ..core.models import SQLQuery
-
+from datetime import date
 
 class ListAsQuerySet(list):
     """Convertir una lista a queryset"""
@@ -574,5 +574,53 @@ class BIDashboardExt(APIView):
                 cursor.callproc(qrycalling, params + [r1, r2, r3] )
 
                 result = [dict({'V1': r1.getvalue(), 'V2': r2.getvalue(), 'V3': r3.getvalue()})]
+
+        return Response(result, status=status.HTTP_200_OK)
+
+class CxCAntigAPIView(APIView):
+    """Cuentas por cobrar por Antigüedad"""
+    # Vista 32
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        idVista = 32
+        # p01 - ID de compañía %
+        # p02 - Fecha hasta donde se quiere analizar la antigüedad <Date>
+        p01 = str(request.query_params.get('p01', '%')).lower().strip()
+        p02 = str(request.query_params.get('p02', '0')).lower().strip()
+
+        pvals = p01 + p02
+
+        if pvals == '%0':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+        
+        if p02 == '0':
+            p02 = date.today()
+
+        params = [p01, p02]
+
+        qrys = SQLQuery.objects.filter(vista=idVista)
+
+        result = []
+        # qrycalling = 'DMC.LINAEE_CXC_ANTIG'
+        qrycalling = qrys[0].content
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc(qrycalling, params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+            # Columnas a remover para esta vista y para el grupo del usuario en curso
+            colsToRemoveList = request.user.colsToRemoveTmp(idVista)
+            # Remueve las columnas indicadas en colsToRemoveList
+            result = [{key : val for key, val in sub.items() if key not in colsToRemoveList} for sub in result]
 
         return Response(result, status=status.HTTP_200_OK)
