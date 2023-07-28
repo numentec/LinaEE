@@ -586,24 +586,29 @@ class CxCAntigAPIView(APIView):
     def get(self, request, format=None):
         idVista = 32
         # p01 - ID de compañía %
-        # p02 - Fecha hasta donde se quiere analizar la antigüedad <Date>
+        # p12 - Fecha de inicio del periodo a analizar
+        # p13 - Fecha hasta donde se quiere analizar la antigüedad <Date>
         p01 = str(request.query_params.get('p01', '%')).lower().strip()
-        p02 = str(request.query_params.get('p02', '0')).lower().strip()
+        p12 = str(request.query_params.get('p12', '0')).lower().strip()
+        p13 = str(request.query_params.get('p13', '0')).lower().strip()
 
-        pvals = p01 + p02
+        pvals = p01 + p12 + p13
 
-        if pvals == '%0':
+        if pvals == '%00':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
-        
-        if p02 == '0':
-            p02 = date.today()
 
-        params = [p01, p02]
+        if p12 == '0':
+            p12 = date.today()
+
+        if p13 == '0':
+            p13 = date.today()
+
+        params = [p01, p12, p13]
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 
         result = []
-        # qrycalling = 'DMC.LINAEE_CXC_ANTIG'
+        # qrycalling = 'DMC.LINAEE_CXCANTIG'
         qrycalling = qrys[0].content
 
         with connections['extdb1'].cursor() as cursor:
