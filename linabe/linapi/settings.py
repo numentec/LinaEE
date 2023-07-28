@@ -23,6 +23,7 @@ SECRET_KEY = environ.get("SECRET_KEY")
 DEBUG = (environ.get("APP_DEBUG", True) == '1')
 
 ALLOWED_HOSTS = ['*']
+CORS_ALLOW_ALL_ORIGINS = True
 # USE_X_FORWARDED_HOST = True
 
 # Application definition
@@ -48,8 +49,8 @@ INSTALLED_APPS = [
     'apps.wms',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
+#CORS_ORIGIN_ALLOW_ALL = True
+#CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
