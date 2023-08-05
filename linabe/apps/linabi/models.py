@@ -108,11 +108,12 @@ class BIXLSXTemplate(Common):
 
     def __str_(self):
         return "Plantilla {}".format(self.name)
-#*********************** EDITAR UNIQUE EN COLUMNA **********************
+
+
 # Modelo para columnas incluidas en la plantilla de Excel
 class BIXLSXTemplateCol(Common):
     """Modelo para columnas incluidas en la plantilla xlsx en LinaBI"""
-    name = models.CharField("Columna", max_length=20, unique=True)
+    name = models.CharField("Columna", max_length=20)
     descrip = models.TextField("Descripción", blank = True)
     ordinal = models.IntegerField("Ordinal", default=0)
     posicion = models.IntegerField("Posición", default=1)
