@@ -103,8 +103,8 @@ DATABASES = {
         'NAME': environ.get('EXTDB1_NAME'),
         'USER': environ.get('EXTDB1_USER'),
         'PASSWORD': environ.get('EXTDB1_USER_PW'),
-        'HOST': environ.get('EXTDB1_HOST'),
-        #'HOST': '201.218.202.45',
+        #'HOST': environ.get('EXTDB1_HOST'),
+        'HOST': '201.218.202.45',
         'PORT': environ.get('EXTDB1_PORT'),
     },
 }

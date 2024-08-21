@@ -359,3 +359,49 @@ class ExtCountedProdsAPIView(APIView):
             response = self.handle_exception(exc)
 
         return response
+
+
+class QryBaseStockExtAPIView(APIView):
+    """Consultar stock base total (data externa)"""
+    # Vista 33
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        idVista = 33
+        # p01 - Código de barra o SKU
+        # p02 - Tipo de dato (BC o SKU)
+        # p03 - Compañía
+        # p04 - D = Disponible / T = Todo
+        
+        # p01 = str(request.query_params.get('p01', '0')).lower().strip()
+        # p02 = str(request.query_params.get('p02', 'BC')).strip()
+        # p03 = str(request.query_params.get('p03', '01')).strip()
+        # p04 = str(request.query_params.get('p04', 'T')).strip()
+
+        # pvals = p01 + p02 + p03 + p04
+
+        # if pvals == '0BC01T':
+        #     return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+
+        # params = [p01, p02, p03, p04]
+
+        result = []
+
+        qrys = SQLQuery.objects.filter(vista=idVista)
+        qrycalling = qrys[0].content    # 'DMC.LINAEE_QRYBASESTOCK'
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc(qrycalling, [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
