@@ -397,12 +397,17 @@ export default {
     TableSettings,
     LoadingView,
   },
+
+  props: {},
+
   async fetch() {
     if (!this.dataSource) {
       const fi = this.$route.query.fechini
       const ff = this.$route.query.fechfin
 
       this.curPeriod = [fi, ff]
+
+      this.filtered = this.$route.query.filtered
     }
 
     if (this.curPeriod.length === 1) {
@@ -415,11 +420,12 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
-      p05: 100000,
+      p05: this.filtered,
+      p06: 100000,
     }
 
     this.loadingMessage = 'Cargando...'
-
+    // Probar DataSource
     await this.$axios
       .get('linabi/extbidashboard/', {
         params: curparams,
@@ -491,6 +497,7 @@ export default {
       loadingMessage: 'Exportando...',
       noImgList: [],
       psize: 20,
+      filtered: false,
     }
   },
   computed: {
@@ -514,12 +521,14 @@ export default {
     if (this.dataSource) {
       const fi = this.$route.query.fechini
       const ff = this.$route.query.fechfin
+      const prevFiltered = this.filtered
+      this.filtered = this.$route.query.filtered
 
       if (fi && ff) {
         const qryP = [fi, ff]
         const cP = this.curPeriod
 
-        if (!arrayEquals(qryP, cP)) {
+        if (!arrayEquals(qryP, cP) || prevFiltered !== this.filtered) {
           this.curPeriod = qryP
           this.$fetch()
         }
@@ -527,6 +536,10 @@ export default {
     }
   },
   methods: {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
+      this.$fetch()
+    },
     goBack() {
       this.$router.back()
     },

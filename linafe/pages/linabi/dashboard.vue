@@ -182,22 +182,25 @@ export default {
         },
       })
     },
-    updatePeriod() {
-      this.dateMenu = false
+    // upP() {
+    //   this.dateMenu = false
+    //   // this.$refs.dMenuFechfin
+    //   this.$refs.vtot1.updatePeriod(this.globalPeriod)
+    //   this.$refs.vtot2.updatePeriod(this.globalPeriod)
+    //   this.$refs.vtot3.updatePeriod(this.globalPeriod)
 
-      this.$refs.vtot1.updatePeriod(this.globalPeriod)
-      this.$refs.vtot2.updatePeriod(this.globalPeriod)
-      this.$refs.vtot3.updatePeriod(this.globalPeriod)
+    //   this.$refs.vpie1.updatePeriod(this.globalPeriod)
+    //   this.$refs.vpie2.updatePeriod(this.globalPeriod)
+    //   this.$refs.vpie3.updatePeriod(this.globalPeriod)
 
-      this.$refs.vpie1.updatePeriod(this.globalPeriod)
-      this.$refs.vpie2.updatePeriod(this.globalPeriod)
-      this.$refs.vpie3.updatePeriod(this.globalPeriod)
-
-      this.$refs.vpmes.updatePeriod(this.globalPeriod)
-      this.$refs.vrdto.updatePeriod(this.globalPeriod)
-      this.$refs.vpais.updatePeriod(this.globalPeriod)
-      this.$refs.vsku.updatePeriod(this.globalPeriod)
-    },
+    //   this.$refs.vpmes.updatePeriod(this.globalPeriod)
+    //   this.$refs.vpais.updatePeriod(this.globalPeriod)
+    //   this.$refs.vsku.updatePeriod(this.globalPeriod)
+    //   // this.$refs.vrdto.updatePeriod(this.globalPeriod)
+    // },
+    // updatePeriod() {
+    //   setTimeout(this.upP)
+    // },
   },
 }
 </script>

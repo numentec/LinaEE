@@ -205,7 +205,8 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
-      p05: 10,
+      p05: this.filtered,
+      p06: 10,
     }
 
     this.loadingView = true
@@ -241,6 +242,7 @@ export default {
       menuConfig: false,
       psize: 10,
       path: '/linabi/dashboardqueries/skusales/',
+      filtered: false,
     }
   },
   computed: {
@@ -267,10 +269,15 @@ export default {
     this.loadingView = false
   },
   methods: {
-    refreshData() {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
       this.$fetch()
     },
-    updatePeriod() {
+    updatePeriod(up = []) {
+      if (up.length > 0) {
+        this.curPeriod[0] = up[0]
+        this.curPeriod[1] = up[1]
+      }
       this.$refs.dMenu.save(this.curPeriod)
       this.refreshData()
     },
@@ -279,10 +286,13 @@ export default {
     },
     goView() {
       const curPeriod = this.curPeriod
+      const filtered = this.filtered
+
       this.$emit('goView', {
         argField: 'SKU',
         curPeriod,
         path: '/linabi/dashboardqueries/skusales/',
+        filtered,
       })
       // this.$router.push('/linabi/dashboardqueries/skusales/')
     },

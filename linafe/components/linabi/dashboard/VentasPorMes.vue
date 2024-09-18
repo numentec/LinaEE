@@ -155,6 +155,7 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
+      p05: this.filtered,
     }
 
     this.loadingView = true
@@ -199,6 +200,7 @@ export default {
       umbral: 0,
       curPeriod: [startDate, endDate],
       dateMenu: false,
+      filtered: false,
     }
   },
   computed: {
@@ -225,13 +227,18 @@ export default {
     this.loadingView = false
   },
   methods: {
-    refreshData() {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
       this.$fetch()
     },
     formatLabel(pointInfo) {
       return `${pointInfo.valueText} (${pointInfo.percentText})`
     },
-    updatePeriod() {
+    updatePeriod(up = []) {
+      if (up.length > 0) {
+        this.curPeriod[0] = up[0]
+        this.curPeriod[1] = up[1]
+      }
       this.$refs.dMenu.save(this.curPeriod)
       this.refreshData()
     },

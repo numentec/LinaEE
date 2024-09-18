@@ -10,6 +10,7 @@
     <v-card-text>
       <DxPieChart
         id="pieId"
+        ref="vpie1"
         :data-source="dataSource"
         :palette="piePalette"
         :title="setTitle"
@@ -79,6 +80,20 @@
         </v-date-picker>
       </v-menu>
       <v-spacer></v-spacer>
+      <!-- <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            color="success"
+            v-bind="attrs"
+            v-on="on"
+            @click="dsFilter"
+          >
+            <v-icon>mdi-test-tube</v-icon>
+          </v-btn>
+        </template>
+        <span>Aplicar filtro</span>
+      </v-tooltip> -->
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -100,7 +115,9 @@
             color="success"
             v-bind="attrs"
             v-on="on"
-            @click.stop="$emit('goView', { argField, curPeriod, path })"
+            @click.stop="
+              $emit('goView', { argField, curPeriod, path, filtered })
+            "
           >
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
@@ -113,6 +130,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import DataSource from 'devextreme/data/data_source'
 import DxPieChart, {
   DxSeries,
   DxLabel,
@@ -183,7 +201,8 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
-      p05: '1000000',
+      p05: this.filtered,
+      p06: '1000000',
     }
 
     this.loadingView = true
@@ -193,9 +212,18 @@ export default {
         params: curparams,
       })
       .then((response) => {
-        this.dataSource = response.data
-
-        const xumbral = this.dataSource[10][this.valField]
+        this.dataSource = new DataSource({
+          store: {
+            type: 'array',
+            key: this.argField,
+            data: response.data,
+          },
+        })
+      })
+      .then(() => {
+        // this.dataSource = response.data
+        const dsitems = this.dataSource.items()
+        const xumbral = dsitems[10][this.valField]
 
         this.umbral = xumbral
 
@@ -207,12 +235,13 @@ export default {
     return {
       loadingView: false,
       perms: this.$auth.user.perms,
-      dataSource: [],
+      dataSource: null,
       showLegend: false,
       umbral: 0,
       curPeriod: [startDate, endDate],
       dateMenu: false,
       path: '/linabi/dashboardqueries/pivotsales/',
+      filtered: false,
     }
   },
   computed: {
@@ -239,10 +268,15 @@ export default {
     this.loadingView = false
   },
   methods: {
-    refreshData() {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
       this.$fetch()
     },
-    updatePeriod() {
+    updatePeriod(up = []) {
+      if (up.length > 0) {
+        this.curPeriod[0] = up[0]
+        this.curPeriod[1] = up[1]
+      }
       this.$refs.dMenu.save(this.curPeriod)
       this.refreshData()
     },
@@ -268,6 +302,19 @@ export default {
     toggleVisibility(item) {
       item.isVisible() ? item.hide() : item.show()
     },
+    // dsFilter() {
+    //   this.filtered = !this.filtered
+
+    //   const dS = this.dataSource
+
+    //   if (this.filtered) {
+    //     dS.filter(['MARCA_EXT', 'contains', 'EXTERNA'])
+    //   } else {
+    //     dS.filter(null)
+    //   }
+
+    //   dS.load()
+    // },
   },
 }
 </script>

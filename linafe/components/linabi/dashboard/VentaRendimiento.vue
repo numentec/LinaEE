@@ -180,6 +180,7 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.fechIni,
       p04: this.fechFin,
+      p05: this.filtered,
     }
 
     this.loadingView = true
@@ -231,6 +232,7 @@ export default {
       menuDateYear: false,
       activePickerYear: null,
       menuFechfin: false,
+      filtered: false,
     }
   },
   computed: {
@@ -265,11 +267,16 @@ export default {
       // this.loadingView = true
       // this.$router.push(this.el.link)
     },
-    refreshData() {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
       this.$fetch()
     },
-    updatePeriod() {
-      this.$refs.dMenuFechfin.save(this.fechFin)
+    updatePeriod(up = []) {
+      if (up.length > 0) {
+        this.fechIni = up[0]
+        this.fechFin = up[1]
+      }
+      // this.$refs.dMenuFechfin.save(this.fechFin)
       this.menuFechfin = false
       this.dateMenu = false
       this.refreshData()

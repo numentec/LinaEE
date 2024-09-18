@@ -90,7 +90,8 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
-      p05: 12,
+      po5: this.filtered,
+      p06: 12,
     }
 
     this.loadingView = true
@@ -120,6 +121,7 @@ export default {
       dataSource: null,
       curPeriod: [startDate, endDate],
       psize: 3,
+      filtered: false,
     }
   },
   computed: {
@@ -130,7 +132,8 @@ export default {
     this.loadingView = false
   },
   methods: {
-    refreshData() {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
       this.$fetch()
     },
   },

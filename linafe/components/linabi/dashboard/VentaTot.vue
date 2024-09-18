@@ -13,7 +13,7 @@
     <v-expand-transition>
       <div v-show="descrip">
         <v-divider />
-        <v-card-title class="text-h4" v-text="dataSource"></v-card-title>
+        <v-card-title class="text-h4">{{ dataSource }}</v-card-title>
         <v-card-subtitle> {{ curPeriodText }} </v-card-subtitle>
         <v-divider />
         <v-card-actions>
@@ -104,6 +104,7 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
+      p05: this.filtered,
     }
 
     this.loadingView = true
@@ -136,20 +137,21 @@ export default {
       dateMenu: false,
       descrip: false,
       curPeriod: [startDate, endDate],
+      filtered: false,
     }
   },
   computed: {
     ...mapGetters('sistema', ['getCurCia']),
     curPeriodText() {
-      // const fini = new Date(this.curPeriod[0] + 'T00:00:00').toLocaleDateString(
-      //   'es-es'
-      // )
-      // const ffin = new Date(this.curPeriod[1] + 'T00:00:00').toLocaleDateString(
-      //   'es-es'
-      // )
+      const fini = new Date(this.curPeriod[0] + 'T00:00:00').toLocaleDateString(
+        'es-es'
+      )
+      const ffin = new Date(this.curPeriod[1] + 'T00:00:00').toLocaleDateString(
+        'es-es'
+      )
 
-      // return fini + ' ~ ' + ffin
-      return this.curPeriod.join(' ~ ')
+      return fini + ' ~ ' + ffin
+      // return this.curPeriod.join(' ~ ')
     },
   },
   activated() {
@@ -160,10 +162,15 @@ export default {
       // this.loadingView = true
       // this.$router.push(this.el.link)
     },
-    refreshData() {
-      this.$fetch()
+    async refreshData(updateFilter = false) {
+      this.filtered = updateFilter
+      await this.$fetch()
     },
     updatePeriod(cP = this.curPeriod) {
+      // if (cP.length > 0) {
+      //   this.curPeriod[0] = cP[0]
+      //   this.curPeriod[1] = cP[1]
+      // }
       if (JSON.stringify(cP) !== JSON.stringify(this.curPeriod)) {
         this.curPeriod[0] = cP[0]
         if (cP.length === 2) {

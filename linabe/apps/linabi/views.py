@@ -509,27 +509,31 @@ class BIDashboardExt(APIView):
         # p02 - Cia en curso
         # p03 - Fecha inicial del periodo a consultar
         # p04 - Fecha final del periodo a consultar
-        # p05 - Cantidad de registros a recuperar (SQL LIMIT)
-        
+        # p05 - Filtro adicional para el tipo de marca (Marca externa)
+        # p06 - Cantidad de registros a recuperar (SQL LIMIT)
+
+
         p01 = str(request.query_params.get('p01', '1')).lower().strip()
         p02 = str(request.query_params.get('p02', '01')).lower().strip()
         p03 = str(request.query_params.get('p03', '2022-01-01')).strip()
         p04 = str(request.query_params.get('p04', '2022-03-31')).strip()
-        p05 = str(request.query_params.get('p05', '1000')).strip()
+        p05 = str(request.query_params.get('p05', 'false')).strip()
+        p06 = str(request.query_params.get('p06', '1000')).strip()
+        
 
-        pvals = p01 + p02 + p03 + p04 + p05
+        pvals = p01 + p02 + p03 + p04 + p05 + p06
 
-        if pvals == '1012022-01-012022-03-311000':
+        if pvals == '1012022-01-012022-03-31false1000':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         qrys = SQLQuery.objects.filter(vista=31)
 
         # Preparar parametros
         if p01 != '0':
-            params = [p01, p02, p03, p04]
+            params = [p01, p02, p03, p04, p05, p06]
             qrycalling = qrys[0].content
         else:
-            params = [p02, p03, p04]
+            params = [p02, p03, p04, p05]
             qrycalling = qrys[1].content
 
         result = []
@@ -559,7 +563,7 @@ class BIDashboardExt(APIView):
                 else:
                     refCursor = cursor.connection.cursor()
 
-                    cursor.callproc(qrycalling, params + [refCursor] + [p05])
+                    cursor.callproc(qrycalling, params + [refCursor])
 
                     descrip = refCursor.description
 

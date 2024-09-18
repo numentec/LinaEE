@@ -82,7 +82,9 @@
             color="success"
             v-bind="attrs"
             v-on="on"
-            @click.stop="$emit('goView', { argField: 'PAIS', curPeriod, path })"
+            @click.stop="
+              $emit('goView', { argField: 'PAIS', curPeriod, path, filtered })
+            "
           >
             <v-icon>mdi-open-in-new</v-icon>
           </v-btn>
@@ -152,6 +154,7 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
+      p05: this.filtered,
     }
 
     this.loadingView = true
@@ -198,6 +201,7 @@ export default {
       curPeriod: [startDate, endDate],
       dateMenu: false,
       path: '/linabi/dashboardqueries/pivotsales/',
+      filtered: false,
     }
   },
   computed: {
@@ -237,10 +241,15 @@ export default {
       }
       return null
     },
-    refreshData() {
+    refreshData(updateFilter = false) {
+      this.filtered = updateFilter
       this.$fetch()
     },
-    updatePeriod() {
+    updatePeriod(up = []) {
+      if (up.length > 0) {
+        this.curPeriod[0] = up[0]
+        this.curPeriod[1] = up[1]
+      }
       this.$refs.dMenu.save(this.curPeriod)
       this.refreshData()
     },

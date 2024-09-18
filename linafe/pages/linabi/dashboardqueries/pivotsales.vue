@@ -44,6 +44,22 @@
                   Limpiar Datos
                 </v-list-item-title>
               </v-list-item>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-expand-all-outline</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click.stop="expandAll">
+                  Expandir todo
+                </v-list-item-title>
+              </v-list-item>
+              <v-list-item link>
+                <v-list-item-icon>
+                  <v-icon>mdi-collapse-all-outline</v-icon>
+                </v-list-item-icon>
+                <v-list-item-title @click.stop="collapseAll">
+                  Contraer todo
+                </v-list-item-title>
+              </v-list-item>
               <v-list-group prepend-icon="mdi-export" no-action>
                 <template v-slot:activator>
                   <v-list-item>
@@ -185,14 +201,20 @@ export default {
 
     if (this.dataSource) {
       fields = this.dataSource.fields()
+      // eslint-disable-next-line no-console
+      // console.log(fields)
     } else {
       const fi = this.$route.query.fechini
       const ff = this.$route.query.fechfin
       const crow = this.$route.query.row
 
+      this.filtered = this.$route.query.filtered
+
       this.curPeriod = [fi, ff]
 
       fields = setFields(crow)
+      // eslint-disable-next-line no-console
+      // console.log(fields)
     }
 
     if (this.curPeriod.length === 1) {
@@ -205,6 +227,7 @@ export default {
       p02: this.getCurCia.extrel,
       p03: this.curPeriod[0],
       p04: this.curPeriod[1],
+      p05: this.filtered,
     }
 
     await this.renewStore(curparams).then((store) => {
@@ -227,6 +250,7 @@ export default {
       snackbar: false,
       busyWith: false,
       loadingMessage: 'Exportando...',
+      filtered: false,
     }
   },
   computed: {
@@ -247,6 +271,8 @@ export default {
       const fi = this.$route.query.fechini
       const ff = this.$route.query.fechfin
       const crow = this.$route.query.row
+      const prevFiltered = this.filtered
+      this.filtered = this.$route.query.filtered
 
       if (fi && ff && crow) {
         const qryP = [fi, ff]
@@ -258,7 +284,7 @@ export default {
         this.curRow = crow
         this.curPeriod = qryP
 
-        if (!arrayEquals(qryP, cP)) {
+        if (!arrayEquals(qryP, cP) || prevFiltered !== this.filtered) {
           this.$fetch()
         } else {
           this.dataSource.load()
@@ -275,6 +301,7 @@ export default {
           p02: this.getCurCia.extrel,
           p03: qryP[0],
           p04: qryP[1],
+          p05: this.filtered,
         }
 
         this.loadingMessage = 'Cargando...'
@@ -296,6 +323,18 @@ export default {
     },
     clearData() {
       this.dataSource = null
+      this.menuFilter = false
+    },
+    expandAll() {
+      const rowField = this.$route.query.row
+      this.dataSource.expandAll('FECHA')
+      this.dataSource.expandAll(rowField)
+      this.menuFilter = false
+    },
+    collapseAll() {
+      const rowField = this.$route.query.row
+      this.dataSource.collapseAll('FECHA')
+      this.dataSource.collapseAll(rowField)
       this.menuFilter = false
     },
     updatePeriod() {

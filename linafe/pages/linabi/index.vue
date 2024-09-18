@@ -7,6 +7,12 @@
         <v-card outlined max-height="32" class="my-0 py-0">
           <v-card-actions class="my-0 py-0">
             <v-spacer></v-spacer>
+            <v-card-text
+              v-show="filtered"
+              class="text-h6 my-0 py-0 grey--text text--lighten-1"
+            >
+              Marcas Externas
+            </v-card-text>
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -15,9 +21,14 @@
                   v-bind="attrs"
                   class="my-0"
                   v-on="on"
-                  @click.stop="showLegend = !showLegend"
+                  @click.stop="filterMarcaExt"
                 >
-                  <v-icon>mdi-view-gallery-outline</v-icon>
+                  <v-icon v-show="filtered" color="error"
+                    >mdi-filter-remove-outline</v-icon
+                  >
+                  <v-icon v-show="!filtered" color="success"
+                    >mdi-filter-check-outline</v-icon
+                  >
                 </v-btn>
               </template>
               <span>Filtrar por tipo de marca</span>
@@ -190,6 +201,7 @@ export default {
       page_name: 'BI Dashboard',
       globalPeriod: [startDate, endDate],
       dateMenu: false,
+      filtered: false,
     }
   },
   created() {},
@@ -202,24 +214,46 @@ export default {
           row: obj.argField,
           fechini: obj.curPeriod[0],
           fechfin: obj.curPeriod[1],
+          filtered: obj.filtered,
         },
       })
     },
-    updatePeriod() {
+    upP() {
       this.dateMenu = false
-
-      this.$refs.vtot1.updatePeriod(this.globalPeriod)
-      this.$refs.vtot2.updatePeriod(this.globalPeriod)
-      this.$refs.vtot3.updatePeriod(this.globalPeriod)
+      // this.$refs.dMenuFechfin
+      this.$refs.vtot1.updatePeriodExternal(this.globalPeriod)
+      this.$refs.vtot2.updatePeriodExternal(this.globalPeriod)
+      this.$refs.vtot3.updatePeriodExternal(this.globalPeriod)
 
       this.$refs.vpie1.updatePeriod(this.globalPeriod)
       this.$refs.vpie2.updatePeriod(this.globalPeriod)
       this.$refs.vpie3.updatePeriod(this.globalPeriod)
 
       this.$refs.vpmes.updatePeriod(this.globalPeriod)
-      this.$refs.vrdto.updatePeriod(this.globalPeriod)
       this.$refs.vpais.updatePeriod(this.globalPeriod)
       this.$refs.vsku.updatePeriod(this.globalPeriod)
+      // this.$refs.vrdto.updatePeriod(this.globalPeriod)
+    },
+    updatePeriod() {
+      setTimeout(this.upP)
+    },
+    filterMarcaExt() {
+      this.dateMenu = false
+
+      this.filtered = !this.filtered
+
+      this.$refs.vtot1.refreshData(this.filtered)
+      this.$refs.vtot2.refreshData(this.filtered)
+      this.$refs.vtot3.refreshData(this.filtered)
+
+      this.$refs.vpie1.refreshData(this.filtered)
+      this.$refs.vpie2.refreshData(this.filtered)
+      this.$refs.vpie3.refreshData(this.filtered)
+
+      this.$refs.vpmes.refreshData(this.filtered)
+      this.$refs.vpais.refreshData(this.filtered)
+      this.$refs.vsku.refreshData(this.filtered)
+      this.$refs.vrdto.refreshData(this.filtered)
     },
   },
 }
