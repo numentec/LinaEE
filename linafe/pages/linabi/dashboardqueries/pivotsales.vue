@@ -326,9 +326,17 @@ export default {
       this.menuFilter = false
     },
     expandAll() {
-      const rowField = this.$route.query.row
       this.dataSource.expandAll('FECHA')
-      this.dataSource.expandAll(rowField)
+
+      const fields = this.dataSource.fields()
+      fields.forEach((obj) => {
+        if ('area' in obj) {
+          if (obj.area === 'row') {
+            this.dataSource.expandAll(obj.dataField)
+          }
+        }
+      })
+
       this.menuFilter = false
     },
     collapseAll() {

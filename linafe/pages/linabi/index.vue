@@ -6,13 +6,13 @@
       <v-col align="end">
         <v-card outlined max-height="32" class="my-0 py-0">
           <v-card-actions class="my-0 py-0">
-            <v-spacer></v-spacer>
             <v-card-text
               v-show="filtered"
               class="text-h6 my-0 py-0 grey--text text--lighten-1"
             >
               Marcas Externas
             </v-card-text>
+            <v-spacer></v-spacer>
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -31,7 +31,7 @@
                   >
                 </v-btn>
               </template>
-              <span>Filtrar por tipo de marca</span>
+              <span>Filtro marca externa</span>
             </v-tooltip>
             <v-menu
               ref="dMenu"
