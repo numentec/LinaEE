@@ -14,6 +14,7 @@ export const state = () => ({
   listed: false,
   error: null,
   variants: [],
+  variants_colors: [],
   fotos: {},
   loadingView: false,
   slidecurkey: '',
@@ -52,6 +53,9 @@ export const mutations = {
   },
   SET_VARIANTS(state, payload) {
     state.variants = payload
+  },
+  SET_VARIANTS_COLORS(state, payload) {
+    state.variants_colors = payload
   },
   SET_FOTOS(state, payload) {
     state.fotos = payload
@@ -133,18 +137,45 @@ export const actions = {
     commit('SET_VARIANTS', payload)
   },
 
+  setVariantsColors({ commit }, payload) {
+    commit('SET_VARIANTS_COLORS', payload)
+  },
+
   setFotos({ commit }, payload) {
     commit('SET_FOTOS', payload)
   },
 
   async fetchVariants({ commit }, payload) {
     const sku = payload.sku.toString()
+    const cv = { name: payload.cv.toString() }
+
+    if (cv.name === 'COLOR') {
+      cv.endpoint = 'linabi/coloresbc'
+      // cv.mutation = 'SET_VARIANTS_COLORS'
+      cv.mutation = 'SET_VARIANTS'
+    } else {
+      cv.endpoint = 'linabi/tallasbc'
+      cv.mutation = 'SET_VARIANTS'
+    }
+
     return await this.$axios
-      .get('linabi/tallasbc', {
+      .get(cv.endpoint, {
         params: { sku },
       })
       .then((response) => {
-        commit('SET_VARIANTS', response.data)
+        commit(cv.mutation, response.data)
+        return response.data
+      })
+  },
+
+  async fetchVariantsColors({ commit }, payload) {
+    const sku = payload.sku.toString()
+    return await this.$axios
+      .get('linabi/colorsbc', {
+        params: { sku },
+      })
+      .then((response) => {
+        commit('SET_VARIANTS_COLORS', response.data)
         return response.data
       })
   },
@@ -280,6 +311,18 @@ export const getters = {
   },
   getVariants(state) {
     return state.variants
+  },
+  getAllVariantsColors(state) {
+    return async (sku) => {
+      return await this.$axios
+        .get('linabi/colorsbc', {
+          params: { sku },
+        })
+        .then((response) => response.data)
+    }
+  },
+  getVariantsColors(state) {
+    return state.variants_colors
   },
   getFotos(state) {
     return state.fotos

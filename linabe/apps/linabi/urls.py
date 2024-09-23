@@ -20,6 +20,7 @@ urlpatterns = [
     path('storagexloc/', views.StoragexlocAPIView.as_view(), name='storagexloc'),
     path('clists/', views.CommonListsAPIView.as_view(), name='commonlists'),
     path('tallasbc/', views.TallasBCAPIView.as_view(), name='tallasbc'),
+    path('coloresbc/', views.ColoresBCAPIView.as_view(), name='coloresbc'),
     path('extbidashboard/', views.BIDashboardExt.as_view(), name='extbidashboard'),
     path('cxcantig/', views.CxCAntigAPIView.as_view(), name='cxcantig'),
 ]

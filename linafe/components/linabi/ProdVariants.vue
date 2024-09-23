@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 <template>
   <div>
-    <h4>{{ variantTitle }}</h4>
+    <h4>{{ curVariant.title }}</h4>
     <DxDataGrid :data-source="dataSource" :show-borders="true">
-      <DxColumn data-field="TALLA" :width="100" />
+      <DxColumn :data-field="curVariant.data_field" :width="100" />
       <!-- <DxColumn data-field="BARCODE" /> -->
       <DxColumn
         data-field="BARCODE"
@@ -30,9 +30,9 @@ export default {
       type: String,
       default: '',
     },
-    variantTitle: {
-      type: String,
-      default: 'Variante',
+    curVariant: {
+      type: Object,
+      default: () => {},
     },
   },
   computed: {
@@ -46,11 +46,12 @@ export default {
   },
   methods: {
     fetchVariants(sku) {
+      const endpoint = this.curVariant.endpoint
       const ax = this.$axios
 
       async function load() {
         return await ax
-          .get('linabi/tallasbc', {
+          .get(endpoint, {
             params: { sku },
           })
           .then((response) => response.data)

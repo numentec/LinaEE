@@ -89,6 +89,14 @@
                     <v-list-item-title>Variantes</v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
+                <v-list-item v-show="expDetail">
+                  <v-list-item-action>
+                    <v-radio-group v-model="cur_variante">
+                      <v-radio label="Tallas" value="TALLA"></v-radio>
+                      <v-radio label="Colores" value="COLOR"></v-radio>
+                    </v-radio-group>
+                  </v-list-item-action>
+                </v-list-item>
                 <v-list-item link>
                   <v-list-item-content>
                     <v-list-item-title @click.stop="exportGrid(1)">
@@ -373,10 +381,7 @@
             </template>
           </DxSummary>
           <template #mdTemplate="{ data }">
-            <ProdVariants
-              :variant-data="data.data.SKU"
-              :variant-title="'Códigos de Barra por Talla'"
-            />
+            <ProdVariants :variant-data="data.data.SKU" :cur-variant="curVar" />
           </template>
           <template #imgCellTemplate="{ data }">
             <ImgForGrid
@@ -592,6 +597,7 @@ export default {
       selFunction,
       dataSource: null,
       variantes: false,
+      cur_variante: 'TALLA',
       menuConf: false,
       snackbar: false,
       setConf: {
@@ -654,7 +660,9 @@ export default {
       if (this.menuFilter) {
         if (this.$refs[curGridRefKey]) {
           const grd = this.$refs[curGridRefKey].instance
-          result = grd.columnOption('TALLA', 'visible')
+          result =
+            grd.columnOption('TALLA', 'visible') ||
+            grd.columnOption('COLORES', 'visible')
         }
         if (!result) {
           this.makeVariantFalse()
@@ -674,6 +682,21 @@ export default {
           value: ['FOTO', 'anyof', this.noImgList],
         },
       ]
+    },
+    curVar() {
+      const cv = {}
+
+      if (this.cur_variante === 'COLOR') {
+        cv.data_field = 'COLOR'
+        cv.endpoint = 'linabi/coloresbc'
+        cv.title = 'Códigos de Barra por Color'
+      } else {
+        cv.data_field = 'TALLA'
+        cv.endpoint = 'linabi/tallasbc'
+        cv.title = 'Códigos de Barra por Talla'
+      }
+
+      return cv
     },
   },
   created() {
@@ -881,7 +904,8 @@ export default {
           const worksheet = workbook.addWorksheet(savingFilename)
           if (this.variantes) {
             // Exportar a Excel con detalle de códigos de barra
-            this.fetchVariants({ sku: selectedRows }).then((vv) => {
+            const cv = this.cur_variante
+            this.fetchVariants({ sku: selectedRows, cv }).then((vv) => {
               this.doExportExcel(workbook, worksheet, savingFilename, tLC, vv)
             })
           } else {
@@ -942,7 +966,8 @@ export default {
 
                 if (this.variantes) {
                   // Exportar a Excel con detalle de códigos de barra
-                  this.fetchVariants({ sku: selectedRows }).then((vv) => {
+                  const cv = this.cur_variante
+                  this.fetchVariants({ sku: selectedRows, cv }).then((vv) => {
                     this.doExportExcel(
                       workbook,
                       worksheet,
@@ -1119,11 +1144,22 @@ export default {
               }
             }
 
-            if (gridCell.column.dataField === 'TALLA' && vv.length > 0) {
-              masterRows.push({
-                rowIndex: excelCell.fullAddress.row + 1,
-                data: gridCell.data,
-              })
+            if (this.cur_variante === 'TALLA') {
+              if (gridCell.column.dataField === 'TALLA' && vv.length > 0) {
+                masterRows.push({
+                  rowIndex: excelCell.fullAddress.row + 1,
+                  data: gridCell.data,
+                })
+              }
+            }
+
+            if (this.cur_variante === 'COLOR') {
+              if (gridCell.column.dataField === 'COLORES' && vv.length > 0) {
+                masterRows.push({
+                  rowIndex: excelCell.fullAddress.row + 1,
+                  data: gridCell.data,
+                })
+              }
             }
           }
           if (customTemplate) {
@@ -1174,7 +1210,7 @@ export default {
               // )
               const prodSKU = masterRows[i].data.SKU
 
-              const columns = ['TALLA', 'BARCODE']
+              const columns = [this.cur_variante, 'BARCODE']
 
               const row = insertRow(masterRows[i].rowIndex + i, offset++, 2)
               row.height = 15
