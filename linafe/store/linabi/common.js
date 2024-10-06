@@ -14,6 +14,7 @@ export const state = () => ({
   listed: false,
   error: null,
   variants: [],
+  variants_tallas: [],
   variants_colors: [],
   fotos: {},
   loadingView: false,
@@ -53,6 +54,9 @@ export const mutations = {
   },
   SET_VARIANTS(state, payload) {
     state.variants = payload
+  },
+  SET_VARIANTS_TALLAS(state, payload) {
+    state.variants_tallas = payload
   },
   SET_VARIANTS_COLORS(state, payload) {
     state.variants_colors = payload
@@ -137,6 +141,10 @@ export const actions = {
     commit('SET_VARIANTS', payload)
   },
 
+  setVariantsTallas({ commit }, payload) {
+    commit('SET_VARIANTS_TALLAS', payload)
+  },
+
   setVariantsColors({ commit }, payload) {
     commit('SET_VARIANTS_COLORS', payload)
   },
@@ -168,15 +176,53 @@ export const actions = {
       })
   },
 
-  async fetchVariantsColors({ commit }, payload) {
+  async fetchVariantsX({ commit }, payload) {
     const sku = payload.sku.toString()
-    return await this.$axios
-      .get('linabi/colorsbc', {
-        params: { sku },
-      })
+    // Cuurent variant (cv) can be 1 for TALLAS, 2 for COLORES and 3 for both
+    const cv = payload.cv.toString()
+
+    const vv = { vt: [], vc: [] }
+    let endpoints = []
+
+    if (cv === '1') {
+      endpoints = ['linabi/tallasbc']
+    }
+
+    if (cv === '2') {
+      endpoints = ['linabi/coloresbc']
+    }
+
+    if (cv === '3') {
+      endpoints = ['linabi/tallasbc', 'linabi/coloresbc']
+    }
+
+    await this.$axios
+      .all(
+        endpoints.map((endpoint) =>
+          this.$axios.get(endpoint, {
+            params: { sku },
+          })
+        )
+      )
       .then((response) => {
-        commit('SET_VARIANTS_COLORS', response.data)
-        return response.data
+        if (cv === '1') {
+          commit('SET_VARIANTS_TALLAS', response[0].data)
+          vv.vt = response[0].data
+        }
+
+        if (cv === '2') {
+          commit('SET_VARIANTS_COLORS', response[0].data)
+          vv.vc = response[0].data
+        }
+
+        if (cv === '3') {
+          commit('SET_VARIANTS_TALLAS', response[0].data)
+          vv.vt = response[0].data
+          commit('SET_VARIANTS_COLORS', response[1].data)
+          vv.vc = response[1].data
+        }
+
+        return vv
       })
   },
 
@@ -311,6 +357,18 @@ export const getters = {
   },
   getVariants(state) {
     return state.variants
+  },
+  getAllVariantsTallas(state) {
+    return async (sku) => {
+      return await this.$axios
+        .get('linabi/tallasbc', {
+          params: { sku },
+        })
+        .then((response) => response.data)
+    }
+  },
+  getVariantsTallas(state) {
+    return state.variants_tallas
   },
   getAllVariantsColors(state) {
     return async (sku) => {
