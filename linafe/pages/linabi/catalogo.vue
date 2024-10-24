@@ -81,21 +81,27 @@
                     </v-list-item-content>
                   </v-list-item>
                 </template>
-                <v-list-item v-show="expDetail">
+                <v-list-item v-show="isTallaVisible">
                   <v-list-item-action>
-                    <v-switch v-model="variantes"></v-switch>
+                    <v-switch
+                      v-model="setvart"
+                      @change="verifVar(1)"
+                    ></v-switch>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title>Variantes</v-list-item-title>
+                    <v-list-item-title>Variante tallas</v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
-                <v-list-item v-show="expDetail">
+                <v-list-item v-show="isColorVisible">
                   <v-list-item-action>
-                    <v-radio-group v-model="cur_variante">
-                      <v-radio label="Tallas" value="TALLA"></v-radio>
-                      <v-radio label="Colores" value="COLOR"></v-radio>
-                    </v-radio-group>
+                    <v-switch
+                      v-model="setvarc"
+                      @change="verifVar(2)"
+                    ></v-switch>
                   </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title>Variante colores</v-list-item-title>
+                  </v-list-item-content>
                 </v-list-item>
                 <v-list-item link>
                   <v-list-item-content>
@@ -289,6 +295,7 @@
           :hover-state-enabled="true"
           @cell-click="manageCellClick"
           @context-menu-preparing="addMenuItems"
+          @option-changed="handlePropertyChange"
         >
           <template v-for="xcol in colsConfig">
             <DxColumn
@@ -381,7 +388,22 @@
             </template>
           </DxSummary>
           <template #mdTemplate="{ data }">
-            <ProdVariants :variant-data="data.data.SKU" :cur-variant="curVar" />
+            <v-row>
+              <v-col>
+                <ProdVariants
+                  v-show="isTallaVisible"
+                  :variant-data="data.data.SKU"
+                  :cur-variant="var_talla"
+                />
+              </v-col>
+              <v-col>
+                <ProdVariants
+                  v-show="isColorVisible"
+                  :variant-data="data.data.SKU"
+                  :cur-variant="var_color"
+                />
+              </v-col>
+            </v-row>
           </template>
           <template #imgCellTemplate="{ data }">
             <ImgForGrid
@@ -518,6 +540,18 @@ function uniqByKeepLast(data, key) {
 //   }
 // }
 
+const VARTALLA = {
+  data_field: 'TALLA',
+  endpoint: 'linabi/tallasbc',
+  title: 'Códigos de Barra por Talla',
+}
+
+const VARCOLOR = {
+  data_field: 'COLOR',
+  endpoint: 'linabi/coloresbc',
+  title: 'Códigos de Barra por Color',
+}
+
 const contextItems = [
   { text: 'Todos' },
   { text: 'Con foto' },
@@ -596,8 +630,13 @@ export default {
       curGridRefKey,
       selFunction,
       dataSource: null,
-      variantes: false,
-      cur_variante: 'TALLA',
+      setvart: false,
+      setvarc: false,
+      cur_variante: '',
+      var_talla: VARTALLA,
+      var_color: VARCOLOR,
+      isTallaVisible: false,
+      isColorVisible: false,
       menuConf: false,
       snackbar: false,
       setConf: {
@@ -608,7 +647,6 @@ export default {
       },
       colsConfig: [],
       menuFilter: false,
-      radioGroup: '1',
       showBaseFilters: false,
       showCatalogBuilder: false,
       showSelTemplate: false,
@@ -655,22 +693,6 @@ export default {
     colsWithSummary() {
       return this.colsConfig.filter((obj) => obj.configval8 !== '')
     },
-    expDetail() {
-      let result = false
-      if (this.menuFilter) {
-        if (this.$refs[curGridRefKey]) {
-          const grd = this.$refs[curGridRefKey].instance
-          result =
-            grd.columnOption('TALLA', 'visible') ||
-            grd.columnOption('COLORES', 'visible')
-        }
-        if (!result) {
-          this.makeVariantFalse()
-        }
-      }
-
-      return result
-    },
     noImgFilters() {
       return [
         {
@@ -682,21 +704,6 @@ export default {
           value: ['FOTO', 'anyof', this.noImgList],
         },
       ]
-    },
-    curVar() {
-      const cv = {}
-
-      if (this.cur_variante === 'COLOR') {
-        cv.data_field = 'COLOR'
-        cv.endpoint = 'linabi/coloresbc'
-        cv.title = 'Códigos de Barra por Color'
-      } else {
-        cv.data_field = 'TALLA'
-        cv.endpoint = 'linabi/tallasbc'
-        cv.title = 'Códigos de Barra por Talla'
-      }
-
-      return cv
     },
   },
   created() {
@@ -902,7 +909,7 @@ export default {
           const workbook = new ExcelJS.Workbook()
           const tLC = { row: 1, column: 1 }
           const worksheet = workbook.addWorksheet(savingFilename)
-          if (this.variantes) {
+          if (this.cur_variante !== '') {
             // Exportar a Excel con detalle de códigos de barra
             const cv = this.cur_variante
             this.fetchVariants({ sku: selectedRows, cv }).then((vv) => {
@@ -964,7 +971,7 @@ export default {
                   column: this.plantilla.col,
                 }
 
-                if (this.variantes) {
+                if (this.cur_variante !== '') {
                   // Exportar a Excel con detalle de códigos de barra
                   const cv = this.cur_variante
                   this.fetchVariants({ sku: selectedRows, cv }).then((vv) => {
@@ -1144,22 +1151,14 @@ export default {
               }
             }
 
-            if (this.cur_variante === 'TALLA') {
-              if (gridCell.column.dataField === 'TALLA' && vv.length > 0) {
-                masterRows.push({
-                  rowIndex: excelCell.fullAddress.row + 1,
-                  data: gridCell.data,
-                })
-              }
-            }
-
-            if (this.cur_variante === 'COLOR') {
-              if (gridCell.column.dataField === 'COLORES' && vv.length > 0) {
-                masterRows.push({
-                  rowIndex: excelCell.fullAddress.row + 1,
-                  data: gridCell.data,
-                })
-              }
+            if (
+              gridCell.column.dataField === this.cur_variante &&
+              vv.length > 0
+            ) {
+              masterRows.push({
+                rowIndex: excelCell.fullAddress.row + 1,
+                data: gridCell.data,
+              })
             }
           }
           if (customTemplate) {
@@ -1322,6 +1321,22 @@ export default {
         )
       }
     },
+    handlePropertyChange(e) {
+      if (e.fullName === 'columns[6].visible') {
+        this.$nextTick(() => {
+          this.isTallaVisible = e.value
+        })
+      }
+      if (e.fullName === 'columns[18].visible') {
+        this.$nextTick(() => {
+          this.isColorVisible = e.value
+        })
+      }
+
+      if (!this.isTallaVisible && !this.isColorVisible) {
+        this.makeVariantFalse()
+      }
+    },
     async addImageExcel(url, workbook, worksheet, excelCell, inirow, resolve) {
       await this.imgax
         .get(url, {
@@ -1396,7 +1411,26 @@ export default {
         })
     },
     makeVariantFalse() {
-      this.variantes = false
+      this.cur_variante = ''
+    },
+    verifVar(v) {
+      if (v === 1) {
+        if (this.setvart) {
+          this.setvarc = false
+          this.cur_variante = 'TALLA'
+        }
+      }
+
+      if (v === 2) {
+        if (this.setvarc) {
+          this.setvart = false
+          this.cur_variante = 'COLORES'
+        }
+      }
+
+      if (!this.setvart && !this.setvarc) {
+        this.cur_variante = ''
+      }
     },
     // testMethod() {},
   },

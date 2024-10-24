@@ -157,14 +157,13 @@ export const actions = {
     const sku = payload.sku.toString()
     const cv = { name: payload.cv.toString() }
 
-    if (cv.name === 'COLOR') {
+    if (cv.name === 'COLORES') {
       cv.endpoint = 'linabi/coloresbc'
-      // cv.mutation = 'SET_VARIANTS_COLORS'
-      cv.mutation = 'SET_VARIANTS'
     } else {
       cv.endpoint = 'linabi/tallasbc'
-      cv.mutation = 'SET_VARIANTS'
     }
+
+    cv.mutation = 'SET_VARIANTS'
 
     return await this.$axios
       .get(cv.endpoint, {
