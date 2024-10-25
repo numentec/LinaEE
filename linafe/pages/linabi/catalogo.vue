@@ -329,10 +329,11 @@
             />
             <DxColumn
               v-else
-              id="colx"
+              :id="xcol.configkey"
               :key="xcol.id"
               :allow-grouping="xcol.configval7 == '1'"
               :data-field="xcol.configkey"
+              :name="xcol.configkey"
               :visible="xcol.configval3 == '1'"
               :caption="xcol.configval2"
               :data-type="xcol.configval4"
@@ -547,7 +548,7 @@ const VARTALLA = {
 }
 
 const VARCOLOR = {
-  data_field: 'COLOR',
+  data_field: 'COLORES',
   endpoint: 'linabi/coloresbc',
   title: 'Códigos de Barra por Color',
 }
@@ -1322,6 +1323,7 @@ export default {
       }
     },
     handlePropertyChange(e) {
+      console.log('***** PROP FULL NAME *****', e.fullName)
       if (e.fullName === 'columns[6].visible') {
         this.$nextTick(() => {
           this.isTallaVisible = e.value

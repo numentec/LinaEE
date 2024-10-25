@@ -598,7 +598,7 @@ const VARTALLA = {
 }
 
 const VARCOLOR = {
-  data_field: 'COLOR',
+  data_field: 'COLORES',
   endpoint: 'linabi/coloresbc',
   title: 'Códigos de Barra por Color',
 }
