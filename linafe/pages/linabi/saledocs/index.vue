@@ -1390,14 +1390,13 @@ export default {
       }
     },
     handlePropertyChange(e) {
-      if (e.fullName === 'columns[17].visible') {
+      if (e.name === 'columns') {
         this.$nextTick(() => {
-          this.isTallaVisible = e.value
+          this.isTallaVisible = this.curGrid1.columnOption('TALLA', 'visible')
         })
-      }
-      if (e.fullName === 'columns[22].visible') {
+
         this.$nextTick(() => {
-          this.isColorVisible = e.value
+          this.isColorVisible = this.curGrid1.columnOption('COLORES', 'visible')
         })
       }
 

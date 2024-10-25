@@ -333,7 +333,6 @@
               :key="xcol.id"
               :allow-grouping="xcol.configval7 == '1'"
               :data-field="xcol.configkey"
-              :name="xcol.configkey"
               :visible="xcol.configval3 == '1'"
               :caption="xcol.configval2"
               :data-type="xcol.configval4"
@@ -1323,15 +1322,14 @@ export default {
       }
     },
     handlePropertyChange(e) {
-      console.log('***** PROP FULL NAME *****', e.fullName)
-      if (e.fullName === 'columns[6].visible') {
+      // console.log('***** PROP FULL NAME *****', e.fullName)
+      if (e.name === 'columns') {
         this.$nextTick(() => {
-          this.isTallaVisible = e.value
+          this.isTallaVisible = this.curGrid.columnOption('TALLA', 'visible')
         })
-      }
-      if (e.fullName === 'columns[18].visible') {
+
         this.$nextTick(() => {
-          this.isColorVisible = e.value
+          this.isColorVisible = this.curGrid.columnOption('COLORES', 'visible')
         })
       }
 
