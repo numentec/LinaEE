@@ -89,7 +89,7 @@
                     ></v-switch>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title>Variante tallas</v-list-item-title>
+                    <v-list-item-title>Tallas</v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item v-show="isColorVisible">
@@ -100,7 +100,7 @@
                     ></v-switch>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title>Variante colores</v-list-item-title>
+                    <v-list-item-title>Colores</v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item link>
@@ -1200,9 +1200,11 @@ export default {
             }
 
             for (let i = 0; i < masterRows.length; i++) {
-              const columnIndex = cellRange.from.column + 1
+              // const columnIndex = cellRange.from.column + 1
               // const columnIndex =
-              //   this.curGrid.columnOption('TALLA', 'visibleIndex') - 1
+              //   this.curGrid.columnOption(this.cur_variante, 'visibleIndex') - 1
+              const columnIndex =
+                this.curGrid.getVisibleColumnIndex(this.cur_variante) - 1
 
               // const prodData = this.curStore.find(
               //   (item) => item.SKU === masterRows[i].data.SKU
@@ -1432,7 +1434,10 @@ export default {
         this.cur_variante = ''
       }
     },
-    // testMethod() {},
+    // testMethod() {
+    //   const columnIndex = this.curGrid.getVisibleColumnIndex(this.cur_variante)
+    //   console.log('***** COL_INDEX *****', columnIndex)
+    // },
   },
   head() {
     return {

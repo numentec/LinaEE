@@ -106,7 +106,7 @@
                     ></v-switch>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title>Variante tallas</v-list-item-title>
+                    <v-list-item-title>Tallas</v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item v-show="isColorVisible">
@@ -117,7 +117,7 @@
                     ></v-switch>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title>Variante colores</v-list-item-title>
+                    <v-list-item-title>Colores</v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item link>
@@ -1270,9 +1270,11 @@ export default {
             }
 
             for (let i = 0; i < masterRows.length; i++) {
-              const columnIndex = cellRange.from.column + 1
+              // const columnIndex = cellRange.from.column + 1
               // const columnIndex =
               //   curGrid.component.columnOption('TALLA', 'visibleIndex') - 1
+              const columnIndex =
+                curGrid.component.getVisibleColumnIndex(this.cur_variante) - 1
               const prodSKU = masterRows[i].data.SKU
 
               const prodvv = getProdVariants(vv, prodSKU)
