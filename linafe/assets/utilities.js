@@ -133,6 +133,32 @@ export const modulos = [
     ],
   },
   {
+    name: 'shoppingcart',
+    icon: 'mdi-cart-variant',
+    title: 'Shopping',
+    perm: 'core.acc_crm',
+    items: [
+      {
+        icon: 'mdi-format-list-text',
+        title: 'Inicio',
+        to: '/shoppingcart/',
+        perm: 'core.acc_crm',
+      },
+      {
+        icon: 'mdi-cart-arrow-right',
+        title: 'Go to cart',
+        to: '/shoppingcart/gotocart',
+        perm: 'core.acc_crm',
+      },
+      {
+        icon: 'mdi-cog-outline',
+        title: 'Tools',
+        to: '/shoppingcart/tools',
+        perm: 'core.acc_crm',
+      },
+    ],
+  },
+  {
     name: 'inv',
     icon: 'mdi-package-variant',
     title: 'Inventario',
