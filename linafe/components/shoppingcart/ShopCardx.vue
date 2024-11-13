@@ -5,13 +5,19 @@
     :loading="loadingView"
     @click="goToView"
   >
-    <v-img :src="category.image" height="400px" cover></v-img>
-    <v-card flat tile width="100%">
-      <v-card-title>{{ category.name }}</v-card-title>
-      <v-card-text>
-        {{ category.description }}
-      </v-card-text>
-    </v-card>
+    <v-img :src="category.image" height="400px" cover>
+      <v-toolbar
+        flat
+        color="rgba(0, 0, 0, 0.65)"
+        bottom
+        absolute
+        style="width: 100%"
+      >
+        <v-toolbar-title class="white--text">
+          {{ category.name }}
+        </v-toolbar-title>
+      </v-toolbar>
+    </v-img>
   </v-card>
 </template>
 
@@ -36,6 +42,7 @@ export default {
   methods: {
     goToView() {
       this.loadingView = true
+      // this.$router.push(this.category.link)
       this.$router.push(this.category.link)
     },
   },

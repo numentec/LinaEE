@@ -1,39 +1,13 @@
 <template>
-  <div>
-    <div class="floating-header">
-      <v-toolbar flat color="grey lighten-4" class="mb-6">
-        <v-select
-          v-model="selected_brands"
-          :items="brands"
-          multiple
-          label="Filter by brand"
-          chips
-          dense
-        ></v-select>
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          solo
-          flat
-          hide-details
-          prepend-inner-icon="mdi-magnify"
-          label="Search"
-          dense
-          rounded
-          clearable
-        ></v-text-field>
-      </v-toolbar>
-    </div>
-    <div class="shopping-cart">
-      <div v-for="(item, index) in filteredItems" :key="index">
-        <ShopCardx :category="item" />
-      </div>
+  <div class="shopping-cart mt-4">
+    <div v-for="(item, index) in filteredItems" :key="index">
+      <ShopCard :category="item" />
     </div>
   </div>
 </template>
 
 <script>
-import ShopCardx from '~/components/shoppingcart/ShopCardx.vue'
+import ShopCard from '~/components/shoppingcart/ShopCard.vue'
 
 const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
 
@@ -59,7 +33,7 @@ function makeItems(images) {
       price: 100.0,
       description: `Description for Department ${i}`,
       brands: getRandomSubarray(BRANDSDATA, 3),
-      link: '/shoppingcart/categories/departments',
+      link: '/shoppingcart/categories/categoriesmain',
     })
   }
 
@@ -70,7 +44,7 @@ function makeItems(images) {
 
 export default {
   components: {
-    ShopCardx,
+    ShopCard,
   },
   async asyncData({ error }) {
     try {
@@ -104,58 +78,50 @@ export default {
       }
     }
   },
+
+  inject: ['selected_brands', 'search_department'],
+
   data() {
     return {
-      search: '',
       items: [],
       brands: ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5'],
-      selected_brands: [],
     }
   },
+
   computed: {
     filteredItems() {
       return this.items.filter((item) => {
-        if (this.search === null) {
-          this.search = ''
+        if (this.search_department === null) {
+          this.search_department = ''
         }
-        if (this.search === '' && this.selected_brands.length === 0) {
+        if (
+          this.search_department === '' &&
+          this.selected_brands.length === 0
+        ) {
           return true
         }
         if (this.selected_brands.length > 0) {
           return (
-            item.name.toLowerCase().includes(this.search.toLowerCase()) &&
+            item.name
+              .toLowerCase()
+              .includes(this.search_department.toLowerCase()) &&
             this.selected_brands.includes(item.brands[0])
           )
         }
-        return item.name.toLowerCase().includes(this.search.toLowerCase())
+        return item.name
+          .toLowerCase()
+          .includes(this.search_department.toLowerCase())
       })
     },
   },
-  // mounted() {
-  //   // const images = ['/uc1.jpg', '/uc2.jpg', '/uc3.jpg', '/uc4.jpg']
-  //   const images = [
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/prev1.jpg',
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/prev2.png',
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/rpt01.jpeg',
-  //   ]
-  //   for (let i = 0; i < 100; i++) {
-  //     this.items.push({
-  //       image: images[Math.floor(Math.random() * images.length)],
-  //     })
-  //   }
-  // },
+
+  mounted() {
+    window.scrollTo(0, 0)
+  },
 }
 </script>
 
 <style scoped>
-.floating-header {
-  position: -webkit-sticky; /* Safari */
-  position: sticky;
-  top: 56px; /* Ajusta este valor según la altura de tu app-bar */
-  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
-  background-color: white;
-}
 .shopping-cart {
   display: flex;
   flex-wrap: wrap;
