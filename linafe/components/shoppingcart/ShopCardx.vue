@@ -42,8 +42,15 @@ export default {
   methods: {
     goToView() {
       this.loadingView = true
-      // this.$router.push(this.category.link)
-      this.$router.push(this.category.link)
+      if (
+        this.category.link === null ||
+        this.category.link === '' ||
+        this.category.link === undefined
+      ) {
+        this.$router.push('/shoppingcart/categories/departments')
+      } else {
+        this.$router.push(this.category.link)
+      }
     },
   },
 }

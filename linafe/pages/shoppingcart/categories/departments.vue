@@ -1,13 +1,14 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <ShopCard :category="item" />
+      <ShopCardx :category="item" />
     </div>
   </div>
 </template>
 
 <script>
-import ShopCard from '~/components/shoppingcart/ShopCard.vue'
+import { mapGetters } from 'vuex'
+import ShopCardx from '~/components/shoppingcart/ShopCardx.vue'
 
 const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
 
@@ -44,7 +45,7 @@ function makeItems(images) {
 
 export default {
   components: {
-    ShopCard,
+    ShopCardx,
   },
   async asyncData({ error }) {
     try {
@@ -79,8 +80,6 @@ export default {
     }
   },
 
-  inject: ['selected_brands', 'search_department'],
-
   data() {
     return {
       items: [],
@@ -89,28 +88,31 @@ export default {
   },
 
   computed: {
+    ...mapGetters('shoppingcart/categories', [
+      'getSelectedBrands',
+      'getSearchDepartment',
+    ]),
+
     filteredItems() {
       return this.items.filter((item) => {
-        if (this.search_department === null) {
-          this.search_department = ''
+        const selectedBrands = this.getSelectedBrands
+        let searchDepartment = this.getSearchDepartment
+
+        if (searchDepartment === null || searchDepartment === undefined) {
+          searchDepartment = ''
         }
-        if (
-          this.search_department === '' &&
-          this.selected_brands.length === 0
-        ) {
+
+        if (searchDepartment === '' && selectedBrands.length === 0) {
           return true
         }
-        if (this.selected_brands.length > 0) {
+
+        if (selectedBrands.length > 0) {
           return (
-            item.name
-              .toLowerCase()
-              .includes(this.search_department.toLowerCase()) &&
-            this.selected_brands.includes(item.brands[0])
+            item.name.toLowerCase().includes(searchDepartment.toLowerCase()) &&
+            selectedBrands.includes(item.brands[0])
           )
         }
-        return item.name
-          .toLowerCase()
-          .includes(this.search_department.toLowerCase())
+        return item.name.toLowerCase().includes(searchDepartment.toLowerCase())
       })
     },
   },

@@ -1,13 +1,14 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <ShopCard :category="item" />
+      <ShopCardx :category="item" />
     </div>
   </div>
 </template>
 
 <script>
-import ShopCard from '~/components/shoppingcart/ShopCard.vue'
+import { mapGetters } from 'vuex'
+import ShopCardx from '~/components/shoppingcart/ShopCardx.vue'
 
 const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
 
@@ -33,6 +34,7 @@ function makeItems(images) {
       price: 100.0,
       description: `Description for Sub Category ${i}`,
       brands: getRandomSubarray(BRANDSDATA, 3),
+      link: '/shoppingcart/categories/products',
     })
   }
 
@@ -43,7 +45,7 @@ function makeItems(images) {
 
 export default {
   components: {
-    ShopCard,
+    ShopCardx,
   },
   async asyncData({ error }) {
     try {
@@ -78,8 +80,6 @@ export default {
     }
   },
 
-  inject: ['selected_brands', 'search_subcategory'],
-
   data() {
     return {
       items: [],
@@ -88,28 +88,32 @@ export default {
   },
 
   computed: {
+    ...mapGetters('shoppingcart/categories', [
+      'getSelectedBrands',
+      'getSearchSubcategory',
+    ]),
+
     filteredItems() {
       return this.items.filter((item) => {
-        if (this.search_subcategory === null) {
-          this.search_subcategory = ''
+        const selectedBrands = this.getSelectedBrands
+        let searchSubCategory = this.getSearchSubcategory
+
+        if (searchSubCategory === null || searchSubCategory === undefined) {
+          searchSubCategory = ''
         }
-        if (
-          this.search_subcategory === '' &&
-          this.selected_brands.length === 0
-        ) {
+
+        if (searchSubCategory === '' && selectedBrands.length === 0) {
           return true
         }
-        if (this.selected_brands.length > 0) {
+
+        if (selectedBrands.length > 0) {
           return (
-            item.name
-              .toLowerCase()
-              .includes(this.search_subcategory.toLowerCase()) &&
-            this.selected_brands.includes(item.brands[0])
+            item.name.toLowerCase().includes(searchSubCategory.toLowerCase()) &&
+            selectedBrands.includes(item.brands[0])
           )
         }
-        return item.name
-          .toLowerCase()
-          .includes(this.search_subcategory.toLowerCase())
+
+        return item.name.toLowerCase().includes(searchSubCategory.toLowerCase())
       })
     },
   },
