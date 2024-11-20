@@ -1,14 +1,14 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <ShopCardx :category="item" />
+      <CategoryCard :category="item" />
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import ShopCardx from '~/components/shoppingcart/ShopCardx.vue'
+import CategoryCard from '~/components/shoppingcart/CategoryCard.vue'
 
 const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
 
@@ -31,8 +31,9 @@ function makeItems(images) {
     items.push({
       image: images[Math.floor(Math.random() * images.length)],
       name: `Department ${i}`,
-      price: 100.0,
+      price: Math.floor(Math.random() * 1000),
       description: `Description for Department ${i}`,
+      instock: Math.floor(Math.random() * 100),
       brands: getRandomSubarray(BRANDSDATA, 3),
       link: '/shoppingcart/categories/categoriesmain',
     })
@@ -45,7 +46,7 @@ function makeItems(images) {
 
 export default {
   components: {
-    ShopCardx,
+    CategoryCard,
   },
   async asyncData({ error }) {
     try {

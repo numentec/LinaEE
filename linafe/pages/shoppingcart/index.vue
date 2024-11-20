@@ -1,161 +1,22 @@
 <template>
-  <div>
-    <div class="floating-header">
-      <v-toolbar flat color="grey lighten-4" class="mb-6">
-        <v-select
-          v-model="selected_brands"
-          :items="brands"
-          multiple
-          label="Filter by brand"
-          chips
-          dense
-        ></v-select>
-        <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          solo
-          flat
-          hide-details
-          prepend-inner-icon="mdi-magnify"
-          label="Search"
-          dense
-          rounded
-          clearable
-        ></v-text-field>
-      </v-toolbar>
-    </div>
-    <div class="shopping-cart">
-      <div v-for="(item, index) in filteredItems" :key="index">
-        <ShopCardx :category="item" />
-      </div>
-    </div>
+  <div class="shopping-cart">
+    <v-btn block color="primary lighten-2" @click="$router.push(link)">
+      Start
+    </v-btn>
   </div>
 </template>
 
 <script>
-import ShopCardx from '~/components/shoppingcart/ShopCardx.vue'
-
-const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
-
-function getRandomSubarray(arr, size) {
-  const shuffled = arr.slice(0)
-  let i = arr.length
-  let temp, index
-  while (i--) {
-    index = Math.floor((i + 1) * Math.random())
-    temp = shuffled[index]
-    shuffled[index] = shuffled[i]
-    shuffled[i] = temp
-  }
-  return shuffled.slice(0, size)
-}
-
-function makeItems(images) {
-  const items = []
-  for (let i = 0; i < 100; i++) {
-    items.push({
-      image: images[Math.floor(Math.random() * images.length)],
-      name: `Department ${i}`,
-      price: 100.0,
-      description: `Description for Department ${i}`,
-      brands: getRandomSubarray(BRANDSDATA, 3),
-      link: '/shoppingcart/categories/departments',
-    })
-  }
-
-  return new Promise((resolve) => {
-    resolve({ data: items })
-  })
-}
-
 export default {
-  components: {
-    ShopCardx,
-  },
-  async asyncData({ error }) {
-    try {
-      const images = [
-        'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
-        '/shoppingcart/H23100256A.jpg',
-        '/shoppingcart/H23100133A.jpg',
-        '/shoppingcart/H22200482A.jpg',
-        '/shoppingcart/W231013199.jpg',
-        '/shoppingcart/W231013210.jpg',
-        '/shoppingcart/HBS01401N-B.jpg',
-        '/shoppingcart/VLCSMLORG.jpg',
-      ]
-
-      const { data } = await makeItems(images)
-
-      return {
-        items: data,
-      }
-    } catch (err) {
-      if (err.response) {
-        error({
-          statusCode: err.response.status,
-          message: err.response.data.detail,
-        })
-      } else {
-        error({
-          statusCode: 503,
-          message: 'No se pudo cargar la lista. Intente luego',
-        })
-      }
-    }
-  },
   data() {
     return {
-      search: '',
-      items: [],
-      brands: ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5'],
-      selected_brands: [],
+      link: '/shoppingcart/categories/departments',
     }
   },
-  computed: {
-    filteredItems() {
-      return this.items.filter((item) => {
-        if (this.search === null) {
-          this.search = ''
-        }
-        if (this.search === '' && this.selected_brands.length === 0) {
-          return true
-        }
-        if (this.selected_brands.length > 0) {
-          return (
-            item.name.toLowerCase().includes(this.search.toLowerCase()) &&
-            this.selected_brands.includes(item.brands[0])
-          )
-        }
-        return item.name.toLowerCase().includes(this.search.toLowerCase())
-      })
-    },
-  },
-  // mounted() {
-  //   // const images = ['/uc1.jpg', '/uc2.jpg', '/uc3.jpg', '/uc4.jpg']
-  //   const images = [
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/prev1.jpg',
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/prev2.png',
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
-  //     'http://192.168.1.55:8001/media/images/bifavoritos/rpt01.jpeg',
-  //   ]
-  //   for (let i = 0; i < 100; i++) {
-  //     this.items.push({
-  //       image: images[Math.floor(Math.random() * images.length)],
-  //     })
-  //   }
-  // },
 }
 </script>
 
 <style scoped>
-.floating-header {
-  position: -webkit-sticky; /* Safari */
-  position: sticky;
-  top: 56px; /* Ajusta este valor según la altura de tu app-bar */
-  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
-  background-color: white;
-}
 .shopping-cart {
   display: flex;
   flex-wrap: wrap;

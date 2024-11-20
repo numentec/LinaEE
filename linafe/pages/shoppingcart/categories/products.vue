@@ -1,14 +1,14 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <ShopCard :category="item" />
+      <ProductCard :product="item" />
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import ShopCard from '~/components/shoppingcart/ShopCard.vue'
+import ProductCard from '~/components/shoppingcart/ProductCard.vue'
 
 const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
 
@@ -31,8 +31,10 @@ function makeItems(images) {
     items.push({
       image: images[Math.floor(Math.random() * images.length)],
       name: `Product ${i}`,
-      price: 100.0,
+      price: Math.floor(Math.random() * 1000),
       description: `Description for Product ${i}`,
+      instock: Math.floor(Math.random() * 100),
+      quantity: Math.floor(Math.random() * 10),
       brands: getRandomSubarray(BRANDSDATA, 3),
       // link: '/shoppingcart/categories/products',
     })
@@ -45,7 +47,7 @@ function makeItems(images) {
 
 export default {
   components: {
-    ShopCard,
+    ProductCard,
   },
   async asyncData({ error }) {
     try {
@@ -88,31 +90,30 @@ export default {
   },
 
   computed: {
-    ...mapGetters('shoppingcart/categories', [
-      'getSelectedBrands',
-      'getSearchCategory',
-    ]),
+    ...mapGetters('shoppingcart/categories', ['getSelectedBrands']),
+    ...mapGetters('shoppingcart/cart', ['getSearchProduct']),
+
     filteredItems() {
       return this.items.filter((item) => {
         const selectedBrands = this.getSelectedBrands
-        let searchCategory = this.getSearchCategory
+        let SearchProduct = this.getSearchProduct
 
-        if (searchCategory === null || searchCategory === undefined) {
-          searchCategory = ''
+        if (SearchProduct === null || SearchProduct === undefined) {
+          SearchProduct = ''
         }
 
-        if (searchCategory === '' && selectedBrands.length === 0) {
+        if (SearchProduct === '' && selectedBrands.length === 0) {
           return true
         }
 
         if (selectedBrands.length > 0) {
           return (
-            item.name.toLowerCase().includes(searchCategory.toLowerCase()) &&
+            item.name.toLowerCase().includes(SearchProduct.toLowerCase()) &&
             selectedBrands.includes(item.brands[0])
           )
         }
 
-        return item.name.toLowerCase().includes(searchCategory.toLowerCase())
+        return item.name.toLowerCase().includes(SearchProduct.toLowerCase())
       })
     },
   },

@@ -67,6 +67,19 @@
             rounded
             clearable
           ></v-text-field>
+          <v-text-field
+            v-show="cur_child_view.includes('products')"
+            id="products"
+            v-model="search_products"
+            solo
+            flat
+            hide-details
+            prepend-inner-icon="mdi-magnify"
+            label="Search"
+            dense
+            rounded
+            clearable
+          ></v-text-field>
           <v-btn class="ma-2" icon color="cyan lighten-1">
             <v-icon>mdi-format-list-text</v-icon>
           </v-btn>
@@ -120,6 +133,7 @@ export default {
       search_department: '',
       search_category: '',
       search_subcategory: '',
+      search_products: '',
       breadcrumbs: [],
     }
   },
@@ -133,7 +147,20 @@ export default {
     ]),
     crumbs() {
       const n = this.$route.fullPath.lastIndexOf('/')
-      const curText = this.$route.fullPath.substring(n + 1)
+      const curText = () => {
+        switch (this.$route.fullPath.substring(n + 1)) {
+          case 'departments':
+            return 'Departments'
+          case 'categoriesmain':
+            return 'Categories'
+          case 'categoriessub':
+            return 'Subcategories'
+          case 'products':
+            return 'Products'
+          default:
+            return ''
+        }
+      }
 
       const crumbs = this.breadcrumbs
 
@@ -143,7 +170,7 @@ export default {
         })
       }
 
-      const index = crumbs.findIndex((crumb) => crumb.text === curText)
+      const index = crumbs.findIndex((crumb) => crumb.text === curText())
       const crumb = index !== -1 ? crumbs[index] : null
 
       if (crumb) {
@@ -153,7 +180,7 @@ export default {
         }
       } else {
         crumbs.push({
-          text: curText,
+          text: curText(),
           disabled: true,
           to: this.$route.fullPath,
         })
@@ -179,6 +206,9 @@ export default {
     search_subcategory(newVal) {
       this.setSearchSubcategory(newVal)
     },
+    search_products(newVal) {
+      this.setSearchProducts(newVal)
+    },
   },
   methods: {
     ...mapActions('shoppingcart/categories', [
@@ -187,6 +217,7 @@ export default {
       'setSearchCategory',
       'setSearchSubcategory',
     ]),
+    ...mapActions('shoppingcart/products', ['setSearchProducts']),
     onOption() {
       console.log('Option clicked')
     },

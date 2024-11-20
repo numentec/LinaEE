@@ -1,47 +1,54 @@
 <template>
-  <v-card class="mx-4 my-4" max-width="400">
-    <v-img :src="product.image" height="200px"></v-img>
-    <v-card-title>{{ product.name }}</v-card-title>
-    <v-card-subtitle>{{ product.price | currency }}</v-card-subtitle>
-    <v-card-text>
-      {{ product.description }}
-    </v-card-text>
-    <v-card-actions>
-      <v-row align="center" justify="space-between">
-        <v-col cols="6">
-          <v-btn icon @click="decreaseQuantity">
-            <v-icon>mdi-minus</v-icon>
-          </v-btn>
-          <v-text-field
-            v-model="quantity"
-            type="number"
-            min="1"
-            class="mx-2"
-            style="max-width: 50px"
-          ></v-text-field>
-          <v-btn icon @click="increaseQuantity">
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
-        </v-col>
-        <v-col cols="6" class="text-right">
-          <v-btn color="primary" @click="addToCart">Agregar al carrito</v-btn>
-        </v-col>
-      </v-row>
-    </v-card-actions>
+  <v-card
+    class="mx-4 my-4"
+    max-width="300"
+    :loading="loadingView"
+    @click="goToView"
+  >
+    <!-- <v-badge color="green" content="6" bottom overlap>
+      <v-img :src="product.image" height="400px" cover></v-img>
+    </v-badge> -->
+    <v-img :src="product.image" height="400px" cover>
+      <v-app-bar flat color="rgba(0, 0, 0, 0)">
+        <v-chip
+          v-if="product.quantity > 0"
+          class="ma-2"
+          color="rgba(0, 0, 0, 0.65)"
+          text-color="white"
+        >
+          {{ product.quantity }}
+        </v-chip>
+      </v-app-bar>
+    </v-img>
+    <v-card flat tile width="100%">
+      <v-card-actions>
+        <v-card-title>{{ product.name }}</v-card-title>
+        <v-spacer></v-spacer>
+        <v-chip color="green lighten-2" text-color="white">
+          {{
+            `${product.price.toLocaleString('es-US', {
+              style: 'currency',
+              currency: 'USD',
+            })}`
+          }}
+        </v-chip>
+      </v-card-actions>
+      <v-card-actions>
+        <v-chip color="light-blue lighten-2" text-color="white">
+          {{ `In Stock: ${product.instock}` }}
+        </v-chip>
+        <v-spacer></v-spacer>
+        <v-btn color="deep-purple lighten-2" fab small dark @click="makeAction">
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-card>
 </template>
 
 <script>
 export default {
-  name: 'ProductCard',
-  filters: {
-    currency(value) {
-      return new Intl.NumberFormat('es-PA', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(value)
-    },
-  },
+  name: 'ShopCard',
   props: {
     product: {
       type: Object,
@@ -50,23 +57,29 @@ export default {
   },
   data() {
     return {
-      quantity: 1,
+      loadingView: false,
     }
   },
+  activated() {
+    this.loadingView = false
+  },
   methods: {
-    increaseQuantity() {
-      this.quantity++
-    },
-    decreaseQuantity() {
-      if (this.quantity > 1) {
-        this.quantity--
+    goToView() {
+      this.loadingView = true
+      if (
+        this.product.link === null ||
+        this.product.link === '' ||
+        this.product.link === undefined
+      ) {
+        this.$router.push('/shoppingcart/categories/departments')
+      } else {
+        this.$router.push(this.product.link)
       }
     },
-    addToCart() {
-      this.$emit('add-to-cart', {
-        product: this.product,
-        quantity: this.quantity,
-      })
+    makeAction() {
+      this.loadingView = true
+
+      setTimeout(() => (this.loadingView = false), 2000)
     },
   },
 }
