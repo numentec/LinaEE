@@ -7,7 +7,14 @@
         <nuxt keep-alive :keep-alive-props="{ exclude: ['modal'] }" />
       </v-container>
     </v-main>
-    <v-bottom-navigation :value="mobileNav" color="primary" grow fixed app>
+    <v-bottom-navigation
+      v-show="getShowBottomNav"
+      :value="mobileNav"
+      color="primary"
+      grow
+      fixed
+      app
+    >
       <v-btn @click="goHome">
         <span>Inicio</span>
 
@@ -100,6 +107,7 @@ export default {
   },
   computed: {
     ...mapState('sistema', ['curuser']),
+    ...mapGetters('sistema', ['getShowBottomNav']),
     ...mapGetters(['loggedInUser']),
     useDrawer() {
       if (this.$vuetify.breakpoint.mobile) {

@@ -141,13 +141,14 @@ export const modulos = [
       {
         icon: 'mdi-format-list-text',
         title: 'Inicio',
-        to: '/shoppingcart/',
+        // to: '/shoppingcart/',
+        to: '/shoppingcart/categories/departments',
         perm: 'core.acc_crm',
       },
       {
         icon: 'mdi-cart-arrow-right',
         title: 'Go to cart',
-        to: '/shoppingcart/gotocart',
+        to: '/shoppingcart/cart',
         perm: 'core.acc_crm',
       },
       {

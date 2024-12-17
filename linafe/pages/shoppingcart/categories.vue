@@ -6,7 +6,7 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
               <v-btn
-                class="ma-2"
+                class="mt-0 mb-2 mx-2"
                 icon
                 v-bind="attrs"
                 color="cyan lighten-1"
@@ -70,7 +70,7 @@
           <v-text-field
             v-show="cur_child_view.includes('products')"
             id="products"
-            v-model="search_products"
+            v-model="search_product"
             solo
             flat
             hide-details
@@ -96,13 +96,13 @@
               </v-btn>
             </template>
             <v-list>
-              <v-list-item @click="onOption">
-                <v-list-item-title>Option 1</v-list-item-title>
+              <v-list-item @click="goToCart">
+                <v-list-item-title>Go to Cart</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="onOption">
+              <v-list-item @click="snackbar = true">
                 <v-list-item-title>Option 2</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="onOption">
+              <v-list-item @click="snackbar = true">
                 <v-list-item-title>Option 3</v-list-item-title>
               </v-list-item>
             </v-list>
@@ -111,13 +111,26 @@
       </v-row>
       <v-row>
         <div v-if="crumbs.length > 0">
-          <v-breadcrumbs :items="crumbs"></v-breadcrumbs>
+          <v-breadcrumbs :items="crumbs" nuxt></v-breadcrumbs>
         </div>
       </v-row>
     </div>
     <div>
       <nuxt-child></nuxt-child>
     </div>
+    <v-snackbar v-model="snackbar" timeout="2000">
+      No implementado
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          color="secondary"
+          text
+          v-bind="attrs"
+          @click.stop="snackbar = false"
+        >
+          Cerrar
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -133,8 +146,9 @@ export default {
       search_department: '',
       search_category: '',
       search_subcategory: '',
-      search_products: '',
+      search_product: '',
       breadcrumbs: [],
+      snackbar: false,
     }
   },
 
@@ -144,6 +158,7 @@ export default {
       'getSearchDepartment',
       'getSearchCategory',
       'getSearchSubcategory',
+      'getSearchProduct',
     ]),
     crumbs() {
       const n = this.$route.fullPath.lastIndexOf('/')
@@ -206,20 +221,26 @@ export default {
     search_subcategory(newVal) {
       this.setSearchSubcategory(newVal)
     },
-    search_products(newVal) {
-      this.setSearchProducts(newVal)
+    search_product(newVal) {
+      this.setSearchProduct(newVal)
     },
   },
+
+  mounted() {
+    this.setShowBottomNav(true)
+  },
+
   methods: {
     ...mapActions('shoppingcart/categories', [
       'setSelectedBrands',
       'setSearchDepartment',
       'setSearchCategory',
       'setSearchSubcategory',
+      'setSearchProduct',
     ]),
-    ...mapActions('shoppingcart/products', ['setSearchProducts']),
-    onOption() {
-      console.log('Option clicked')
+    ...mapActions('sistema', ['setShowBottomNav']),
+    goToCart() {
+      this.$router.push('/shoppingcart/cart')
     },
   },
 }
@@ -229,7 +250,7 @@ export default {
 .floating-header {
   position: -webkit-sticky; /* Safari */
   position: sticky;
-  top: 56px; /* Ajusta este valor según la altura de tu app-bar */
+  top: 45px; /* Ajusta este valor según la altura de tu app-bar */
   z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
   background-color: white;
 }

@@ -10,63 +10,19 @@
 import { mapGetters } from 'vuex'
 import ProductCard from '~/components/shoppingcart/ProductCard.vue'
 
-const BRANDSDATA = ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5']
-
-function getRandomSubarray(arr, size) {
-  const shuffled = arr.slice(0)
-  let i = arr.length
-  let temp, index
-  while (i--) {
-    index = Math.floor((i + 1) * Math.random())
-    temp = shuffled[index]
-    shuffled[index] = shuffled[i]
-    shuffled[i] = temp
-  }
-  return shuffled.slice(0, size)
-}
-
-function makeItems(images) {
-  const items = []
-  for (let i = 0; i < 100; i++) {
-    items.push({
-      image: images[Math.floor(Math.random() * images.length)],
-      name: `Product ${i}`,
-      price: Math.floor(Math.random() * 1000),
-      description: `Description for Product ${i}`,
-      instock: Math.floor(Math.random() * 100),
-      quantity: Math.floor(Math.random() * 10),
-      brands: getRandomSubarray(BRANDSDATA, 3),
-      // link: '/shoppingcart/categories/products',
-    })
-  }
-
-  return new Promise((resolve) => {
-    resolve({ data: items })
-  })
-}
-
 export default {
   components: {
     ProductCard,
   },
-  async asyncData({ error }) {
+
+  async asyncData({ store, error }) {
     try {
-      const images = [
-        'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
-        '/shoppingcart/H23100256A.jpg',
-        '/shoppingcart/H23100133A.jpg',
-        '/shoppingcart/H22200482A.jpg',
-        '/shoppingcart/W231013199.jpg',
-        '/shoppingcart/W231013210.jpg',
-        '/shoppingcart/HBS01401N-B.jpg',
-        '/shoppingcart/VLCSMLORG.jpg',
-      ]
+      const items = await store.dispatch('shoppingcart/categories/fetchItems', {
+        name: 'Product',
+        link: '',
+      })
 
-      const { data } = await makeItems(images)
-
-      return {
-        items: data,
-      }
+      return items
     } catch (err) {
       if (err.response) {
         error({
@@ -85,13 +41,14 @@ export default {
   data() {
     return {
       items: [],
-      brands: ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5'],
     }
   },
 
   computed: {
-    ...mapGetters('shoppingcart/categories', ['getSelectedBrands']),
-    ...mapGetters('shoppingcart/cart', ['getSearchProduct']),
+    ...mapGetters('shoppingcart/categories', [
+      'getSelectedBrands',
+      'getSearchProduct',
+    ]),
 
     filteredItems() {
       return this.items.filter((item) => {

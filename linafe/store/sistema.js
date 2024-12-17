@@ -10,6 +10,7 @@ export const state = () => ({
   error: { statusCode: 0, message: '' },
   cias: [],
   curCia: null,
+  showBottomNav: true,
 })
 
 export const mutations = {
@@ -36,6 +37,9 @@ export const mutations = {
   },
   SET_CURCIA(state, payload) {
     state.curCia = Object.assign({}, payload)
+  },
+  SET_SHOWBOTTOMNAV(state, payload) {
+    state.showBottomNav = payload
   },
 }
 
@@ -156,6 +160,10 @@ export const actions = {
   setCurCia({ commit }, payload) {
     commit('SET_CURCIA', payload)
   },
+
+  setShowBottomNav({ commit }, payload) {
+    commit('SET_SHOWBOTTOMNAV', payload)
+  },
 }
 
 export const getters = {
@@ -167,5 +175,8 @@ export const getters = {
   },
   getCias(state) {
     return state.cias
+  },
+  getShowBottomNav(state) {
+    return state.showBottomNav
   },
 }

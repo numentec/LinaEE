@@ -33,6 +33,23 @@
         </v-list>
       </v-menu>
       <v-spacer />
+      <v-badge
+        v-show="getCartItemCount > 0"
+        :content="getCartProductCount > 999 ? '999+' : getCartProductCount"
+        class="mr-6"
+        color="red"
+        offset-y="25"
+        overlap
+      >
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon dark v-bind="attrs" v-on="on" @click="goToCart">
+              <v-icon dark>mdi-cart-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>Go to cart</span>
+        </v-tooltip>
+      </v-badge>
       <v-menu offset-y origin="center center" transition="scale-transition">
         <template v-slot:activator="{ on: menu, attrs }">
           <v-tooltip bottom>
@@ -115,6 +132,10 @@ export default {
     ...mapState('sistema', ['curuser']),
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
     ...mapGetters('sistema', ['getUsers', 'getCias', 'getCurCia']),
+    ...mapGetters('shoppingcart/cart', [
+      'getCartItemCount',
+      'getCartProductCount',
+    ]),
     imgSrc() {
       return this.$config.publicURL + this.loggedInUser.foto
     },
@@ -146,6 +167,9 @@ export default {
       this.setIsMini(mini)
       this.setIsExpanded(!mini)
       this.setDrawer(!this.drawer)
+    },
+    goToCart() {
+      this.$router.push('/shoppingcart/cart')
     },
   },
 }
