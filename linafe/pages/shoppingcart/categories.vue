@@ -251,7 +251,7 @@ export default {
   position: -webkit-sticky; /* Safari */
   position: sticky;
   top: 45px; /* Ajusta este valor según la altura de tu app-bar */
-  z-index: 1000; /* Asegúrate de que esté por encima de otros elementos */
+  z-index: 3; /* Asegúrate de que esté por encima de otros elementos */
   background-color: white;
 }
 </style>

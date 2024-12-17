@@ -1,7 +1,7 @@
 <template>
   <v-app dark>
-    <CoreAppBar />
-    <component :is="useDrawer" />
+    <CoreAppBar ref="appbarx" />
+    <component :is="useDrawer" ref="appdrawerx" />
     <v-main>
       <v-container>
         <nuxt keep-alive :keep-alive-props="{ exclude: ['modal'] }" />
@@ -67,6 +67,8 @@ export default {
   middleware: 'setcias',
   data() {
     return {
+      appbarZIndex: null,
+      appdrawerZIndex: null,
       mobileNav: 0,
       bar: true,
       allowedTools: [0, 1, 2, 3, 4],
@@ -143,6 +145,8 @@ export default {
     // this.$root.$on('home', this.goHome)
     // this.$root.$on('qtools', this.qTools)
     // this.$root.$on('fav', this.goFav)
+    this.getAppbarZIndex()
+    this.getAppdrawerZIndex()
   },
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.test)
@@ -166,6 +170,24 @@ export default {
     },
     async test() {
       await this.$axios.post('logout/', { force: '1' })
+    },
+    getAppbarZIndex() {
+      const appbarx = this.$refs.appbarx
+      if (appbarx) {
+        const style = window.getComputedStyle(appbarx.$el)
+        this.appbarZIndex = style.zIndex
+        // eslint-disable-next-line no-console
+        console.log('Appbar z-index:', this.appbarZIndex)
+      }
+    },
+    getAppdrawerZIndex() {
+      const appdrawerx = this.$refs.appdrawerx
+      if (appdrawerx) {
+        const style = window.getComputedStyle(appdrawerx.$el)
+        this.appdrawerZIndex = style.zIndex
+        // eslint-disable-next-line no-console
+        console.log('Appdrawer z-index:', this.appdrawerZIndex)
+      }
     },
   },
 }
