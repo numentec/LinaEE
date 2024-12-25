@@ -23,6 +23,7 @@ urlpatterns = [
     path('linapi/', include('apps.core.urls')),
     path('linapi/linabi/', include('apps.linabi.urls')),
     path('linapi/wms/', include('apps.wms.urls')),
+    path('linapi/shoppingcart/', include('apps.shoppingcart.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 urlpatterns = urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
