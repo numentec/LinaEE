@@ -1,7 +1,7 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <CategoryCard :category="item" />
+      <CategoryCard :category="{ ...item, link }" />
     </div>
   </div>
 </template>
@@ -16,12 +16,9 @@ export default {
   },
   async asyncData({ store, error }) {
     try {
-      const items = await store.dispatch('shoppingcart/categories/fetchItems', {
+      await store.dispatch('shoppingcart/categories/fetchItems', {
         name: 'Subcategory',
-        link: '/shoppingcart/categories/products',
       })
-
-      return items
     } catch (err) {
       if (err.response) {
         error({
@@ -39,7 +36,7 @@ export default {
 
   data() {
     return {
-      items: [],
+      link: '/shoppingcart/categories/products',
     }
   },
 
@@ -47,10 +44,11 @@ export default {
     ...mapGetters('shoppingcart/categories', [
       'getSelectedBrands',
       'getSearchSubcategory',
+      'getAllSubcategories',
     ]),
 
     filteredItems() {
-      return this.items.filter((item) => {
+      return this.getAllSubcategories.filter((item) => {
         const selectedBrands = this.getSelectedBrands
         let searchSubCategory = this.getSearchSubcategory
 

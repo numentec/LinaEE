@@ -17,7 +17,7 @@ export default {
 
   async asyncData({ store, error }) {
     try {
-      const items = await store.dispatch('shoppingcart/categories/fetchItems', {
+      const items = await store.dispatch('shoppingcart/categories/fetchData', {
         name: 'Product',
         link: '',
       })

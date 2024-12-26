@@ -26,7 +26,7 @@ function getRandomSubarray(arr, size) {
   return shuffled.slice(0, size)
 }
 
-function makeItems(name, link) {
+function makeItems(name) {
   const items = []
   for (let i = 0; i < 100; i++) {
     items.push({
@@ -37,7 +37,6 @@ function makeItems(name, link) {
       description: `Description for ${name} ${i}`,
       instock: Math.floor(Math.random() * 100),
       brands: getRandomSubarray(BRANDSDATA, 3),
-      link,
     })
   }
 
@@ -47,7 +46,10 @@ function makeItems(name, link) {
 }
 
 export const state = () => ({
+  departments: [],
   categories: [],
+  subcategories: [],
+  products: [],
   selected_brands: [],
   search_department: '',
   search_category: '',
@@ -56,8 +58,17 @@ export const state = () => ({
 })
 
 export const mutations = {
+  SET_DEPARTMENTS(state, departments) {
+    state.departments = departments
+  },
   SET_CATEGORIES(state, categories) {
     state.categories = categories
+  },
+  SET_SUBCATEGORIES(state, subcategories) {
+    state.subcategories = subcategories
+  },
+  SET_PRODUCTS(state, products) {
+    state.products = products
   },
   ADD_CATEGORY(state, category) {
     state.categories.push(category)
@@ -85,9 +96,48 @@ export const mutations = {
 }
 
 export const actions = {
-  async fetchItems({ commit }, payload) {
+  async fetchItems({ commit, dispatch }, payload) {
+    // commit('SET_LOADING_STATUS')
+
+    let curMutation = ''
+    let endpointParams = {}
+
+    switch (payload.name) {
+      case 'Department':
+        curMutation = 'SET_DEPARTMENTS'
+        endpointParams = { p01: 'DEPTO', p02: '01' }
+        break
+      case 'Category':
+        curMutation = 'SET_CATEGORIES'
+        endpointParams = { p01: 'CAT', p02: '01' }
+        break
+      case 'Subcategory':
+        curMutation = 'SET_SUBCATEGORIES'
+        endpointParams = { p01: 'SCAT', p02: '01' }
+        break
+      case 'Product':
+        curMutation = 'SET_PRODUCTS'
+        endpointParams = { p01: 'PROD', p02: '01' }
+        break
+    }
+
+    return await this.$axios
+      .get('shoppingcart/catsbrands/', {
+        params: endpointParams,
+      })
+      .then((response) => {
+        commit(curMutation, response.data)
+        // commit('SET_LOADING_STATUS')
+        return { items: response.data }
+      })
+  },
+
+  // Función temporal para generar datos de prueba para los productos
+  async fetchData({ commit, dispatch }, payload) {
+    // commit('SET_LOADING_STATUS')
+
     // Simulate an API call
-    const { data } = await makeItems(payload.name, payload.link)
+    const { data } = await makeItems(payload.name)
 
     switch (payload.name) {
       case 'Department':
@@ -131,9 +181,18 @@ export const actions = {
 }
 
 export const getters = {
-  allCategories: (state) => state.categories,
-  categoryById: (state) => (id) =>
+  getAllDepartments: (state) => state.departments,
+  getDepartmentById: (state) => (id) =>
+    state.departments.find((department) => department.id === id),
+
+  getAllCategories: (state) => state.categories,
+  getCategoryById: (state) => (id) =>
     state.categories.find((category) => category.id === id),
+
+  getAllSubcategories: (state) => state.subcategories,
+  getSubcategoryById: (state) => (id) =>
+    state.subcategories.find((subcategory) => subcategory.id === id),
+
   getSelectedBrands: (state) => state.selected_brands,
   getSearchDepartment: (state) => state.search_department,
   getSearchCategory: (state) => state.search_category,

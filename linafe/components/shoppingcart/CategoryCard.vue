@@ -5,7 +5,21 @@
     :loading="loadingView"
     @click="goToView"
   >
-    <v-img :src="category.image" height="400px" cover>
+    <v-img
+      :src="imgSrc"
+      height="400px"
+      cover
+      :lazy-src="lazySrc"
+      @error="onImgError"
+    >
+      <template v-slot:placeholder>
+        <v-row class="fill-height ma-0" align="center" justify="center">
+          <v-progress-circular
+            indeterminate
+            color="grey lighten-5"
+          ></v-progress-circular>
+        </v-row>
+      </template>
       <v-toolbar
         flat
         color="rgba(0, 0, 0, 0.65)"
@@ -34,6 +48,8 @@ export default {
     return {
       loadingView: false,
       quantity: 1,
+      imgSrc: this.$config.fotosURL + this.category.image,
+      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
   activated() {
@@ -51,6 +67,10 @@ export default {
       } else {
         this.$router.push(this.category.link)
       }
+    },
+    onImgError() {
+      this.imgSrc = '/no_image.png'
+      this.$emit('no-image')
     },
   },
 }
