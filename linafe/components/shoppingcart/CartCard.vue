@@ -34,17 +34,30 @@
             @click:append="increaseQuantity(item.index)"
           ></v-text-field>
         </v-col>
-        <v-col cols="2" align-self="center">
-          <v-row justify="center" dense>
-            <h3>
-              {{
-                `${itemSubTotal.toLocaleString('es-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                })}`
-              }}
-            </h3>
-          </v-row>
+        <v-col cols="2" class="d-flex flex-column justify-space-between">
+          <div class="text-center">
+            <v-btn large icon color="green lighten-1">
+              <v-icon large>mdi-pencil-box-outline</v-icon>
+            </v-btn>
+          </div>
+          <h3 class="text-center">
+            {{
+              `${itemSubTotal.toLocaleString('es-US', {
+                style: 'currency',
+                currency: 'USD',
+              })}`
+            }}
+          </h3>
+          <div class="text-center">
+            <v-btn
+              large
+              icon
+              color="red lighten-1"
+              @click="removeFromCart(item.product.id)"
+            >
+              <v-icon large>{{ delIcon }}</v-icon>
+            </v-btn>
+          </div>
         </v-col>
       </v-row>
     </v-card-text>
@@ -69,6 +82,7 @@ export default {
   },
   computed: {
     ...mapGetters('shoppingcart/cart', [
+      'getCartItemCount',
       'getCartItemQuantity',
       'getCartTotalPrice',
     ]),
@@ -76,7 +90,12 @@ export default {
       return this.item.price * this.item.quantity
     },
     preIcon() {
-      return this.item.quantity > 1 ? 'mdi-minus' : 'mdi-delete'
+      return this.item.quantity > 1 ? 'mdi-minus' : 'mdi-delete-outline'
+    },
+    delIcon() {
+      return this.getCartItemCount > 1
+        ? 'mdi-delete-outline'
+        : 'mdi-delete-empty'
     },
   },
   methods: {

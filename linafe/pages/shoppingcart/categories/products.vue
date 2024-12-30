@@ -17,7 +17,8 @@ export default {
 
   async asyncData({ store, error }) {
     try {
-      const items = await store.dispatch('shoppingcart/categories/fetchData', {
+      // await store.dispatch('shoppingcart/products/fetchProducts')
+      const items = await store.dispatch('shoppingcart/products/fetchData', {
         name: 'Product',
         link: '',
       })
@@ -45,32 +46,34 @@ export default {
   },
 
   computed: {
-    ...mapGetters('shoppingcart/categories', [
-      'getSelectedBrands',
+    ...mapGetters('shoppingcart/categories', ['getSelectedBrands']),
+
+    ...mapGetters('shoppingcart/products', [
+      'getAllProducts',
       'getSearchProduct',
     ]),
 
     filteredItems() {
-      return this.items.filter((item) => {
+      return this.getAllProducts.filter((item) => {
         const selectedBrands = this.getSelectedBrands
-        let SearchProduct = this.getSearchProduct
+        let searchProduct = this.getSearchProduct
 
-        if (SearchProduct === null || SearchProduct === undefined) {
-          SearchProduct = ''
+        if (searchProduct === null || searchProduct === undefined) {
+          searchProduct = ''
         }
 
-        if (SearchProduct === '' && selectedBrands.length === 0) {
+        if (searchProduct === '' && selectedBrands.length === 0) {
           return true
         }
 
         if (selectedBrands.length > 0) {
           return (
-            item.name.toLowerCase().includes(SearchProduct.toLowerCase()) &&
-            selectedBrands.includes(item.brands[0])
+            item.name.toLowerCase().includes(searchProduct.toLowerCase()) &&
+            selectedBrands.includes(item.brand)
           )
         }
 
-        return item.name.toLowerCase().includes(SearchProduct.toLowerCase())
+        return item.name.toLowerCase().includes(searchProduct.toLowerCase())
       })
     },
   },

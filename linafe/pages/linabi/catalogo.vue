@@ -527,6 +527,14 @@ function fileDownloader(url, ax) {
   })
 }
 
+/**
+ * Returns a new array with unique elements based on the provided key function.
+ * If there are duplicate keys, the last occurrence is kept.
+ *
+ * @param {Array} data - The array of objects to be filtered for uniqueness.
+ * @param {Function} key - A function that takes an element from the array and returns the key to determine uniqueness.
+ * @returns {Array} A new array with unique elements based on the provided key function.
+ */
 function uniqByKeepLast(data, key) {
   return [...new Map(data.map((x) => [key(x), x])).values()]
 }

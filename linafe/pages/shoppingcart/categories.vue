@@ -18,15 +18,24 @@
             </template>
             <span>Volver a vista anterior</span>
           </v-tooltip>
-          <v-select
-            v-model="selected_brands"
-            :items="brands"
-            multiple
-            label="Filter by brand"
-            chips
-            deletable-chips
-            dense
-          ></v-select>
+          <div class="px-2 mt-4">
+            <v-autocomplete
+              v-model="selected_brands"
+              label="Brands"
+              :items="getBrands"
+              item-text="name"
+              item-value="id"
+              multiple
+              chips
+              deletable-chips
+              dense
+              rounded
+              clearable
+              background-color="white"
+              single-line
+              max-width="300"
+            ></v-autocomplete>
+          </div>
           <v-spacer></v-spacer>
           <v-text-field
             v-show="cur_child_view.includes('departments')"
@@ -137,10 +146,54 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
 
+function uniqByKeepLast(data, key) {
+  return [...new Map(data.map((x) => [key(x), x])).values()]
+}
+
 export default {
+  name: 'Categories',
+  components: {},
+  async asyncData({ $axios, store, error }) {
+    const loggedInUser = store.getters.loggedInUser
+    const groupList = loggedInUser.ugroups.toString()
+    try {
+      const [resp0, resp1] = await Promise.all([
+        $axios.get('vistas/35/'),
+        $axios.get('accviewconf-list/', {
+          params: { idvista: '35', groups: groupList },
+        }),
+        store.dispatch('shoppingcart/categories/fetchItems', { name: 'Brand' }),
+      ])
+      const filterPerms = uniqByKeepLast(resp1.data, (it) => it.vistaconf)
+      return {
+        curView: {
+          num: resp0.data.id,
+          checkelperms: resp0.data.checkelperms,
+        },
+        viewConf: resp0.data.configs_x_vista,
+        filterPerms,
+      }
+    } catch (err) {
+      if (err.response) {
+        error({
+          statusCode: err.response.status,
+          message: err.response.data.message,
+        })
+      } else if (error.request) {
+        error({
+          statusCode: 503,
+          message: 'No hubo respuesta del servidor',
+        })
+      } else {
+        error({
+          statusCode: 1010,
+          message: err.message,
+        })
+      }
+    }
+  },
   data() {
     return {
-      brands: ['Brand 1', 'Brand 2', 'Brand 3', 'Brand 4', 'Brand 5'],
       selected_brands: [],
       cur_child_view: 'departments',
       search_department: '',
@@ -158,8 +211,9 @@ export default {
       'getSearchDepartment',
       'getSearchCategory',
       'getSearchSubcategory',
-      'getSearchProduct',
+      'getBrands',
     ]),
+    ...mapGetters('shoppingcart/products', ['getSearchProduct']),
     crumbs() {
       const n = this.$route.fullPath.lastIndexOf('/')
       const curText = () => {
@@ -228,6 +282,7 @@ export default {
 
   mounted() {
     this.setShowBottomNav(true)
+    this.setViewConf(this.viewConf)
   },
 
   methods: {
@@ -236,8 +291,9 @@ export default {
       'setSearchDepartment',
       'setSearchCategory',
       'setSearchSubcategory',
-      'setSearchProduct',
+      'setViewConf',
     ]),
+    ...mapActions('shoppingcart/products', ['setSearchProduct']),
     ...mapActions('sistema', ['setShowBottomNav']),
     goToCart() {
       this.$router.push('/shoppingcart/cart')

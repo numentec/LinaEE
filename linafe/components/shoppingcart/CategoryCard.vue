@@ -58,6 +58,10 @@ export default {
   methods: {
     goToView() {
       this.loadingView = true
+      this.$emit('card-clicked', {
+        key: this.category.type,
+        value: this.category.id,
+      })
       if (
         this.category.link === null ||
         this.category.link === '' ||

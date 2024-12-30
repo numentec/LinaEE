@@ -1,13 +1,16 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <CategoryCard :category="{ ...item, link }" />
+      <CategoryCard
+        :category="{ ...item, type: 'depto', link: setLink() }"
+        @card-clicked="setSelectProductsByElement"
+      />
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import CategoryCard from '~/components/shoppingcart/CategoryCard.vue'
 
 export default {
@@ -36,7 +39,6 @@ export default {
 
   data() {
     return {
-      // items: [],
       link: '/shoppingcart/categories/categoriesmain',
     }
   },
@@ -46,6 +48,7 @@ export default {
       'getSelectedBrands',
       'getSearchDepartment',
       'getAllDepartments',
+      'getViewConfElement',
     ]),
 
     filteredItems() {
@@ -64,7 +67,9 @@ export default {
         if (selectedBrands.length > 0) {
           return (
             item.name.toLowerCase().includes(searchDepartment.toLowerCase()) &&
-            selectedBrands.includes(item.brands[0])
+            item.brands
+              .split(',')
+              .some((brand) => selectedBrands.includes(brand))
           )
         }
         return item.name.toLowerCase().includes(searchDepartment.toLowerCase())
@@ -76,9 +81,12 @@ export default {
     window.scrollTo(0, 0)
   },
 
-  // methods: {
-  //   ...mapActions('shoppingcart/categories', ['fetchCategories']),
-  // },
+  methods: {
+    ...mapActions('shoppingcart/categories', ['setSelectProductsByElement']),
+    setLink() {
+      return this.getViewConfElement('link', 'configval1') ?? this.link
+    },
+  },
 }
 </script>
 

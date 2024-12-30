@@ -19,7 +19,7 @@
 export default {
   data() {
     return {
-      page_name: 'page',
+      page_name: 'tools',
     }
   },
   created() {

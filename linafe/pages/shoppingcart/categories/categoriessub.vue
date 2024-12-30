@@ -1,16 +1,20 @@
 <template>
   <div class="shopping-cart mt-4">
     <div v-for="(item, index) in filteredItems" :key="index">
-      <CategoryCard :category="{ ...item, link }" />
+      <CategoryCard
+        :category="{ ...item, type: 'scat', link: setLink() }"
+        @card-clicked="setSelectProductsByElement"
+      />
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import CategoryCard from '~/components/shoppingcart/CategoryCard.vue'
 
 export default {
+  name: 'CategoriesSub',
   components: {
     CategoryCard,
   },
@@ -45,6 +49,7 @@ export default {
       'getSelectedBrands',
       'getSearchSubcategory',
       'getAllSubcategories',
+      'getViewConfElement',
     ]),
 
     filteredItems() {
@@ -63,7 +68,9 @@ export default {
         if (selectedBrands.length > 0) {
           return (
             item.name.toLowerCase().includes(searchSubCategory.toLowerCase()) &&
-            selectedBrands.includes(item.brands[0])
+            item.brands
+              .split(',')
+              .some((brand) => selectedBrands.includes(brand))
           )
         }
 
@@ -73,6 +80,15 @@ export default {
   },
   mounted() {
     window.scrollTo(0, 0)
+  },
+  methods: {
+    ...mapActions('shoppingcart/categories', ['setSelectProductsByElement']),
+    onImgError() {
+      this.imgSrc = '/no_image.png'
+    },
+    setLink() {
+      return this.getViewConfElement('link', 'configval3') ?? this.link
+    },
   },
 }
 </script>

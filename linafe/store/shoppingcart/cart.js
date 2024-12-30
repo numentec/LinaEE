@@ -21,7 +21,7 @@ export const mutations = {
     state.cart[item.index].price = item.price
   },
   REMOVE_FROM_CART(state, productId) {
-    state.cart = state.cart.filter((product) => product.id !== productId)
+    state.cart = state.cart.filter((item) => item.product.id !== productId)
   },
   CLEAR_CART(state) {
     state.cart = []
@@ -101,5 +101,5 @@ export const getters = {
   },
   getCartTotalPrice: (state) =>
     state.cart.reduce((total, item) => total + item.price * item.quantity, 0),
-  getCarItemQuantity: (state) => (index) => state.cart[index].quantity,
+  getCartItemQuantity: (state) => (index) => state.cart[index].quantity,
 }
