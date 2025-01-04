@@ -185,6 +185,13 @@ const setFields = (row) => {
       area: 'data',
       isMeasure: true,
     },
+    {
+      dataField: 'COSTO',
+      dataType: 'number',
+      summaryType: 'sum',
+      format: '#,##0.00',
+      isMeasure: true,
+    },
   ]
 }
 
