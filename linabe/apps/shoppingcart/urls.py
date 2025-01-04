@@ -6,4 +6,5 @@ app_name = "shoppingcart"
 
 urlpatterns = [
     path('catsbrands/', views.CategoryBrandListAPIView.as_view(), name='catsbrands'),
+    path('products/', views.ProductsAPIView.as_view(), name='products'),
 ]

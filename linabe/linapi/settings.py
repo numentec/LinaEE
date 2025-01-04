@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.inv',
     'apps.linabi',
+    'apps.shoppingcart',
     'apps.wms',
 ]
 
