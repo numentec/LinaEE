@@ -1,6 +1,7 @@
 import os
 import secrets
 from datetime import date, timedelta
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
 from .attributs import attrs_catalog
@@ -142,8 +143,7 @@ class BICustomCatalogCategory(Common):
         verbose_name_plural = 'Custom Categories'
 
 def defaultTTL():
-    ttl = date.today + timedelta(days=5)
-    return ttl
+    return timezone.now() + timedelta(days=5)
 
 
 # Modelo para maestro de catálogo personalizado
