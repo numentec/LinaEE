@@ -72,11 +72,11 @@ class ProductsAPIView(APIView):
 
     def get(self, request, format=None):
         idVista = 36
-        # p01 - DEPARTMENT filter
-        # p02 - CATEGORY filter
-        # p03 - SUBCATEGORY filter
-        # p04 - BRAND filter EJ.: '200,101,151,25'
-        # p05 - COMPANY filter
+        # depto - DEPARTMENT filter
+        # cat - CATEGORY filter
+        # scat - SUBCATEGORY filter
+        # brands - BRAND filter EJ.: '200,101,151,25'
+        # cia - COMPANY filter
 
         p01 = str(request.query_params.get('depto', '0')).lower().strip()
         p02 = str(request.query_params.get('cat', '0')).lower().strip()
@@ -87,7 +87,8 @@ class ProductsAPIView(APIView):
         # Transform p04 to be compatible with the procedure
         if p04_raw:
             p04_list = p04_raw.split(",")  # Split by commas
-            p04 = ",".join([f"'{brand.strip()}'" for brand in p04_list])  # Add single quotes to each element
+            # Add single quotes to each element and join them with commas. EJ.: '200','101','151','25'
+            p04 = ",".join([f"'{brand.strip()}'" for brand in p04_list])
         else:
             p04 = ""  # If there are no brands, leave the parameter empty
 
@@ -97,8 +98,6 @@ class ProductsAPIView(APIView):
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         params = [p01, p02, p03, p04, p05]
-
-        print('***** PARAMS *****', params)
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 
