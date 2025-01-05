@@ -8,7 +8,13 @@
     <!-- <v-badge color="green" content="6" bottom overlap>
       <v-img :src="product.image" height="400px" cover></v-img>
     </v-badge> -->
-    <v-img :src="product.image" height="400px" cover>
+    <v-img
+      :src="imgSrc"
+      height="400px"
+      cover
+      :lazy-src="lazySrc"
+      @error="onImgError"
+    >
       <v-app-bar flat color="rgba(0, 0, 0, 0)">
         <v-chip
           v-if="cartquantity > 0"
@@ -132,6 +138,8 @@ export default {
       dialog: false,
       cartquantity: 0,
       cartprice: this.product.price,
+      imgSrc: this.$config.fotosURL + this.product.image,
+      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
   watch: {
@@ -148,15 +156,8 @@ export default {
     ...mapActions('shoppingcart/cart', ['addToCart']),
     goToView() {
       this.loadingView = true
-      if (
-        this.product.link === null ||
-        this.product.link === '' ||
-        this.product.link === undefined
-      ) {
-        this.$router.push('/shoppingcart/categories/departments')
-      } else {
-        this.$router.push(this.product.link)
-      }
+      const link = this.product.link || this.$route.path
+      this.$router.push(link)
     },
     makeAction() {
       this.loadingView = true
@@ -186,6 +187,10 @@ export default {
       if (this.cartquantity === 0) {
         this.cartquantity = 1
       }
+    },
+    onImgError() {
+      this.imgSrc = '/no_image.png'
+      this.$emit('no-image')
     },
   },
 }

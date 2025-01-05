@@ -51,8 +51,24 @@
               <v-col cols="12">
                 <v-row dense justify="start" align="start" class="ml-4 mb-4">
                   <v-col align="start">
-                    <h3>{{ getCartCustomer.name }}</h3>
-                    {{ getCartCustomer.email }}
+                    <div class="my-0">
+                      <v-autocomplete
+                        v-model="selected_customer"
+                        label="Customer"
+                        return-object
+                        :items="getCustomers"
+                        item-text="name"
+                        item-value="id"
+                        dense
+                        background-color="#eafaff"
+                        rounded
+                        clearable
+                        single-line
+                      ></v-autocomplete>
+                    </div>
+                    <div class="mt-0">
+                      {{ getCartCustomer.email }}
+                    </div>
                   </v-col>
                 </v-row>
                 <v-row justify="center" align="center">
@@ -100,7 +116,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import CartCard from '@/components/shoppingcart/CartCard.vue'
 
 export default {
@@ -108,8 +124,28 @@ export default {
   components: {
     CartCard,
   },
+  async fetch() {
+    const curparams = {
+      p01: 'CLI',
+      p02: this.getCurCia.extrel,
+    }
+
+    // this.loadingView = true
+    await this.$axios
+      .get('shoppingcart/catsbrands/', {
+        params: curparams,
+      })
+      .then((response) => {
+        this.$store.dispatch(
+          'shoppingcart/categories/setCustomers',
+          response.data
+        )
+        // this.loadingView = false
+      })
+  },
   data() {
     return {
+      selected_customer: null,
       snackbar: false,
     }
   },
@@ -119,8 +155,25 @@ export default {
       'getCartTotalPrice',
       'getCartCustomer',
     ]),
+    ...mapGetters('shoppingcart/categories', ['getCustomers']),
+    ...mapGetters('sistema', ['getCurCia']),
   },
+
+  watch: {
+    selected_customer(newCustomer) {
+      if (!newCustomer) {
+        newCustomer = {
+          id: 0,
+          name: 'nocli',
+          email: 'noemail@numen.pa',
+        }
+      }
+      this.setCartCustomer(newCustomer)
+    },
+  },
+
   methods: {
+    ...mapActions('shoppingcart/cart', ['setCartCustomer']),
     goToCheckout() {
       this.snackbar = true
     },

@@ -17,6 +17,7 @@ export default {
   components: {
     CategoryCard,
   },
+
   async asyncData({ store, error }) {
     try {
       await store.dispatch('shoppingcart/categories/fetchItems', {
@@ -79,6 +80,10 @@ export default {
 
   mounted() {
     window.scrollTo(0, 0)
+    console.log(
+      'Departments mounted with:',
+      this.getViewConfElement('link', 'configval1')
+    )
   },
 
   methods: {

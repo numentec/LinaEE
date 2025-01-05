@@ -165,7 +165,7 @@ const arrayEquals = (a, b) => {
   return a.length === b.length && a.every((v, i) => v === b[i])
 }
 
-const setFields = (row) => {
+const setFields = (row, hasPermissions) => {
   return [
     {
       dataField: row,
@@ -191,8 +191,13 @@ const setFields = (row) => {
       summaryType: 'sum',
       format: '#,##0.00',
       isMeasure: true,
+      visible: hasPermissions,
     },
   ]
+}
+
+function uniqByKeepLast(data, key) {
+  return [...new Map(data.map((x) => [key(x), x])).values()]
 }
 
 export default {
@@ -203,6 +208,7 @@ export default {
     MaterialCard,
     LoadingView,
   },
+
   async fetch() {
     let fields = []
 
@@ -219,7 +225,7 @@ export default {
 
       this.curPeriod = [fi, ff]
 
-      fields = setFields(crow)
+      fields = setFields(crow, this.hasPermissions)
       // eslint-disable-next-line no-console
       // console.log(fields)
     }
@@ -244,6 +250,48 @@ export default {
       })
     })
   },
+
+  async asyncData({ $axios, store, error }) {
+    const loggedInUser = store.getters.loggedInUser
+    const groupList = loggedInUser.ugroups.toString()
+
+    try {
+      const [resp0, resp1] = await Promise.all([
+        $axios.get('vistas/31/'),
+        $axios.get('accviewconf-list/', {
+          params: { idvista: '31', groups: groupList },
+        }),
+      ])
+      const filterPerms = uniqByKeepLast(resp1.data, (it) => it.vistaconf)
+      return {
+        curView: {
+          num: resp0.data.id,
+          checkelperms: resp0.data.checkelperms,
+        },
+        viewConf: resp0.data.configs_x_vista,
+        filterPerms,
+        loggedInUser,
+      }
+    } catch (err) {
+      if (err.response) {
+        error({
+          statusCode: err.response.status,
+          message: err.response.data.message,
+        })
+      } else if (error.request) {
+        error({
+          statusCode: 503,
+          message: 'No hubo respuesta del servidor',
+        })
+      } else {
+        error({
+          statusCode: 1010,
+          message: err.message,
+        })
+      }
+    }
+  },
+
   data() {
     return {
       curGridRefKey,
@@ -268,7 +316,30 @@ export default {
     curPeriodText() {
       return this.curPeriod.join(' ~ ')
     },
+    hasPermissions() {
+      let perm = false
+
+      const conf = this.viewConf.find((obj) => obj.configkey === 'costo')
+
+      if (conf) {
+        if (this.loggedInUser.is_superuser) {
+          perm = true
+        } else {
+          perm = conf.configval1 === '1'
+
+          if (this.curView.checkelperms) {
+            const acc = this.filterPerms.find((el) => el.configkey === 'costo')
+            if (acc) {
+              perm = acc.acceso
+            }
+          }
+        }
+      }
+
+      return perm
+    },
   },
+
   created() {
     locale(navigator.language)
   },
@@ -285,7 +356,7 @@ export default {
         const qryP = [fi, ff]
         const cP = this.curPeriod
 
-        const fields = setFields(crow)
+        const fields = setFields(crow, this.hasPermissions)
         this.dataSource.fields(fields)
 
         this.curRow = crow

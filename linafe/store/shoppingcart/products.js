@@ -1,6 +1,5 @@
-import { state as categoriesState } from './categories'
-
 export const namespaced = true
+
 const BRANDSDATA = ['1', '2', '3', '4', '5', '187', '188', '189', '190', '191']
 const IMAGES = [
   'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
@@ -60,12 +59,19 @@ export const actions = {
     commit('SET_LOADING_STATUS')
   },
 
-  async fetchProducts({ commit }) {
+  async fetchProducts({ commit, rootGetters }) {
     commit('SET_LOADING_STATUS')
 
+    const selectedBrands =
+      rootGetters['shoppingcart/categories/getSelectedBrands']
+    const selectProductsBy =
+      rootGetters['shoppingcart/categories/getSelectProductsBy']
+
+    const brands = selectedBrands.length > 0 ? selectedBrands.join(',') : ''
+
     const endpointParams = {
-      ...categoriesState.select_products_by,
-      brands: categoriesState.selected_brands.join(','), // '1,2,3,4,5,187,188,189,190,191',
+      ...selectProductsBy,
+      brands, // '1,2,3,4,5,187,188,189,190,191',
       cia: '01',
     }
 

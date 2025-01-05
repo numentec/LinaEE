@@ -17,13 +17,15 @@ export default {
 
   async asyncData({ store, error }) {
     try {
-      // await store.dispatch('shoppingcart/products/fetchProducts')
-      const items = await store.dispatch('shoppingcart/products/fetchData', {
-        name: 'Product',
-        link: '',
-      })
-
-      return items
+      await store.dispatch('shoppingcart/products/fetchProducts')
+      /* Dejaré comentado este código por si se necesita en un futuro. 
+      Mientras no se complete la paginación desde el backend, 
+      se podría necesitar para pruebas en desarrollo.
+      */
+      // await store.dispatch('shoppingcart/products/fetchData', {
+      //   name: 'Product',
+      //   link: '',
+      // })
     } catch (err) {
       if (err.response) {
         error({
@@ -40,9 +42,7 @@ export default {
   },
 
   data() {
-    return {
-      items: [],
-    }
+    return {}
   },
 
   computed: {

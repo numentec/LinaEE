@@ -156,6 +156,7 @@ export default {
   async asyncData({ $axios, store, error }) {
     const loggedInUser = store.getters.loggedInUser
     const groupList = loggedInUser.ugroups.toString()
+
     try {
       const [resp0, resp1] = await Promise.all([
         $axios.get('vistas/35/'),
@@ -165,12 +166,16 @@ export default {
         store.dispatch('shoppingcart/categories/fetchItems', { name: 'Brand' }),
       ])
       const filterPerms = uniqByKeepLast(resp1.data, (it) => it.vistaconf)
+      const viewConf = resp0.data.configs_x_vista
+
+      store.dispatch('shoppingcart/categories/setViewConf', viewConf)
+
       return {
         curView: {
           num: resp0.data.id,
           checkelperms: resp0.data.checkelperms,
         },
-        viewConf: resp0.data.configs_x_vista,
+        viewConf,
         filterPerms,
       }
     } catch (err) {
@@ -282,7 +287,6 @@ export default {
 
   mounted() {
     this.setShowBottomNav(true)
-    this.setViewConf(this.viewConf)
   },
 
   methods: {
@@ -291,7 +295,6 @@ export default {
       'setSearchDepartment',
       'setSearchCategory',
       'setSearchSubcategory',
-      'setViewConf',
     ]),
     ...mapActions('shoppingcart/products', ['setSearchProduct']),
     ...mapActions('sistema', ['setShowBottomNav']),

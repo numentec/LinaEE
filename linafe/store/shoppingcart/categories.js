@@ -10,12 +10,13 @@ export const state = () => ({
   search_department: '',
   search_category: '',
   search_subcategory: '',
-  viewconf: [{}],
+  viewconf: [],
   select_products_by: {
-    depto: '*',
-    cat: '*',
-    scat: '*',
+    depto: '0',
+    cat: '0',
+    scat: '0',
   },
+  customers: [],
   isLoading: false,
 })
 
@@ -63,6 +64,9 @@ export const mutations = {
   },
   SET_SELECT_PRODUCTS_BY_ELEMENT(state, { key, value }) {
     state.select_products_by[key] = value
+  },
+  SET_CUSTOMERS(state, customers) {
+    state.customers = customers
   },
 }
 
@@ -143,6 +147,9 @@ export const actions = {
   setSelectProductsByElement({ commit }, { key, value }) {
     commit('SET_SELECT_PRODUCTS_BY_ELEMENT', { key, value })
   },
+  setCustomers({ commit }, customers) {
+    commit('SET_CUSTOMERS', customers)
+  },
 }
 
 export const getters = {
@@ -166,8 +173,13 @@ export const getters = {
   getViewConf: (state) => state.viewconf,
   getViewConfElement: (state) => (name, element) => {
     const conf = state.viewconf.find((conf) => conf.configkey === name)
-    return conf ? conf[element] : null
+
+    return conf ? `/shoppingcart/categories/${conf[element]}` : null
   },
   getSelectProductsBy: (state) => state.select_products_by,
   getSelectProductsByElement: (state) => (key) => state.select_products_by[key],
+  getCustomers: (state) => state.customers,
+  getCustomerById: (state) => (id) =>
+    state.customers.find((customer) => customer.id === id),
+  getIsLoading: (state) => state.isLoading,
 }

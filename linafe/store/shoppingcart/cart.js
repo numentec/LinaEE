@@ -3,7 +3,7 @@ export const namespaced = true
 export const state = () => ({
   cart: [],
   products: [],
-  cartCustomer: { id: 1, name: 'John Doe', email: 'jdoe@numen.pa' },
+  cartCustomer: { id: 0, name: 'nocli', email: 'noemail@numen.pa' },
 })
 
 export const mutations = {
