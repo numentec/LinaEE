@@ -16,12 +16,15 @@ export const mutations = {
   ADD_TO_CART(state, product) {
     state.cart.push(product)
   },
-  UPDATE_CART(state, item) {
-    state.cart[item.index].quantity = item.qty
+  UPDATE_ITEM(state, item) {
+    state.cart[item.index].quantity = item.quantity
     state.cart[item.index].price = item.price
   },
   REMOVE_FROM_CART(state, productId) {
     state.cart = state.cart.filter((item) => item.product.id !== productId)
+  },
+  REMOVE_ITEM(state, index) {
+    state.cart.splice(index, 1)
   },
   CLEAR_CART(state) {
     state.cart = []
@@ -60,9 +63,9 @@ export const actions = {
     )
 
     if (itemIndex > -1) {
-      commit('UPDATE_CART', {
+      commit('UPDATE_ITEM', {
         index: itemIndex,
-        qty: item.quantity,
+        quantity: item.quantity,
         price: item.price,
       })
 
@@ -102,4 +105,8 @@ export const getters = {
   getCartTotalPrice: (state) =>
     state.cart.reduce((total, item) => total + item.price * item.quantity, 0),
   getCartItemQuantity: (state) => (index) => state.cart[index].quantity,
+  getItemQuantityById: (state) => (id) => {
+    const item = state.cart.find((item) => item.product.id === id)
+    return item ? item.quantity : 0
+  },
 }

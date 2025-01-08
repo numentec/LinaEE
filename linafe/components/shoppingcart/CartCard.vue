@@ -4,10 +4,12 @@
       <v-row>
         <v-col cols="4" class="d-flex justify-center shrink">
           <v-img
-            :src="item.product.image"
+            :src="imgSrc"
             class="mr-4"
             max-width="150"
             height="200"
+            :lazy-src="lazySrc"
+            @error="onImgError"
           ></v-img>
         </v-col>
         <v-col cols="6">
@@ -15,7 +17,7 @@
           <p>{{ item.product.description }}</p>
           <v-chip color="green lighten-2" text-color="white" class="my-4">
             {{
-              `${item.price.toLocaleString('es-US', {
+              `${Number(item.price).toLocaleString('es-US', {
                 style: 'currency',
                 currency: 'USD',
               })}`
@@ -30,15 +32,73 @@
             class="centered-input mx-2 mt-6"
             :prepend-inner-icon="preIcon"
             append-icon="mdi-plus"
-            @click:prepend-inner="decreaseQuantity(item.index)"
-            @click:append="increaseQuantity(item.index)"
+            @click:prepend-inner="() => decreaseQuantity(item.index)"
+            @click:append="() => increaseQuantity(item.index)"
           ></v-text-field>
         </v-col>
         <v-col cols="2" class="d-flex flex-column justify-space-between">
           <div class="text-center">
-            <v-btn large icon color="green lighten-1">
-              <v-icon large>mdi-pencil-box-outline</v-icon>
-            </v-btn>
+            <v-dialog v-model="dialog" max-width="500px">
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  large
+                  icon
+                  color="green lighten-1"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="openDialog"
+                >
+                  <v-icon large>mdi-pencil-box-outline</v-icon>
+                </v-btn>
+              </template>
+              <v-card>
+                <v-card-title class="headline">{{
+                  item.product.name
+                }}</v-card-title>
+                <v-card-subtitle>{{
+                  item.product.description
+                }}</v-card-subtitle>
+                <v-card-text>
+                  <v-row>
+                    <v-col cols="12">
+                      <v-text-field
+                        v-model="itemQuantity"
+                        label="Cantidad"
+                        type="number"
+                        placeholder="1"
+                        class="centered-input"
+                        prepend-icon="mdi-minus"
+                        append-icon="mdi-plus"
+                        @click:prepend="decreaseItemQuantity"
+                        @click:append="increaseItemQuantity"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <v-text-field
+                        v-model="itemPrice"
+                        label="Precio"
+                        class="centered-input"
+                        prefix="$"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="green darken-1" text @click.stop="updateItem">
+                    Update
+                  </v-btn>
+                </v-card-actions>
+                <v-btn
+                  icon
+                  class="ma-2"
+                  style="position: absolute; top: 0; right: 0"
+                  @click="closeDialog"
+                >
+                  <v-icon>mdi-close</v-icon>
+                </v-btn>
+              </v-card>
+            </v-dialog>
           </div>
           <h3 class="text-center">
             {{
@@ -77,7 +137,12 @@ export default {
   },
   data() {
     return {
-      quantity: this.item.quantity,
+      itemQuantity: this.item.quantity,
+      itemPrice: this.item.price,
+      imgSrc: this.$config.fotosURL + this.item.product.image,
+      // imgSrc: this.item.product.image,
+      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+      dialog: false,
     }
   },
   computed: {
@@ -100,11 +165,45 @@ export default {
   },
   methods: {
     ...mapActions('shoppingcart/cart', [
+      'decreaseQuantity',
+      'increaseQuantity',
       'removeFromCart',
       'clearCart',
-      'increaseQuantity',
-      'decreaseQuantity',
     ]),
+    decreaseItemQuantity() {
+      if (this.itemQuantity > 1) {
+        this.itemQuantity--
+      }
+    },
+    increaseItemQuantity() {
+      this.itemQuantity++
+    },
+    updateItem() {
+      if (this.itemQuantity > 0) {
+        this.$store.commit('shoppingcart/cart/UPDATE_ITEM', {
+          index: this.item.index,
+          quantity: parseInt(this.itemQuantity, 10),
+          price: parseFloat(parseFloat(this.itemPrice).toFixed(2)),
+        })
+        this.dialog = false
+      }
+    },
+    openDialog() {
+      this.itemQuantity = this.item.quantity
+      this.itemPrice = this.item.price
+      if (this.itemQuantity === 0) {
+        this.itemQuantity = 1
+      }
+    },
+    closeDialog() {
+      this.itemQuantity = this.item.quantity
+      this.itemPrice = this.item.price
+      this.dialog = false
+    },
+    onImgError() {
+      this.imgSrc = '/no_image.png'
+      this.$emit('no-image')
+    },
   },
 }
 </script>

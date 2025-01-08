@@ -1,7 +1,7 @@
 <template>
   <v-card
     class="mx-4 my-4"
-    max-width="300"
+    :width="225"
     :loading="loadingView"
     @click="goToView"
   >
@@ -10,25 +10,27 @@
     </v-badge> -->
     <v-img
       :src="imgSrc"
-      height="400px"
-      cover
+      :height="200"
+      contain
       :lazy-src="lazySrc"
       @error="onImgError"
     >
       <v-app-bar flat color="rgba(0, 0, 0, 0)">
         <v-chip
-          v-if="cartquantity > 0"
+          v-show="addedQuantity > 0"
           class="ma-2"
           color="rgba(0, 0, 0, 0.65)"
           text-color="white"
         >
-          {{ cartquantity }}
+          {{ addedQuantity }}
         </v-chip>
       </v-app-bar>
     </v-img>
     <v-card flat tile width="100%">
       <v-card-actions>
-        <v-card-title>{{ product.name }}</v-card-title>
+        <h4>
+          {{ product.name }}
+        </h4>
         <v-spacer></v-spacer>
         <v-chip color="green lighten-2" text-color="white">
           {{
@@ -96,7 +98,7 @@
               icon
               class="ma-2"
               style="position: absolute; top: 0; right: 0"
-              @click="dialog = false"
+              @click="closeDialog"
             >
               <v-icon>mdi-close</v-icon>
             </v-btn>
@@ -121,7 +123,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'ProductCard',
@@ -138,9 +140,18 @@ export default {
       dialog: false,
       cartquantity: 0,
       cartprice: this.product.price,
+      tmpCartQuantity: 0,
+      tmpCartPrice: this.product.price,
       imgSrc: this.$config.fotosURL + this.product.image,
+      // imgSrc: this.product.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
+  },
+  computed: {
+    ...mapGetters('shoppingcart/cart', ['getItemQuantityById']),
+    addedQuantity() {
+      return this.getItemQuantityById(this.product.id)
+    },
   },
   watch: {
     cartquantity(value) {
@@ -184,9 +195,16 @@ export default {
       }
     },
     openDialog() {
+      this.tmpCartQuantity = this.cartquantity
+      this.tmpCartPrice = this.cartprice
       if (this.cartquantity === 0) {
         this.cartquantity = 1
       }
+    },
+    closeDialog() {
+      this.cartquantity = this.tmpCartQuantity
+      this.cartprice = this.tmpCartPrice
+      this.dialog = false
     },
     onImgError() {
       this.imgSrc = '/no_image.png'
