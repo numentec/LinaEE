@@ -38,27 +38,30 @@ function makeItems(name) {
 
 export const state = () => ({
   products: [],
+  images: {}, // Almacenar las URLs de las imágenes de los productos
   search_product: '',
   isLoading: false,
 })
 
 export const mutations = {
-  SET_LOADING_STATUS(state) {
-    state.isLoading = !state.isLoading
-  },
   SET_PRODUCTS(state, products) {
     state.products = products
+  },
+  SET_IMAGES(state, images) {
+    state.images = images
+  },
+  ADD_IMAGE(state, { id, url }) {
+    state.images = { ...state.images, [id]: url }
   },
   SET_SEARCH_PRODUCT(state, search) {
     state.search_product = search
   },
+  SET_LOADING_STATUS(state) {
+    state.isLoading = !state.isLoading
+  },
 }
 
 export const actions = {
-  setIsLoading({ commit }) {
-    commit('SET_LOADING_STATUS')
-  },
-
   async fetchProducts({ commit, rootGetters }) {
     commit('SET_LOADING_STATUS')
 
@@ -97,11 +100,20 @@ export const actions = {
   setSearchProduct({ commit }, search) {
     commit('SET_SEARCH_PRODUCT', search)
   },
+
+  addImage({ commit }, { id, url }) {
+    commit('ADD_IMAGE', { id, url })
+  },
+
+  setIsLoading({ commit }) {
+    commit('SET_LOADING_STATUS')
+  },
 }
 
 export const getters = {
   getAllProducts: (state) => state.products,
-  getProductById: (state) => (id) =>
-    state.products.find((product) => product.id === id),
+  getProductById: (state) => (id) => state.products.find((p) => p.id === id),
   getSearchProduct: (state) => state.search_product,
+  getImages: (state) => state.images,
+  getImage: (state) => (id) => state.images[id],
 }

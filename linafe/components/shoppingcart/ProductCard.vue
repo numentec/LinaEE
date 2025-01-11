@@ -14,6 +14,7 @@
       contain
       :lazy-src="lazySrc"
       @error="onImgError"
+      @load="addImage({ id: product.id, url: imgSrc })"
     >
       <v-app-bar flat color="rgba(0, 0, 0, 0)">
         <v-chip
@@ -33,12 +34,7 @@
         </h4>
         <v-spacer></v-spacer>
         <v-chip color="green lighten-2" text-color="white">
-          {{
-            `${product.price.toLocaleString('es-US', {
-              style: 'currency',
-              currency: 'USD',
-            })}`
-          }}
+          {{ formatedPrice }}
         </v-chip>
       </v-card-actions>
       <v-card-actions>
@@ -142,15 +138,30 @@ export default {
       cartprice: this.product.price,
       tmpCartQuantity: 0,
       tmpCartPrice: this.product.price,
-      imgSrc: this.$config.fotosURL + this.product.image,
-      // imgSrc: this.product.image,
-      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+      setNoImage: false,
+      // lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+      lazySrc: '/no_image.png',
+      imgError: false,
     }
   },
   computed: {
     ...mapGetters('shoppingcart/cart', ['getItemQuantityById']),
+    ...mapGetters('shoppingcart/products', ['getImage']),
     addedQuantity() {
       return this.getItemQuantityById(this.product.id)
+    },
+    imgSrc() {
+      if (this.imgError) {
+        return '/no_image.png'
+      }
+
+      return this.getImage(this.product.id) || this.product.image
+    },
+    formatedPrice() {
+      return Number(this.product.price).toLocaleString('es-US', {
+        style: 'currency',
+        currency: 'USD',
+      })
     },
   },
   watch: {
@@ -165,6 +176,7 @@ export default {
   },
   methods: {
     ...mapActions('shoppingcart/cart', ['addToCart']),
+    ...mapActions('shoppingcart/products', ['addImage']),
     goToView() {
       this.loadingView = true
       const link = this.product.link || this.$route.path
@@ -207,7 +219,8 @@ export default {
       this.dialog = false
     },
     onImgError() {
-      this.imgSrc = '/no_image.png'
+      // this.imgSrc = '/no_image.png'
+      this.imgError = true
       this.$emit('no-image')
     },
   },

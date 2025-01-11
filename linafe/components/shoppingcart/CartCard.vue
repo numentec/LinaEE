@@ -4,24 +4,20 @@
       <v-row>
         <v-col cols="4" class="d-flex justify-center shrink">
           <v-img
-            :src="imgSrc"
+            :src="getImage(item.product.id)"
             class="mr-4"
             max-width="150"
             height="200"
             :lazy-src="lazySrc"
             @error="onImgError"
+            @load="addImage({ id: product.id, url: imgSrc })"
           ></v-img>
         </v-col>
         <v-col cols="6">
           <h3>SKU: {{ item.product.id }}</h3>
           <p>{{ item.product.description }}</p>
           <v-chip color="green lighten-2" text-color="white" class="my-4">
-            {{
-              `${Number(item.price).toLocaleString('es-US', {
-                style: 'currency',
-                currency: 'USD',
-              })}`
-            }}
+            {{ formattedPrice }}
           </v-chip>
           <v-text-field
             :value="item.quantity"
@@ -151,6 +147,7 @@ export default {
       'getCartItemQuantity',
       'getCartTotalPrice',
     ]),
+    ...mapGetters('shoppingcart/products', ['getImage']),
     itemSubTotal() {
       return this.item.price * this.item.quantity
     },
@@ -161,6 +158,12 @@ export default {
       return this.getCartItemCount > 1
         ? 'mdi-delete-outline'
         : 'mdi-delete-empty'
+    },
+    formattedPrice() {
+      return Number(this.item.price).toLocaleString('es-US', {
+        style: 'currency',
+        currency: 'USD',
+      })
     },
   },
   methods: {
