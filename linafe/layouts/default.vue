@@ -120,8 +120,7 @@ export default {
     },
   },
   mounted() {
-    window.addEventListener('beforeunload', this.test)
-
+    // window.addEventListener('beforeunload', this.test)
     if (!this.curuser.is_superuser) {
       let aT1 = []
       let aT2 = []
@@ -148,9 +147,9 @@ export default {
     this.getAppbarZIndex()
     this.getAppdrawerZIndex()
   },
-  beforeDestroy() {
-    window.removeEventListener('beforeunload', this.test)
-  },
+  // beforeDestroy() {
+  //   window.removeEventListener('beforeunload', this.test)
+  // },
   methods: {
     loadTool(indx) {
       this.dataSource[indx].onClick()
@@ -168,16 +167,16 @@ export default {
       this.$router.push({ path: '/linabi/favoritos/' })
       this.mobileNav = 2
     },
-    async test() {
-      await this.$axios.post('logout/', { force: '1' })
-    },
+    // async test() {
+    //   await this.$axios.post('logout/', { force: '1' })
+    // },
     getAppbarZIndex() {
       const appbarx = this.$refs.appbarx
       if (appbarx) {
         const style = window.getComputedStyle(appbarx.$el)
         this.appbarZIndex = style.zIndex
         // eslint-disable-next-line no-console
-        console.log('Appbar z-index:', this.appbarZIndex)
+        // console.log('Appbar z-index:', this.appbarZIndex)
       }
     },
     getAppdrawerZIndex() {
@@ -186,7 +185,7 @@ export default {
         const style = window.getComputedStyle(appdrawerx.$el)
         this.appdrawerZIndex = style.zIndex
         // eslint-disable-next-line no-console
-        console.log('Appdrawer z-index:', this.appdrawerZIndex)
+        // console.log('Appdrawer z-index:', this.appdrawerZIndex)
       }
     },
   },

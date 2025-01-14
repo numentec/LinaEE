@@ -80,10 +80,10 @@ export default {
 
   mounted() {
     window.scrollTo(0, 0)
-    console.log(
-      'Departments mounted with:',
-      this.getViewConfElement('link', 'configval1')
-    )
+    // console.log(
+    //   'Departments mounted with:',
+    //   this.getViewConfElement('link', 'configval1')
+    // )
   },
 
   methods: {

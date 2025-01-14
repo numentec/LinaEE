@@ -205,7 +205,7 @@ export default {
       search_category: '',
       search_subcategory: '',
       search_product: '',
-      breadcrumbs: [],
+      // breadcrumbs: JSON.parse(localStorage.getItem('lina_breadcrumbs')) || [],
       snackbar: false,
     }
   },
@@ -217,6 +217,7 @@ export default {
       'getSearchCategory',
       'getSearchSubcategory',
       'getBrands',
+      'getBreadcrumbs',
     ]),
     ...mapGetters('shoppingcart/products', ['getSearchProduct']),
     crumbs() {
@@ -236,7 +237,7 @@ export default {
         }
       }
 
-      const crumbs = this.breadcrumbs
+      const crumbs = JSON.parse(JSON.stringify(this.getBreadcrumbs))
 
       if (crumbs.length > 0) {
         crumbs.forEach((e) => {
@@ -259,6 +260,8 @@ export default {
           to: this.$route.fullPath,
         })
       }
+
+      this.setBreadcrumbs(JSON.parse(JSON.stringify(crumbs)))
 
       return crumbs
     },
@@ -283,6 +286,9 @@ export default {
     search_product(newVal) {
       this.setSearchProduct(newVal)
     },
+    // breadcrumbs(newVal) {
+    //   this.$store.commit('shoppingcart/categories/SET_BREADCRUMBS', [...newVal])
+    // },
   },
 
   mounted() {
@@ -295,6 +301,7 @@ export default {
       'setSearchDepartment',
       'setSearchCategory',
       'setSearchSubcategory',
+      'setBreadcrumbs',
     ]),
     ...mapActions('shoppingcart/products', ['setSearchProduct']),
     ...mapActions('sistema', ['setShowBottomNav']),

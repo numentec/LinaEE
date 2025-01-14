@@ -36,6 +36,10 @@ function makeItems(name) {
   })
 }
 
+function updateImagesState(imgstate) {
+  localStorage.setItem('lina_cartImages', JSON.stringify(imgstate))
+}
+
 export const state = () => ({
   products: [],
   images: {}, // Almacenar las URLs de las imágenes de los productos
@@ -49,12 +53,15 @@ export const mutations = {
   },
   SET_IMAGES(state, images) {
     state.images = images
+    updateImagesState(state.images)
   },
   ADD_IMAGE(state, { id, url }) {
     state.images = { ...state.images, [id]: url }
+    updateImagesState(state.images)
   },
   SET_SEARCH_PRODUCT(state, search) {
     state.search_product = search
+    localStorage.setItem('lina_searchProduct', JSON.stringify(search))
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
@@ -62,6 +69,17 @@ export const mutations = {
 }
 
 export const actions = {
+  nuxtClientInit({ commit }) {
+    if (process.client) {
+      const images = JSON.parse(localStorage.getItem('lina_cartImages')) || {}
+      commit('SET_IMAGES', images)
+
+      const searchProduct =
+        JSON.parse(localStorage.getItem('lina_searchProduct')) || ''
+      commit('SET_SEARCH_PRODUCT', searchProduct)
+    }
+  },
+
   async fetchProducts({ commit, rootGetters }) {
     commit('SET_LOADING_STATUS')
 

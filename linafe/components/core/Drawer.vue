@@ -22,7 +22,7 @@
         </v-list-item>
         <v-list-group
           v-for="item in modulos_disponibles"
-          v-show="perms[item.perm]"
+          v-show="getCurUser.perms[item.perm]"
           :key="item.title"
           :prepend-icon="item.icon"
           no-action
@@ -34,7 +34,7 @@
           </template>
           <v-list-item
             v-for="subitem in item.items"
-            v-show="perms[subitem.perm]"
+            v-show="getCurUser.perms[subitem.perm]"
             :key="subitem.title"
             nuxt
             :to="subitem.to"
@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import { modulos } from '~/assets/utilities'
 
 export default {
@@ -94,7 +94,7 @@ export default {
     return {
       modulos_disponibles: [],
       modulactiv: [],
-      perms: this.$auth.user.perms,
+      // perms: this.$auth.user.perms,
       modulos,
       drawer_mode: null,
     }
@@ -102,6 +102,10 @@ export default {
 
   computed: {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
+    ...mapGetters('sistema', ['getCurUser']),
+    // perms() {
+    //   return this.curuser.perms
+    // },
   },
 
   mounted() {

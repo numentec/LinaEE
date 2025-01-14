@@ -155,7 +155,11 @@ export default {
         return '/no_image.png'
       }
 
-      return this.getImage(this.product.id) || this.product.image
+      // return this.getImage(this.product.id) || this.product.image
+      return (
+        this.getImage(this.product.id) ||
+        this.$config.fotosURL + this.product.image
+      )
     },
     formatedPrice() {
       return Number(this.product.price).toLocaleString('es-US', {
@@ -219,7 +223,6 @@ export default {
       this.dialog = false
     },
     onImgError() {
-      // this.imgSrc = '/no_image.png'
       this.imgError = true
       this.$emit('no-image')
     },

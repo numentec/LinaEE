@@ -4,13 +4,13 @@
       <v-row>
         <v-col cols="4" class="d-flex justify-center shrink">
           <v-img
-            :src="getImage(item.product.id)"
+            :src="imgSrc"
             class="mr-4"
             max-width="150"
             height="200"
             :lazy-src="lazySrc"
             @error="onImgError"
-            @load="addImage({ id: product.id, url: imgSrc })"
+            @load="addImage({ id: item.product.id, url: imgSrc })"
           ></v-img>
         </v-col>
         <v-col cols="6">
@@ -135,9 +135,8 @@ export default {
     return {
       itemQuantity: this.item.quantity,
       itemPrice: this.item.price,
-      imgSrc: this.$config.fotosURL + this.item.product.image,
-      // imgSrc: this.item.product.image,
-      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+      lazySrc: '/no_image.png',
+      imgError: false,
       dialog: false,
     }
   },
@@ -148,6 +147,19 @@ export default {
       'getCartTotalPrice',
     ]),
     ...mapGetters('shoppingcart/products', ['getImage']),
+
+    imgSrc() {
+      if (this.imgError) {
+        return '/no_image.png'
+      }
+
+      return this.getImage(this.item.product.id) || this.item.product.image
+      // return (
+      //   this.getImage(this.item.product.id) ||
+      //   this.$config.fotosURL + this.item.product.image
+      // )
+    },
+
     itemSubTotal() {
       return this.item.price * this.item.quantity
     },
@@ -173,6 +185,7 @@ export default {
       'removeFromCart',
       'clearCart',
     ]),
+    ...mapActions('shoppingcart/products', ['addImage']),
     decreaseItemQuantity() {
       if (this.itemQuantity > 1) {
         this.itemQuantity--
@@ -204,7 +217,7 @@ export default {
       this.dialog = false
     },
     onImgError() {
-      this.imgSrc = '/no_image.png'
+      this.imgError = true
       this.$emit('no-image')
     },
   },

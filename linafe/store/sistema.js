@@ -3,6 +3,14 @@ import CustomStore from 'devextreme/data/custom_store'
 
 export const namespaced = true
 
+function clearLocalStorage(prefix) {
+  for (const key in localStorage) {
+    if (key.startsWith(prefix)) {
+      localStorage.removeItem(key)
+    }
+  }
+}
+
 export const state = () => ({
   curuser: null,
   users: [],
@@ -16,11 +24,14 @@ export const state = () => ({
 export const mutations = {
   SET_USER_DATA(state, payload) {
     this.$auth.setUser(payload)
+    // console.log('SET_USER', this.$auth)
     state.curuser = payload
-    localStorage.setItem('curuser', JSON.stringify(payload))
+    localStorage.setItem('lina_curuser', JSON.stringify(payload))
   },
   USER_LOGOUT() {
-    localStorage.removeItem('curuser')
+    state.curuser = null
+    clearLocalStorage('lina_')
+    // localStorage.removeItem('lina_curuser')
     // location.reload()
   },
   SET_ERROR(state, payload) {
@@ -28,18 +39,22 @@ export const mutations = {
   },
   SET_USERS(state, payload) {
     state.users = payload
+    localStorage.setItem('lina_users', JSON.stringify(payload))
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
   },
   SET_CIAS(state, payload) {
     state.cias = payload
+    localStorage.setItem('lina_cias', JSON.stringify(payload))
   },
   SET_CURCIA(state, payload) {
     state.curCia = Object.assign({}, payload)
+    localStorage.setItem('lina_curCia', JSON.stringify(payload))
   },
   SET_SHOWBOTTOMNAV(state, payload) {
     state.showBottomNav = payload
+    localStorage.setItem('lina_showBottomNav', JSON.stringify(payload))
   },
 }
 
@@ -167,6 +182,9 @@ export const actions = {
 }
 
 export const getters = {
+  getCurUser(state) {
+    return state.curuser
+  },
   getUsers(state) {
     return state.users
   },

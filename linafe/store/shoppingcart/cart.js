@@ -1,33 +1,52 @@
 export const namespaced = true
 
+function updateCartState(cartstate) {
+  // console.log('***** updateCartState *****', cartstate)
+  localStorage.setItem('lina_cart', JSON.stringify(cartstate))
+}
+
 export const state = () => ({
   cart: [],
-  products: [],
-  cartCustomer: { id: 0, name: 'nocli', email: 'noemail@numen.pa' },
+  cartCustomer: {
+    id: 0,
+    name: 'nocli',
+    email: 'noemail@numen.pa',
+  },
 })
 
+/* El estado de cart se inicializa con los datos almacenados en localStorage.
+  Se le da seguimiento con el plugin cartState.js
+*/
 export const mutations = {
-  SET_PRODUCTS(state, products) {
-    state.products = products
+  SET_CART(state, cart) {
+    state.cart = cart
+    updateCartState(cart)
   },
+
   SET_CART_CUSTOMER(state, customer) {
     state.cartCustomer = customer
+    localStorage.setItem('lina_cartCustomer', JSON.stringify(customer))
   },
   ADD_TO_CART(state, product) {
     state.cart.push(product)
+    updateCartState(state.cart)
   },
   UPDATE_ITEM(state, item) {
     state.cart[item.index].quantity = item.quantity
     state.cart[item.index].price = item.price
+    updateCartState(state.cart)
   },
   REMOVE_FROM_CART(state, productId) {
     state.cart = state.cart.filter((item) => item.product.id !== productId)
+    updateCartState(state.cart)
   },
   REMOVE_ITEM(state, index) {
     state.cart.splice(index, 1)
+    updateCartState(state.cart)
   },
   CLEAR_CART(state) {
     state.cart = []
+    localStorage.removeItem('lina_cart')
   },
   DECREASE_QUANTITY(state, index) {
     if (state.cart[index].quantity > 1) {
@@ -35,25 +54,36 @@ export const mutations = {
     } else {
       state.cart.splice(index, 1)
     }
+    updateCartState(state.cart)
   },
   INCREASE_QUANTITY(state, index) {
     state.cart[index].quantity++
+    updateCartState(state.cart)
   },
 }
 
 export const actions = {
-  fetchProducts({ commit }) {
-    // Simulate an API call
-    const products = [
-      { id: 1, name: 'Electronics', price: 100, quantity: 1 },
-      { id: 2, name: 'Books', price: 50, quantity: 1 },
-      { id: 3, name: 'Clothing', price: 25, quantity: 1 },
-    ]
-    commit('SET_PRODUCTS', products)
+  nuxtClientInit({ commit }) {
+    if (process.client) {
+      const objcart = JSON.parse(localStorage.getItem('lina_cart')) || {
+        cart: [],
+        cartCustomer: { id: 0, name: 'nocli', email: 'noemail@numen.pa' },
+      }
+
+      commit('SET_CART', objcart.cart)
+      commit('SET_CART_CUSTOMER', objcart.cartCustomer)
+
+      // const cartCustomer = JSON.parse(
+      //   localStorage.getItem('lina_cartCustomer')
+      // ) || {
+      //   id: 0,
+      //   name: 'nocli',
+      //   email: 'noemail@numen.pa',
+      // }
+      // commit('SET_CART_CUSTOMER', cartCustomer)
+    }
   },
-  setProducts({ commit }, products) {
-    commit('SET_PRODUCTS', products)
-  },
+
   setCartCustomer({ commit }, customer) {
     commit('SET_CART_CUSTOMER', customer)
   },
@@ -74,9 +104,6 @@ export const actions = {
 
     commit('ADD_TO_CART', item)
   },
-  // addToCart({ commit }, product) {
-  //   commit('ADD_TO_CART', product)
-  // },
   removeFromCart({ commit }, productId) {
     commit('REMOVE_FROM_CART', productId)
   },
@@ -92,9 +119,6 @@ export const actions = {
 }
 
 export const getters = {
-  getAllProducts: (state) => state.products,
-  getProductById: (state) => (id) =>
-    state.products.find((product) => product.id === id),
   getCartCustomer: (state) => state.cartCustomer,
   getCartItems: (state) => state.cart,
   getCartItemCount: (state) => state.cart.length,

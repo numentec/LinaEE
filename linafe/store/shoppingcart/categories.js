@@ -18,6 +18,7 @@ export const state = () => ({
   },
   customers: [],
   isLoading: false,
+  breadcrumbs: [],
 })
 
 export const mutations = {
@@ -46,31 +47,78 @@ export const mutations = {
   },
   SET_SELECTED_BRANDS(state, brands) {
     state.selected_brands = brands
+    localStorage.setItem('lina_selectedBrands', JSON.stringify(brands))
   },
   SET_SEARCH_DEPARTMENT(state, department) {
     state.search_department = department
+    localStorage.setItem('lina_searchDepartment', JSON.stringify(department))
   },
   SET_SEARCH_CATEGORY(state, category) {
     state.search_category = category
+    localStorage.setItem('lina_searchCategory', JSON.stringify(category))
   },
   SET_SEARCH_SUBCATEGORY(state, subcategory) {
     state.search_subcategory = subcategory
+    localStorage.setItem('lina_searchSubcategory', JSON.stringify(subcategory))
   },
   SET_VIEWCONF(state, viewconf) {
     state.viewconf = viewconf
   },
   SET_SELECT_PRODUCTS_BY(state, selectProductsBy) {
     state.select_products_by = selectProductsBy
+    localStorage.setItem('lina_selProdsBy', JSON.stringify(selectProductsBy))
   },
   SET_SELECT_PRODUCTS_BY_ELEMENT(state, { key, value }) {
     state.select_products_by[key] = value
+    localStorage.setItem(
+      'lina_selProdsBy',
+      JSON.stringify(state.select_products_by)
+    )
   },
   SET_CUSTOMERS(state, customers) {
     state.customers = customers
   },
+  SET_BREADCRUMBS(state, breadcrumbs) {
+    state.breadcrumbs = breadcrumbs
+    // console.log('Breadcrumbs:', state.breadcrumbs)
+    localStorage.setItem('lina_breadcrumbs', JSON.stringify(state.breadcrumbs)) // Save to local storage
+  },
 }
 
 export const actions = {
+  nuxtClientInit({ commit }) {
+    if (process.client) {
+      const selectedBrands =
+        JSON.parse(localStorage.getItem('lina_selectedBrands')) || []
+      commit('SET_SELECTED_BRANDS', selectedBrands)
+
+      const searchDepartment =
+        JSON.parse(localStorage.getItem('lina_searchDepartment')) || ''
+      commit('SET_SEARCH_DEPARTMENT', searchDepartment)
+
+      const searchCategory =
+        JSON.parse(localStorage.getItem('lina_searchCategory')) || ''
+      commit('SET_SEARCH_CATEGORY', searchCategory)
+
+      const searchSubcategory =
+        JSON.parse(localStorage.getItem('lina_searchSubcategory')) || ''
+      commit('SET_SEARCH_SUBCATEGORY', searchSubcategory)
+
+      const selProdsBy = JSON.parse(
+        localStorage.getItem('lina_selProdsBy')
+      ) || {
+        depto: '0',
+        cat: '0',
+        scat: '0',
+      }
+      commit('SET_SELECT_PRODUCTS_BY', selProdsBy)
+
+      const breadcrumbs =
+        JSON.parse(localStorage.getItem('lina_breadcrumbs')) || []
+      commit('SET_BREADCRUMBS', breadcrumbs)
+    }
+  },
+
   setIsLoading({ commit }) {
     commit('SET_LOADING_STATUS')
   },
@@ -135,9 +183,6 @@ export const actions = {
   setSearchSubcategory({ commit }, subcategory) {
     commit('SET_SEARCH_SUBCATEGORY', subcategory)
   },
-  setSearchProduct({ commit }, search) {
-    commit('SET_SEARCH_PRODUCT', search)
-  },
   setViewConf({ commit }, viewconf) {
     commit('SET_VIEWCONF', viewconf)
   },
@@ -149,6 +194,9 @@ export const actions = {
   },
   setCustomers({ commit }, customers) {
     commit('SET_CUSTOMERS', customers)
+  },
+  setBreadcrumbs({ commit }, breadcrumbs) {
+    commit('SET_BREADCRUMBS', breadcrumbs)
   },
 }
 
@@ -182,4 +230,5 @@ export const getters = {
   getCustomerById: (state) => (id) =>
     state.customers.find((customer) => customer.id === id),
   getIsLoading: (state) => state.isLoading,
+  getBreadcrumbs: (state) => state.breadcrumbs,
 }
