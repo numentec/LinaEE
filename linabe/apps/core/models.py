@@ -293,6 +293,7 @@ class Modulo(models.Model):
                             ("acc_linabi", "Access to BI Module"),
                             ("acc_config", "Access to Configuration Module"),
                             ("acc_wms", "Access to WMS Module"),
+                            ("acc_extcart", "Access to External Shoppingcart Module"),
                         )
         db_table = 'core_modulos'
         verbose_name = 'Módulo'

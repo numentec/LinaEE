@@ -18,7 +18,7 @@ class BIQuerySerializer(serializers.ModelSerializer):
 
     def get_username(self, obj):
         return obj.created_by.username
-        
+
     class Meta:
         model = BIQuery
         fields = '__all__'

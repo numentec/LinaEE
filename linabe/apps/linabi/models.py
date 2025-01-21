@@ -145,6 +145,9 @@ class BICustomCatalogCategory(Common):
 def defaultTTL():
     return timezone.now() + timedelta(days=5)
 
+def genToken():
+    return secrets.token_urlsafe(32)
+
 
 # Modelo para maestro de catálogo personalizado
 class BICustomCatalogMaster(Common):
@@ -152,10 +155,15 @@ class BICustomCatalogMaster(Common):
     name = models.CharField("Nombre", max_length=20, blank=True, default='Custom Catalog')
     descrip = models.TextField("Descripción", blank = True)
     note =  models.TextField("Nota", blank = True)
-    token = models.CharField("Token", max_length=45, unique=True, default=secrets.token_urlsafe(32))
+    token = models.CharField("Token", max_length=45, unique=True, default=genToken)
     ttl = models.DateField("TTL", default=defaultTTL)
     stakeholder = models.ForeignKey(StakeHolder, on_delete=models.SET_NULL, \
                 verbose_name='Cliente', related_name='catalog_x_stakeholder', null=True)
+
+    # def save(self, *args, **kwargs):
+    #     if not self.ttl:
+    #         self.ttl = defaultTTL()
+    #     super(BICustomCatalogMaster, self).save(*args, **kwargs)
 
     class Meta:
         db_table = 'linabi_customcatalogm'

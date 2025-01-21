@@ -1,9 +1,12 @@
 from django.db import connections
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import authentication, permissions
 from rest_framework import status
 from ..core.models import SQLQuery
+from .models import ExtOrderMaster, ExtOrderItem
+from .serializers import ExtOrderMasterSerializer, ExtOrderMasterOnlySerializer, ExtOrderItemSerializer
 
 
 class CategoryBrandListAPIView(APIView):
@@ -118,3 +121,43 @@ class ProductsAPIView(APIView):
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class ExtOrderMasterViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing ExtOrderMaster.
+    Including the items associated with each order.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    queryset = ExtOrderMaster.objects.all()
+    serializer_class = ExtOrderMasterSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, modified_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(modified_by=self.request.user)
+
+
+class ExtOrderMasterOnlyViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing ExtOrderMaster.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    queryset = ExtOrderMaster.objects.all()
+    serializer_class = ExtOrderMasterOnlySerializer
+
+
+class ExtOrderItemViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing ExtOrderItem.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    queryset = ExtOrderItem.objects.all()
+    serializer_class = ExtOrderItemSerializer
