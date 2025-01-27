@@ -89,8 +89,19 @@
             <v-row>
               <v-col cols="12">
                 <v-row justify="center" align="center">
-                  <v-btn color="green darken-1" text @click="goToCheckout">
+                  <v-btn
+                    color="green darken-1"
+                    text
+                    :loading="loading"
+                    :disabled="loading"
+                    @click="goToCheckout"
+                  >
                     Checkout
+                    <template v-slot:loader>
+                      <span class="custom-loader">
+                        <v-icon light>mdi-cached</v-icon>
+                      </span>
+                    </template>
                   </v-btn>
                 </v-row>
               </v-col>
@@ -99,8 +110,8 @@
         </v-card>
       </v-col>
     </v-row>
-    <v-snackbar v-model="snackbar" timeout="2000">
-      No implementado
+    <v-snackbar v-model="snackbar" timeout="3000">
+      {{ snackbarText }}
       <template v-slot:action="{ attrs }">
         <v-btn
           color="secondary"
@@ -108,7 +119,7 @@
           v-bind="attrs"
           @click.stop="snackbar = false"
         >
-          Cerrar
+          Close
         </v-btn>
       </template>
     </v-snackbar>
@@ -147,6 +158,8 @@ export default {
     return {
       selected_customer: null,
       snackbar: false,
+      snackbarText: 'No implementado',
+      loading: false,
     }
   },
   computed: {
@@ -166,6 +179,7 @@ export default {
           id: 0,
           name: 'nocli',
           email: 'noemail@numen.pa',
+          tel: '',
         }
       }
       this.setCartCustomer(newCustomer)
@@ -174,13 +188,71 @@ export default {
 
   methods: {
     ...mapActions('shoppingcart/cart', ['setCartCustomer']),
-    goToCheckout() {
+    ...mapActions('shoppingcart/orders', ['createOrder']),
+    async goToCheckout() {
       this.snackbar = true
+      if (this.getCartItems.length === 0) {
+        this.snackbarText = 'Your shopping cart is empty'
+        return
+      }
+
+      if (!this.getCartCustomer) {
+        this.snackbarText = 'Please select a customer'
+        return
+      }
+
+      this.snackbarText = 'Creating order...'
+
+      this.loading = true
+
+      const orderid = await this.createOrder()
+      this.snackbarText = 'Order created successfully'
+
+      setTimeout(() => {
+        this.loading = false
+      }, 2000)
+
+      console.log('Order ID:', orderid)
     },
   },
 }
 </script>
 
 <style scoped>
-/* Add any custom styles here */
+.custom-loader {
+  animation: loader 1s infinite;
+  display: flex;
+}
+@-moz-keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 </style>

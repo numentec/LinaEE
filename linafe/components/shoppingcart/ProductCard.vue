@@ -202,10 +202,16 @@ export default {
     },
     addProdToCart() {
       if (this.cartquantity > 0) {
+        const { id, name, description, instock, brand } = this.product
+
         this.addToCart({
-          product: { ...this.product },
+          id,
+          name,
+          description,
+          instock,
           quantity: Number(this.cartquantity, 10),
           price: this.cartprice,
+          brand,
         })
         this.dialog = false
       }

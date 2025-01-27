@@ -10,12 +10,12 @@
             height="200"
             :lazy-src="lazySrc"
             @error="onImgError"
-            @load="addImage({ id: item.product.id, url: imgSrc })"
+            @load="addImage({ id: item.id, url: imgSrc })"
           ></v-img>
         </v-col>
         <v-col cols="6">
-          <h3>SKU: {{ item.product.id }}</h3>
-          <p>{{ item.product.description }}</p>
+          <h3>SKU: {{ item.id }}</h3>
+          <p>{{ item.description }}</p>
           <v-chip color="green lighten-2" text-color="white" class="my-4">
             {{ formattedPrice }}
           </v-chip>
@@ -40,6 +40,7 @@
                   large
                   icon
                   color="green lighten-1"
+                  :disabled="isLoading"
                   v-bind="attrs"
                   v-on="on"
                   @click="openDialog"
@@ -48,12 +49,8 @@
                 </v-btn>
               </template>
               <v-card>
-                <v-card-title class="headline">{{
-                  item.product.name
-                }}</v-card-title>
-                <v-card-subtitle>{{
-                  item.product.description
-                }}</v-card-subtitle>
+                <v-card-title class="headline">{{ item.name }}</v-card-title>
+                <v-card-subtitle>{{ item.description }}</v-card-subtitle>
                 <v-card-text>
                   <v-row>
                     <v-col cols="12">
@@ -109,7 +106,8 @@
               large
               icon
               color="red lighten-1"
-              @click="removeFromCart(item.product.id)"
+              :disabled="isLoading"
+              @click="removeItemID(item.id)"
             >
               <v-icon large>{{ delIcon }}</v-icon>
             </v-btn>
@@ -121,7 +119,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 // Guiarse con ventas/tools/qryprod.vue
 export default {
   name: 'CartCard',
@@ -147,16 +145,17 @@ export default {
       'getCartTotalPrice',
     ]),
     ...mapGetters('shoppingcart/products', ['getImage']),
+    ...mapState('shoppingcart/orders', ['isLoading']),
 
     imgSrc() {
       if (this.imgError) {
         return '/no_image.png'
       }
 
-      return this.getImage(this.item.product.id) || this.item.product.image
+      return this.getImage(this.item.id) || this.item.image
       // return (
-      //   this.getImage(this.item.product.id) ||
-      //   this.$config.fotosURL + this.item.product.image
+      //   this.getImage(this.item.id) ||
+      //   this.$config.fotosURL + this.item.image
       // )
     },
 
@@ -182,7 +181,7 @@ export default {
     ...mapActions('shoppingcart/cart', [
       'decreaseQuantity',
       'increaseQuantity',
-      'removeFromCart',
+      'removeItemID',
       'clearCart',
     ]),
     ...mapActions('shoppingcart/products', ['addImage']),
