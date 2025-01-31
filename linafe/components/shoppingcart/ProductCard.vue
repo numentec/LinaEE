@@ -1,7 +1,7 @@
 <template>
   <v-card
-    class="mx-4 my-4"
-    :width="225"
+    :class="[isMobile ? 'mx-2 my-2' : 'mx-4 my-4']"
+    :max-width="cardWidth"
     :loading="loadingView"
     @click="goToView"
   >
@@ -10,7 +10,7 @@
     </v-badge> -->
     <v-img
       :src="imgSrc"
-      :height="200"
+      :height="imgHeight"
       contain
       :lazy-src="lazySrc"
       @error="onImgError"
@@ -28,18 +28,22 @@
       </v-app-bar>
     </v-img>
     <v-card flat tile width="100%">
-      <v-card-actions>
-        <h4>
-          {{ product.name }}
-        </h4>
-        <v-spacer></v-spacer>
-        <v-chip color="green lighten-2" text-color="white">
-          {{ formatedPrice }}
-        </v-chip>
-      </v-card-actions>
-      <v-card-actions>
-        <v-chip color="light-blue lighten-2" text-color="white">
-          {{ `In Stock: ${product.instock}` }}
+      <v-card-text>
+        <v-row dense justify="space-between">
+          <h4 class="mt-2 ml-2">
+            {{ product.id }}
+          </h4>
+          <v-chip outlined pill color="green lighten-2" class="mr-2 ml-0 pa-1">
+            {{ formatedPrice }}
+          </v-chip>
+        </v-row>
+        <v-row dense>
+          <p class="mt-0 ml-2">{{ product.name }}</p>
+        </v-row>
+      </v-card-text>
+      <v-card-actions class="mt-2">
+        <v-chip outlined color="light-blue lighten-2" class="mt-0">
+          {{ inStock }}
         </v-chip>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
@@ -49,6 +53,7 @@
               fab
               small
               dark
+              class="mt-0"
               v-bind="attrs"
               v-on="on"
               @click="openDialog"
@@ -147,6 +152,20 @@ export default {
   computed: {
     ...mapGetters('shoppingcart/cart', ['getItemQuantityById']),
     ...mapGetters('shoppingcart/products', ['getImage']),
+
+    isMobile() {
+      return this.$vuetify.breakpoint.mobile
+    },
+    imgHeight() {
+      return this.isMobile ? '100px' : '200px'
+    },
+    cardHeight() {
+      return this.isMobile ? 280 : 450
+    },
+    cardWidth() {
+      return this.isMobile ? 140 : 225
+    },
+
     addedQuantity() {
       return this.getItemQuantityById(this.product.id)
     },
@@ -166,6 +185,11 @@ export default {
         style: 'currency',
         currency: 'USD',
       })
+    },
+    inStock() {
+      return this.isMobile
+        ? `Stk: ${this.product.instock}`
+        : `In Stock: ${this.product.instock}`
     },
   },
   watch: {

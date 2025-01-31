@@ -205,14 +205,12 @@ export default {
 
       this.loading = true
 
-      const orderid = await this.createOrder()
+      await this.createOrder()
       this.snackbarText = 'Order created successfully'
 
       setTimeout(() => {
         this.loading = false
       }, 2000)
-
-      console.log('Order ID:', orderid)
     },
   },
 }

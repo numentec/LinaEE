@@ -1,13 +1,13 @@
 <template>
   <v-card
     class="mx-4 my-4"
-    max-width="300"
+    :max-width="cardWidth"
     :loading="loadingView"
     @click="goToView"
   >
     <v-img
       :src="imgSrc"
-      height="400px"
+      :height="imgHeight"
       cover
       :lazy-src="lazySrc"
       @error="onImgError"
@@ -27,7 +27,12 @@
         absolute
         style="width: 100%"
       >
-        <v-toolbar-title class="white--text">
+        <v-toolbar-title
+          :class="[
+            'white--text',
+            isMobile ? 'toolbar-title--small' : 'toolbar-title',
+          ]"
+        >
           {{ category.name }}
         </v-toolbar-title>
       </v-toolbar>
@@ -52,9 +57,26 @@ export default {
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
+
+  computed: {
+    isMobile() {
+      return this.$vuetify.breakpoint.mobile
+    },
+    cardWidth() {
+      return this.isMobile ? 125 : 300
+    },
+    cardHeight() {
+      return this.isMobile ? 250 : 600
+    },
+    imgHeight() {
+      return this.isMobile ? '200px' : '400px'
+    },
+  },
+
   activated() {
     this.loadingView = false
   },
+
   methods: {
     goToView() {
       this.loadingView = true
@@ -84,5 +106,12 @@ export default {
 .mx-2 {
   margin-left: 8px;
   margin-right: 8px;
+}
+.toolbar-title {
+  font-size: 1.25rem; /* Tamaño de fuente por defecto */
+}
+
+.toolbar-title--small {
+  font-size: 1rem; /* Tamaño de fuente más pequeño para dispositivos móviles */
 }
 </style>

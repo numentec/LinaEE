@@ -20,6 +20,7 @@
           </v-tooltip>
           <div class="px-2 mt-4">
             <v-autocomplete
+              v-show="!isMobile"
               v-model="selected_brands"
               label="Brands"
               :items="getBrands"
@@ -89,8 +90,14 @@
             rounded
             clearable
           ></v-text-field>
-          <v-btn class="ma-2" icon color="cyan lighten-1">
-            <v-icon>mdi-format-list-text</v-icon>
+          <v-btn
+            v-show="!isMobile"
+            class="ma-2"
+            icon
+            color="cyan lighten-1"
+            @click="viewMode = !viewMode"
+          >
+            <v-icon>{{ viewModeIcon }}</v-icon>
           </v-btn>
           <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
@@ -109,10 +116,31 @@
                 <v-list-item-title>Go to Cart</v-list-item-title>
               </v-list-item>
               <v-list-item @click="snackbar = true">
-                <v-list-item-title>Option 2</v-list-item-title>
+                <v-list-item-title>
+                  {{ viewMode ? 'List view' : 'Grid view' }}
+                </v-list-item-title>
               </v-list-item>
               <v-list-item @click="snackbar = true">
-                <v-list-item-title>Option 3</v-list-item-title>
+                <v-list-item-title>
+                  <div class="px-2">
+                    <v-autocomplete
+                      v-model="selected_brands"
+                      label="Brands"
+                      :items="getBrands"
+                      item-text="name"
+                      item-value="id"
+                      multiple
+                      chips
+                      deletable-chips
+                      dense
+                      rounded
+                      clearable
+                      background-color="white"
+                      single-line
+                      max-width="300"
+                    ></v-autocomplete>
+                  </div>
+                </v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -199,6 +227,7 @@ export default {
   },
   data() {
     return {
+      viewMode: true, // true for grid and false for list
       selected_brands: [],
       cur_child_view: 'departments',
       search_department: '',
@@ -220,6 +249,12 @@ export default {
       'getBreadcrumbs',
     ]),
     ...mapGetters('shoppingcart/products', ['getSearchProduct']),
+    isMobile() {
+      return this.$vuetify.breakpoint.mobile
+    },
+    viewModeIcon() {
+      return this.viewMode ? 'mdi-format-list-text' : 'mdi-view-grid'
+    },
     crumbs() {
       const n = this.$route.fullPath.lastIndexOf('/')
       const curText = () => {

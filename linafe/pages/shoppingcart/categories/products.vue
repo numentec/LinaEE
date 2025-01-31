@@ -35,7 +35,7 @@ export default {
       } else {
         error({
           statusCode: 503,
-          message: 'No se pudo cargar la lista. Intente luego',
+          message: 'Error fetching products',
         })
       }
     }

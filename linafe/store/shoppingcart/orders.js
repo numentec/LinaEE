@@ -6,6 +6,8 @@ function updateOrderState(orderstate) {
 
 export const state = () => ({
   orders: [],
+  currentIndex: 0,
+  currentID: 0,
   isLoading: false,
 })
 
@@ -15,8 +17,20 @@ export const mutations = {
     updateOrderState(orders)
   },
   ADD_ORDER(state, order) {
-    state.orders.push(order)
+    const curlength = state.orders.push(order)
+
+    state.currentIndex = curlength - 1
+    state.currentID = order.id
+
+    updateOrderState(state.orders)
   },
+  SET_CURRENT_INDEX(state, index) {
+    state.currentIndex = index
+  },
+  SET_CURRENT_ID(state, id) {
+    state.currentID = id
+  },
+
   SET_ISLOADING(state) {
     state.isLoading = !state.isLoading
   },
@@ -38,8 +52,29 @@ export const actions = {
   addOrder({ commit }, order) {
     commit('ADD_ORDER', order)
   },
+  setCurrentID({ commit }, id) {
+    commit('SET_CURRENT_ID', id)
+  },
+  setCurrentIndex({ commit }, index) {
+    commit('SET_CURRENT_INDEX', index)
+  },
   setIsLoading({ commit }) {
     commit('SET_ISLOADING')
+  },
+
+  async fetchOrders({ commit }) {
+    commit('SET_ISLOADING')
+
+    try {
+      const response = await this.$axios.get('shoppingcart/extorder/')
+      commit('SET_ORDERS', response.data)
+      commit('SET_CURRENT_INDEX', 0)
+      commit('SET_ISLOADING')
+    } catch (error) {
+      commit('SET_ISLOADING')
+      // Lanzar la excepción para que pueda ser capturada en asyncData
+      throw error
+    }
   },
 
   async createOrder({ commit, dispatch, rootState }) {
@@ -70,12 +105,9 @@ export const actions = {
       )
 
       commit('ADD_ORDER', response.data)
-      // commit('CLEAR_CART')
       await dispatch('shoppingcart/cart/clearCart', null, { root: true })
 
       commit('SET_ISLOADING')
-
-      return response.data.id
     } catch (error) {
       console.error('Error during checkout:', error)
     }
@@ -84,16 +116,29 @@ export const actions = {
 
 export const getters = {
   getOrders: (state) => state.orders,
+  getOrdersCount: (state) => state.orders.length || 0,
   getOrderByid: (state) => (id) =>
     state.orders.find((order) => order.id === id),
   getOrderByIndex: (state) => (index) => state.orders[index],
   getOrdersByCustomer: (state) => (customerId) =>
     state.orders.filter((order) => order.customer_id === customerId),
-  getOrderTotal: (state) => (id) => {
+  getOrderTotalByID: (state) => (id) => {
     const order = state.orders.find((order) => order.id === id)
     return order
       ? order.items.reduce((acc, item) => acc + item.price * item.quantity, 0)
       : 0
   },
+  getOrderTotalByIndex: (state) => (index) => {
+    const order = state.orders[index]
+    return order ? order.total : 0
+  },
+  getCurrentOrderTotal: (state) => {
+    const order = state.orders[state.currentIndex]
+    return order ? order.total : 0
+  },
+
+  getCurrentOrder: (state) => state.orders[state.currentIndex],
+  getCurrentIndex: (state) => state.currentIndex,
+  getCurrentID: (state) => state.currentID,
   getLoadingStatus: (state) => state.isLoading,
 }

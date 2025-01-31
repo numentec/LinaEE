@@ -152,6 +152,12 @@ export const modulos = [
         perm: 'core.acc_crm',
       },
       {
+        icon: 'mdi-format-list-text',
+        title: 'Orders',
+        to: '/shoppingcart/ordersview',
+        perm: 'core.acc_crm',
+      },
+      {
         icon: 'mdi-cog-outline',
         title: 'Tools',
         to: '/shoppingcart/tools',

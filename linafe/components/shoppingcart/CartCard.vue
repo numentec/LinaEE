@@ -147,6 +147,19 @@ export default {
     ...mapGetters('shoppingcart/products', ['getImage']),
     ...mapState('shoppingcart/orders', ['isLoading']),
 
+    isMobile() {
+      return this.$vuetify.breakpoint.mobile
+    },
+    imgHeight() {
+      return this.isMobile ? '100px' : '200px'
+    },
+    cardHeight() {
+      return this.isMobile ? 100 : 160
+    },
+    cardWidth() {
+      return this.isMobile ? 75 : 120
+    },
+
     imgSrc() {
       if (this.imgError) {
         return '/no_image.png'
