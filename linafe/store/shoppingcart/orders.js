@@ -8,6 +8,8 @@ export const state = () => ({
   orders: [],
   currentIndex: 0,
   currentID: 0,
+  lastCreatedID: 0,
+  justCreated: false,
   isLoading: false,
 })
 
@@ -21,6 +23,8 @@ export const mutations = {
 
     state.currentIndex = curlength - 1
     state.currentID = order.id
+    state.lastCreatedID = order.id
+    state.justCreated = true
 
     updateOrderState(state.orders)
   },
@@ -29,6 +33,14 @@ export const mutations = {
   },
   SET_CURRENT_ID(state, id) {
     state.currentID = id
+  },
+
+  SET_LAST_CREATED_ID(state, id) {
+    state.lastCreatedID = id
+  },
+
+  SET_JUST_CREATED(state) {
+    state.justCreated = !state.justCreated
   },
 
   SET_ISLOADING(state) {
@@ -60,6 +72,12 @@ export const actions = {
   },
   setIsLoading({ commit }) {
     commit('SET_ISLOADING')
+  },
+  setJustCreated({ commit }) {
+    commit('SET_JUST_CREATED')
+  },
+  setLastCreatedID({ commit }, id) {
+    commit('SET_LAST_CREATED_ID', id)
   },
 
   async fetchOrders({ commit }) {
@@ -109,7 +127,10 @@ export const actions = {
 
       commit('SET_ISLOADING')
     } catch (error) {
-      console.error('Error during checkout:', error)
+      commit('SET_ISLOADING')
+      // Lanzar la excepción para que pueda ser capturada en asyncData
+      throw error
+      // console.error('Error during checkout:', error)
     }
   },
 }
@@ -120,6 +141,8 @@ export const getters = {
   getOrderByid: (state) => (id) =>
     state.orders.find((order) => order.id === id),
   getOrderByIndex: (state) => (index) => state.orders[index],
+  getIndexByOrderID: (state) => (id) =>
+    state.orders.findIndex((order) => order.id === id),
   getOrdersByCustomer: (state) => (customerId) =>
     state.orders.filter((order) => order.customer_id === customerId),
   getOrderTotalByID: (state) => (id) => {
@@ -140,5 +163,7 @@ export const getters = {
   getCurrentOrder: (state) => state.orders[state.currentIndex],
   getCurrentIndex: (state) => state.currentIndex,
   getCurrentID: (state) => state.currentID,
+  getLastCreatedID: (state) => state.lastCreatedID,
+  getJustCreated: (state) => state.justCreated,
   getLoadingStatus: (state) => state.isLoading,
 }

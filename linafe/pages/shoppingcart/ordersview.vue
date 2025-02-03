@@ -202,7 +202,7 @@ import { mapGetters, mapActions } from 'vuex'
 import OrderCard from '@/components/shoppingcart/OrderCard.vue'
 
 export default {
-  name: 'OrderView',
+  name: 'OrdersView',
   components: {
     OrderCard,
   },
@@ -237,8 +237,12 @@ export default {
     ...mapGetters('shoppingcart/orders', {
       curOrder: 'getCurrentOrder',
       curIndex: 'getCurrentIndex',
+      curID: 'getCurrentID',
+      lastID: 'getLastCreatedID',
       dataLoading: 'getLoadingStatus',
       ordersCount: 'getOrdersCount',
+      getIndexByOrderID: 'getIndexByOrderID',
+      getJustCreated: 'getJustCreated',
     }),
     ...mapGetters('sistema', ['getCurCia']),
     isMobile() {
@@ -246,11 +250,26 @@ export default {
     },
   },
 
+  activated() {
+    if (this.getJustCreated) {
+      this.setJustCreated()
+      if (this.lastID !== 0) {
+        setTimeout(() => {
+          this.setCurrentIndex(this.getIndexByOrderID(this.lastID))
+        }, 1000)
+      }
+    }
+  },
+
   methods: {
-    ...mapActions('shoppingcart/orders', ['setCurrentIndex', 'fetchOrders']),
+    ...mapActions('shoppingcart/orders', [
+      'setCurrentIndex',
+      'fetchOrders',
+      'setJustCreated',
+    ]),
     async goToProducts() {
       this.loading = true
-      await this.$router.push({ name: 'products' })
+      await this.$router.push('/shoppingcart/categories/products')
       this.loading = false
     },
     goLeft() {

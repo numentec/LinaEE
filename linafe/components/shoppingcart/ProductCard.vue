@@ -33,7 +33,14 @@
           <h4 class="mt-2 ml-2">
             {{ product.id }}
           </h4>
-          <v-chip outlined pill color="green lighten-2" class="mr-2 ml-0 pa-1">
+          <v-chip
+            outlined
+            pill
+            color="green lighten-2"
+            class="mr-2 ml-0 pa-1"
+            :small="sz == 'sm'"
+            :x-small="sz == 'xs'"
+          >
             {{ formatedPrice }}
           </v-chip>
         </v-row>
@@ -42,7 +49,13 @@
         </v-row>
       </v-card-text>
       <v-card-actions class="mt-2">
-        <v-chip outlined color="light-blue lighten-2" class="mt-0">
+        <v-chip
+          outlined
+          color="light-blue lighten-2"
+          class="mt-0"
+          :small="sz == 'sm'"
+          :x-small="sz == 'xs'"
+        >
           {{ inStock }}
         </v-chip>
         <v-spacer></v-spacer>
@@ -155,6 +168,10 @@ export default {
 
     isMobile() {
       return this.$vuetify.breakpoint.mobile
+    },
+    sz() {
+      // screen size
+      return this.$vuetify.breakpoint.name
     },
     imgHeight() {
       return this.isMobile ? '100px' : '200px'

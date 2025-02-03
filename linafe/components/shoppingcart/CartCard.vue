@@ -165,11 +165,10 @@ export default {
         return '/no_image.png'
       }
 
-      return this.getImage(this.item.id) || this.item.image
-      // return (
-      //   this.getImage(this.item.id) ||
-      //   this.$config.fotosURL + this.item.image
-      // )
+      // return this.getImage(this.item.id) || this.item.image
+      return (
+        this.getImage(this.item.id) || this.$config.fotosURL + this.item.image
+      )
     },
 
     itemSubTotal() {

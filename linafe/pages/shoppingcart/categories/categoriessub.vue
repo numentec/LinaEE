@@ -23,6 +23,10 @@ export default {
       await store.dispatch('shoppingcart/categories/fetchItems', {
         name: 'Subcategory',
       })
+      // await store.dispatch('shoppingcart/categories/fetchData', {
+      //   name: 'Subcategory',
+      //   link: '',
+      // })
     } catch (err) {
       if (err.response) {
         error({

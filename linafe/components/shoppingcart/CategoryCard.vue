@@ -54,6 +54,7 @@ export default {
       loadingView: false,
       quantity: 1,
       imgSrc: this.$config.fotosURL + this.category.image,
+      // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
