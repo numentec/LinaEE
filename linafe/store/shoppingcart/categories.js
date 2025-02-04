@@ -158,45 +158,46 @@ export const actions = {
   setIsLoading({ commit }) {
     commit('SET_LOADING_STATUS')
   },
-  // async fetchItems({ commit, dispatch }, payload) {
-  //   commit('SET_LOADING_STATUS')
 
-  //   let curMutation = ''
-  //   let endpointParams = {}
+  async fetchItems({ commit, dispatch }, payload) {
+    commit('SET_LOADING_STATUS')
 
-  //   switch (payload.name) {
-  //     case 'Department':
-  //       curMutation = 'SET_DEPARTMENTS'
-  //       endpointParams = { p01: 'DEPTO', p02: '01' }
-  //       break
-  //     case 'Category':
-  //       curMutation = 'SET_CATEGORIES'
-  //       endpointParams = { p01: 'CAT', p02: '01' }
-  //       break
-  //     case 'Subcategory':
-  //       curMutation = 'SET_SUBCATEGORIES'
-  //       endpointParams = { p01: 'SCAT', p02: '01' }
-  //       break
-  //     case 'Product':
-  //       curMutation = 'SET_PRODUCTS'
-  //       endpointParams = { p01: 'PROD', p02: '01' }
-  //       break
-  //     case 'Brand':
-  //       curMutation = 'SET_BRANDS'
-  //       endpointParams = { p01: 'BRAND', p02: '01' }
-  //       break
-  //   }
+    let curMutation = ''
+    let endpointParams = {}
 
-  //   return await this.$axios
-  //     .get('shoppingcart/catsbrands/', {
-  //       params: endpointParams,
-  //     })
-  //     .then((response) => {
-  //       commit(curMutation, response.data)
-  //       commit('SET_LOADING_STATUS')
-  //       return { items: response.data }
-  //     })
-  // },
+    switch (payload.name) {
+      case 'Department':
+        curMutation = 'SET_DEPARTMENTS'
+        endpointParams = { p01: 'DEPTO', p02: '01' }
+        break
+      case 'Category':
+        curMutation = 'SET_CATEGORIES'
+        endpointParams = { p01: 'CAT', p02: '01' }
+        break
+      case 'Subcategory':
+        curMutation = 'SET_SUBCATEGORIES'
+        endpointParams = { p01: 'SCAT', p02: '01' }
+        break
+      case 'Product':
+        curMutation = 'SET_PRODUCTS'
+        endpointParams = { p01: 'PROD', p02: '01' }
+        break
+      case 'Brand':
+        curMutation = 'SET_BRANDS'
+        endpointParams = { p01: 'BRAND', p02: '01' }
+        break
+    }
+
+    return await this.$axios
+      .get('shoppingcart/catsbrands/', {
+        params: endpointParams,
+      })
+      .then((response) => {
+        commit(curMutation, response.data)
+        commit('SET_LOADING_STATUS')
+        return { items: response.data }
+      })
+  },
 
   // Función temporal para generar datos de prueba para los productos
   async fetchData({ commit, dispatch }, payload) {
