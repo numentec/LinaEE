@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import authentication, permissions
 from rest_framework import status
+from rest_framework.filters import SearchFilter, OrderingFilter
 from ..core.models import SQLQuery
 from .models import ExtOrderMaster, ExtOrderItem
 from .serializers import ExtOrderMasterSerializer, ExtOrderMasterOnlySerializer, ExtOrderItemSerializer
@@ -133,6 +134,12 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
 
     queryset = ExtOrderMaster.objects.all()
     serializer_class = ExtOrderMasterSerializer
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['id', 'created_ad', 'status', 'created_by__username', 'customer_name']
+    ordering_fields = ['id', 'created_at', 'status', 'created_by__username', 'customer_name']
+
+    ordering = ['-created_at']
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, modified_by=self.request.user)

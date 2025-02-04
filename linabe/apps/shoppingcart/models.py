@@ -35,6 +35,7 @@ class ExtOrderMaster(Common):
     discount = models.DecimalField("Discount", max_digits=10, decimal_places=2, default=0.00)
     tax = models.DecimalField("Tax", max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
+    status = models.CharField("Status", max_length=25, default='Pending')
 
     # def save(self, *args, **kwargs):
     #     user = get_current_user()
