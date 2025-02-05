@@ -115,13 +115,13 @@
               <v-list-item @click="goToCart">
                 <v-list-item-title>Go to Cart</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="snackbar = true">
+              <v-list-item @click="viewMode = !viewMode">
                 <v-list-item-title>
                   {{ viewMode ? 'List view' : 'Grid view' }}
                 </v-list-item-title>
               </v-list-item>
-              <v-list-item @click="snackbar = true">
-                <v-list-item-title>
+              <v-list-item>
+                <v-list-item-action>
                   <div class="px-2">
                     <v-autocomplete
                       v-model="selected_brands"
@@ -140,15 +140,20 @@
                       max-width="300"
                     ></v-autocomplete>
                   </div>
-                </v-list-item-title>
+                </v-list-item-action>
               </v-list-item>
             </v-list>
           </v-menu>
         </v-toolbar>
       </v-row>
-      <v-row>
+      <v-row justify="space-between">
         <div v-if="crumbs.length > 0">
           <v-breadcrumbs :items="crumbs" nuxt></v-breadcrumbs>
+        </div>
+        <div>
+          <p v-show="countChildItems > 0" class="primary-text my-2">
+            {{ `${countChildItems} ${countChildItems > 1 ? 'Items' : 'Item'}` }}
+          </p>
         </div>
       </v-row>
     </div>
@@ -247,8 +252,14 @@ export default {
       'getSearchSubcategory',
       'getBrands',
       'getBreadcrumbs',
+      'getCountFilteredDep',
+      'getCountFilteredCat',
+      'getCountFilteredSubcat',
     ]),
-    ...mapGetters('shoppingcart/products', ['getSearchProduct']),
+    ...mapGetters('shoppingcart/products', [
+      'getSearchProduct',
+      'getCountFilteredProducts',
+    ]),
     isMobile() {
       return this.$vuetify.breakpoint.mobile
     },
@@ -299,6 +310,27 @@ export default {
       this.setBreadcrumbs(JSON.parse(JSON.stringify(crumbs)))
 
       return crumbs
+    },
+
+    countChildItems() {
+      const index = this.cur_child_view.lastIndexOf('-')
+      const curChild =
+        index !== -1
+          ? this.cur_child_view.substring(index + 1)
+          : this.cur_child_view
+
+      switch (curChild) {
+        case 'departments':
+          return this.getCountFilteredDep
+        case 'categoriesmain':
+          return this.getCountFilteredCat
+        case 'categoriessub':
+          return this.getCountFilteredSubcat
+        case 'products':
+          return this.getCountFilteredProducts
+        default:
+          return 0
+      }
     },
   },
 
@@ -354,5 +386,9 @@ export default {
   top: 45px; /* Ajusta este valor según la altura de tu app-bar */
   z-index: 3; /* Asegúrate de que esté por encima de otros elementos pero por debajo del Drawer */
   background-color: white;
+}
+.primary-text {
+  font-size: 16px;
+  color: var(--v-primary-base);
 }
 </style>

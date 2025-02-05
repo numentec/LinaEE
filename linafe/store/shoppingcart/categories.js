@@ -46,6 +46,9 @@ export const state = () => ({
   search_department: '',
   search_category: '',
   search_subcategory: '',
+  countFilteredDep: 0,
+  countFilteredCat: 0,
+  countFilteredSubcat: 0,
   viewconf: [],
   select_products_by: {
     depto: '0',
@@ -97,6 +100,16 @@ export const mutations = {
     state.search_subcategory = subcategory
     localStorage.setItem('lina_searchSubcategory', JSON.stringify(subcategory))
   },
+  SET_COUNT_FILTERED_DEP(state, count) {
+    state.countFilteredDep = count
+  },
+  SET_COUNT_FILTERED_CAT(state, count) {
+    state.countFilteredCat = count
+  },
+  SET_COUNT_FILTERED_SUBCAT(state, count) {
+    state.countFilteredSubcat = count
+  },
+
   SET_VIEWCONF(state, viewconf) {
     state.viewconf = viewconf
   },
@@ -253,6 +266,16 @@ export const actions = {
   setSearchSubcategory({ commit }, subcategory) {
     commit('SET_SEARCH_SUBCATEGORY', subcategory)
   },
+  setCountFilteredDep({ commit }, count) {
+    commit('SET_COUNT_FILTERED_DEP', count)
+  },
+  setCountFilteredCat({ commit }, count) {
+    commit('SET_COUNT_FILTERED_CAT', count)
+  },
+  setCountFilteredSubcat({ commit }, count) {
+    commit('SET_COUNT_FILTERED_SUBCAT', count)
+  },
+
   setViewConf({ commit }, viewconf) {
     commit('SET_VIEWCONF', viewconf)
   },
@@ -288,6 +311,11 @@ export const getters = {
   getSearchDepartment: (state) => state.search_department,
   getSearchCategory: (state) => state.search_category,
   getSearchSubcategory: (state) => state.search_subcategory,
+
+  getCountFilteredDep: (state) => state.countFilteredDep,
+  getCountFilteredCat: (state) => state.countFilteredCat,
+  getCountFilteredSubcat: (state) => state.countFilteredSubcat,
+
   getViewConf: (state) => state.viewconf,
   getViewConfElement: (state) => (name, element) => {
     const conf = state.viewconf.find((conf) => conf.configkey === name)

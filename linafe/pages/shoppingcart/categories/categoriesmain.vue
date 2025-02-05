@@ -81,11 +81,23 @@ export default {
       })
     },
   },
+
+  watch: {
+    filteredItems(newVal) {
+      this.setCountFilteredCat(newVal?.length)
+    },
+  },
+
   mounted() {
     window.scrollTo(0, 0)
+    this.setCountFilteredCat(this.filteredItems?.length)
   },
+
   methods: {
-    ...mapActions('shoppingcart/categories', ['setSelectProductsByElement']),
+    ...mapActions('shoppingcart/categories', [
+      'setSelectProductsByElement',
+      'setCountFilteredCat',
+    ]),
     setLink() {
       return this.getViewConfElement('link', 'configval2') ?? this.link
     },

@@ -82,11 +82,22 @@ export default {
       })
     },
   },
+
+  watch: {
+    filteredItems(newVal) {
+      this.setCountFilteredSubcat(newVal?.length)
+    },
+  },
+
   mounted() {
     window.scrollTo(0, 0)
+    this.setCountFilteredSubcat(this.filteredItems?.length)
   },
   methods: {
-    ...mapActions('shoppingcart/categories', ['setSelectProductsByElement']),
+    ...mapActions('shoppingcart/categories', [
+      'setSelectProductsByElement',
+      'setCountFilteredSubcat',
+    ]),
     onImgError() {
       this.imgSrc = '/no_image.png'
     },

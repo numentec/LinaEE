@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import ProductCard from '~/components/shoppingcart/ProductCard.vue'
 
 export default {
@@ -77,8 +77,20 @@ export default {
       })
     },
   },
+
+  watch: {
+    filteredItems(newVal) {
+      this.setCountFilteredProducts(newVal?.length)
+    },
+  },
+
   mounted() {
     window.scrollTo(0, 0)
+    this.setCountFilteredProducts(this.filteredItems?.length)
+  },
+
+  methods: {
+    ...mapActions('shoppingcart/products', ['setCountFilteredProducts']),
   },
 }
 </script>

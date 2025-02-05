@@ -44,6 +44,7 @@ export const state = () => ({
   products: [],
   images: {}, // Almacenar las URLs de las imágenes de los productos
   search_product: '',
+  countFilteredProducts: 0,
   isLoading: false,
 })
 
@@ -62,6 +63,9 @@ export const mutations = {
   SET_SEARCH_PRODUCT(state, search) {
     state.search_product = search
     localStorage.setItem('lina_searchProduct', JSON.stringify(search))
+  },
+  SET_COUNT_FILTERED_PRODUCTS(state, count) {
+    state.countFilteredProducts = count
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
@@ -119,6 +123,10 @@ export const actions = {
     commit('SET_SEARCH_PRODUCT', search)
   },
 
+  setCountFilteredProducts({ commit }, count) {
+    commit('SET_COUNT_FILTERED_PRODUCTS', count)
+  },
+
   addImage({ commit }, { id, url }) {
     commit('ADD_IMAGE', { id, url })
   },
@@ -132,6 +140,7 @@ export const getters = {
   getAllProducts: (state) => state.products,
   getProductById: (state) => (id) => state.products.find((p) => p.id === id),
   getSearchProduct: (state) => state.search_product,
+  getCountFilteredProducts: (state) => state.countFilteredProducts,
   getImages: (state) => state.images,
   getImage: (state) => (id) => state.images[id],
 }

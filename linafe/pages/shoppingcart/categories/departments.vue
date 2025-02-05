@@ -82,16 +82,22 @@ export default {
     },
   },
 
+  watch: {
+    filteredItems(newVal) {
+      this.setCountFilteredDep(newVal?.length)
+    },
+  },
+
   mounted() {
     window.scrollTo(0, 0)
-    // console.log(
-    //   'Departments mounted with:',
-    //   this.getViewConfElement('link', 'configval1')
-    // )
+    this.setCountFilteredDep(this.filteredItems?.length)
   },
 
   methods: {
-    ...mapActions('shoppingcart/categories', ['setSelectProductsByElement']),
+    ...mapActions('shoppingcart/categories', [
+      'setSelectProductsByElement',
+      'setCountFilteredDep',
+    ]),
     setLink() {
       return this.getViewConfElement('link', 'configval1') ?? this.link
     },
