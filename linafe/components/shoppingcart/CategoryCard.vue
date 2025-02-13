@@ -42,7 +42,7 @@
 
 <script>
 export default {
-  name: 'ShopCard',
+  name: 'CategoryCard',
   props: {
     category: {
       type: Object,
@@ -52,9 +52,8 @@ export default {
   data() {
     return {
       loadingView: false,
-      quantity: 1,
-      imgSrc: this.$config.fotosURL + this.category.image,
-      // imgSrc: this.category.image,
+      // imgSrc: this.$config.fotosURL + this.category.image,
+      imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },

@@ -6,7 +6,7 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
               <v-btn
-                class="mt-0 mb-2"
+                class="mt-0 mb-2 ml-0"
                 icon
                 v-bind="attrs"
                 color="cyan lighten-1"
@@ -77,8 +77,28 @@
         <v-card>
           <v-toolbar dense flat rounded>
             <v-card-title>{{ `Order # ${curOrder.id}` }}</v-card-title>
+            <v-spacer></v-spacer>
+
+            <v-btn
+              v-show="isMobile"
+              icon
+              small
+              @click.stop="showSummary = !showSummary"
+            >
+              <v-icon>
+                {{ showSummary ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+              </v-icon>
+            </v-btn>
           </v-toolbar>
           <v-divider></v-divider>
+          <v-expand-transition>
+            <OrderSummary
+              v-show="showSummary"
+              :cur-order="curOrder"
+              :outlined="true"
+              @go-to-products="goToProducts"
+            />
+          </v-expand-transition>
           <v-card-text>
             <v-row v-for="(item, index) in curOrder.items" :key="item.id">
               <v-col cols="12">
@@ -98,87 +118,7 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="4">
-        <v-card>
-          <v-toolbar dense flat rounded>
-            <v-card-title>Order Summary</v-card-title>
-          </v-toolbar>
-          <v-divider></v-divider>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12">
-                <v-row dense justify="start" align="start" class="ml-4 mb-0">
-                  <v-col cols="12" sm="2" align="start">
-                    <div class="my-0">
-                      <v-avatar>
-                        <v-img
-                          src="https://cdn.vuetifyjs.com/images/john.jpg"
-                        ></v-img>
-                      </v-avatar>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" sm="10" align="start">
-                    <div class="my-0">
-                      <strong>{{ curOrder.customer_name }}</strong>
-                    </div>
-                    <div class="my-0">
-                      <p>{{ curOrder.customer_email }}</p>
-                    </div>
-                  </v-col>
-                </v-row>
-                <v-row
-                  dense
-                  justify="start"
-                  align="start"
-                  class="ml-4 mb-4 mt-0"
-                >
-                  <v-col cols="12" sm="2" align="start">
-                    <div class="my-0">
-                      <strong>Date:</strong>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" sm="10" align="start">
-                    <div class="my-0">
-                      {{ new Date(curOrder.created_at).toLocaleString() }}
-                    </div>
-                  </v-col>
-                </v-row>
-                <v-row justify="center" align="center">
-                  <h3>Total</h3>
-                </v-row>
-                <v-row justify="center" align="center">
-                  <h3>
-                    {{
-                      `${curOrder.total.toLocaleString('es-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                      })}`
-                    }}
-                  </h3>
-                </v-row>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12">
-                <v-row justify="center" align="center">
-                  <v-btn
-                    color="green darken-1"
-                    text
-                    :loading="loading"
-                    :disabled="loading"
-                    @click="goToProducts"
-                  >
-                    Keep selling
-                    <template v-slot:loader>
-                      <span class="custom-loader">
-                        <v-icon light>mdi-cached</v-icon>
-                      </span>
-                    </template>
-                  </v-btn>
-                </v-row>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
+        <OrderSummary :cur-order="curOrder" @go-to-products="goToProducts" />
       </v-col>
     </v-row>
     <v-snackbar v-model="snackbar" timeout="3000">
@@ -200,11 +140,13 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import OrderCard from '@/components/shoppingcart/OrderCard.vue'
+import OrderSummary from '@/components/shoppingcart/OrderSummary.vue'
 
 export default {
   name: 'OrdersView',
   components: {
     OrderCard,
+    OrderSummary,
   },
 
   async asyncData({ store, error }) {
@@ -231,6 +173,7 @@ export default {
       snackbar: false,
       snackbarText: 'No implementado',
       loading: false,
+      showSummary: false,
     }
   },
   computed: {

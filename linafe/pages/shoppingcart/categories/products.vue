@@ -1,31 +1,50 @@
 <template>
-  <div class="shopping-cart mt-4">
-    <div v-for="(item, index) in filteredItems" :key="index">
-      <ProductCard :product="item" />
-    </div>
+  <div>
+    <v-row>
+      <v-col cols="12">
+        <div v-if="isListView">
+          <v-list three-line class="mx-0">
+            <ProductListItem
+              v-for="item in filteredItems"
+              :key="item.id"
+              :product="item"
+            />
+          </v-list>
+        </div>
+        <div v-else class="shopping-cart mt-4">
+          <ProductCard
+            v-for="item in filteredItems"
+            :key="item.id"
+            :product="item"
+          />
+        </div>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
 import ProductCard from '~/components/shoppingcart/ProductCard.vue'
+import ProductListItem from '~/components/shoppingcart/ProductListItem.vue'
 
 export default {
   components: {
     ProductCard,
+    ProductListItem,
   },
 
   async asyncData({ store, error }) {
     try {
-      await store.dispatch('shoppingcart/products/fetchProducts')
+      // await store.dispatch('shoppingcart/products/fetchProducts')
       /* Dejaré comentado este código por si se necesita en un futuro. 
       Mientras no se complete la paginación desde el backend, 
       se podría necesitar para pruebas en desarrollo.
       */
-      // await store.dispatch('shoppingcart/products/fetchData', {
-      //   name: 'Product',
-      //   link: '',
-      // })
+      await store.dispatch('shoppingcart/products/fetchData', {
+        name: 'Product',
+        link: '',
+      })
     } catch (err) {
       if (err.response) {
         error({
@@ -46,7 +65,10 @@ export default {
   },
 
   computed: {
-    ...mapGetters('shoppingcart/categories', ['getSelectedBrands']),
+    ...mapGetters('shoppingcart/categories', [
+      'getSelectedBrands',
+      'isListView',
+    ]),
 
     ...mapGetters('shoppingcart/products', [
       'getAllProducts',

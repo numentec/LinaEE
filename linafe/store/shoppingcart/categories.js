@@ -58,6 +58,7 @@ export const state = () => ({
   customers: [],
   isLoading: false,
   breadcrumbs: [],
+  isListView: false,
 })
 
 export const mutations = {
@@ -102,12 +103,15 @@ export const mutations = {
   },
   SET_COUNT_FILTERED_DEP(state, count) {
     state.countFilteredDep = count
+    localStorage.setItem('lina_countFilteredDep', JSON.stringify(count))
   },
   SET_COUNT_FILTERED_CAT(state, count) {
     state.countFilteredCat = count
+    localStorage.setItem('lina_countFilteredCat', JSON.stringify(count))
   },
   SET_COUNT_FILTERED_SUBCAT(state, count) {
     state.countFilteredSubcat = count
+    localStorage.setItem('lina_countFilteredSubcat', JSON.stringify(count))
   },
 
   SET_VIEWCONF(state, viewconf) {
@@ -131,6 +135,10 @@ export const mutations = {
     state.breadcrumbs = breadcrumbs
     // console.log('Breadcrumbs:', state.breadcrumbs)
     localStorage.setItem('lina_breadcrumbs', JSON.stringify(state.breadcrumbs)) // Save to local storage
+  },
+  SET_LIST_VIEW(state, isListView) {
+    state.isListView = isListView
+    localStorage.setItem('lina_isListView', JSON.stringify(isListView))
   },
 }
 
@@ -165,6 +173,22 @@ export const actions = {
       const breadcrumbs =
         JSON.parse(localStorage.getItem('lina_breadcrumbs')) || []
       commit('SET_BREADCRUMBS', breadcrumbs)
+
+      const isListView =
+        JSON.parse(localStorage.getItem('lina_isListView')) || false
+      commit('SET_LIST_VIEW', isListView)
+
+      const countFilteredDep =
+        JSON.parse(localStorage.getItem('lina_countFilteredDep')) || 0
+      commit('SET_COUNT_FILTERED_DEP', countFilteredDep)
+
+      const countFilteredCat =
+        JSON.parse(localStorage.getItem('lina_countFilteredCat')) || 0
+      commit('SET_COUNT_FILTERED_CAT', countFilteredCat)
+
+      const countFilteredSubcat =
+        JSON.parse(localStorage.getItem('lina_countFilteredSubcat')) || 0
+      commit('SET_COUNT_FILTERED_SUBCAT', countFilteredSubcat)
     }
   },
 
@@ -291,6 +315,9 @@ export const actions = {
   setBreadcrumbs({ commit }, breadcrumbs) {
     commit('SET_BREADCRUMBS', breadcrumbs)
   },
+  setListView({ commit }, isListView) {
+    commit('SET_LIST_VIEW', isListView)
+  },
 }
 
 export const getters = {
@@ -329,4 +356,6 @@ export const getters = {
     state.customers.find((customer) => customer.id === id),
   getIsLoading: (state) => state.isLoading,
   getBreadcrumbs: (state) => state.breadcrumbs,
+
+  isListView: (state) => state.isListView,
 }

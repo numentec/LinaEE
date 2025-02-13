@@ -48,6 +48,7 @@ export default {
   axios: {
     baseURL: process.env.API_URL_SERVER,
     browserBaseURL: process.env.API_URL_CLIENT,
+    // browserBaseURL: 'http://192.168.1.17:8001/linapi/',
   },
 
   auth: {

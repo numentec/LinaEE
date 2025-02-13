@@ -1,24 +1,30 @@
 <template>
   <v-card flat width="1100" max-height="200" class="my-2">
-    <v-card-text>
-      <v-row dense>
-        <v-col cols="4" class="d-flex justify-center shrink">
-          <v-img
-            :src="imgSrc"
-            class="mr-4"
-            :max-width="cardWidth"
-            :height="cardHeight"
-            :lazy-src="lazySrc"
-            @error="onImgError"
-            @load="addImage({ id: item.id, url: imgSrc })"
-          ></v-img>
-        </v-col>
-        <v-col cols="6" align-self="stretch">
+    <v-row dense>
+      <v-col cols="4" class="d-flex justify-center shrink">
+        <v-img
+          :src="imgSrc"
+          class="mr-4"
+          :max-width="cardWidth"
+          :height="cardHeight"
+          :lazy-src="lazySrc"
+          @error="onImgError"
+          @load="addImage({ id: item.id, url: imgSrc })"
+        ></v-img>
+      </v-col>
+      <v-col sm="8" md="6" align-self="stretch">
+        <v-row no-gutters>
           <h3>SKU: {{ item.id }}</h3>
+        </v-row>
+        <v-row no-gutters>
           <p>{{ item.name }}</p>
+        </v-row>
+        <v-row v-if="!isMobile" no-gutters>
           <v-chip color="green lighten-2" text-color="white" class="my-4">
-            {{ formattedPrice }}
+            {{ formatedPrice }}
           </v-chip>
+        </v-row>
+        <v-row v-if="!isMobile" no-gutters>
           <v-text-field
             :value="item.quantity"
             readonly
@@ -27,19 +33,43 @@
             dense
             class="centered-input mx-2 mt-2 mb-6"
           ></v-text-field>
-        </v-col>
-        <v-col cols="2" class="d-flex flex-column justify-center">
-          <div :class="[isMobile ? 'h4-aux' : 'h2-aux', 'text-center']">
-            {{
-              `${itemSubTotal.toLocaleString('es-US', {
-                style: 'currency',
-                currency: 'USD',
-              })}`
-            }}
-          </div>
-        </v-col>
-      </v-row>
-    </v-card-text>
+        </v-row>
+        <v-row v-if="isMobile" no-gutters justify="space-between">
+          <v-col cols="6">
+            <p class="green--text">{{ formatedPrice }}</p>
+          </v-col>
+          <v-col cols="6">
+            <p class="light-blue--text lighten-2">
+              {{ `qty. ${item.quantity}` }}
+            </p>
+          </v-col>
+        </v-row>
+      </v-col>
+      <v-col
+        v-if="!isMobile"
+        cols="2"
+        class="d-flex flex-column justify-center"
+      >
+        <div :class="[isMobile ? 'h4-aux' : 'h2-aux', 'text-center']">
+          {{
+            `${itemSubTotal.toLocaleString('es-US', {
+              style: 'currency',
+              currency: 'USD',
+            })}`
+          }}
+        </div>
+      </v-col>
+    </v-row>
+    <v-row v-if="isMobile" no-gutters justify="center">
+      <div class="h4-aux">
+        {{
+          `${itemSubTotal.toLocaleString('es-US', {
+            style: 'currency',
+            currency: 'USD',
+          })}`
+        }}
+      </div>
+    </v-row>
   </v-card>
 </template>
 
@@ -90,7 +120,7 @@ export default {
     itemSubTotal() {
       return this.item.price * this.item.quantity
     },
-    formattedPrice() {
+    formatedPrice() {
       return Number(this.item.price).toLocaleString('es-US', {
         style: 'currency',
         currency: 'USD',
@@ -122,6 +152,12 @@ export default {
   font-size: 1.17em; /* Tamaño de fuente equivalente a <h4> */
   font-weight: bold; /* Peso de fuente equivalente a <h4> */
   margin: 1.33em 0; /* Margen equivalente a <h4> */
+}
+
+.h6-aux {
+  font-size: 0.67em; /* Tamaño de fuente equivalente a <h6> */
+  font-weight: bold; /* Peso de fuente equivalente a <h6> */
+  margin: 1.67em 0; /* Margen equivalente a <h6> */
 }
 /* .v-card {
   max-width: 600px;

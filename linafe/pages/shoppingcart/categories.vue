@@ -6,7 +6,7 @@
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
               <v-btn
-                class="mt-0 mb-2 mx-2"
+                class="mt-0 mb-2"
                 icon
                 v-bind="attrs"
                 color="cyan lighten-1"
@@ -18,25 +18,24 @@
             </template>
             <span>Volver a vista anterior</span>
           </v-tooltip>
-          <div class="px-2 mt-4">
-            <v-autocomplete
-              v-show="!isMobile"
-              v-model="selected_brands"
-              label="Brands"
-              :items="getBrands"
-              item-text="name"
-              item-value="id"
-              multiple
-              chips
-              deletable-chips
-              dense
-              rounded
-              clearable
-              background-color="white"
-              single-line
-              max-width="300"
-            ></v-autocomplete>
-          </div>
+          <v-autocomplete
+            v-show="!isMobile"
+            v-model="selected_brands"
+            label="Brands"
+            :items="getBrands"
+            item-text="name"
+            item-value="id"
+            multiple
+            chips
+            deletable-chips
+            dense
+            rounded
+            clearable
+            background-color="white"
+            single-line
+            max-width="300"
+            class="px-2 mt-4"
+          ></v-autocomplete>
           <v-spacer></v-spacer>
           <v-text-field
             v-show="cur_child_view.includes('departments')"
@@ -95,19 +94,13 @@
             class="ma-2"
             icon
             color="cyan lighten-1"
-            @click="viewMode = !viewMode"
+            @click="toggleView"
           >
             <v-icon>{{ viewModeIcon }}</v-icon>
           </v-btn>
           <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                class="mr-2"
-                icon
-                color="cyan lighten-1"
-                v-bind="attrs"
-                v-on="on"
-              >
+              <v-btn icon color="cyan lighten-1" v-bind="attrs" v-on="on">
                 <v-icon>mdi-dots-vertical</v-icon>
               </v-btn>
             </template>
@@ -115,9 +108,9 @@
               <v-list-item @click="goToCart">
                 <v-list-item-title>Go to Cart</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="viewMode = !viewMode">
+              <v-list-item @click="toggleView">
                 <v-list-item-title>
-                  {{ viewMode ? 'List view' : 'Grid view' }}
+                  {{ isListView ? 'Grid view' : 'List view' }}
                 </v-list-item-title>
               </v-list-item>
               <v-list-item>
@@ -151,7 +144,10 @@
           <v-breadcrumbs :items="crumbs" nuxt></v-breadcrumbs>
         </div>
         <div>
-          <p v-show="countChildItems > 0" class="primary-text my-2">
+          <p
+            v-show="countChildItems > 0"
+            :class="[isXSScreen ? 'primary-text-xs' : 'primary-text my-2']"
+          >
             {{ `${countChildItems} ${countChildItems > 1 ? 'Items' : 'Item'}` }}
           </p>
         </div>
@@ -232,7 +228,6 @@ export default {
   },
   data() {
     return {
-      viewMode: true, // true for grid and false for list
       selected_brands: [],
       cur_child_view: 'departments',
       search_department: '',
@@ -255,6 +250,7 @@ export default {
       'getCountFilteredDep',
       'getCountFilteredCat',
       'getCountFilteredSubcat',
+      'isListView',
     ]),
     ...mapGetters('shoppingcart/products', [
       'getSearchProduct',
@@ -263,21 +259,24 @@ export default {
     isMobile() {
       return this.$vuetify.breakpoint.mobile
     },
+    isXSScreen() {
+      return this.$vuetify.breakpoint.xs
+    },
     viewModeIcon() {
-      return this.viewMode ? 'mdi-format-list-text' : 'mdi-view-grid'
+      return this.isListView ? 'mdi-view-grid' : 'mdi-format-list-text'
     },
     crumbs() {
       const n = this.$route.fullPath.lastIndexOf('/')
       const curText = () => {
         switch (this.$route.fullPath.substring(n + 1)) {
           case 'departments':
-            return 'Departments'
+            return this.isMobile ? 'Dep' : 'Departments'
           case 'categoriesmain':
-            return 'Categories'
+            return this.isMobile ? 'Cat' : 'Categories'
           case 'categoriessub':
-            return 'Subcategories'
+            return this.isMobile ? 'Scat' : 'Subcategories'
           case 'products':
-            return 'Products'
+            return this.isMobile ? 'Prod' : 'Products'
           default:
             return ''
         }
@@ -360,6 +359,7 @@ export default {
 
   mounted() {
     this.setShowBottomNav(true)
+    this.setListView(this.$vuetify.breakpoint.xs)
   },
 
   methods: {
@@ -369,11 +369,15 @@ export default {
       'setSearchCategory',
       'setSearchSubcategory',
       'setBreadcrumbs',
+      'setListView',
     ]),
     ...mapActions('shoppingcart/products', ['setSearchProduct']),
     ...mapActions('sistema', ['setShowBottomNav']),
     goToCart() {
       this.$router.push('/shoppingcart/cart')
+    },
+    toggleView() {
+      this.setListView(!this.isListView)
     },
   },
 }
@@ -389,6 +393,10 @@ export default {
 }
 .primary-text {
   font-size: 16px;
+  color: var(--v-primary-base);
+}
+.primary-text-xs {
+  font-size: 12px;
   color: var(--v-primary-base);
 }
 </style>

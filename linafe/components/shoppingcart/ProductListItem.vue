@@ -1,72 +1,50 @@
 <template>
-  <v-card
-    :class="[isMobile ? 'mx-2 my-2' : 'mx-4 my-4']"
-    :max-width="cardWidth"
-    :loading="loadingView"
-    @click="goToView"
-  >
-    <!-- <v-badge color="green" content="6" bottom overlap>
-      <v-img :src="product.image" height="400px" cover></v-img>
-    </v-badge> -->
-    <v-img
-      :src="imgSrc"
-      :height="imgHeight"
-      contain
-      :lazy-src="lazySrc"
-      @error="onImgError"
-      @load="addImage({ id: product.id, url: imgSrc })"
-    >
-      <v-app-bar flat color="rgba(0, 0, 0, 0)">
-        <v-chip
-          v-show="addedQuantity > 0"
-          class="ma-2"
-          color="rgba(0, 0, 0, 0.65)"
-          text-color="white"
+  <div>
+    <v-divider></v-divider>
+    <v-list-item class="ml-0 mr-2 pl-0 pr-1">
+      <v-list-item-avatar rounded size="100" left class="mx-0 pl-0 pr-1">
+        <v-img
+          :src="imgSrc"
+          :height="imgHeight"
+          contain
+          :lazy-src="lazySrc"
+          @error="onImgError"
+          @load="addImage({ id: product.id, url: imgSrc })"
         >
-          {{ addedQuantity }}
-        </v-chip>
-      </v-app-bar>
-    </v-img>
-    <v-card flat tile width="100%">
-      <v-card-text>
-        <v-row dense justify="space-between">
-          <h4 class="mt-2 ml-2">
-            {{ product.id }}
-          </h4>
-          <v-chip
-            outlined
-            pill
-            color="green lighten-2"
-            class="mr-2 ml-0 pa-1"
-            :small="sz == 'sm'"
-            :x-small="sz == 'xs'"
-          >
-            {{ formatedPrice }}
-          </v-chip>
-        </v-row>
-        <v-row dense>
-          <p class="mt-0 ml-2">{{ product.name }}</p>
-        </v-row>
-      </v-card-text>
-      <v-card-actions class="mt-2">
-        <v-chip
-          outlined
-          color="light-blue lighten-2"
-          class="mt-0"
-          :small="sz == 'sm'"
-          :x-small="sz == 'xs'"
-        >
-          {{ inStock }}
-        </v-chip>
-        <v-spacer></v-spacer>
+          <v-app-bar flat color="rgba(0, 0, 0, 0)">
+            <v-chip
+              v-show="addedQuantity > 0"
+              class="ma-2"
+              color="rgba(0, 0, 0, 0.65)"
+              text-color="white"
+              small
+            >
+              {{ addedQuantity }}
+            </v-chip>
+          </v-app-bar>
+        </v-img>
+      </v-list-item-avatar>
+      <v-list-item-content>
+        <v-list-item-title>{{ product.id }}</v-list-item-title>
+        <v-list-item-subtitle>{{ product.name }}</v-list-item-subtitle>
+        <v-list-item-subtitle>
+          <v-row justify="space-between" class="mx-1">
+            <div class="green--text">{{ formatedPrice }}</div>
+            <div class="light-blue--text lighten-2">
+              {{ inStock }}
+            </div>
+          </v-row>
+        </v-list-item-subtitle>
+      </v-list-item-content>
+      <v-list-item-icon>
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on, attrs }">
             <v-btn
               color="deep-purple lighten-2"
               fab
-              small
+              x-small
               dark
-              class="mt-0"
+              class="mt-4"
               v-bind="attrs"
               v-on="on"
               @click="openDialog"
@@ -118,8 +96,8 @@
             </v-btn>
           </v-card>
         </v-dialog>
-      </v-card-actions>
-    </v-card>
+      </v-list-item-icon>
+    </v-list-item>
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -133,20 +111,21 @@
         </v-btn>
       </template>
     </v-snackbar>
-  </v-card>
+  </div>
 </template>
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
-  name: 'ProductCard',
+  name: 'ProductListItem',
   props: {
     product: {
       type: Object,
       required: true,
     },
   },
+
   data() {
     return {
       loadingView: false,
@@ -157,7 +136,6 @@ export default {
       tmpCartQuantity: 0,
       tmpCartPrice: this.product.price,
       setNoImage: false,
-      // lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
       lazySrc: '/no_image.png',
       imgError: false,
     }
@@ -174,6 +152,7 @@ export default {
       // screen size
       return this.$vuetify.breakpoint.name
     },
+
     imgHeight() {
       return this.isMobile ? '100px' : '200px'
     },
@@ -187,6 +166,7 @@ export default {
     addedQuantity() {
       return this.getItemQuantityById(this.product.id)
     },
+
     imgSrc() {
       if (this.imgError) {
         return '/no_image.png'
@@ -194,22 +174,25 @@ export default {
 
       return this.getImage(this.product.id) || this.product.image
       // return (
-      //   this.getImage(this.product.id) ||
-      //   this.$config.fotosURL + this.product.image
+      //  this.getImage(this.product.id) ||
+      //  this.$config.fotosURL + this.product.image
       // )
     },
+
     formatedPrice() {
       return Number(this.product.price).toLocaleString('es-US', {
         style: 'currency',
         currency: 'USD',
       })
     },
+
     inStock() {
       return this.isMobile
         ? `Stk: ${this.product.instock}`
         : `In Stock: ${this.product.instock}`
     },
   },
+
   watch: {
     cartquantity(value) {
       if (isNaN(value)) {
@@ -217,12 +200,11 @@ export default {
       }
     },
   },
-  activated() {
-    this.loadingView = false
-  },
+
   methods: {
     ...mapActions('shoppingcart/cart', ['addToCart']),
     ...mapActions('shoppingcart/products', ['addImage']),
+
     goToView() {
       this.loadingView = true
       const link = this.product.link || this.$route.path

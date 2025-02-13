@@ -1,32 +1,50 @@
 <template>
-  <div class="shopping-cart mt-4">
-    <div v-for="(item, index) in filteredItems" :key="index">
-      <CategoryCard
-        :category="{ ...item, type: 'depto', link: setLink() }"
-        @card-clicked="setSelectProductsByElement"
-      />
-    </div>
+  <div>
+    <v-row>
+      <v-col cols="12">
+        <div v-if="isListView">
+          <v-list three-line class="mx-0">
+            <CategoryListItem
+              v-for="item in filteredItems"
+              :key="item.id"
+              :category="{ ...item, type: 'depto', link: setLink() }"
+              @card-clicked="setSelectProductsByElement"
+            />
+          </v-list>
+        </div>
+        <div v-else class="shopping-cart mt-4">
+          <CategoryCard
+            v-for="item in filteredItems"
+            :key="item.id"
+            :category="{ ...item, type: 'depto', link: setLink() }"
+            @card-clicked="setSelectProductsByElement"
+          />
+        </div>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
 import CategoryCard from '~/components/shoppingcart/CategoryCard.vue'
+import CategoryListItem from '~/components/shoppingcart/CategoryListItem.vue'
 
 export default {
   components: {
     CategoryCard,
+    CategoryListItem,
   },
 
   async asyncData({ store, error }) {
     try {
-      await store.dispatch('shoppingcart/categories/fetchItems', {
-        name: 'Department',
-      })
-      // await store.dispatch('shoppingcart/categories/fetchData', {
+      // await store.dispatch('shoppingcart/categories/fetchItems', {
       //   name: 'Department',
-      //   link: '',
       // })
+      await store.dispatch('shoppingcart/categories/fetchData', {
+        name: 'Department',
+        link: '',
+      })
     } catch (err) {
       if (err.response) {
         error({
@@ -54,6 +72,7 @@ export default {
       'getSearchDepartment',
       'getAllDepartments',
       'getViewConfElement',
+      'isListView',
     ]),
 
     filteredItems() {
