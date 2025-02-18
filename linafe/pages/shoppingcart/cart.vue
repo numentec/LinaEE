@@ -24,8 +24,29 @@
               <span>Back to previous view</span>
             </v-tooltip>
             <v-card-title>Shopping Cart</v-card-title>
+            <v-spacer></v-spacer>
+
+            <v-btn
+              v-show="isMobile"
+              icon
+              small
+              @click.stop="showSummary = !showSummary"
+            >
+              <v-icon>
+                {{ showSummary ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+              </v-icon>
+            </v-btn>
           </v-toolbar>
           <v-divider></v-divider>
+          <v-expand-transition>
+            <CartOrderSummary
+              v-show="showSummary"
+              :customers-list="customersList"
+              :loading="loading"
+              :outlined="true"
+              @go-to-checkout="goToCheckout"
+            />
+          </v-expand-transition>
           <v-card-text>
             <v-row v-for="(item, index) in getCartItems" :key="item.id">
               <v-col cols="12">
@@ -45,73 +66,11 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="4">
-        <v-card>
-          <v-toolbar dense flat rounded>
-            <v-card-title>Order Summary</v-card-title>
-          </v-toolbar>
-          <v-divider></v-divider>
-          <v-card-text>
-            <v-row>
-              <v-col cols="12">
-                <v-row dense justify="start" align="start" class="ml-4 mb-4">
-                  <v-col align="start">
-                    <div class="my-0">
-                      <v-autocomplete
-                        v-model="selected_customer"
-                        label="Customer"
-                        return-object
-                        :items="getCustomers"
-                        item-text="name"
-                        item-value="id"
-                        dense
-                        background-color="#eafaff"
-                        rounded
-                        clearable
-                        single-line
-                      ></v-autocomplete>
-                    </div>
-                    <div class="mt-0">
-                      {{ getCartCustomer.email }}
-                    </div>
-                  </v-col>
-                </v-row>
-                <v-row justify="center" align="center">
-                  <h3>Total</h3>
-                </v-row>
-                <v-row justify="center" align="center">
-                  <h3>
-                    {{
-                      `${getCartTotalPrice.toLocaleString('es-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                      })}`
-                    }}
-                  </h3>
-                </v-row>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12">
-                <v-row justify="center" align="center">
-                  <v-btn
-                    color="green darken-1"
-                    text
-                    :loading="loading"
-                    :disabled="loading"
-                    @click="goToCheckout"
-                  >
-                    Checkout
-                    <template v-slot:loader>
-                      <span class="custom-loader">
-                        <v-icon light>mdi-cached</v-icon>
-                      </span>
-                    </template>
-                  </v-btn>
-                </v-row>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
+        <CartOrderSummary
+          :customers-list="customersList"
+          :loading="loading"
+          @go-to-checkout="goToCheckout"
+        />
       </v-col>
     </v-row>
     <v-snackbar
@@ -137,11 +96,13 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import CartCard from '@/components/shoppingcart/CartCard.vue'
+import CartOrderSummary from '@/components/shoppingcart/CartOrderSummary.vue'
 
 export default {
   name: 'ShoppingCart',
   components: {
     CartCard,
+    CartOrderSummary,
   },
   async fetch() {
     const curparams = {
@@ -164,13 +125,16 @@ export default {
   },
   data() {
     return {
-      selected_customer: null,
+      selectedCustomer: {},
+      editEmail: '',
+      editTel: '',
       snackbar: false,
       snackbarText: 'No implementado',
       snackbarColor: 'info',
       snackTimeout: 3000,
       loading: false,
-      overlay: false,
+      dialog: false,
+      showSummary: false,
     }
   },
   computed: {
@@ -181,24 +145,20 @@ export default {
     ]),
     ...mapGetters('shoppingcart/categories', ['getCustomers']),
     ...mapGetters('sistema', ['getCurCia']),
-  },
 
-  watch: {
-    selected_customer(newCustomer) {
-      if (!newCustomer) {
-        newCustomer = {
-          id: 0,
-          name: 'nocli',
-          email: 'noemail@numen.pa',
-          tel: '',
-        }
-      }
-      this.setCartCustomer(newCustomer)
+    customersList() {
+      return JSON.parse(JSON.stringify(this.getCustomers))
+    },
+
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown
+    },
+    isXSmall() {
+      return this.$vuetify.breakpoint.xsOnly
     },
   },
 
   methods: {
-    ...mapActions('shoppingcart/cart', ['setCartCustomer']),
     ...mapActions('shoppingcart/orders', ['createOrder']),
     async goToCheckout() {
       this.snackbar = true
@@ -233,41 +193,4 @@ export default {
 }
 </script>
 
-<style scoped>
-.custom-loader {
-  animation: loader 1s infinite;
-  display: flex;
-}
-@-moz-keyframes loader {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-@-webkit-keyframes loader {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-@-o-keyframes loader {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes loader {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>
+<style scoped></style>

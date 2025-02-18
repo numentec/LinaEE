@@ -101,10 +101,10 @@ export const actions = {
     const cart = rootState.shoppingcart.cart.cart
 
     const newOrder = {
-      customer_id: cart.customerID,
-      customer_name: cart.customerName,
-      customer_email: cart.customerEmail,
-      customr_cel: cart.customerTel,
+      customer_id: cart.carCustomer?.id || 0,
+      customer_name: cart.cartCustomer?.name || '',
+      customer_email: cart.cartCustomer?.email || '',
+      customr_cel: cart.cartCustomer?.tel || '',
       total: cart.items
         .reduce((acc, item) => acc + parseFloat(item.price * item.quantity), 0)
         .toFixed(2),
@@ -130,7 +130,6 @@ export const actions = {
       commit('SET_ISLOADING')
       // Lanzar la excepción para que pueda ser capturada en asyncData
       throw error
-      // console.error('Error during checkout:', error)
     }
   },
 }

@@ -5,8 +5,8 @@
         <div v-if="isListView">
           <v-list three-line class="mx-0">
             <CategoryListItem
-              v-for="item in filteredItems"
-              :key="item.id"
+              v-for="(item, index) in filteredItems"
+              :key="index"
               :category="{ ...item, type: 'scat', link: setLink() }"
               @card-clicked="setSelectProductsByElement"
             />
@@ -14,8 +14,8 @@
         </div>
         <div v-else class="shopping-cart mt-4">
           <CategoryCard
-            v-for="item in filteredItems"
-            :key="item.id"
+            v-for="(item, index) in filteredItems"
+            :key="index"
             :category="{ ...item, type: 'scat', link: setLink() }"
             @card-clicked="setSelectProductsByElement"
           />
@@ -38,13 +38,13 @@ export default {
   },
   async asyncData({ store, error }) {
     try {
-      // await store.dispatch('shoppingcart/categories/fetchItems', {
-      //   name: 'Subcategory',
-      // })
-      await store.dispatch('shoppingcart/categories/fetchData', {
+      await store.dispatch('shoppingcart/categories/fetchItems', {
         name: 'Subcategory',
-        link: '',
       })
+      // await store.dispatch('shoppingcart/categories/fetchData', {
+      //   name: 'Subcategory',
+      //   link: '',
+      // })
     } catch (err) {
       if (err.response) {
         error({

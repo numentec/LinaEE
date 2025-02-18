@@ -5,10 +5,7 @@ function updateCartState(cartstate) {
 }
 
 const initCart = {
-  customerID: 0,
-  customerName: 'nocli',
-  customerEmail: 'noemail@numen.pa',
-  customerTel: '',
+  cartCustomer: {},
   total: 0,
   items: [],
 }
@@ -27,24 +24,24 @@ export const mutations = {
   },
 
   SET_CART_CUSTOMER(state, customer) {
-    state.cart.customerID = customer?.id
-    state.cart.customerName = customer?.name
-    state.cart.customerEmail = customer.email
-    state.cart.customerTel = customer?.tel
+    if (!customer) {
+      customer = {}
+    }
+    state.cart.cartCustomer = customer
     updateCartState(state.cart)
   },
 
   SET_CUSTOMERID(state, id) {
-    state.cart.customerID = id
+    state.cart.cartCustomer.id = id
   },
   SET_CUSTOMERNAME(state, name) {
-    state.cart.customerName = name
+    state.cart.cartCustomer.name = name
   },
   SET_CUSTOMEREMAIL(state, email) {
-    state.cart.customerEmail = email
+    state.cart.cartCustomer.email = email
   },
   SET_CUSTOMERTEL(state, tel) {
-    state.cart.customerTel = tel
+    state.cart.cartCustomer.tel = tel
   },
   SET_TOTAL(state, total) {
     state.cart.total = total
@@ -94,16 +91,6 @@ export const actions = {
       }
 
       commit('SET_CART', objcart.cart)
-      // commit('SET_CART_CUSTOMER', objcart.cartCustomer)
-
-      // const cartCustomer = JSON.parse(
-      //   localStorage.getItem('lina_cartCustomer')
-      // ) || {
-      //   id: 0,
-      //   name: 'nocli',
-      //   email: 'noemail@numen.pa',
-      // }
-      // commit('SET_CART_CUSTOMER', cartCustomer)
     }
   },
 
@@ -146,13 +133,8 @@ export const actions = {
 }
 
 export const getters = {
-  getCartCustomer: (state) => {
-    return {
-      id: state.cart.customerID,
-      name: state.cart.customerName,
-      email: state.cart.customerEmail,
-      tel: state.cart.customerTel,
-    }
+  getCartCustomer(state) {
+    return state.cart.cartCustomer
   },
 
   getCartItems: (state) => state.cart.items || [],

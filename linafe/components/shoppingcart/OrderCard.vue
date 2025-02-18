@@ -50,7 +50,7 @@
         cols="2"
         class="d-flex flex-column justify-center"
       >
-        <div :class="[isMobile ? 'h4-aux' : 'h2-aux', 'text-center']">
+        <div :class="[isMobile ? 'h4-aux' : 'h3-aux', 'text-center']">
           {{
             `${itemSubTotal.toLocaleString('es-US', {
               style: 'currency',
@@ -146,6 +146,12 @@ export default {
   font-size: 1.5em; /* Tamaño de fuente equivalente a <h2> */
   font-weight: bold; /* Peso de fuente equivalente a <h2> */
   margin: 0.83em 0; /* Margen equivalente a <h2> */
+}
+
+.h3-aux {
+  font-size: 1.17em; /* Tamaño de fuente equivalente a <h3> */
+  font-weight: bold; /* Peso de fuente equivalente a <h3> */
+  margin: 1em 0; /* Margen equivalente a <h3> */
 }
 
 .h4-aux {

@@ -61,7 +61,7 @@
               text
               :loading="loading"
               :disabled="loading"
-              @click="$emit('goToProducts')"
+              @click="$emit('go-to-products')"
             >
               Keep selling
               <template v-slot:loader>
