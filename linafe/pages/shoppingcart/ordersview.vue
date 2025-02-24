@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <div class="floating-header">
+    <div class="floating-header mt-0 mx-0">
       <v-row>
         <v-toolbar flat color="rgba(225, 250, 250, 0.5)">
           <v-tooltip bottom>
@@ -19,10 +19,16 @@
             <span>Back to previous view</span>
           </v-tooltip>
           <v-spacer></v-spacer>
-          <v-btn icon small @click="() => setCurrentIndex(0)">
+          <v-btn
+            v-if="!isListView"
+            icon
+            small
+            @click="() => setCurrentIndex(0)"
+          >
             <v-icon>mdi-page-first</v-icon>
           </v-btn>
           <v-text-field
+            v-if="!isListView"
             :value="`${curIndex + 1} / ${ordersCount}`"
             readonly
             filled
@@ -35,19 +41,36 @@
             @click:prepend-inner="() => goLeft()"
             @click:append="() => goRight()"
           ></v-text-field>
-          <v-btn icon small @click="() => setCurrentIndex(ordersCount - 1)">
+          <v-btn
+            v-if="!isListView"
+            icon
+            small
+            @click="() => setCurrentIndex(ordersCount - 1)"
+          >
             <v-icon>mdi-page-last</v-icon>
           </v-btn>
+          <v-text-field
+            v-show="isListView"
+            v-model="searchOrders"
+            solo
+            flat
+            hide-details
+            prepend-inner-icon="mdi-magnify"
+            label="Search"
+            dense
+            rounded
+            clearable
+          ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn
             v-show="!isMobile"
             class="ma-2"
             icon
             color="cyan lighten-1"
-            @click="viewMode = !viewMode"
+            @click="changeView"
           >
-            <v-icon v-if="viewMode">mdi-format-list-text</v-icon>
-            <v-icon v-else>mdi-view-grid</v-icon>
+            <v-icon v-if="isListView">mdi-view-grid</v-icon>
+            <v-icon v-else>mdi-format-list-text</v-icon>
           </v-btn>
           <v-menu offset-y>
             <template v-slot:activator="{ on, attrs }">
@@ -59,9 +82,9 @@
               <v-list-item @click="goToProducts">
                 <v-list-item-title>Go to Cart</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="snackbar = true">
+              <v-list-item @click="changeView">
                 <v-list-item-title>
-                  {{ viewMode ? 'List view' : 'Grid view' }}
+                  {{ isListView ? 'Grid view' : 'List view' }}
                 </v-list-item-title>
               </v-list-item>
               <v-list-item @click="snackbar = true">
@@ -73,8 +96,8 @@
       </v-row>
     </div>
     <v-row>
-      <v-col cols="12" md="8">
-        <v-card>
+      <v-col cols="12" :md="isListView ? 12 : 8">
+        <v-card v-show="!isListView">
           <v-toolbar dense flat rounded>
             <v-card-title>{{ `Order # ${curOrder.id}` }}</v-card-title>
             <v-spacer></v-spacer>
@@ -116,9 +139,25 @@
             </v-alert>
           </v-card-text>
         </v-card>
+        <v-list v-show="isListView" nav class="px-0">
+          <v-list-item-group v-model="selectedListItem" color="primary">
+            <template v-for="order in filteredOrders">
+              <OrderListItem
+                :key="order.id"
+                :order="order"
+                @resend-mail="snackbar = true"
+                @order-clicked="goToOrder"
+              />
+            </template>
+          </v-list-item-group>
+        </v-list>
       </v-col>
-      <v-col cols="12" md="4">
-        <OrderSummary :cur-order="curOrder" @go-to-products="goToProducts" />
+      <v-col v-show="!isListView" cols="12" md="4">
+        <OrderSummary
+          :cur-order="curOrder"
+          class="sticky-summary"
+          @go-to-products="goToProducts"
+        />
       </v-col>
     </v-row>
     <v-snackbar v-model="snackbar" timeout="3000">
@@ -140,6 +179,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import OrderCard from '@/components/shoppingcart/OrderCard.vue'
+import OrderListItem from '@/components/shoppingcart/OrderListItem.vue'
 import OrderSummary from '@/components/shoppingcart/OrderSummary.vue'
 
 export default {
@@ -147,6 +187,7 @@ export default {
   components: {
     OrderCard,
     OrderSummary,
+    OrderListItem,
   },
 
   async asyncData({ store, error }) {
@@ -169,11 +210,13 @@ export default {
 
   data() {
     return {
-      viewMode: true, // true for grid and false for list
+      isListView: true, // true for list and false for grid
+      selectedListItem: 0,
       snackbar: false,
       snackbarText: 'No implementado',
       loading: false,
       showSummary: false,
+      searchOrders: '',
     }
   },
   computed: {
@@ -186,10 +229,39 @@ export default {
       ordersCount: 'getOrdersCount',
       getIndexByOrderID: 'getIndexByOrderID',
       getJustCreated: 'getJustCreated',
+      orders: 'getOrders',
     }),
     ...mapGetters('sistema', ['getCurCia']),
     isMobile() {
       return this.$vuetify.breakpoint.mobile
+    },
+    filteredOrders() {
+      return this.orders.filter((order) => {
+        if (!this.searchOrders) {
+          return true
+        }
+        const searchOrders = this.searchOrders.toLowerCase()
+        return (
+          order.id.toString().toLowerCase().includes(searchOrders) ||
+          order.customer_name.toLowerCase().includes(searchOrders)
+        )
+      })
+    },
+  },
+
+  watch: {
+    selectedListItem(newIndex, oldIndex) {
+      let curIndex = 0
+
+      if (oldIndex) {
+        curIndex = oldIndex
+      }
+
+      if (newIndex) {
+        curIndex = newIndex
+      }
+
+      this.setCurrentIndex(curIndex)
     },
   },
 
@@ -227,6 +299,19 @@ export default {
       }
       this.setCurrentIndex(this.curIndex + 1)
     },
+    setCurIndex() {
+      this.setCurrentIndex(this.selectedListItem)
+    },
+    changeView() {
+      if (!this.isListView) {
+        this.selectedListItem = this.curIndex
+      }
+      this.isListView = !this.isListView
+    },
+    async goToOrder(id) {
+      await this.setCurrentIndex(this.getIndexByOrderID(id))
+      this.changeView()
+    },
   },
 }
 </script>
@@ -235,7 +320,7 @@ export default {
 .floating-header {
   position: -webkit-sticky; /* Safari */
   position: sticky;
-  top: 45px; /* Ajusta este valor según la altura de tu app-bar */
+  top: 40px; /* Ajusta este valor según la altura de tu app-bar */
   z-index: 3; /* Asegúrate de que esté por encima de otros elementos pero por debajo del Drawer */
   background-color: white;
 }
@@ -277,5 +362,11 @@ export default {
   to {
     transform: rotate(360deg);
   }
+}
+.sticky-summary {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 125px;
+  z-index: 2;
 }
 </style>
