@@ -1,43 +1,49 @@
 <template>
-  <v-card
-    class="mx-4 my-4"
-    :max-width="cardWidth"
-    :loading="loadingView"
-    @click="goToView"
-  >
-    <v-img
-      :src="imgSrc"
-      :height="imgHeight"
-      cover
-      :lazy-src="lazySrc"
-      @error="onImgError"
-    >
-      <template v-slot:placeholder>
-        <v-row class="fill-height ma-0" align="center" justify="center">
-          <v-progress-circular
-            indeterminate
-            color="grey lighten-5"
-          ></v-progress-circular>
-        </v-row>
-      </template>
-      <v-toolbar
-        flat
-        color="rgba(0, 0, 0, 0.65)"
-        bottom
-        absolute
-        style="width: 100%"
+  <v-hover>
+    <template v-slot:default="{ hover }">
+      <v-card
+        :elevation="hover ? 5 : 0"
+        :outlined="!hover"
+        :class="['mx-4 my-4']"
+        :max-width="cardWidth"
+        :loading="loadingView"
+        @click="goToView"
       >
-        <v-toolbar-title
-          :class="[
-            'white--text',
-            isMobile ? 'toolbar-title--small' : 'toolbar-title',
-          ]"
+        <v-img
+          :src="imgSrc"
+          :height="imgHeight"
+          cover
+          :lazy-src="lazySrc"
+          @error="onImgError"
         >
-          {{ category.name }}
-        </v-toolbar-title>
-      </v-toolbar>
-    </v-img>
-  </v-card>
+          <template v-slot:placeholder>
+            <v-row class="fill-height ma-0" align="center" justify="center">
+              <v-progress-circular
+                indeterminate
+                color="grey lighten-5"
+              ></v-progress-circular>
+            </v-row>
+          </template>
+          <v-toolbar
+            flat
+            color="rgba(0, 0, 0, 0.65)"
+            bottom
+            absolute
+            style="width: 100%"
+          >
+            <v-toolbar-title
+              :class="[
+                'white--text',
+                isMobile ? 'toolbar-title--small' : 'toolbar-title',
+              ]"
+            >
+              {{ category.name }}
+            </v-toolbar-title>
+          </v-toolbar>
+        </v-img>
+      </v-card>
+    </template>
+  </v-hover>
 </template>
 
 <script>

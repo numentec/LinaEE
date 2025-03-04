@@ -1,5 +1,9 @@
 <template>
-  <v-list-item :key="order.id" class="mx-0">
+  <v-list-item
+    :key="order.id"
+    class="mx-0"
+    @click.stop="$emit('order-clicked', order.id)"
+  >
     <!-- <v-list-item-avatar>
                     <v-img
                         :src="`https://picsum.photos/seed/${order.id}/50/50`"
@@ -8,9 +12,7 @@
                     </v-list-item-avatar> -->
     <v-list-item-content>
       <v-list-item-title>
-        <vbtn text @click="$emit('order-clicked', order.id)">
-          {{ `Order #: ${order.id}` }}
-        </vbtn>
+        {{ `Order #: ${order.id}` }}
       </v-list-item-title>
       <v-list-item-subtitle>
         {{ order.customer_name }}
@@ -28,7 +30,7 @@
       <v-list-item-action-text>
         {{ new Date(order.created_at).toISOString().split('T')[0] }}
       </v-list-item-action-text>
-      <v-btn icon @click="$emit('resend-mail')">
+      <v-btn icon @click.stop="$emit('resend-mail')">
         <v-icon>mdi-email-outline</v-icon>
       </v-btn>
     </v-list-item-action>
@@ -66,25 +68,9 @@ export default {
   },
 
   methods: {
-    goToView() {
+    resendMail() {
       this.loadingView = true
-      this.$emit('card-clicked', {
-        key: this.category.type,
-        value: this.category.id,
-      })
-      if (
-        this.category.link === null ||
-        this.category.link === '' ||
-        this.category.link === undefined
-      ) {
-        this.$router.push('/shoppingcart/categories/departments')
-      } else {
-        this.$router.push(this.category.link)
-      }
-    },
-    onImgError() {
-      this.imgSrc = '/no_image.png'
-      this.$emit('no-image')
+      this.$emit('resend-mail', this.order.id)
     },
   },
 }

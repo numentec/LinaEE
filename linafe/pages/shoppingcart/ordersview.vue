@@ -51,7 +51,7 @@
           </v-btn>
           <v-text-field
             v-show="isListView"
-            v-model="searchOrders"
+            v-model="filterOrdersBy"
             solo
             flat
             hide-details
@@ -60,6 +60,7 @@
             dense
             rounded
             clearable
+            @input="updateFilter"
           ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn
@@ -99,7 +100,7 @@
       <v-col cols="12" :md="isListView ? 12 : 8">
         <v-card v-show="!isListView">
           <v-toolbar dense flat rounded>
-            <v-card-title>{{ `Order # ${curOrder.id}` }}</v-card-title>
+            <v-card-title>{{ `Order # ${cOrderID}` }}</v-card-title>
             <v-spacer></v-spacer>
 
             <v-btn
@@ -140,10 +141,15 @@
           </v-card-text>
         </v-card>
         <v-list v-show="isListView" nav class="px-0">
-          <v-list-item-group v-model="selectedListItem" color="primary">
-            <template v-for="order in filteredOrders">
+          <v-list-item-group
+            :key="listKey"
+            v-model="selectedListItem"
+            color="primary"
+          >
+            <template v-for="order in orders">
               <OrderListItem
                 :key="order.id"
+                ref="selectedOrder"
                 :order="order"
                 @resend-mail="snackbar = true"
                 @order-clicked="goToOrder"
@@ -182,6 +188,26 @@ import OrderCard from '@/components/shoppingcart/OrderCard.vue'
 import OrderListItem from '@/components/shoppingcart/OrderListItem.vue'
 import OrderSummary from '@/components/shoppingcart/OrderSummary.vue'
 
+function debounce(func, delay) {
+  let timeout
+  return function (...args) {
+    clearTimeout(timeout) // Limpia el temporizador anterior
+    timeout = setTimeout(() => {
+      func.apply(this, args) // Ejecuta la función después del retraso
+    }, delay)
+  }
+}
+
+function filtro(func) {
+  return function (...args) {
+    return new Promise((resolve) => {
+      debounce(() => {
+        resolve(func.apply(this, args))
+      }, 500)()
+    })
+  }
+}
+
 export default {
   name: 'OrdersView',
   components: {
@@ -216,7 +242,8 @@ export default {
       snackbarText: 'No implementado',
       loading: false,
       showSummary: false,
-      searchOrders: '',
+      filterOrdersBy: '',
+      listKey: 0, // Agregar una clave dinámica para forzar la actualización de la lista
     }
   },
   computed: {
@@ -235,17 +262,8 @@ export default {
     isMobile() {
       return this.$vuetify.breakpoint.mobile
     },
-    filteredOrders() {
-      return this.orders.filter((order) => {
-        if (!this.searchOrders) {
-          return true
-        }
-        const searchOrders = this.searchOrders.toLowerCase()
-        return (
-          order.id.toString().toLowerCase().includes(searchOrders) ||
-          order.customer_name.toLowerCase().includes(searchOrders)
-        )
-      })
+    cOrderID() {
+      return this.curOrder ? String(this.curOrder.id) : ''
     },
   },
 
@@ -263,6 +281,9 @@ export default {
 
       this.setCurrentIndex(curIndex)
     },
+    // filterOrdersBy() {
+    //   this.listKey += 1 // Incrementar la clave dinámica cuando el filtro cambie
+    // },
   },
 
   activated() {
@@ -281,6 +302,7 @@ export default {
       'setCurrentIndex',
       'fetchOrders',
       'setJustCreated',
+      'setFilterCriteria',
     ]),
     async goToProducts() {
       this.loading = true
@@ -303,14 +325,33 @@ export default {
       this.setCurrentIndex(this.selectedListItem)
     },
     changeView() {
-      if (!this.isListView) {
-        this.selectedListItem = this.curIndex
-      }
       this.isListView = !this.isListView
+      this.$nextTick(() => {
+        if (this.isListView) {
+          this.selectedListItem = this.curIndex
+          const selectedOrder = this.$refs.selectedOrder?.[
+            this.selectedListItem
+          ]
+
+          if (selectedOrder) {
+            console.log('SELECTED ORDER: ', selectedOrder)
+            selectedOrder.$el.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            })
+          }
+        } else {
+          window.scrollTo(0, 0)
+        }
+      })
     },
-    async goToOrder(id) {
-      await this.setCurrentIndex(this.getIndexByOrderID(id))
+    goToOrder(id) {
+      // await this.setCurrentIndex(this.getIndexByOrderID(id))
       this.changeView()
+    },
+    async updateFilter() {
+      await filtro(this.setFilterCriteria.bind(this))(this.filterOrdersBy)
+      this.listKey += 1 // Incrementar la clave dinámica cuando el filtro cambie
     },
   },
 }

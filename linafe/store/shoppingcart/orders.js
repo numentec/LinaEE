@@ -11,6 +11,7 @@ export const state = () => ({
   lastCreatedID: 0,
   justCreated: false,
   isLoading: false,
+  filterCriteria: '',
 })
 
 export const mutations = {
@@ -46,6 +47,10 @@ export const mutations = {
   SET_ISLOADING(state) {
     state.isLoading = !state.isLoading
   },
+
+  SET_FILTER_CRITERIA(state, criteria) {
+    state.filterCriteria = criteria
+  },
 }
 
 export const actions = {
@@ -78,6 +83,10 @@ export const actions = {
   },
   setLastCreatedID({ commit }, id) {
     commit('SET_LAST_CREATED_ID', id)
+  },
+
+  setFilterCriteria({ commit }, criteria) {
+    commit('SET_FILTER_CRITERIA', criteria)
   },
 
   async fetchOrders({ commit }) {
@@ -135,31 +144,45 @@ export const actions = {
 }
 
 export const getters = {
-  getOrders: (state) => state.orders,
-  getOrdersCount: (state) => state.orders.length || 0,
+  // getOrders: (state) => state.orders,
+  getOrders: (state) => {
+    const filter = state.filterCriteria
+    return state.orders.filter((order) => {
+      const matchesCustomerName = filter
+        ? order.customer_name.toLowerCase().includes(filter.toLowerCase())
+        : true
+      const matchesID = filter
+        ? order.id.toString().toLowerCase().includes(filter.toLowerCase())
+        : true
+
+      return matchesCustomerName || matchesID
+    })
+  },
+
+  getOrdersCount: (state, getters) => getters.getOrders.length || 0,
   getOrderByid: (state) => (id) =>
     state.orders.find((order) => order.id === id),
-  getOrderByIndex: (state) => (index) => state.orders[index],
-  getIndexByOrderID: (state) => (id) =>
-    state.orders.findIndex((order) => order.id === id),
-  getOrdersByCustomer: (state) => (customerId) =>
-    state.orders.filter((order) => order.customer_id === customerId),
-  getOrderTotalByID: (state) => (id) => {
-    const order = state.orders.find((order) => order.id === id)
+  getOrderByIndex: (state, getters) => (index) => getters.getOrders[index],
+  getIndexByOrderID: (state, getters) => (id) =>
+    getters.getOrders.findIndex((order) => order.id === id),
+  getOrdersByCustomer: (state, getters) => (customerId) =>
+    getters.getOrders.filter((order) => order.customer_id === customerId),
+  getOrderTotalByID: (state, getters) => (id) => {
+    const order = getters.getOrders.find((order) => order.id === id)
     return order
       ? order.items.reduce((acc, item) => acc + item.price * item.quantity, 0)
       : 0
   },
-  getOrderTotalByIndex: (state) => (index) => {
-    const order = state.orders[index]
+  getOrderTotalByIndex: (state, getters) => (index) => {
+    const order = getters.getOrders[index]
     return order ? order.total : 0
   },
-  getCurrentOrderTotal: (state) => {
-    const order = state.orders[state.currentIndex]
+  getCurrentOrderTotal: (state, getters) => {
+    const order = getters.getOrders[state.currentIndex]
     return order ? order.total : 0
   },
 
-  getCurrentOrder: (state) => state.orders[state.currentIndex],
+  getCurrentOrder: (state, getters) => getters.getOrders[state.currentIndex],
   getCurrentIndex: (state) => state.currentIndex,
   getCurrentID: (state) => state.currentID,
   getLastCreatedID: (state) => state.lastCreatedID,

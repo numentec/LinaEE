@@ -21,7 +21,9 @@
         </v-img>
       </v-list-item-avatar>
       <v-list-item-content>
-        <v-list-item-title class="text-h5">
+        <v-list-item-title
+          :class="isMobile ? 'toolbar-title--small' : 'toolbar-title'"
+        >
           {{ category.name }}
         </v-list-item-title>
       </v-list-item-content>
@@ -91,4 +93,12 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.toolbar-title {
+  font-size: 1.25rem; /* Tamaño de fuente por defecto */
+}
+
+.toolbar-title--small {
+  font-size: 1rem; /* Tamaño de fuente más pequeño para dispositivos móviles */
+}
+</style>
