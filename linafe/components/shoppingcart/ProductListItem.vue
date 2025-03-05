@@ -1,7 +1,10 @@
 <template>
   <div>
     <v-divider></v-divider>
-    <v-list-item class="ml-0 mr-2 pl-0 pr-1">
+    <v-list-item
+      class="ml-0 mr-2 pl-0 pr-1"
+      @click="$emit('click', product.id)"
+    >
       <v-list-item-avatar rounded size="100" left class="mx-0 pl-0 pr-1">
         <v-img
           :src="imgSrc"

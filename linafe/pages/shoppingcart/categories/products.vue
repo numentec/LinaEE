@@ -8,6 +8,7 @@
               v-for="item in filteredItems"
               :key="item.id"
               :product="item"
+              @click="loadSlideshow"
             />
           </v-list>
         </div>
@@ -16,10 +17,19 @@
             v-for="item in filteredItems"
             :key="item.id"
             :product="item"
+            @click="loadSlideshow"
           />
         </div>
       </v-col>
     </v-row>
+    <Slideshow
+      :data-source="getItemImages"
+      :cur-key="0"
+      :show-slideshow="slideshow"
+      :no-img-list="noImgList"
+      :show-title="false"
+      @hideSlideshow="slideshow = false"
+    />
   </div>
 </template>
 
@@ -27,11 +37,13 @@
 import { mapActions, mapGetters } from 'vuex'
 import ProductCard from '~/components/shoppingcart/ProductCard.vue'
 import ProductListItem from '~/components/shoppingcart/ProductListItem.vue'
+import Slideshow from '~/components/linabi/Slideshow'
 
 export default {
   components: {
     ProductCard,
     ProductListItem,
+    Slideshow,
   },
 
   async asyncData({ store, error }) {
@@ -61,7 +73,10 @@ export default {
   },
 
   data() {
-    return {}
+    return {
+      slideshow: false,
+      noImgList: [],
+    }
   },
 
   computed: {
@@ -73,6 +88,7 @@ export default {
     ...mapGetters('shoppingcart/products', [
       'getAllProducts',
       'getSearchProduct',
+      'getItemImages',
     ]),
 
     filteredItems() {
@@ -113,6 +129,10 @@ export default {
 
   methods: {
     ...mapActions('shoppingcart/products', ['setCountFilteredProducts']),
+    async loadSlideshow(e) {
+      await this.$store.dispatch('shoppingcart/products/fetchItemImages', e.id)
+      this.slideshow = true
+    },
   },
 }
 </script>

@@ -9,14 +9,19 @@
       @keydown.esc="$emit('hideSlideshow')"
     >
       <v-card flat tile class="mx-auto">
-        <v-app-bar color="accent darken-3" dark>
+        <v-app-bar
+          :color="showTitle ? 'accent darken-3' : 'white'"
+          :dark="showTitle"
+          :flat="!showTitle"
+          :elevated="showTitle"
+        >
           <v-app-bar-nav-icon @click.stop="showDetails">
             <v-icon v-show="showdetails">
               mdi-arrow-collapse-horizontal
             </v-icon>
             <v-icon v-show="!showdetails">mdi-arrow-split-vertical</v-icon>
           </v-app-bar-nav-icon>
-          <v-toolbar-title>Fotos Slideshow</v-toolbar-title>
+          <v-toolbar-title v-show="showTitle">Fotos Slideshow</v-toolbar-title>
           <v-spacer />
           <v-btn icon @click="$emit('hideSlideshow')">
             <v-icon>mdi-window-close</v-icon>
@@ -35,7 +40,12 @@
                   <v-carousel v-model="curItem" hide-delimiters>
                     <v-carousel-item v-for="(item, i) in dS" :key="i">
                       <v-container>
-                        <v-img :src="imgSrc(item.FOTO)" contain max-width="700">
+                        <v-img
+                          :src="imgSrc(item.FOTO)"
+                          contain
+                          max-width="700"
+                          max-height="500"
+                        >
                           <template v-slot:placeholder>
                             <v-row
                               class="fill-height ma-0"
@@ -109,6 +119,10 @@ export default {
     noImgList: {
       type: Array,
       default: () => [],
+    },
+    showTitle: {
+      type: Boolean,
+      default: true,
     },
   },
 

@@ -46,6 +46,7 @@ export const state = () => ({
   search_product: '',
   countFilteredProducts: 0,
   isLoading: false,
+  itemImages: [],
 })
 
 export const mutations = {
@@ -69,6 +70,9 @@ export const mutations = {
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
+  },
+  SET_ITEM_IMAGES(state, itemImages) {
+    state.itemImages = itemImages
   },
 }
 
@@ -119,6 +123,21 @@ export const actions = {
     commit('SET_PRODUCTS', data)
   },
 
+  // One product images
+  async fetchItemImages({ commit }, id) {
+    await this.$axios
+      .get('shoppingcart/productimages/', {
+        params: { id, cia: '01' },
+      })
+      .then((response) => {
+        commit('SET_ITEM_IMAGES', response.data)
+      })
+      .catch((error) => {
+        commit('SET_ITEM_IMAGES', [])
+        console.error(error)
+      })
+  },
+
   setSearchProduct({ commit }, search) {
     commit('SET_SEARCH_PRODUCT', search)
   },
@@ -134,6 +153,10 @@ export const actions = {
   setIsLoading({ commit }) {
     commit('SET_LOADING_STATUS')
   },
+
+  setitemImages({ commit }, itemImages) {
+    commit('SET_ITEM_IMAGES', itemImages)
+  },
 }
 
 export const getters = {
@@ -143,4 +166,6 @@ export const getters = {
   getCountFilteredProducts: (state) => state.countFilteredProducts,
   getImages: (state) => state.images,
   getImage: (state) => (id) => state.images[id],
+  getIsLoading: (state) => state.isLoading,
+  getItemImages: (state) => state.itemImages,
 }

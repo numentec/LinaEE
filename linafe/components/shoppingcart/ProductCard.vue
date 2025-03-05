@@ -7,7 +7,9 @@
         :class="[isMobile ? 'mx-2 my-2' : 'mx-4 my-4']"
         :max-width="cardWidth"
         :loading="loadingView"
-        @click="goToView"
+        @click="$emit('click', product.id)"
+        @mouseover="$emit('mouseover')"
+        @mouseleave="$emit('mouseleave')"
       >
         <!-- <v-badge color="green" content="6" bottom overlap>
           <v-img :src="product.image" height="400px" cover></v-img>
