@@ -9,45 +9,56 @@
       @keydown.esc="$emit('hideSlideshow')"
     >
       <v-card flat tile class="mx-auto">
-        <v-app-bar color="white" flat>
-          <v-spacer />
-          <v-btn icon @click="$emit('hideSlideshow')">
-            <v-icon>mdi-window-close</v-icon>
-          </v-btn>
-        </v-app-bar>
+        <v-btn
+          fab
+          right
+          small
+          absolute
+          class="mt-4"
+          @click="$emit('hideSlideshow')"
+        >
+          <v-icon>mdi-window-close</v-icon>
+        </v-btn>
         <v-container>
           <v-row justify="center">
-            <v-col align="center" justify="center" class="shrink" cols="12">
-              <v-card flat tile class="mx-auto">
-                <v-container>
-                  <v-carousel v-model="curItem" hide-delimiters>
-                    <v-carousel-item v-for="(item, i) in dS" :key="i">
-                      <v-container>
-                        <v-img
-                          :src="imgSrc(item)"
-                          contain
-                          max-width="700"
-                          max-height="500"
+            <v-col align="center" justify="center">
+              <v-carousel
+                v-show="dS.length !== 0"
+                v-model="curItem"
+                hide-delimiters
+                :show-arrows="!isMobile"
+              >
+                <v-carousel-item v-for="(item, i) in dS" :key="i">
+                  <v-img
+                    :src="imgSrc(item)"
+                    contain
+                    max-width="700"
+                    max-height="500"
+                  >
+                    <template v-slot:placeholder>
+                      <v-row
+                        class="fill-height ma-0"
+                        align="center"
+                        justify="center"
+                      >
+                        <v-progress-circular
+                          indeterminate
+                          color="grey lighten-5"
                         >
-                          <template v-slot:placeholder>
-                            <v-row
-                              class="fill-height ma-0"
-                              align="center"
-                              justify="center"
-                            >
-                              <v-progress-circular
-                                indeterminate
-                                color="grey lighten-5"
-                              >
-                              </v-progress-circular>
-                            </v-row>
-                          </template>
-                        </v-img>
-                      </v-container>
-                    </v-carousel-item>
-                  </v-carousel>
-                </v-container>
-              </v-card>
+                        </v-progress-circular>
+                      </v-row>
+                    </template>
+                  </v-img>
+                </v-carousel-item>
+              </v-carousel>
+              <v-alert
+                v-show="dS.length === 0"
+                dense
+                border="left"
+                type="warning"
+              >
+                <strong>No aditional image found!</strong>
+              </v-alert>
             </v-col>
           </v-row>
         </v-container>
@@ -83,6 +94,9 @@ export default {
         ds = this.dataSource
       }
       return ds
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown
     },
   },
 
