@@ -7,7 +7,7 @@
         :class="[isMobile ? 'mx-2 my-2' : 'mx-4 my-4']"
         :max-width="cardWidth"
         :loading="loadingView"
-        @click="$emit('click', product.id)"
+        @click="$emit('click', imgID)"
         @mouseover="$emit('mouseover')"
         @mouseleave="$emit('mouseleave')"
       >
@@ -200,11 +200,11 @@ export default {
         return '/no_image.png'
       }
 
-      // return this.getImage(this.product.id) || this.product.image
-      return (
-        this.getImage(this.product.id) ||
-        this.$config.fotosURL + this.product.image
-      )
+      return this.getImage(this.product.id) || this.product.image
+      // return (
+      //   this.getImage(this.product.id) ||
+      //   this.$config.fotosURL + this.product.image
+      // )
     },
     formatedPrice() {
       return Number(this.product.price).toLocaleString('es-US', {
@@ -216,6 +216,14 @@ export default {
       return this.isMobile
         ? `Stk: ${this.product.instock}`
         : `In Stock: ${this.product.instock}`
+    },
+    imgID() {
+      const imgx = this.getImage(this.product.id) || this.product.image
+      const imgName = imgx.substring(
+        imgx.lastIndexOf('/') + 1,
+        imgx.lastIndexOf('.jpg')
+      )
+      return imgName
     },
   },
   watch: {

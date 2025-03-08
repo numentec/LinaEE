@@ -175,11 +175,11 @@ export default {
         return '/no_image.png'
       }
 
-      // return this.getImage(this.product.id) || this.product.image
-      return (
-        this.getImage(this.product.id) ||
-        this.$config.fotosURL + this.product.image
-      )
+      return this.getImage(this.product.id) || this.product.image
+      // return (
+      //   this.getImage(this.product.id) ||
+      //   this.$config.fotosURL + this.product.image
+      // )
     },
 
     formatedPrice() {

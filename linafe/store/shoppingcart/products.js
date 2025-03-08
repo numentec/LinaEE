@@ -2,7 +2,6 @@ export const namespaced = true
 
 const BRANDSDATA = ['1', '2', '3', '4', '5', '187', '188', '189', '190', '191']
 const IMAGES = [
-  'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
   '/shoppingcart/H23100256A.jpg',
   '/shoppingcart/H23100133A.jpg',
   '/shoppingcart/H22200482A.jpg',
@@ -126,9 +125,7 @@ export const actions = {
   // One product images
   async fetchItemImages({ commit }, id) {
     await this.$axios
-      .get('shoppingcart/productimages/', {
-        params: { id, cia: '01' },
-      })
+      .get(`shoppingcart/itemimages/${id}`)
       .then((response) => {
         commit('SET_ITEM_IMAGES', response.data)
       })

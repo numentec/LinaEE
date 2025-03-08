@@ -38,13 +38,13 @@ export default {
   },
   async asyncData({ store, error }) {
     try {
-      await store.dispatch('shoppingcart/categories/fetchItems', {
-        name: 'Subcategory',
-      })
-      // await store.dispatch('shoppingcart/categories/fetchData', {
+      // await store.dispatch('shoppingcart/categories/fetchItems', {
       //   name: 'Subcategory',
-      //   link: '',
       // })
+      await store.dispatch('shoppingcart/categories/fetchData', {
+        name: 'Subcategory',
+        link: '',
+      })
     } catch (err) {
       if (err.response) {
         error({

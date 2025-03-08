@@ -48,15 +48,15 @@ export default {
 
   async asyncData({ store, error }) {
     try {
-      await store.dispatch('shoppingcart/products/fetchProducts')
+      // await store.dispatch('shoppingcart/products/fetchProducts')
       /* Dejaré comentado este código por si se necesita en un futuro. 
       Mientras no se complete la paginación desde el backend, 
       se podría necesitar para pruebas en desarrollo.
       */
-      // await store.dispatch('shoppingcart/products/fetchData', {
-      //   name: 'Product',
-      //   link: '',
-      // })
+      await store.dispatch('shoppingcart/products/fetchData', {
+        name: 'Product',
+        link: '',
+      })
     } catch (err) {
       if (err.response) {
         error({
@@ -129,8 +129,8 @@ export default {
 
   methods: {
     ...mapActions('shoppingcart/products', ['setCountFilteredProducts']),
-    async loadSlideshow(e) {
-      await this.$store.dispatch('shoppingcart/products/fetchItemImages', e.id)
+    async loadSlideshow(id) {
+      await this.$store.dispatch('shoppingcart/products/fetchItemImages', id)
       this.slideshow = true
     },
   },
