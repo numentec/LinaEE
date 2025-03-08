@@ -1,7 +1,7 @@
 <template>
   <div class="shopping-cart">
     <v-btn block color="primary lighten-2" @click="$router.push(link)">
-      Start
+      Start (Shopping Cart testing data)
     </v-btn>
   </div>
 </template>
