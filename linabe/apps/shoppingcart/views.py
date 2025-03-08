@@ -1,9 +1,11 @@
+import os
+from django.conf import settings
 from django.db import connections
 from rest_framework import viewsets
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import authentication, permissions
+from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import authentication, permissions
 from rest_framework.filters import SearchFilter, OrderingFilter
 from ..core.models import SQLQuery
 from .models import ExtOrderMaster, ExtOrderItem
@@ -124,6 +126,29 @@ class ProductsAPIView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class ItemImagesAPIView(APIView):
+    """
+    View to list all images in a given subfolder.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, subfolder, format=None):
+        # Define the path to the images folder
+        images_path = os.path.join(settings.MEDIA_ROOT, 'images', subfolder)
+
+        if not os.path.exists(images_path):
+            return Response({"error": "Subfolder does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        # List all files in the subfolder
+        images = [f for f in os.listdir(images_path) if os.path.isfile(os.path.join(images_path, f))]
+
+        # Create URLs for the images
+        image_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'images', subfolder, image)) for image in images]
+
+        return Response(image_urls, status=status.HTTP_200_OK)
+
+
 class ExtOrderMasterViewSet(viewsets.ModelViewSet):
     """
     A simple ViewSet for viewing and editing ExtOrderMaster.
@@ -168,3 +193,5 @@ class ExtOrderItemViewSet(viewsets.ModelViewSet):
 
     queryset = ExtOrderItem.objects.all()
     serializer_class = ExtOrderItemSerializer
+
+
