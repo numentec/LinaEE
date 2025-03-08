@@ -24,10 +24,7 @@
     </v-row>
     <Slideshow
       :data-source="getItemImages"
-      :cur-key="0"
       :show-slideshow="slideshow"
-      :no-img-list="noImgList"
-      :show-title="false"
       @hideSlideshow="slideshow = false"
     />
   </div>
@@ -37,7 +34,7 @@
 import { mapActions, mapGetters } from 'vuex'
 import ProductCard from '~/components/shoppingcart/ProductCard.vue'
 import ProductListItem from '~/components/shoppingcart/ProductListItem.vue'
-import Slideshow from '~/components/linabi/Slideshow'
+import Slideshow from '~/components/shoppingcart/Slideshow'
 
 export default {
   components: {
