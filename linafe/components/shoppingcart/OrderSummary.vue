@@ -81,7 +81,7 @@ export default {
   props: {
     curOrder: {
       type: Object,
-      required: true,
+      default: () => ({}),
     },
     outlined: {
       type: Boolean,

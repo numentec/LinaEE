@@ -128,7 +128,10 @@
               />
             </v-expand-transition>
             <v-card-text>
-              <v-row v-for="(item, index) in curOrder.items" :key="item.id">
+              <v-row
+                v-for="(item, index) in curOrder ? curOrder.items : []"
+                :key="item.id"
+              >
                 <v-col cols="12">
                   <v-row dense><OrderCard :item="{ ...item, index }" /></v-row>
                   <v-row dense><v-divider class="mb-0"></v-divider></v-row>
@@ -150,15 +153,14 @@
               v-model="selectedListItem"
               color="primary"
             >
-              <template v-for="order in orders">
-                <OrderListItem
-                  :key="order.id"
-                  ref="selectedOrder"
-                  :order="order"
-                  @resend-mail="snackbar = true"
-                  @order-clicked="goToOrder"
-                />
-              </template>
+              <OrderListItem
+                v-for="order in orders"
+                :key="order.id"
+                ref="selectedOrder"
+                :order="order"
+                @resend-mail="snackbar = true"
+                @order-clicked="goToOrder"
+              />
             </v-list-item-group>
           </v-list>
         </v-col>
@@ -265,14 +267,16 @@ export default {
       getIndexByOrderID: 'getIndexByOrderID',
       getJustCreated: 'getJustCreated',
       orders: 'getOrders',
-      hideControls: false,
     }),
     ...mapGetters('sistema', ['getCurCia']),
+    curOrderItems() {
+      return this.curOrder ? this.curOrder.items : []
+    },
     isMobile() {
       return this.$vuetify.breakpoint.mobile
     },
     cOrderID() {
-      return this.curOrder ? String(this.curOrder.id) : ''
+      return this.curOrder ? String(this.curOrder?.id) : ''
     },
   },
 

@@ -58,8 +58,8 @@ export default {
   data() {
     return {
       loadingView: false,
-      // imgSrc: this.$config.fotosURL + this.category.image,
-      imgSrc: this.category.image,
+      imgSrc: this.$config.fotosURL + this.category.image,
+      // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
