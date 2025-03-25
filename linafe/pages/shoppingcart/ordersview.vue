@@ -88,84 +88,90 @@
                   {{ isListView ? 'Grid view' : 'List view' }}
                 </v-list-item-title>
               </v-list-item>
-              <v-list-item @click="snackbar = true">
-                <v-list-item-title>Option 3</v-list-item-title>
+              <v-list-item @click="generatePDF">
+                <v-list-item-title>Generate PDF</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="generateExcel">
+                <v-list-item-title>Generate Excel</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
         </v-toolbar>
       </v-row>
     </div>
-    <v-row>
-      <v-col cols="12" :md="isListView ? 12 : 8">
-        <v-card v-show="!isListView">
-          <v-toolbar dense flat rounded>
-            <v-card-title>{{ `Order # ${cOrderID}` }}</v-card-title>
-            <v-spacer></v-spacer>
+    <div id="orders-view">
+      <v-row>
+        <v-col cols="12" :md="isListView ? 12 : 8">
+          <v-card v-show="!isListView">
+            <v-toolbar dense flat rounded>
+              <v-card-title>{{ `Order # ${cOrderID}` }}</v-card-title>
+              <v-spacer></v-spacer>
 
-            <v-btn
-              v-show="isMobile"
-              icon
-              small
-              @click.stop="showSummary = !showSummary"
-            >
-              <v-icon>
-                {{ showSummary ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-              </v-icon>
-            </v-btn>
-          </v-toolbar>
-          <v-divider></v-divider>
-          <v-expand-transition>
-            <OrderSummary
-              v-show="showSummary"
-              :cur-order="curOrder"
-              :outlined="true"
-              @go-to-products="goToProducts"
-            />
-          </v-expand-transition>
-          <v-card-text>
-            <v-row v-for="(item, index) in curOrder.items" :key="item.id">
-              <v-col cols="12">
-                <v-row dense><OrderCard :item="{ ...item, index }" /></v-row>
-                <v-row dense><v-divider class="mb-0"></v-divider></v-row>
-              </v-col>
-            </v-row>
-            <v-alert
-              v-if="ordersCount.length === 0"
-              border="bottom"
-              colored-border
-              type="warning"
-            >
-              <strong>There are not orders</strong>.
-            </v-alert>
-          </v-card-text>
-        </v-card>
-        <v-list v-show="isListView" nav class="px-0">
-          <v-list-item-group
-            :key="listKey"
-            v-model="selectedListItem"
-            color="primary"
-          >
-            <template v-for="order in orders">
-              <OrderListItem
-                :key="order.id"
-                ref="selectedOrder"
-                :order="order"
-                @resend-mail="snackbar = true"
-                @order-clicked="goToOrder"
+              <v-btn
+                v-show="isMobile"
+                icon
+                small
+                @click.stop="showSummary = !showSummary"
+              >
+                <v-icon>
+                  {{ showSummary ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                </v-icon>
+              </v-btn>
+            </v-toolbar>
+            <v-divider></v-divider>
+            <v-expand-transition>
+              <OrderSummary
+                v-show="showSummary"
+                :cur-order="curOrder"
+                :outlined="true"
+                @go-to-products="goToProducts"
               />
-            </template>
-          </v-list-item-group>
-        </v-list>
-      </v-col>
-      <v-col v-show="!isListView" cols="12" md="4">
-        <OrderSummary
-          :cur-order="curOrder"
-          class="sticky-summary"
-          @go-to-products="goToProducts"
-        />
-      </v-col>
-    </v-row>
+            </v-expand-transition>
+            <v-card-text>
+              <v-row v-for="(item, index) in curOrder.items" :key="item.id">
+                <v-col cols="12">
+                  <v-row dense><OrderCard :item="{ ...item, index }" /></v-row>
+                  <v-row dense><v-divider class="mb-0"></v-divider></v-row>
+                </v-col>
+              </v-row>
+              <v-alert
+                v-if="ordersCount.length === 0"
+                border="bottom"
+                colored-border
+                type="warning"
+              >
+                <strong>There are not orders</strong>.
+              </v-alert>
+            </v-card-text>
+          </v-card>
+          <v-list v-show="isListView" nav class="px-0">
+            <v-list-item-group
+              :key="listKey"
+              v-model="selectedListItem"
+              color="primary"
+            >
+              <template v-for="order in orders">
+                <OrderListItem
+                  :key="order.id"
+                  ref="selectedOrder"
+                  :order="order"
+                  @resend-mail="snackbar = true"
+                  @order-clicked="goToOrder"
+                />
+              </template>
+            </v-list-item-group>
+          </v-list>
+        </v-col>
+        <v-col v-show="!isListView" cols="12" md="4">
+          <OrderSummary
+            :cur-order="curOrder"
+            :hide-controls="hideControls"
+            class="sticky-summary"
+            @go-to-products="goToProducts"
+          />
+        </v-col>
+      </v-row>
+    </div>
     <v-snackbar v-model="snackbar" timeout="3000">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -187,6 +193,7 @@ import { mapGetters, mapActions } from 'vuex'
 import OrderCard from '@/components/shoppingcart/OrderCard.vue'
 import OrderListItem from '@/components/shoppingcart/OrderListItem.vue'
 import OrderSummary from '@/components/shoppingcart/OrderSummary.vue'
+import html2pdf from 'html2pdf.js'
 
 function debounce(func, delay) {
   let timeout
@@ -244,6 +251,7 @@ export default {
       showSummary: false,
       filterOrdersBy: '',
       listKey: 0, // Agregar una clave dinámica para forzar la actualización de la lista
+      hideControls: false,
     }
   },
   computed: {
@@ -257,6 +265,7 @@ export default {
       getIndexByOrderID: 'getIndexByOrderID',
       getJustCreated: 'getJustCreated',
       orders: 'getOrders',
+      hideControls: false,
     }),
     ...mapGetters('sistema', ['getCurCia']),
     isMobile() {
@@ -352,6 +361,37 @@ export default {
     async updateFilter() {
       await filtro(this.setFilterCriteria.bind(this))(this.filterOrdersBy)
       this.listKey += 1 // Incrementar la clave dinámica cuando el filtro cambie
+    },
+    async generatePDF() {
+      const element = document.getElementById('orders-view')
+      const opt = {
+        margin: 0.25,
+        filename: `order_${this.cOrderID}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      }
+
+      this.hideControls = true
+
+      await html2pdf().from(element).set(opt).save()
+
+      this.hideControls = false
+    },
+    generateExcel() {
+      this.hideControls = !this.hideControls
+      this.snackbar = true
+      this.snackbarText = 'No implementado'
+      // const element = document.getElementById('orders-view')
+      // const opt = {
+      //   margin: 1,
+      //   filename: 'orders.xlsx',
+      //   image: { type: 'jpeg', quality: 0.98 },
+      //   html2canvas: { scale: 2 },
+      //   jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      // }
+
+      // html2pdf().from(element).set(opt).toXLSX()
     },
   },
 }
