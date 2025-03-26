@@ -123,14 +123,23 @@ export const actions = {
   },
 
   // One product images
-  async fetchItemImages({ commit }, id) {
+  async fetchItemImages({ commit }, src) {
+    if (src.imgID === 'no_image') {
+      commit('SET_ITEM_IMAGES', [src.imgSrc])
+      return
+    }
+
     await this.$axios
-      .get(`shoppingcart/itemimages/${id}`)
+      .get(`shoppingcart/itemimages/${src.imgID}`)
       .then((response) => {
-        commit('SET_ITEM_IMAGES', response.data)
+        const itemImages = response.data || []
+
+        itemImages.push(src.imgSrc)
+
+        commit('SET_ITEM_IMAGES', itemImages)
       })
       .catch((error) => {
-        commit('SET_ITEM_IMAGES', [])
+        commit('SET_ITEM_IMAGES', [src.imgSrc])
         console.error(error)
       })
   },

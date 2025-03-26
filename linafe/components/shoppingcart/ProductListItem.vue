@@ -3,7 +3,7 @@
     <v-divider></v-divider>
     <v-list-item
       class="ml-0 mr-2 pl-0 pr-1"
-      @click="$emit('click', product.id)"
+      @click="$emit('click', { imgID, imgSrc })"
     >
       <v-list-item-avatar rounded size="100" left class="mx-0 pl-0 pr-1">
         <v-img
@@ -180,6 +180,16 @@ export default {
         this.getImage(this.product.id) ||
         this.$config.fotosURL + this.product.image
       )
+    },
+
+    imgID() {
+      const imgx = this.getImage(this.product.id) || this.product.image
+      const imgName = imgx.substring(
+        imgx.lastIndexOf('/') + 1,
+        imgx.lastIndexOf('.jpg')
+      )
+
+      return imgName === '/' ? 'no_image' : imgName
     },
 
     formatedPrice() {

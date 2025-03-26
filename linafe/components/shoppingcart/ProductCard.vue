@@ -7,7 +7,7 @@
         :class="[isMobile ? 'mx-2 my-2' : 'mx-4 my-4']"
         :max-width="cardWidth"
         :loading="loadingView"
-        @click="$emit('click', imgID)"
+        @click="$emit('click', { imgID, imgSrc })"
         @mouseover="$emit('mouseover')"
         @mouseleave="$emit('mouseleave')"
       >
@@ -223,7 +223,8 @@ export default {
         imgx.lastIndexOf('/') + 1,
         imgx.lastIndexOf('.jpg')
       )
-      return imgName
+
+      return imgName === '/' ? 'no_image' : imgName
     },
   },
   watch: {

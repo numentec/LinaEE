@@ -126,8 +126,8 @@ export default {
 
   methods: {
     ...mapActions('shoppingcart/products', ['setCountFilteredProducts']),
-    async loadSlideshow(id) {
-      await this.$store.dispatch('shoppingcart/products/fetchItemImages', id)
+    async loadSlideshow(src) {
+      await this.$store.dispatch('shoppingcart/products/fetchItemImages', src)
       this.slideshow = true
     },
   },
