@@ -135,7 +135,7 @@ class ItemImagesAPIView(APIView):
 
     def get(self, request, subfolder, format=None):
         # Define the path to the images folder
-        images_path = os.path.join(settings.MEDIA_ROOT, 'images', subfolder)
+        images_path = os.path.join(settings.MEDIA_ROOT, 'fotos', subfolder)
 
         if not os.path.exists(images_path):
             return Response({"error": "Subfolder does not exist"}, status=status.HTTP_404_NOT_FOUND)
@@ -144,7 +144,7 @@ class ItemImagesAPIView(APIView):
         images = [f for f in os.listdir(images_path) if os.path.isfile(os.path.join(images_path, f))]
 
         # Create URLs for the images
-        image_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'images', subfolder, image)) for image in images]
+        image_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'fotos', subfolder, image)) for image in images]
 
         return Response(image_urls, status=status.HTTP_200_OK)
 

@@ -48,7 +48,7 @@ export default {
   axios: {
     baseURL: process.env.API_URL_SERVER,
     browserBaseURL: process.env.API_URL_CLIENT,
-    // browserBaseURL: 'http://192.168.1.17:8001/linapi/',
+    // browserBaseURL: 'http://192.168.1.94:8001/linapi/',
   },
 
   auth: {
@@ -127,5 +127,12 @@ export default {
     fotosExt: process.env.FOTOS_EXT,
     mediaURL: process.env.MEDIA_URL,
   },
+  // publicRuntimeConfig: {
+  //   browserBaseURL: 'http://192.168.1.94:8001/linapi/',
+  //   publicURL: 'http://192.168.1.94:8001',
+  //   fotosURL: 'http://192.168.1.94:8001/media/fotos',
+  //   fotosExt: process.env.FOTOS_EXT,
+  //   mediaURL: 'http://192.168.1.94:8001/media/',
+  // },
   privateRuntimeConfig: {},
 }
