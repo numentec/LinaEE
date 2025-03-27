@@ -3,10 +3,18 @@ from .models import ExtOrderMaster, ExtOrderItem
 
 
 class ExtOrderItemSerializer(serializers.ModelSerializer):
+
+    # Campo personalizado que no está en el modelo
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ExtOrderItem
-        fields = ['id', 'sku', 'name', 'quantity', 'price', 'discount_percentage', 'discount', 'tax', 'total']
+        fields = ['id', 'sku', 'name', 'quantity', 'price', 'discount_percentage', 'discount', 'tax', 'total', 'image']
         read_only_fields = ('id',)
+
+    def get_image(self, obj):
+        # Devuelve el valor del campo sku concatenado con ".JPG"
+        return f"{obj.sku}.JPG"
 
 
 class ExtOrderMasterSerializer(serializers.ModelSerializer):
