@@ -367,12 +367,19 @@ export default {
       this.listKey += 1 // Incrementar la clave dinámica cuando el filtro cambie
     },
     async generatePDF() {
+      this.snackbar = true
+      this.snackbarText = 'Generating PDF'
+
       const element = document.getElementById('orders-view')
       const opt = {
         margin: 0.25,
         filename: `order_${this.cOrderID}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: {
+          scale: 4,
+          letterRendering: true,
+          useCORS: true,
+        },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
       }
 

@@ -7,6 +7,7 @@
           class="mr-4"
           :max-width="cardWidth"
           :height="cardHeight"
+          contain
           :lazy-src="lazySrc"
           @error="onImgError"
           @load="addImage({ id: item.id, url: imgSrc })"
@@ -127,12 +128,54 @@ export default {
       })
     },
   },
+
+  // watch: {
+  //   // Observa cambios en el item para cargar la imagen
+  //   item: {
+  //     immediate: true, // Ejecuta el watcher al montar el componente
+  //     handler(newItem) {
+  //       this.loadImage(newItem)
+  //     },
+  //   },
+  // },
+  // mounted() {
+  //   this.loadImage(this.item)
+  // },
+  // beforeDestroy() {
+  //   this.lazySrc = null
+  // },
+
   methods: {
     ...mapActions('shoppingcart/products', ['addImage']),
 
     onImgError() {
       this.imgError = true
       this.$emit('no-image')
+    },
+
+    async loadImage(item) {
+      if (!item) return
+
+      const imageUrl =
+        this.getImage(item.id) || this.$config.fotosURL + item.image
+
+      try {
+        const response = await fetch(imageUrl)
+        const blob = await response.blob()
+        this.lazySrc = await this.convertToBase64(blob)
+      } catch (error) {
+        console.error('Error loading image:', error)
+        this.lazySrc = '/no_image.png'
+      }
+    },
+
+    convertToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
     },
   },
 }
