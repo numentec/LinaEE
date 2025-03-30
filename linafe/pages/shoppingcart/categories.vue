@@ -359,7 +359,7 @@ export default {
 
   mounted() {
     this.setShowBottomNav(true)
-    this.setListView(this.$vuetify.breakpoint.xs)
+    this.setListView(this.isMobile)
   },
 
   methods: {
