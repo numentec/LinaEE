@@ -168,7 +168,7 @@ export default {
         return
       }
 
-      if (!this.getCartCustomer) {
+      if (!this.getCartCustomer.id) {
         this.snackbarColor = 'warning'
         this.snackbarText = 'Please select a customer'
         return
