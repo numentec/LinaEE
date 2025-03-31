@@ -25,7 +25,7 @@
               <v-carousel
                 v-show="dS.length !== 0"
                 v-model="curItem"
-                hide-delimiters
+                :hide-delimiters="!isMobile"
                 :show-arrows="!isMobile"
               >
                 <v-carousel-item v-for="(item, i) in dS" :key="i">
