@@ -142,7 +142,7 @@ export const modulos = [
         icon: 'mdi-format-list-text',
         title: 'Inicio',
         // to: '/shoppingcart/',
-        to: '/shoppingcart/categories/departments',
+        to: '/shoppingcart/categories/departments?category=Departments',
         perm: 'core.acc_crm',
       },
       {

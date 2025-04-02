@@ -229,12 +229,11 @@ export default {
   data() {
     return {
       selected_brands: [],
-      cur_child_view: 'departments',
+      cur_child_view: '',
       search_department: '',
       search_category: '',
       search_subcategory: '',
       search_product: '',
-      // breadcrumbs: JSON.parse(localStorage.getItem('lina_breadcrumbs')) || [],
       snackbar: false,
     }
   },
@@ -250,6 +249,7 @@ export default {
       'getCountFilteredDep',
       'getCountFilteredCat',
       'getCountFilteredSubcat',
+      'getSelectedCategoryName',
       'isListView',
     ]),
     ...mapGetters('shoppingcart/products', [
@@ -266,20 +266,20 @@ export default {
       return this.isListView ? 'mdi-view-grid' : 'mdi-format-list-text'
     },
     crumbs() {
-      const n = this.$route.fullPath.lastIndexOf('/')
-      const curText = () => {
-        switch (this.$route.fullPath.substring(n + 1)) {
-          case 'departments':
-            return this.isMobile ? 'Dep' : 'Departments'
-          case 'categoriesmain':
-            return this.isMobile ? 'Cat' : 'Categories'
-          case 'categoriessub':
-            return this.isMobile ? 'Scat' : 'Subcategories'
-          case 'products':
-            return this.isMobile ? 'Prod' : 'Products'
-          default:
-            return ''
-        }
+      let curText = this.$route.query.category
+
+      if (!curText) {
+        return []
+      }
+
+      if (this.isMobile) {
+        curText = curText.substring(0, 5)
+      }
+
+      curText = curText.charAt(0).toUpperCase() + curText.slice(1)
+
+      if (curText === 'Depar') {
+        curText = 'Dep'
       }
 
       const crumbs = JSON.parse(JSON.stringify(this.getBreadcrumbs))
@@ -290,7 +290,9 @@ export default {
         })
       }
 
-      const index = crumbs.findIndex((crumb) => crumb.text === curText())
+      const index = crumbs.findIndex(
+        (crumb) => crumb.to === this.$route.fullPath
+      )
       const crumb = index !== -1 ? crumbs[index] : null
 
       if (crumb) {
@@ -300,7 +302,7 @@ export default {
         }
       } else {
         crumbs.push({
-          text: curText(),
+          text: curText,
           disabled: true,
           to: this.$route.fullPath,
         })
@@ -334,8 +336,11 @@ export default {
   },
 
   watch: {
-    $route(to) {
-      this.cur_child_view = to.name
+    $route: {
+      immediate: true,
+      handler(to) {
+        this.cur_child_view = to.name
+      },
     },
     selected_brands(newVal) {
       this.setSelectedBrands(newVal)

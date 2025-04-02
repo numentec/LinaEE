@@ -71,6 +71,7 @@ export default {
   methods: {
     goToView() {
       this.loadingView = true
+
       this.$emit('card-clicked', {
         key: this.category.type,
         value: this.category.id,
@@ -82,7 +83,10 @@ export default {
       ) {
         this.$router.push('/shoppingcart/categories/departments')
       } else {
-        this.$router.push(this.category.link)
+        this.$router.push({
+          path: this.category.link,
+          query: { category: this.category.name },
+        })
       }
     },
     onImgError() {
