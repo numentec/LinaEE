@@ -41,6 +41,9 @@
             </v-toolbar-title>
           </v-toolbar>
         </v-img>
+        <v-overlay absolute :value="overlay">
+          <v-progress-circular indeterminate size="32"></v-progress-circular>
+        </v-overlay>
       </v-card>
     </template>
   </v-hover>
@@ -58,6 +61,7 @@ export default {
   data() {
     return {
       loadingView: false,
+      overlay: false,
       imgSrc: this.$config.fotosURL + this.category.image,
       // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
@@ -81,11 +85,13 @@ export default {
 
   activated() {
     this.loadingView = false
+    this.overlay = false
   },
 
   methods: {
     goToView() {
       this.loadingView = true
+      this.overlay = true
 
       this.$emit('card-clicked', {
         key: this.category.type,
@@ -98,9 +104,15 @@ export default {
       ) {
         this.$router.push('/shoppingcart/categories/departments')
       } else {
+        let catname = this.category.name
+
+        if (this.isMobile) {
+          catname = this.category.abreviated_name ?? catname
+        }
+
         this.$router.push({
           path: this.category.link,
-          query: { category: this.category.name },
+          query: { category: catname },
         })
       }
     },

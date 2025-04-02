@@ -34,6 +34,8 @@
                     contain
                     max-width="700"
                     max-height="500"
+                    :lazy-src="lazySrc"
+                    @error="onImgError"
                   >
                     <template v-slot:placeholder>
                       <v-row
@@ -84,6 +86,7 @@ export default {
   data() {
     return {
       curItem: 0,
+      lazySrc: '/no_image.png',
     }
   },
   computed: {
@@ -111,6 +114,11 @@ export default {
       }
 
       return imgsrc
+    },
+
+    onImgError() {
+      this.imgSrc = '/no_image.png'
+      this.$emit('no-image')
     },
   },
 }

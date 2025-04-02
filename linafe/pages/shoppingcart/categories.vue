@@ -273,14 +273,14 @@ export default {
       }
 
       if (this.isMobile) {
+        curText = curText === 'Departments' ? 'Dep' : curText.substring(0, 10)
+      }
+
+      if (this.isXSScreen) {
         curText = curText.substring(0, 5)
       }
 
       curText = curText.charAt(0).toUpperCase() + curText.slice(1)
-
-      if (curText === 'Depar') {
-        curText = 'Dep'
-      }
 
       const crumbs = JSON.parse(JSON.stringify(this.getBreadcrumbs))
 
