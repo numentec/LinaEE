@@ -15,14 +15,17 @@ from .serializers import ExtOrderMasterSerializer, ExtOrderMasterOnlySerializer,
 class CategoryBrandListAPIView(APIView):
     """ This view returns the list of Departments (DEPTO), Categories (CAT), or Subcategories (SUBCAT)
         along with the brands associated with each of them.
-        Parameters: p01, p02
-        p01 - Type of list (DEPTO, CAT, SUBCAT)
-        p02 - Company
+        Parameters: type, cia, dep, cat
+        type - List type (DEPTO, CAT, SUBCAT)
+        cia - Company
+        dep - Department
+        cat - Category
         The list returned depends on the value of the parameter passed to the query (p01).
         For example, if p01 = 'DEPTO', the list of departments with the brands associated with each of them will be returned.
-        If p01 = 'CAT', the list of categories with the brands associated with each of them will be returned.
-        If p01 = 'SUBCAT', the list of subcategories with the brands associated with each of them will be returned.
-        If p01 = 'X', an error message will be returned.
+        If type = 'DEPTO', the list of departments with the brands associated with each of them will be returned.
+        If type = 'CAT', the list of categories with the brands associated with each of them will be returned.
+        If type = 'SUBCAT', the list of subcategories with the brands associated with each of them will be returned.
+        If type = 'X', an error message will be returned.
     """
     # Vista 35
     authentication_classes = [authentication.TokenAuthentication]
@@ -30,23 +33,27 @@ class CategoryBrandListAPIView(APIView):
 
     def get(self, request, format=None):
         idVista = 35
-        # p01 - List type (DEPTO, CAT, SUBCAT)
-        # p02 - Company
+        # type - List type (DEPTO, CAT, SUBCAT)
+        # cia - Company
 
-        p01 = str(request.query_params.get('p01', 'X'))
-        p02 = str(request.query_params.get('p02', '01'))
+        type = str(request.query_params.get('type', 'X'))
+        dep = str(request.query_params.get('dep', 'ALL'))
+        cat = str(request.query_params.get('cat', 'ALL'))
+        cia = str(request.query_params.get('cia', '01'))
 
-        if p01 == 'X':
+        if type == 'X':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+        if type not in ['DEPTO', 'CAT', 'SCAT', 'BRAND', 'CLI']:
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
-        params = [p01, p02]
+        params = [type, dep, cat, cia]
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 
         result = []
         # qrycalling = 'DMC.LINAEE_CATSBRANDS'
         qrycalling = qrys[0].content
-        
+
         with connections['extdb1'].cursor() as cursor:
 
             refCursor = cursor.connection.cursor()

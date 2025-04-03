@@ -196,7 +196,7 @@ export const actions = {
     commit('SET_LOADING_STATUS')
   },
 
-  async fetchItems({ commit, dispatch }, payload) {
+  async fetchItems({ commit, state }, payload) {
     commit('SET_LOADING_STATUS')
 
     let curMutation = ''
@@ -205,23 +205,32 @@ export const actions = {
     switch (payload.name) {
       case 'Department':
         curMutation = 'SET_DEPARTMENTS'
-        endpointParams = { p01: 'DEPTO', p02: '01' }
+        endpointParams = { type: 'DEPTO', cia: '01' }
         break
       case 'Category':
         curMutation = 'SET_CATEGORIES'
-        endpointParams = { p01: 'CAT', p02: '01' }
+        endpointParams = {
+          type: 'CAT',
+          cia: '01',
+          dep: state.select_products_by.depto || 'ALL',
+        }
         break
       case 'Subcategory':
         curMutation = 'SET_SUBCATEGORIES'
-        endpointParams = { p01: 'SCAT', p02: '01' }
+        endpointParams = {
+          type: 'SCAT',
+          cia: '01',
+          dep: state.select_products_by.depto || 'ALL',
+          cat: state.select_products_by.cat || 'ALL',
+        }
         break
       case 'Product':
         curMutation = 'SET_PRODUCTS'
-        endpointParams = { p01: 'PROD', p02: '01' }
+        endpointParams = { type: 'PROD', cia: '01' }
         break
       case 'Brand':
         curMutation = 'SET_BRANDS'
-        endpointParams = { p01: 'BRAND', p02: '01' }
+        endpointParams = { type: 'BRAND', cia: '01' }
         break
     }
 
