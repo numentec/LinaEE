@@ -75,7 +75,7 @@
     </v-row>
     <v-snackbar
       v-model="snackbar"
-      :timeout="snackTimeout"
+      :timeout="snackbarTimeout"
       :color="snackbarColor"
       dark
       right
@@ -131,7 +131,7 @@ export default {
       snackbar: false,
       snackbarText: 'No implementado',
       snackbarColor: 'info',
-      snackTimeout: 3000,
+      snackbarTimeout: 3000,
       loading: false,
       dialog: false,
       showSummary: false,
@@ -179,15 +179,24 @@ export default {
 
       this.loading = true
 
-      await this.createOrder()
-      this.snackbarColor = 'success'
-      this.snackbarText = 'Order created successfully'
-      this.snackbarTimeout = 5000
+      try {
+        await this.createOrder()
+        this.snackbarColor = 'success'
+        this.snackbarText = 'Order created successfully'
+        this.snackbarTimeout = 5000
 
-      setTimeout(() => {
+        setTimeout(() => {
+          this.loading = false
+          this.$router.push('/shoppingcart/ordersview')
+        }, 2000)
+      } catch (error) {
         this.loading = false
-        this.$router.push('/shoppingcart/ordersview')
-      }, 2000)
+        this.snackbarColor = 'error'
+        this.snackbarText =
+          'Failed to create order: ' +
+          (error.response?.data?.message || error.message)
+        this.snackbarTimeout = 5000
+      }
     },
   },
 }
