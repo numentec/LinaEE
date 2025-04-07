@@ -232,6 +232,10 @@ export const actions = {
         curMutation = 'SET_BRANDS'
         endpointParams = { type: 'BRAND', cia: '01' }
         break
+      case 'Cliente':
+        curMutation = 'SET_CUSTOMERS'
+        endpointParams = { type: 'CLI', cia: '01' }
+        break
     }
 
     return await this.$axios

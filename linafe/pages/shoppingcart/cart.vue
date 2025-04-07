@@ -106,8 +106,8 @@ export default {
   },
   async fetch() {
     const curparams = {
-      p01: 'CLI',
-      p02: this.getCurCia.extrel,
+      type: 'CLI',
+      cia: this.getCurCia.extrel,
     }
 
     // this.loadingView = true
