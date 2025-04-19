@@ -84,7 +84,54 @@ services:
       - be
     restart: unless-stopped
 
-volumes: 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    networks: 
+      net:
+        ipv4_address: 192.168.15.6
+
+
+  celery_worker:
+    build:
+      context: ./linabe
+      dockerfile: Dockerfile
+    image: linabe_celery_worker
+    command: /start-celeryworker
+    networks: 
+      net:
+        ipv4_address: 192.168.15.7
+    volumes:
+      - .:/linabe
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+      - db
+
+
+  flower:
+    build:
+      context: ./linabe
+      dockerfile: Dockerfile
+    image: linabe_celery_flower
+    command: /start-flower
+    volumes:
+      - .:/linabe
+    env_file:
+      - ./.env
+    ports:
+      - 5557:5555
+    depends_on:
+      - redis
+      - db
+    networks:
+      net: 
+        ipv4_address: 192.168.15.8
+
+
+volumes:
   dbdata:
 
 networks:
@@ -93,4 +140,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 192.168.15.0/29
+        - subnet: 192.168.15.0/28

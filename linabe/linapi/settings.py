@@ -9,11 +9,13 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+import os
 
 from pathlib import Path
 from os import environ
 from datetime import timedelta
 # from .permissions import CustomDjangoModelPermissions
+from kombu import Queue
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +30,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
     # Django Apps
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,6 +44,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'ckeditor',
+    'channels',
+    'django_celery_beat',
 
     # Numen Apps
     'apps.core',
@@ -82,7 +87,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'linapi.wsgi.application'
+# WSGI_APPLICATION = 'linapi.wsgi.application'
+ASGI_APPLICATION = 'linapi.asgi.application'
 
 # Database
 DATABASE_ROUTERS = ['apps.core.routers.DbRouter']
@@ -179,6 +185,15 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(os.environ.get("CHANNELS_REDIS", "redis://127.0.0.1:6379/0"))],
+        },
+    },
+}
+
 # Internationalization
 LANGUAGE_CODE = environ.get("LOC_LG").lower().replace('/', '-')
 #LANGUAGE_CODE = 'es-pa'
@@ -216,3 +231,36 @@ MEDIA_ROOT = '/linabe/media/'
 # PROXY_TRUSTED = ['192.168.15.11']
 # PROXY_COUNT = environ.get("PROXY_COUNT")
 # PROXY_TRUSTED = environ.get("PROXY_TRUSTED")
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://127.0.0.1:6379/0")
+
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+
+# Force all queues to be explicitly listed in `CELERY_TASK_QUEUES` to help prevent typos
+CELERY_TASK_CREATE_MISSING_QUEUES = False
+
+CELERY_TASK_QUEUES = (
+    # need to define default queue here or exception would be raised
+    Queue('default'),
+
+    Queue('high_priority'),
+    Queue('low_priority'),
+)
+
+# CELERY_TASK_ROUTES = {
+#     'django_celery_example.celery.*': {
+#         'queue': 'high_priority',
+#     },
+# }
+
+# dynamic task routing
+
+def route_task(name, args, kwargs, options, task=None, **kw):
+    if ':' in name:
+        queue, _ = name.split(':')
+        return {'queue': queue}
+    return {'queue': 'default'}
+
+
+CELERY_TASK_ROUTES = (route_task,)

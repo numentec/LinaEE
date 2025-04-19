@@ -11,6 +11,10 @@ from ..core.models import SQLQuery
 from .models import ExtOrderMaster, ExtOrderItem
 from .serializers import ExtOrderMasterSerializer, ExtOrderMasterOnlySerializer, ExtOrderItemSerializer
 
+from celery.result import AsyncResult
+from .tasks import task_send_welcome_email
+from django.http import JsonResponse # (Replace with APIView)
+
 
 class CategoryBrandListAPIView(APIView):
     """ This view returns the list of Departments (DEPTO), Categories (CAT), or Subcategories (SUBCAT)
@@ -202,3 +206,48 @@ class ExtOrderItemViewSet(viewsets.ModelViewSet):
     serializer_class = ExtOrderItemSerializer
 
 
+class TaskStatus(APIView):
+    """
+    Return the status of a task.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, taskid, format=None):
+        """
+        Get the status of a task.
+        :param request: The request object.
+        :param taskid: The ID of the task.
+        :param format: The format of the response.
+        :return: A JSON response with the status of the task.
+        """
+
+        if taskid:
+            task = AsyncResult(taskid)
+            state = task.state
+
+            if state == 'FAILURE':
+                error = str(task.result)
+                response = {
+                    'state': state,
+                    'error': error,
+                }
+            else:
+                response = {
+                    'state': state,
+                }
+            return Response(response, status=status.HTTP_200_OK)
+
+
+class SendWelcomeEmail(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        user = request.user()
+        task = task_send_welcome_email.apply_async(args=[user.pk], countdown=10)
+        # Get the task ID
+        task_id = task.id
+
+        # Return a response to the client
+        return Response({'message': 'Task started successfully', 'task_id': task_id})
