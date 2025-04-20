@@ -111,8 +111,8 @@ DATABASES = {
         # 'NAME': 'HUMMER',
         'USER': environ.get('EXTDB1_USER'),
         'PASSWORD': environ.get('EXTDB1_USER_PW'),
-        #'HOST': environ.get('EXTDB1_HOST'),
-        'HOST': '201.218.202.45',
+        'HOST': environ.get('EXTDB1_HOST'),
+        #'HOST': '201.218.202.45',
         'PORT': environ.get('EXTDB1_PORT'),
         # 'HOST': '192.168.1.4',
         # 'PORT': '1521',
@@ -232,8 +232,8 @@ MEDIA_ROOT = '/linabe/media/'
 # PROXY_COUNT = environ.get("PROXY_COUNT")
 # PROXY_TRUSTED = environ.get("PROXY_TRUSTED")
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://127.0.0.1:6379/0")
+CELERY_BROKER_URL = environ.get("CELERY_BROKER", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = environ.get("CELERY_BACKEND", "redis://127.0.0.1:6379/0")
 
 CELERY_TASK_DEFAULT_QUEUE = 'default'
 

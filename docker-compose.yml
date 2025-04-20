@@ -31,25 +31,8 @@ services:
       context: ./linabe
       dockerfile: Dockerfile
     container_name: linabe
-    environment: 
-      APP_DEBUG: ${APP_DEBUG}
-      SECRET_KEY: ${SECRET_KEY}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_USER_PW: ${DB_USER_PW}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_WAIT_TIME_OUT: ${DB_WAIT_TIME_OUT}
-      DB_WAIT_TIME_EXTRA: ${DB_WAIT_TIME_EXTRA}
-      EXTDB1_ENGINE: ${EXTDB1_ENGINE}
-      EXTDB1_NAME: ${EXTDB1_NAME}
-      EXTDB1_USER: ${EXTDB1_USER}
-      EXTDB1_USER_PW: ${EXTDB1_USER_PW}
-      EXTDB1_HOST: ${EXTDB1_HOST}
-      EXTDB1_PORT: ${EXTDB1_PORT}
-      LOC_TZ: ${LOC_TZ}
-      LOC_LG: ${LOC_LG}
-      TZ: ${LOC_TZ}
+    env_file:
+      - ./.env
     volumes:
       - ./linabe:/linabe
     networks: 
@@ -98,12 +81,13 @@ services:
       context: ./linabe
       dockerfile: Dockerfile
     image: linabe_celery_worker
+    container_name: celeryworker
     command: /start-celeryworker
     networks: 
       net:
         ipv4_address: 192.168.15.7
     volumes:
-      - .:/linabe
+      - ./linabe:/linabe
     env_file:
       - ./.env
     depends_on:
@@ -116,9 +100,10 @@ services:
       context: ./linabe
       dockerfile: Dockerfile
     image: linabe_celery_flower
+    container_name: celeryflower
     command: /start-flower
     volumes:
-      - .:/linabe
+      - ./linabe:/linabe
     env_file:
       - ./.env
     ports:
