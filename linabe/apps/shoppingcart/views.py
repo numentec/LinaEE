@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db import connections
 
 from django.http import HttpResponse
-from .utils import render_order_pdf
+from .utils import render_order_pdf, render_order_csv
 
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -235,6 +235,27 @@ class GenerateOrderPDF(APIView):
 
             response = HttpResponse(pdf_file.getvalue(), content_type="application/pdf")
             response["Content-Disposition"] = f'attachment; filename="Order_{order.id}.pdf"'
+            return response
+
+        except ExtOrderMaster.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class GenerateOrderCSV(APIView):
+    """
+    Generate a csv for an order.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, order_id):
+        try:
+            order = ExtOrderMaster.objects.get(id=order_id)
+
+            csv_file = render_order_csv(order)
+
+            response = HttpResponse(csv_file.getvalue(), content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="Orden_{order.id}.csv"'
             return response
 
         except ExtOrderMaster.DoesNotExist:

@@ -1,9 +1,10 @@
 # utils.py
 from django.template.loader import render_to_string
 from weasyprint import HTML
-from io import BytesIO
+from io import StringIO, BytesIO
 from django.conf import settings
 import os
+import csv
 
 def render_order_pdf(order):
     logo_path = os.path.join(settings.STATIC_ROOT, "images", "logo.png")
@@ -21,7 +22,7 @@ def render_order_pdf(order):
         'order': order,
         'logo_url': logo_url,
         'items': items,
-    })
+    }) #.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
 
     pdf_file = BytesIO()
 
@@ -31,3 +32,30 @@ def render_order_pdf(order):
     HTML(string=html_string).write_pdf(target=pdf_file)
     pdf_file.seek(0)
     return pdf_file
+
+
+def render_order_csv(order):
+    buffer = StringIO()
+    writer = csv.writer(buffer)
+
+    # Cabecera
+    writer.writerow(['SKU', 'Description', 'Quantity', 'Price', 'Amount'])
+
+    for item in order.items.all():
+        writer.writerow([
+            item.sku,
+            item.name,
+            item.quantity,
+            item.price,
+            round(item.quantity * item.price, 2)
+        ])
+
+    # # Opcional: resumen final
+    # writer.writerow([])
+    # writer.writerow(['Total', '', '', order.total])
+
+    # Convertir a BytesIO para descargar o enviar por email
+    csv_bytes = BytesIO(buffer.getvalue().encode('utf-8'))
+    buffer.close()
+    csv_bytes.seek(0)
+    return csv_bytes
