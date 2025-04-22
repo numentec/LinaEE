@@ -1,6 +1,10 @@
 import os
 from django.conf import settings
 from django.db import connections
+
+from django.http import HttpResponse
+from .utils import render_order_pdf
+
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -204,6 +208,37 @@ class ExtOrderItemViewSet(viewsets.ModelViewSet):
 
     queryset = ExtOrderItem.objects.all()
     serializer_class = ExtOrderItemSerializer
+
+class GenerateOrderPDF(APIView):
+    """
+    Generate a PDF for an order.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, order_id, format=None):
+        try:
+            # Obtener la orden y sus ítems
+            order = ExtOrderMaster.objects.get(id=order_id)
+
+            # Construir la URL absoluta del logo
+            # image_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'fotos', subfolder, image)) for image in images]
+            # logo_url = request.build_absolute_uri(settings.MEDIA_URL + 'images/logo.png')
+            pdf_file = render_order_pdf(order)
+
+            # Devolver el PDF como respuesta usando Response
+            # headers = {
+            #     'Content-Type': 'application/pdf',
+            #     'Content-Disposition': f'attachment; filename="order_{order_id}.pdf"',
+            # }
+            # return Response(pdf_file.getvalue(), headers=headers, content_type='application/pdf')
+
+            response = HttpResponse(pdf_file.getvalue(), content_type="application/pdf")
+            response["Content-Disposition"] = f'attachment; filename="Order_{order.id}.pdf"'
+            return response
+
+        except ExtOrderMaster.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class TaskStatus(APIView):

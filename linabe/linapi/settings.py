@@ -211,6 +211,9 @@ AUTH_USER_MODEL = 'core.User'
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = '/linabe/static/'
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/linabe/media/'
