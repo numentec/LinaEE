@@ -141,6 +141,50 @@ export const actions = {
       throw error
     }
   },
+
+  async csvDownload({ commit }, orderid) {
+    const url = `shoppingcart/orders/${orderid}/csv/` // Construye la URL del endpoint
+
+    try {
+      const response = await this.$axios.get(url, {
+        responseType: 'blob', // Importante para manejar archivos binarios
+      })
+
+      // Crear un enlace para descargar el archivo
+      const blob = new Blob([response.data], { type: 'text/csv' })
+      const link = document.createElement('a')
+      link.href = window.URL.createObjectURL(blob)
+      link.setAttribute('download', `order_${orderid}.csv`) // Nombre del archivo
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Error downloading CSV:', error)
+      throw error // Maneja el error según sea necesario
+    }
+  },
+
+  async pdfDownload({ commit }, orderid) {
+    const url = `shoppingcart/orders/${orderid}/pdf/` // Construye la URL del endpoint
+
+    try {
+      const response = await this.$axios.get(url, {
+        responseType: 'blob', // Importante para manejar archivos binarios
+      })
+
+      // Crear un enlace para descargar el archivo
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const link = document.createElement('a')
+      link.href = window.URL.createObjectURL(blob)
+      link.setAttribute('download', `order_${orderid}.pdf`) // Nombre del archivo
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      console.error('Error downloading CSV:', error)
+      throw error // Maneja el error según sea necesario
+    }
+  },
 }
 
 export const getters = {

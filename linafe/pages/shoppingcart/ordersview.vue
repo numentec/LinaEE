@@ -73,7 +73,7 @@
             <v-icon v-if="isListView">mdi-view-grid</v-icon>
             <v-icon v-else>mdi-format-list-text</v-icon>
           </v-btn>
-          <v-menu offset-y>
+          <v-menu v-model="vmenu" :close-on-content-click="false" offset-y>
             <template v-slot:activator="{ on, attrs }">
               <v-btn icon color="cyan lighten-1" v-bind="attrs" v-on="on">
                 <v-icon>mdi-dots-vertical</v-icon>
@@ -88,11 +88,28 @@
                   {{ isListView ? 'Grid view' : 'List view' }}
                 </v-list-item-title>
               </v-list-item>
-              <v-list-item @click="generatePDF">
-                <v-list-item-title>Generate PDF</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="generateExcel">
-                <v-list-item-title>Generate Excel</v-list-item-title>
+              <v-list-group v-show="!isListView" no-action>
+                <template v-slot:activator>
+                  <v-list-item-content>
+                    <v-list-item-title>Download Order</v-list-item-title>
+                  </v-list-item-content>
+                </template>
+                <v-list-item @click="pdfD">
+                  <v-list-item-title>PDF</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-file-pdf-box</v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
+                <v-list-item @click="csvD">
+                  <v-list-item-title>CSV</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-file-delimited-outline</v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
+              </v-list-group>
+
+              <v-list-item @click="printOrderPDF">
+                <v-list-item-title>Print</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -174,7 +191,7 @@
         </v-col>
       </v-row>
     </div>
-    <v-snackbar v-model="snackbar" timeout="3000">
+    <v-snackbar v-model="snackbar" timeout="3000" :color="snackbarColor" dark>
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
         <v-btn
@@ -249,11 +266,13 @@ export default {
       selectedListItem: 0,
       snackbar: false,
       snackbarText: 'No implementado',
+      snackbarColor: 'info',
       loading: false,
       showSummary: false,
       filterOrdersBy: '',
       listKey: 0, // Agregar una clave dinámica para forzar la actualización de la lista
       hideControls: false,
+      vmenu: false,
     }
   },
   computed: {
@@ -316,11 +335,14 @@ export default {
       'fetchOrders',
       'setJustCreated',
       'setFilterCriteria',
+      'csvDownload',
+      'pdfDownload',
     ]),
     async goToProducts() {
       this.loading = true
       await this.$router.push('/shoppingcart/categories/products')
       this.loading = false
+      this.vmenu = false
     },
     goLeft() {
       if (this.curIndex === 0) {
@@ -338,6 +360,7 @@ export default {
       this.setCurrentIndex(this.selectedListItem)
     },
     changeView() {
+      this.vmenu = false
       this.isListView = !this.isListView
       this.$nextTick(() => {
         if (this.isListView) {
@@ -347,7 +370,7 @@ export default {
           ]
 
           if (selectedOrder) {
-            console.log('SELECTED ORDER: ', selectedOrder)
+            // console.log('SELECTED ORDER: ', selectedOrder)
             selectedOrder.$el.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
@@ -366,7 +389,8 @@ export default {
       await filtro(this.setFilterCriteria.bind(this))(this.filterOrdersBy)
       this.listKey += 1 // Incrementar la clave dinámica cuando el filtro cambie
     },
-    async generatePDF() {
+    async printOrderPDF() {
+      this.vmenu = false
       this.snackbar = true
       this.snackbarText = 'Generating PDF'
 
@@ -389,20 +413,47 @@ export default {
 
       this.hideControls = false
     },
-    generateExcel() {
-      this.hideControls = !this.hideControls
-      this.snackbar = true
-      this.snackbarText = 'No implementado'
-      // const element = document.getElementById('orders-view')
-      // const opt = {
-      //   margin: 1,
-      //   filename: 'orders.xlsx',
-      //   image: { type: 'jpeg', quality: 0.98 },
-      //   html2canvas: { scale: 2 },
-      //   jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-      // }
 
-      // html2pdf().from(element).set(opt).toXLSX()
+    // Download CSV
+    // This function is called when the user clicks on the CSV download button
+    // It uses the csvDownload method from the Vuex store to download the CSV file
+    // It also handles errors and shows a snackbar with the download status
+    csvD() {
+      this.vmenu = false
+
+      this.snackbarText = 'Downloading csv'
+      this.snackbarColor = 'info'
+      this.snackbar = true
+
+      try {
+        this.csvDownload(this.cOrderID)
+      } catch (error) {
+        console.error('Error downloading CSV:', error)
+        this.snackbarText = error.message
+        this.snackbarColor = 'error'
+        this.snackbar = true
+      }
+    },
+
+    // Download PDF
+    // This function is called when the user clicks on the PDF download button
+    // It uses the pdfDownload method from the Vuex store to download the PDF file
+    // It also handles errors and shows a snackbar with the download status
+    pdfD() {
+      this.vmenu = false
+
+      this.snackbarText = 'Downloading pdf'
+      this.snackbarColor = 'info'
+      this.snackbar = true
+
+      try {
+        this.pdfDownload(this.cOrderID)
+      } catch (error) {
+        console.error('Error downloading CSV:', error)
+        this.snackbarText = error.message
+        this.snackbarColor = 'error'
+        this.snackbar = true
+      }
     },
   },
 }
