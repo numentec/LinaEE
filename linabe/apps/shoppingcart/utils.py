@@ -39,10 +39,12 @@ def render_order_csv(order):
     writer = csv.writer(buffer)
 
     # Cabecera
-    writer.writerow(['SKU', 'Description', 'Quantity', 'Price', 'Amount'])
+    writer.writerow(['ORDERID', 'DATE', 'SKU', 'Description', 'Quantity', 'Price', 'Amount'])
 
     for item in order.items.all():
         writer.writerow([
+            order.id,
+            order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
             item.sku,
             item.name,
             item.quantity,
