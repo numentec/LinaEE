@@ -103,12 +103,16 @@ export default {
 
         if (selectedBrands.length > 0) {
           return (
-            item.name.toLowerCase().includes(searchProduct.toLowerCase()) &&
+            (item.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
+              item.id.toLowerCase().includes(searchProduct.toLowerCase())) &&
             selectedBrands.includes(item.brand)
           )
         }
 
-        return item.name.toLowerCase().includes(searchProduct.toLowerCase())
+        return (
+          item.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
+          item.id.toLowerCase().includes(searchProduct.toLowerCase())
+        )
       })
     },
   },
