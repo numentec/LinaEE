@@ -34,27 +34,40 @@ def render_order_pdf(order):
     return pdf_file
 
 
-def render_order_csv(order):
+def render_order_csv(order, mode="short"):
     buffer = StringIO()
     writer = csv.writer(buffer)
 
-    # Cabecera
-    writer.writerow(['ORDERID', 'DATE', 'SKU', 'Description', 'Quantity', 'Price', 'Amount'])
+    if mode == "full":
+        # Cabecera completa
+        writer.writerow(['ORDERID', 'DATE', 'SKU', 'Description', 'Quantity', 'Price', 'Amount'])
 
-    for item in order.items.all():
-        writer.writerow([
-            order.id,
-            order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            item.sku,
-            item.name,
-            item.quantity,
-            item.price,
-            round(item.quantity * item.price, 2)
-        ])
+        # Filas completas
+        for item in order.items.all():
+            writer.writerow([
+                order.id,
+                order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                item.sku,
+                item.name,
+                item.quantity,
+                item.price,
+                round(item.quantity * item.price, 2)
+            ])
 
-    # # Opcional: resumen final
-    # writer.writerow([])
-    # writer.writerow(['Total', '', '', order.total])
+        # Opcional: resumen final
+        writer.writerow([])
+        writer.writerow(['Total', '', '', '', '', '', order.total])
+    else:
+        # Cabecera reducida
+        # writer.writerow(['SKU', 'Quantity', 'Price'])
+
+        # Filas reducidas
+        for item in order.items.all():
+            writer.writerow([
+                item.sku,
+                item.quantity,
+                item.price
+            ])
 
     # Convertir a BytesIO para descargar o enviar por email
     csv_bytes = BytesIO(buffer.getvalue().encode('utf-8'))
