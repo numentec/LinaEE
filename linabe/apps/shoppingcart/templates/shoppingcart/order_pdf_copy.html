@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,35 +36,43 @@
 </head>
 
 <body>
-    <h1>Order #{{ order.id }}</h1>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="{{ logo_url }}" alt="Trendmakers PTY, S.A."
+            style="max-width: 300px; height: auto;">
+    </div>
+    <h2>Order #{{ order.id }}</h2>
     <p><strong>Customer:</strong> {{ order.customer_name }}</p>
     <p><strong>Date:</strong> {{ order.created_at }}</p>
 
-    <h2>Items</h2>
+    <h4>Items</h4>
     <table>
         <thead>
             <tr>
                 <th>SKU</th>
-                <th>Name</th>
+                <th>Description</th>
                 <th>Quantity</th>
                 <th>Price</th>
                 <th>Total</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in order.items %}
+            {% for item in items %}
             <tr>
                 <td>{{ item.sku }}</td>
                 <td>{{ item.name }}</td>
                 <td>{{ item.quantity }}</td>
-                <td>{{ item.price }}</td>
-                <td>{{ item.total }}</td>
+                <td>{{ item.price |floatformat:2 }}</td>
+                <td>{{ item.line_total|floatformat:2 }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <h3>Total: {{ order.total }}</h3>
+    <h3>Total: ${{ order.total|floatformat:2 }}</h3>
 </body>
 
 </html>
+
+<script>
+    console.log("Logo URL:", "{{ logo_url }}");
+</script>

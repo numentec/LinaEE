@@ -221,18 +221,10 @@ class GenerateOrderPDF(APIView):
             # Obtener la orden y sus ítems
             order = ExtOrderMaster.objects.get(id=order_id)
 
-            # Construir la URL absoluta del logo
-            # image_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'fotos', subfolder, image)) for image in images]
-            # logo_url = request.build_absolute_uri(settings.MEDIA_URL + 'images/logo.png')
+            # Renderizar el PDF
             pdf_file = render_order_pdf(order)
 
-            # Devolver el PDF como respuesta usando Response
-            # headers = {
-            #     'Content-Type': 'application/pdf',
-            #     'Content-Disposition': f'attachment; filename="order_{order_id}.pdf"',
-            # }
-            # return Response(pdf_file.getvalue(), headers=headers, content_type='application/pdf')
-
+            # Crear la respuesta HTTP con el PDF
             response = HttpResponse(pdf_file.getvalue(), content_type="application/pdf")
             response["Content-Disposition"] = f'attachment; filename="Order_{order.id}.pdf"'
             return response
