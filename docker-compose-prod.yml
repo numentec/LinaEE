@@ -83,89 +83,55 @@ services:
       - be
     restart: unless-stopped
 
-  # Odoo 14
-  odooweb:
-    image: odoo:14
-    container_name: odooweb
-    environment:
-    - HOST=odoodb
-    - USER=${ODOODB_USER}
-    - PASSWORD=${ODOODB_PASSWORD}
-    volumes:
-      - /home/numen/odoo14/webdata:/var/lib/odoo
-      - /home/numen/odoo14/config:/etc/odoo
-      - /home/numen/odoo14/extra-addons:/mnt/extra-addons
-      - /home/numen/odoo14/numen-addons:/mnt/numen-addons
-    networks:
-      net:
-        ipv4_address: 192.168.15.2
-    ports:
-      - "8069:8069"
-    depends_on:
-      - odoodb
-    restart: unless-stopped
 
-  # PostgresSQL for Odoo
-  odoodb:
-    image: postgres
-    container_name: odoodb
-    environment:
-      - POSTGRES_DB=${ODOODB_NAME}
-      - POSTGRES_PASSWORD=${ODOODB_PASSWORD}
-      - POSTGRES_USER=${ODOODB_USER}
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - /home/numen/odoo14/dbdata:/var/lib/postgresql/data/pgdata
-    networks:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    networks: 
       net:
         ipv4_address: 192.168.15.6
-    ports:
-      - 5439:5439
-    restart: unless-stopped
 
-  # Nube Nextcloud 
-  nube:
-    image: ghcr.io/linuxserver/nextcloud
-    container_name: nube
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${LOC_TZ}
-      - MYSQL_HOST=${NUBE_DB_HOST}
-      - MYSQL_DATABASE=${NUBE_DB_NAME}
-      - MYSQL_ROOT_PASSWORD=${NUBE_DB_ROOT_PW}
-      - MYSQL_USER=${NUBE_DB_USER}
-      - MYSQL_PASSWORD=${NUBE_DB_USER_PW}
-    volumes:
-      - /home/numen/nube/config:/config
-      - /home/numen/nube/data:/data
-    networks:
-      net:
-        ipv4_address: 192.168.15.10
-    depends_on:
-      - nubedb
-    restart: unless-stopped
 
-  # Base de datos MariaDB para la nube
-  nubedb:
-    image: ghcr.io/linuxserver/mariadb
-    container_name: nubedb
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - MYSQL_ROOT_PASSWORD=${NUBE_DB_ROOT_PW}
-      - TZ=${LOC_TZ}
-      - MYSQL_DATABASE=${NUBE_DB_NAME}
-      - MYSQL_USER=${NUBE_DB_USER}
-      - MYSQL_PASSWORD=${NUBE_DB_USER_PW}
-    volumes:
-      - /home/numen/nube/db:/config
-    networks:
+  celery_worker:
+    build:
+      context: ./linabe
+      dockerfile: Dockerfile
+    image: linabe_celery_worker
+    container_name: celeryworker
+    command: /start-celeryworker
+    networks: 
       net:
         ipv4_address: 192.168.15.7
+    volumes:
+      - ./linabe:/linabe
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+      - db
+
+
+  flower:
+    build:
+      context: ./linabe
+      dockerfile: Dockerfile
+    image: linabe_celery_flower
+    container_name: celeryflower
+    command: /start-flower
+    volumes:
+      - ./linabe:/linabe
+    env_file:
+      - ./.env
     ports:
-        - 3307:3306
-    restart: unless-stopped
+      - 5557:5555
+    depends_on:
+      - redis
+      - db
+    networks:
+      net: 
+        ipv4_address: 192.168.15.8
+
 
   # Proxies requests to internal services Nginx Reverse Proxy
   swag:
