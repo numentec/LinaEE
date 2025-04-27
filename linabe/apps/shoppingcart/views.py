@@ -217,16 +217,18 @@ class GenerateOrderPDF(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, order_id, format=None):
+        print_images = str(request.query_params.get('print_images', '')).lower().strip()
+
         try:
             # Obtener la orden y sus ítems
             order = ExtOrderMaster.objects.get(id=order_id)
 
             # Renderizar el PDF
-            pdf_file = render_order_pdf(order)
+            pdf_file = render_order_pdf(order, print_images)
 
             # Crear la respuesta HTTP con el PDF
-            response = HttpResponse(pdf_file.getvalue(), content_type="application/pdf")
-            response["Content-Disposition"] = f'attachment; filename="Order_{order.id}.pdf"'
+            response = HttpResponse(pdf_file.getvalue(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="Order_{order.id}.pdf"'
             return response
 
         except ExtOrderMaster.DoesNotExist:

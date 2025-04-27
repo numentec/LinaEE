@@ -6,11 +6,15 @@ from django.conf import settings
 import os
 import csv
 
-def render_order_pdf(order):
-    logo_path = os.path.join(settings.STATIC_ROOT, "images", "logo.png")
-    logo_url = f"file://{logo_path}"
+def render_order_pdf(order, print_images=''):
+    logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
+    logo_url = f'file://{logo_path}'
 
-    styles = CSS(settings.STATIC_ROOT + "/css/bootstrap.min.css")
+    if print_images == '1':
+        print_images = os.path.join(settings.MEDIA_ROOT, 'fotos')
+        print_images = f'file://{print_images}'
+
+    styles = CSS(settings.STATIC_ROOT + '/css/bootstrap.min.css')
 
     items = []
 
@@ -20,12 +24,12 @@ def render_order_pdf(order):
         items.append(item)
 
     # Renderizar la plantilla HTML con los datos de la orden
-    # html_string = render_to_string('shoppingcart/full_html.html', {
     html_string = render_to_string('shoppingcart/order_pdf.html', {
         'order': order,
         'order_date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-        'logo_url': logo_url,
         'items': items,
+        'logo_url': logo_url,
+        'print_images': print_images,
     }) #.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
 
     pdf_file = BytesIO()

@@ -59,7 +59,11 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th style="text-align: center;">Ref package</th>
+                        {% if print_images == '' %}
+                        <th style="text-align: center;">Ref</th>
+                        {% else %}
+                        <th style="text-align: center;">Image</th>
+                        {% endif %}
                         <th style="text-align: center;">SKU</th>
                         <th style="text-align: center;">Description</th>
                         <th style="text-align: center;">Qty</th>
@@ -70,7 +74,11 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
+                        {% if print_images == '' %}
                         <td>{{ item.sku }}</td>
+                        {% else %}
+                        <td><img src="{{ print_images }}/{{ item.sku }}.jpg" style="max-width: 100px;height: auto;"></td>
+                        {% endif %}
                         <td>{{ item.sku }}</td>
                         <td>{{ item.name }}</td>
                         <td style="text-align: center;">{{ item.quantity }}</td>
