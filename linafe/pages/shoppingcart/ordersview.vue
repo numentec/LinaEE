@@ -91,13 +91,19 @@
               <v-list-group v-show="!isListView" no-action>
                 <template v-slot:activator>
                   <v-list-item-content>
-                    <v-list-item-title>Download Order</v-list-item-title>
+                    <v-list-item-title>Download order</v-list-item-title>
                   </v-list-item-content>
                 </template>
                 <v-list-item @click="pdfD">
                   <v-list-item-title>PDF</v-list-item-title>
                   <v-list-item-icon>
                     <v-icon>mdi-file-pdf-box</v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
+                <v-list-item @click="pdfD(true)">
+                  <v-list-item-title>PDF with images</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-file-image</v-icon>
                   </v-list-item-icon>
                 </v-list-item>
                 <v-list-item @click="csvD">
@@ -439,7 +445,7 @@ export default {
     // This function is called when the user clicks on the PDF download button
     // It uses the pdfDownload method from the Vuex store to download the PDF file
     // It also handles errors and shows a snackbar with the download status
-    pdfD() {
+    pdfD(printImages = false) {
       this.vmenu = false
 
       this.snackbarText = 'Downloading pdf'
@@ -447,7 +453,7 @@ export default {
       this.snackbar = true
 
       try {
-        this.pdfDownload(this.cOrderID)
+        this.pdfDownload({ orderid: this.cOrderID, printImages })
       } catch (error) {
         console.error('Error downloading CSV:', error)
         this.snackbarText = error.message

@@ -164,12 +164,20 @@ export const actions = {
     }
   },
 
-  async pdfDownload({ commit }, orderid) {
+  async pdfDownload({ commit }, payload) {
+    const { orderid, printImages } = payload // Desestructura el orderid del payload
     const url = `shoppingcart/orders/${orderid}/pdf/` // Construye la URL del endpoint
+
+    const params = {}
+
+    if (printImages === true) {
+      params.print_images = '1' // Agregar el parámetro print_images
+    }
 
     try {
       const response = await this.$axios.get(url, {
         responseType: 'blob', // Importante para manejar archivos binarios
+        params, // Agregar el parámetro print_images
       })
 
       // Crear un enlace para descargar el archivo
@@ -181,7 +189,7 @@ export const actions = {
       link.click()
       link.remove()
     } catch (error) {
-      console.error('Error downloading CSV:', error)
+      console.error('Error downloading PDF:', error)
       throw error // Maneja el error según sea necesario
     }
   },
