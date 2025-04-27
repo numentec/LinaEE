@@ -267,3 +267,5 @@ def route_task(name, args, kwargs, options, task=None, **kw):
 
 
 CELERY_TASK_ROUTES = (route_task,)
+
+# USE_CDN = environ.get("USE_CDN", True)

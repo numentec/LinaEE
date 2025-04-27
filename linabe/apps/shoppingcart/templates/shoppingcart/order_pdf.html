@@ -1,78 +1,113 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order {{ order.id }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+{% block title %}Order {{ order.id }}{% endblock %}
 
-        h1 {
-            text-align: center;
-        }
+{% block extra_head %}
+<style>
+    th {
+        background-color: rgba(166,239,254,0.25);
+    } 
+    @page {
+        size: Letter;
+        margin: 0.5cm;
+    }
+</style>
+{% endblock %}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-
-<body>
-    <div style="text-align: center; margin-bottom: 20px;">
-        <img src="{{ logo_url }}" alt="Trendmakers PTY, S.A."
-            style="max-width: 300px; height: auto;">
+{% block content %}
+<header>
+    <div class="row">
+        <div class="col-3">
+            <p class="mb-0" style="font-size: 12px;padding-right: 4px;">RUC
+                155657156-2-2017&nbsp; DV 76</p>
+            <p class="mb-0" style="font-size: 12px;padding: initial;padding-right: 4px;">Zona
+                Libre de Colón</p>
+            <p class="mb-0" style="font-size: 12px;padding: initial;padding-right: 4px;">
+                Calle 15 1/2 Av. Sta. Isabel, Diagonal a EPCOT</p>
+            <p style="font-size: 12px;padding: initial;padding-right: 4px;" class="mb-0">
+                +507-4780171</p>
+            <p style="font-size: 12px;padding: initial;padding-right: 4px;" class="mb-2">
+                ventas@trendmakers.com</p>
+        </div>
+        <div class="col-6" style="text-align: center;"><img class="mb-0" src="{{ logo_url }}"
+                alt="Trendmakers PTY, S.A." style="height: auto;max-width: inherit;">
+        </div>
+        <div class="col-3" style="background: rgba(163,207,187,0.43);">
+            <p style="text-align: center;font-weight: bold;font-size: 20px;">Order</p>
+            <h1 style="text-align: center;" class="mb-2"># {{ order.id }}</h1>
+            <p style="text-align: center;font-size: 10px;" class="mt-0 mb-2"><strong>Date:</strong> {{ order_date }}</p>
+        </div>
     </div>
-    <h2>Order #{{ order.id }}</h2>
-    <p><strong>Customer:</strong> {{ order.customer_name }}</p>
-    <p><strong>Date:</strong> {{ order.created_at }}</p>
-
-    <h4>Items</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>SKU</th>
-                <th>Description</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td>{{ item.sku }}</td>
-                <td>{{ item.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>{{ item.price |floatformat:2 }}</td>
-                <td>{{ item.line_total|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <h3>Total: ${{ order.total|floatformat:2 }}</h3>
-</body>
-
-</html>
-
-<script>
-    console.log("Logo URL:", "{{ logo_url }}");
-</script>
+</header>
+<div class="container-fluid">
+    <section>
+        <div class="row">
+            <div class="col-6">
+                <p style="margin-bottom: 4px;"><strong>Customer:</strong> {{ order.customer_name }}</p>
+                <p style="margin-bottom: 4px;"><strong>Address:</strong> Carr. Norte, Managua, Nicaragua</p>
+                <p style="margin-bottom: 4px;"><strong>Phone:</strong> 505-2248-2827</p>
+                <p><strong>e-mail:</strong> purchases@nicaarmy.gob.ni</p>
+            </div>
+            <div class="col-6">
+                <p style="margin-bottom: 4px;"><strong>Payment method:</strong> CREDIT</p>
+                <p style="margin-bottom: 4px;"><strong>Saller:</strong> Mauricio E. Golembiesky</p>
+            </div>
+        </div>
+    </section>
+    <section style="border-top-style: double;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="text-align: center;">Ref package</th>
+                        <th style="text-align: center;">SKU</th>
+                        <th style="text-align: center;">Description</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: center;">Price</th>
+                        <th style="text-align: center;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.name }}</td>
+                        <td style="text-align: center;">{{ item.quantity }}</td>
+                        <td style="text-align: right;">{{ item.price |floatformat:2 }}</td>
+                        <td style="text-align: right;">{{ item.line_total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section>
+        <div class="row">
+            <div class="col-6" style="background: rgb(247,249,251);">
+                <div class="row">
+                    <div class="col">
+                        <p style="text-align: center;font-weight: bold;">RV-WL</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <p>Packages: {{ items|length }}</p>
+                        <p>Weight: 8.00</p>
+                        <p>Volume: 0.36</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 align-self-center">
+                <figure class="text-center ms-2 me-2" style="background: rgba(248,215,218,0.57);">
+                    <blockquote class="blockquote">
+                        <p class="text-center mb-0" style="font-weight: bold;">
+                            Total: ${{ order.total|floatformat:2 }}
+                        </p>
+                    </blockquote>
+                </figure>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 # utils.py
 from django.template.loader import render_to_string
-from weasyprint import HTML
+from weasyprint import HTML, CSS
 from io import StringIO, BytesIO
 from django.conf import settings
 import os
@@ -10,6 +10,8 @@ def render_order_pdf(order):
     logo_path = os.path.join(settings.STATIC_ROOT, "images", "logo.png")
     logo_url = f"file://{logo_path}"
 
+    styles = CSS(settings.STATIC_ROOT + "/css/bootstrap.min.css")
+
     items = []
 
     for item in order.items.all():
@@ -18,8 +20,10 @@ def render_order_pdf(order):
         items.append(item)
 
     # Renderizar la plantilla HTML con los datos de la orden
+    # html_string = render_to_string('shoppingcart/full_html.html', {
     html_string = render_to_string('shoppingcart/order_pdf.html', {
         'order': order,
+        'order_date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
         'logo_url': logo_url,
         'items': items,
     }) #.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
@@ -29,7 +33,7 @@ def render_order_pdf(order):
     # Generar el PDF a partir del HTML utilizando WeasyPrint
     # WeasyPrint requiere que el HTML esté en formato UTF-8
     # y que se especifique el encoding al escribir el PDF
-    HTML(string=html_string).write_pdf(target=pdf_file)
+    HTML(string=html_string).write_pdf(target=pdf_file, stylesheets=[styles])
     pdf_file.seek(0)
     return pdf_file
 
