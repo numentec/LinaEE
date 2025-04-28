@@ -39,7 +39,7 @@ RUN sed -i 's/\r$//g' /start-flower
 RUN chmod +x /start-flower
 
 WORKDIR /linabe
-COPY . .
+COPY ./requirements.txt ./requirements.txt
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt

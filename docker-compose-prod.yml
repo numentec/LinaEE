@@ -92,7 +92,7 @@ services:
       - ./.env
     depends_on:
       - redis
-      - db
+      - linadb
 
 
   flower:
@@ -110,7 +110,7 @@ services:
       - 5557:5555
     depends_on:
       - redis
-      - db
+      - linadb
     networks:
       net: 
         ipv4_address: 192.168.15.8
@@ -144,7 +144,6 @@ services:
     depends_on:
         - be
         - fe
-        - odooweb
     restart: unless-stopped
 
 # volumes:
