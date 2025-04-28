@@ -15,7 +15,7 @@
       </v-col>
       <v-col sm="8" md="6" align-self="stretch">
         <v-row no-gutters>
-          <h3>SKU: {{ item.id }}</h3>
+          <h3>{{ item.sku }}</h3>
         </v-row>
         <v-row no-gutters>
           <p>{{ item.name }}</p>
