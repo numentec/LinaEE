@@ -19,6 +19,8 @@ from celery.result import AsyncResult
 from .tasks import task_send_welcome_email
 from django.http import JsonResponse # (Replace with APIView)
 
+from django.shortcuts import render
+from django.views import View
 
 class CategoryBrandListAPIView(APIView):
     """ This view returns the list of Departments (DEPTO), Categories (CAT), or Subcategories (SUBCAT)
@@ -233,6 +235,44 @@ class GenerateOrderPDF(APIView):
 
         except ExtOrderMaster.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class OrderPDFPreview(View):
+    """
+    Render the order_pdf.html template in the browser for preview purposes.
+    """
+    def get(self, request, order_id):
+        # Obtener el parámetro de consulta 'print_images'
+        print_images = request.GET.get('print_images', '').strip().lower()
+
+        if print_images == '1':
+            print_images = settings.MEDIA_URL + '/fotos'
+
+        try:
+            # Obtener la orden y sus ítems
+            order = ExtOrderMaster.objects.get(id=order_id)
+
+            # Preparar los datos para la plantilla
+            items = []
+            for item in order.items.all():
+                item.line_total = round(item.quantity * item.price, 2)
+                items.append(item)
+
+            context = {
+                'order': order,
+                'order_date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'items': items,
+                'logo_url': '/static/images/logo.png',  # Ruta estática del logo
+                'print_images': print_images,  # Pasar el valor de print_images al contexto
+                'created_by_name': order.created_by.get_full_name() if order.created_by else "Unknown",
+                'created_by_email': order.created_by.email if order.created_by else "Unknown",
+            }
+
+            # Renderizar la plantilla en el navegador
+            return render(request, 'shoppingcart/order_pdf.html', context)
+
+        except ExtOrderMaster.DoesNotExist:
+            return render(request, 'shoppingcart/order_not_found.html', {'order_id': order_id})
 
 
 class GenerateOrderCSV(APIView):

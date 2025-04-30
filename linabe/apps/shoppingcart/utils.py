@@ -10,6 +10,10 @@ def render_order_pdf(order, print_images=''):
     logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
     logo_url = f'file://{logo_path}'
 
+    # print('***** ORDER ****')
+    # for attr, value in vars(order).items():
+    #     print(f'{attr}: {value}')
+
     if print_images == '1':
         print_images = os.path.join(settings.MEDIA_ROOT, 'fotos')
         print_images = f'file://{print_images}'
@@ -30,6 +34,8 @@ def render_order_pdf(order, print_images=''):
         'items': items,
         'logo_url': logo_url,
         'print_images': print_images,
+        'created_by_name': order.created_by.get_full_name(),
+        'created_by_email': order.created_by.email,
     }) #.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
 
     pdf_file = BytesIO()

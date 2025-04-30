@@ -1,12 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}Order {{ order.id }}{% endblock %}
+{% block title %}Shoppingcart Order {{ order.id }}{% endblock %}
 
 {% block extra_head %}
 <style>
-    th {
-        background-color: rgba(166,239,254,0.25);
-    } 
     @page {
         size: Letter;
         margin: 0.5cm;
@@ -43,32 +40,32 @@
     <section>
         <div class="row">
             <div class="col-6">
-                <p style="margin-bottom: 4px;"><strong>Customer:</strong> {{ order.customer_name }}</p>
-                <p style="margin-bottom: 4px;"><strong>Address:</strong> Carr. Norte, Managua, Nicaragua</p>
-                <p style="margin-bottom: 4px;"><strong>Phone:</strong> 505-2248-2827</p>
-                <p><strong>e-mail:</strong> purchases@nicaarmy.gob.ni</p>
+                <p style="margin-bottom: 4px;"><strong>Customer:</strong> {{ order.customer_id }} {{ order.customer_name }}</p>
+                <!-- <p style="margin-bottom: 4px;"><strong>Address:</strong> Carr. Norte, Managua, Nicaragua</p> -->
+                <p style="margin-bottom: 4px;"><strong>e-mail:</strong> {{ order.sendto }}</p>
+                <p><strong>Phone:</strong> {{ order.customer_cel }}</p>
             </div>
             <div class="col-6">
                 <p style="margin-bottom: 4px;"><strong>Payment method:</strong> CREDIT</p>
-                <p style="margin-bottom: 4px;"><strong>Saller:</strong> Mauricio E. Golembiesky</p>
+                <p style="margin-bottom: 4px;"><strong>Saller:</strong> {{ created_by_name }}</p>
             </div>
         </div>
     </section>
     <section style="border-top-style: double;">
         <div class="table-responsive">
             <table class="table">
-                <thead>
+                <thead style="background: rgba(166,239,254,0.25);">
                     <tr>
                         {% if print_images == '' %}
-                        <th style="text-align: center;">Ref</th>
+                        <th style="background: transparent; text-align: center;">Ref</th>
                         {% else %}
-                        <th style="text-align: center;">Image</th>
+                        <th style="background: transparent; text-align: center;">Image</th>
                         {% endif %}
-                        <th style="text-align: center;">SKU</th>
-                        <th style="text-align: center;">Description</th>
-                        <th style="text-align: center;">Qty</th>
-                        <th style="text-align: center;">Price</th>
-                        <th style="text-align: center;">Amount</th>
+                        <th style="background: transparent; text-align: center;">SKU</th>
+                        <th style="background: transparent; text-align: center;">Description</th>
+                        <th style="background: transparent; text-align: center;">Qty</th>
+                        <th style="background: transparent; text-align: center;">Price</th>
+                        <th style="background: transparent; text-align: center;">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
