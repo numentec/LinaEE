@@ -110,10 +110,10 @@ export const actions = {
     const cart = rootState.shoppingcart.cart.cart
 
     const newOrder = {
-      customer_id: cart.carCustomer?.id || 0,
+      customer_id: cart.cartCustomer?.id || '0',
       customer_name: cart.cartCustomer?.name || '',
       customer_email: cart.cartCustomer?.email || '',
-      customr_cel: cart.cartCustomer?.tel || '',
+      customer_cel: cart.cartCustomer?.tel || '',
       total: cart.items
         .reduce((acc, item) => acc + parseFloat(item.price * item.quantity), 0)
         .toFixed(2),
