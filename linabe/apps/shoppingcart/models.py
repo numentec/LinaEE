@@ -37,6 +37,11 @@ class ExtOrderMaster(Common):
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField("Status", max_length=25, default='Pending')
 
+    def save(self, *args, **kwargs):
+        if not self.sendto:  # Si sendto está vacío o es None
+            self.sendto = self.customer_email
+        super(ExtOrderMaster, self).save(*args, **kwargs)
+
     # def save(self, *args, **kwargs):
     #     user = get_current_user()
     #     if user and not user.pk:

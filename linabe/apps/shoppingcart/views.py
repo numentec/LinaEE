@@ -22,6 +22,8 @@ from django.http import JsonResponse # (Replace with APIView)
 from django.shortcuts import render
 from django.views import View
 
+from .tasks import send_order_email
+
 class CategoryBrandListAPIView(APIView):
     """ This view returns the list of Departments (DEPTO), Categories (CAT), or Subcategories (SUBCAT)
         along with the brands associated with each of them.
@@ -184,7 +186,11 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, modified_by=self.request.user)
+        # Crear la orden
+        order = serializer.save(created_by=self.request.user, modified_by=self.request.user)
+
+        # Llamar a la tarea Celery para enviar el correo
+        send_order_email.delay(order.id)
 
     def perform_update(self, serializer):
         serializer.save(modified_by=self.request.user)
@@ -296,6 +302,37 @@ class GenerateOrderCSV(APIView):
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
+class SendOrderPDFEmail(APIView):
+    """
+    Endpoint para generar un PDF y enviarlo por correo electrónico.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, order_id):
+        # Obtener el parámetro 'print_images' de los query params
+        print_images = request.query_params.get('print_images', '').strip().lower()
+
+        # Llamar a la tarea de Celery para enviar el correo con el PDF
+        send_order_email.delay(order_id, print_images=print_images, file_type='pdf')
+
+        return Response({'message': f'PDF email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
+
+
+class SendOrderCSVEmail(APIView):
+    """
+    Endpoint para generar un CSV y enviarlo por correo electrónico.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, order_id):
+        # Llamar a la tarea de Celery para enviar el correo con el CSV
+        send_order_email.delay(order_id, file_type='csv')
+
+        return Response({'message': f'CSV email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
+
+
 class TaskStatus(APIView):
     """
     Return the status of a task.
@@ -320,11 +357,13 @@ class TaskStatus(APIView):
                 error = str(task.result)
                 response = {
                     'state': state,
+                    'result': None,
                     'error': error,
                 }
             else:
                 response = {
                     'state': state,
+                    'result': task.result,
                 }
             return Response(response, status=status.HTTP_200_OK)
 
@@ -334,7 +373,8 @@ class SendWelcomeEmail(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, format=None):
-        user = request.user()
+        user = request.user  # Corrected to access the user object directly
+        print('***** USER *****', user)
         task = task_send_welcome_email.apply_async(args=[user.pk], countdown=10)
         # Get the task ID
         task_id = task.id

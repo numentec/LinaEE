@@ -185,6 +185,26 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+# Email settings
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = environ.get("EMAIL_HOST")
+# EMAIL_PORT = environ.get("EMAIL_PORT")
+# EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER")
+# EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD")
+# EMAIL_USE_TLS = environ.get("EMAIL_USE_TLS", True) == '1'
+# EMAIL_USE_SSL = environ.get("EMAIL_USE_SSL", False) == '1'
+# DEFAULT_FROM_EMAIL = environ.get("DEFAULT_FROM_EMAIL")
+
+# Email settings for testing
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'galvanino@gmail.com'
+EMAIL_HOST_PASSWORD = 'Ka09Li21Ma12!'
+DEFAULT_FROM_EMAIL = 'Moisés Galván Niño <galvanino@gmail.com>'
+
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -237,6 +257,12 @@ MEDIA_ROOT = '/linabe/media/'
 
 CELERY_BROKER_URL = environ.get("CELERY_BROKER", "redis://127.0.0.1:6379/0")
 CELERY_RESULT_BACKEND = environ.get("CELERY_BACKEND", "redis://127.0.0.1:6379/0")
+
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = environ.get("LOC_TZ")
+# CELERY_ENABLE_UTC = True
 
 CELERY_TASK_DEFAULT_QUEUE = 'default'
 
