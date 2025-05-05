@@ -186,23 +186,23 @@ SIMPLE_JWT = {
 }
 
 # Email settings
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = environ.get("EMAIL_HOST")
-# EMAIL_PORT = environ.get("EMAIL_PORT")
-# EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER")
-# EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD")
-# EMAIL_USE_TLS = environ.get("EMAIL_USE_TLS", True) == '1'
-# EMAIL_USE_SSL = environ.get("EMAIL_USE_SSL", False) == '1'
-# DEFAULT_FROM_EMAIL = environ.get("DEFAULT_FROM_EMAIL")
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = environ.get("EMAIL_HOST")
+EMAIL_PORT = environ.get("EMAIL_PORT")
+EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = environ.get("EMAIL_USE_TLS", True) == '1'
+EMAIL_USE_SSL = environ.get("EMAIL_USE_SSL", False) == '1'
+DEFAULT_FROM_EMAIL = environ.get("DEFAULT_FROM_EMAIL")
 
 # Email settings for testing
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'galvanino@gmail.com'
-EMAIL_HOST_PASSWORD = 'Ka09Li21Ma12!'
-DEFAULT_FROM_EMAIL = 'Moisés Galván Niño <galvanino@gmail.com>'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'galvanino@gmail.com'
+# EMAIL_HOST_PASSWORD = 'cwfuvrmkmtbrkjxn'
+# DEFAULT_FROM_EMAIL = 'Moisés Galván Niño <galvanino@gmail.com>'
 
 
 CHANNEL_LAYERS = {
