@@ -34,7 +34,7 @@ def task_postrun_handler(task_id, **kwargs):
 
 
 @shared_task(name='high_priority:send_order_email')
-def send_order_email(order_id, print_images='', file_type='csv'):
+def send_order_email(order_id, print_images='', file_type='pdf'):
     """
     Tarea de Celery para enviar un correo electrónico con los detalles de la orden.
     Esta tarea se ejecuta en segundo plano y genera un PDF y un CSV de la orden,

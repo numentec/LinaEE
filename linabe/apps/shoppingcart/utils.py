@@ -7,7 +7,7 @@ import os
 import csv
 
 def render_order_pdf(order, print_images=''):
-    logo_path = os.path.join(settings.STATIC_ROOT, 'images', 'logo.png')
+    logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'images', 'logo.png')
     logo_url = f'file://{logo_path}'
 
     # print('***** ORDER ****')
@@ -18,7 +18,7 @@ def render_order_pdf(order, print_images=''):
         print_images = os.path.join(settings.MEDIA_ROOT, 'fotos')
         print_images = f'file://{print_images}'
 
-    styles = CSS(settings.STATIC_ROOT + '/css/bootstrap.min.css')
+    styles = CSS(settings.STATICFILES_DIRS[0] + '/css/bootstrap.min.css')
 
     items = []
 
