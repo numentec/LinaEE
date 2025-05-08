@@ -38,6 +38,7 @@ def render_order_pdf(order, print_images=''):
         'created_by_email': order.created_by.email,
     }) #.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
 
+    # Crear un objeto BytesIO para almacenar el PDF
     pdf_file = BytesIO()
 
     # Generar el PDF a partir del HTML utilizando WeasyPrint
