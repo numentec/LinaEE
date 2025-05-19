@@ -14,7 +14,7 @@ class ExtOrderItemSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         # Devuelve el valor del campo sku concatenado con ".JPG"
-        return f"{obj.sku}.JPG"
+        return f"{obj.sku}.jpg"
 
 
 class ExtOrderMasterSerializer(serializers.ModelSerializer):
