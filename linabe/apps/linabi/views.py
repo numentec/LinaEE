@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework import authentication, permissions
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import status
 from drf_dx_datagrid import DxModelViewSet
 from . import models
@@ -127,8 +128,8 @@ class ColoresBCAPIView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
-class CatalogModelViewSet(DxModelViewSet):
-# class CatalogModelViewSet(viewsets.ModelViewSet):
+# class CatalogModelViewSet(DxModelViewSet):
+class CatalogModelViewSet(viewsets.ModelViewSet):
     """Catálogo - Lista de productos"""
     serializer_class = serializers.BICatalogSerializer
     # queryset = BICatalog.objects.all()
@@ -669,3 +670,53 @@ class CxCAntigAPIView(APIView):
             result = [{key : val for key, val in sub.items() if key not in colsToRemoveList} for sub in result]
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class BICustomCatalogMasterViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing BICustomCatalogMaster.
+    The serializer already includes the details associated with each custom catalog.
+    """
+    # Vista 37
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    queryset = models.BICustomCatalogMaster.objects.all()
+    serializer_class = serializers.BICustomCatalogMasterSerializer
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['id', 'created_ad', 'status', 'created_by__username', 'customer_name']
+    ordering_fields = ['id', 'created_at', 'status', 'created_by__username', 'customer_name']
+
+    ordering = ['-created_at']
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, modified_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(modified_by=self.request.user)
+
+
+class BICustomCatalogMasterOnlyViewSet(viewsets.ModelViewSet):
+    """
+    A simple ViewSet for viewing and editing BICustomCatalogMaster.
+    The serializer already includes the details associated with each custom catalog.
+    """
+    # Vista 38
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    queryset = models.BICustomCatalogMaster.objects.all()
+    serializer_class = serializers.BICustomCatalogMasterOnlySerializer
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['id', 'created_ad', 'status', 'created_by__username', 'customer_name']
+    ordering_fields = ['id', 'created_at', 'status', 'created_by__username', 'customer_name']
+
+    ordering = ['-created_at']
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, modified_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(modified_by=self.request.user)

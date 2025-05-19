@@ -5,11 +5,15 @@ from rest_framework.routers import DefaultRouter
 app_name = "linabi"
 
 router = DefaultRouter()
-router.register(r'model-catalog', views.CatalogModelViewSet, basename='model-catalog')
+# router.register(r'model-catalog', views.CatalogModelViewSet, basename='model-catalog')
 router.register(r'biqueries', views.BIQueryModelViewset, basename='biqueries')
 router.register(r'favoritos', views.FavoritoModelViewset, basename='favoritos')
 router.register(r'xlsxtemplates', views.BIXLSXTemplateModelViewset, basename='xlsxtemplates')
 router.register(r'xlsxtemplatescols', views.BIXLSXTemplateColModelViewset, basename='xlsxtemplatescols')
+router.register(r'customcatalogs', views.BICustomCatalogMasterViewSet, basename='customcatalogs')
+# router.register(r'customcatalogsdetails', views.BICustomCatalogDetailsViewSet, basename='customcatalogsdetails')
+router.register(r'customcatalogsmaster', views.BICustomCatalogMasterOnlyViewSet, basename='customcatalogsmaster')
+
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -157,9 +157,18 @@ class BICustomCatalogMaster(Common):
     note =  models.TextField("Nota", blank = True)
     token = models.CharField("Token", max_length=45, unique=True, default=genToken)
     ttl = models.DateField("TTL", default=defaultTTL)
+    customer_name = models.CharField("Nombre del Cliente", max_length=100, blank=True)
+    customer_email = models.EmailField("Email del Cliente", max_length=100, blank=True)
+    customer_phone = models.CharField("Teléfono del Cliente", max_length=50, blank=True)
+    salesperson = models.ForeignKey(LinaUserModel, on_delete=models.SET_NULL, \
+                verbose_name='Vendedor', related_name='catalogs_as_salesperson', null=True)
     stakeholder = models.ForeignKey(StakeHolder, on_delete=models.SET_NULL, \
-                verbose_name='Cliente', related_name='catalog_x_stakeholder', null=True)
+                verbose_name='Cliente', related_name='catalogs_as_stakeholder', null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.salesperson and self.created_by:
+            self.salesperson = self.created_by
+        super(BICustomCatalogMaster, self).save(*args, **kwargs)
     # def save(self, *args, **kwargs):
     #     if not self.ttl:
     #         self.ttl = defaultTTL()
@@ -179,6 +188,8 @@ class BICustomCatalogDetail(Common):
     """Modelo para detalle de catálogo personalizado"""
     sku = models.CharField("SKU", max_length=50)
     note =  models.TextField("Nota", blank = True)
+    price = models.DecimalField("Precio", max_digits=10, decimal_places=2, default=0)
+    stock = models.IntegerField("Stock", default=0)
     category = models.ForeignKey(BICustomCatalogCategory, on_delete=models.SET_NULL, null=True)
     catalog =  models.ForeignKey(BICustomCatalogMaster, on_delete=models.CASCADE)
 
@@ -209,3 +220,4 @@ class BICustomCatalogDetailImage(models.Model):
         db_table = 'linabi_customcatalogdimg'
         verbose_name = 'Custom Catalog Image'
         verbose_name_plural = 'Custom Catalogs Images'
+
