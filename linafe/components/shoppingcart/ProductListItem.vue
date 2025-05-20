@@ -186,7 +186,7 @@ export default {
       const imgx = this.getImage(this.product.id) || this.product.image
       const imgName = imgx.substring(
         imgx.lastIndexOf('/') + 1,
-        imgx.lastIndexOf('.JPG')
+        imgx.lastIndexOf('.jpg')
       )
 
       return imgName === '/' ? 'no_image' : imgName
