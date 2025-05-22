@@ -129,6 +129,8 @@ export const actions = {
       return
     }
 
+    console.log('***** src *****', src)
+
     await this.$axios
       .get(`shoppingcart/itemimages/${src.imgID}`)
       .then((response) => {

@@ -218,10 +218,13 @@ export default {
         : `In Stock: ${this.product.instock}`
     },
     imgID() {
+      console.log('***** imgID1 *****', this.product.id)
+      console.log('***** imgID2 *****', this.product.image)
       const imgx = this.getImage(this.product.id) || this.product.image
+
       const imgName = imgx.substring(
         imgx.lastIndexOf('/') + 1,
-        imgx.lastIndexOf('.jpg')
+        imgx.lastIndexOf('.')
       )
 
       return imgName === '/' ? 'no_image' : imgName
