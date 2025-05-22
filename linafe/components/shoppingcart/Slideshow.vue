@@ -87,6 +87,7 @@ export default {
     return {
       curItem: 0,
       lazySrc: '/no_image.png',
+      imgError: false,
     }
   },
   computed: {
@@ -109,6 +110,11 @@ export default {
     imgSrc(foto) {
       let imgsrc = '/no_image.png'
 
+      if (this.imgError) {
+        this.imgError = false
+        return '/no_image.png'
+      }
+
       if (foto) {
         imgsrc = foto
       }
@@ -117,7 +123,7 @@ export default {
     },
 
     onImgError() {
-      this.imgSrc = '/no_image.png'
+      this.imgError = true
       this.$emit('no-image')
     },
   },
