@@ -147,7 +147,7 @@ class ProductsAPIView(APIView):
 
 class ItemImagesAPIView(APIView):
     """
-    View to list all images in a given subfolder.
+    View to list all non-hidden files in a given subfolder.
     """
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -159,11 +159,17 @@ class ItemImagesAPIView(APIView):
         if not os.path.exists(images_path):
             return Response({"error": "Subfolder does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-        # List all files in the subfolder
-        images = [f for f in os.listdir(images_path) if os.path.isfile(os.path.join(images_path, f))]
+        # List all non-hidden files in the subfolder
+        images = [
+            f for f in os.listdir(images_path)
+            if os.path.isfile(os.path.join(images_path, f)) and not f.startswith('.')
+        ]
 
         # Create URLs for the images
-        image_urls = [request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'fotos', subfolder, image)) for image in images]
+        image_urls = [
+            request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'fotos', subfolder, image))
+            for image in images
+        ]
 
         return Response(image_urls, status=status.HTTP_200_OK)
 

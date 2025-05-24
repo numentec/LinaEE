@@ -236,7 +236,7 @@ STATICFILES_DIRS = [
 ]
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/linabe/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # IPWARE_META_PRECEDENCE_ORDER = (
 #     'HTTP_X_FORWARDED_FOR', 'X_FORWARDED_FOR',  # <client>, <proxy1>, <proxy2>
