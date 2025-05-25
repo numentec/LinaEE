@@ -72,7 +72,7 @@ export default {
 
   router: {
     // base: '/lina/',
-    middleware: ['auth'],
+    middleware: ['auth_lina'],
     prefetchLinks: false,
   },
 

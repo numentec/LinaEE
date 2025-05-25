@@ -42,6 +42,7 @@
                     label="Usuario"
                     maxlength="10"
                     required
+                    autofocus
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12">

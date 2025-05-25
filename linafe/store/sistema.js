@@ -134,8 +134,14 @@ export const actions = {
   },
 
   async userLogout({ commit }) {
-    await this.$auth.logout()
-    commit('USER_LOGOUT')
+    try {
+      await this.$auth.logout()
+      commit('USER_LOGOUT')
+      this.$router.push('/login')
+    } catch (err) {
+      console.error('Error during logout:', err)
+      commit('SET_ERROR', { statusCode: 500, message: 'Error during logout' })
+    }
   },
 
   setUserData({ commit }, payload) {
