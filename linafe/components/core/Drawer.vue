@@ -11,44 +11,9 @@
       dark
       class="primary darken-4"
     >
-      <v-list shaped>
-        <v-list-item nuxt to="/">
-          <v-list-item-icon>
-            <v-icon>mdi-home</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title class="title">Inico</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-group
-          v-for="item in modulos_disponibles"
-          v-show="getCurUser.perms[item.perm]"
-          :key="item.title"
-          :prepend-icon="item.icon"
-          no-action
-        >
-          <template v-slot:activator>
-            <v-list-item-content>
-              <v-list-item-title v-text="item.title" />
-            </v-list-item-content>
-          </template>
-          <v-list-item
-            v-for="subitem in item.items"
-            v-show="getCurUser.perms[subitem.perm]"
-            :key="subitem.title"
-            nuxt
-            :to="subitem.to"
-            router
-            exact
-          >
-            <v-list-item-content>
-              <v-list-item-title v-text="subitem.title" />
-            </v-list-item-content>
-          </v-list-item>
-        </v-list-group>
-      </v-list>
+      <component :is="drawerListComponent" />
       <template v-slot:append>
-        <div class="pa-2">
+        <div v-show="logoutButtonVisible" class="pa-2">
           <v-btn
             v-show="!is_expanded"
             icon
@@ -74,35 +39,30 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from 'vuex'
-import { modulos } from '~/assets/utilities'
+import { mapState, mapActions } from 'vuex'
 
 export default {
   name: 'CoreDrawer',
-  async fetch() {
-    await this.$axios.get('modul-actives/').then((response) => {
-      const modulosActivos = response.data
-      this.modulactiv = modulosActivos
-      this.modulos_disponibles = this.modulos.filter((el) => {
-        return modulosActivos.find((element) => {
-          return element.nombre === el.name
-        })
-      })
-    })
+  props: {
+    drawerListComponent: {
+      type: [Object, Function], // Acepta un componente como objeto o función
+      required: true, // Es obligatorio
+    },
+    showLogout: {
+      type: Boolean,
+      default: false, // Por defecto, mostrar el botón de logout
+    },
   },
+
   data() {
     return {
-      modulos_disponibles: [],
-      modulactiv: [],
-      // perms: this.$auth.user.perms,
-      modulos,
       drawer_mode: null,
+      logoutButtonVisible: this.showLogout,
     }
   },
 
   computed: {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
-    ...mapGetters('sistema', ['getCurUser']),
     // perms() {
     //   return this.curuser.perms
     // },

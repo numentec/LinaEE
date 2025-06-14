@@ -1,13 +1,5 @@
 <template>
   <div>
-    <v-row justify="end">
-      <v-card-actions>
-        <v-btn rounded color="success" @click="$router.push('/login')">
-          <v-icon left> mdi-account-key </v-icon>
-          Login
-        </v-btn>
-      </v-card-actions>
-    </v-row>
     <v-row justify="center" align="center">
       <v-col cols="12">
         <div class="text-center">
