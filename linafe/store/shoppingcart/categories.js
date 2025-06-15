@@ -29,6 +29,7 @@ function makeItems(name) {
       description: `Description for ${name} ${i}`,
       instock: Math.floor(Math.random() * 100),
       brand: getRandomBrand(),
+      token: `token-${i}`,
     })
   }
 
@@ -204,6 +205,7 @@ export const actions = {
 
     switch (payload.name) {
       case 'Department':
+      case 'Catalog':
         curMutation = 'SET_DEPARTMENTS'
         endpointParams = { type: 'DEPTO', cia: '01' }
         break
@@ -260,7 +262,7 @@ export const actions = {
     let curMutation = ''
 
     switch (payload.name) {
-      case 'Department':
+      case ('Department', 'Catalog'):
         curMutation = 'SET_DEPARTMENTS'
         break
       case 'Category':
