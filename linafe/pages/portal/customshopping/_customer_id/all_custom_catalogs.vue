@@ -12,8 +12,11 @@
             <CategoryListItem
               v-for="item in filteredItems"
               :key="item.id"
-              :category="{ ...item, type: 'depto', link: setLink(item.token) }"
-              @card-clicked="setSelectProductsByElement"
+              :category="{
+                ...item,
+                type: 'catalog',
+                link: setLink(item.token),
+              }"
             />
           </v-list>
         </div>
@@ -21,8 +24,7 @@
           <CategoryCard
             v-for="item in filteredItems"
             :key="item.id"
-            :category="{ ...item, type: 'depto', link: setLink(item.token) }"
-            @card-clicked="setSelectProductsByElement"
+            :category="{ ...item, type: 'catalog', link: setLink(item.token) }"
           />
         </div>
       </v-col>
@@ -45,10 +47,12 @@ export default {
 
   async asyncData({ store, error }) {
     try {
-      // await store.dispatch('shoppingcart/categories/fetchItems', {
-      //   name: 'Department',
+      // const cId = store.getters['customshopping/customcatalog/getCustomerId']
+
+      // await store.dispatch('customshopping/customcatalog/fetchItems', {
+      //   ulid: 'cId',
       // })
-      await store.dispatch('shoppingcart/categories/fetchData', {
+      await store.dispatch('customshopping/customcatalog/fetchData', {
         name: 'Catalog',
         link: '',
       })
@@ -69,25 +73,25 @@ export default {
 
   data() {
     return {
-      link: '/shoppingcart/categories/categoriesmain',
+      link: '/login',
     }
   },
 
   computed: {
-    ...mapGetters('shoppingcart/categories', [
+    ...mapGetters('customshopping/customcatalog', [
       'getSelectedBrands',
-      'getSearchDepartment',
-      'getAllDepartments',
-      'getViewConfElement',
+      'getSearchCustomCatalog',
+      'getAllCustomCatalogs',
+      'getCustomerId',
       'isListView',
     ]),
 
-    ...mapGetters({ customerId: 'customshopping/customcatalog/getCustomerId' }),
+    // ...mapGetters({ customerId: 'customshopping/customcatalog/getCustomerId' }),
 
     filteredItems() {
-      return this.getAllDepartments.filter((item) => {
+      return this.getAllCustomCatalogs.filter((item) => {
         const selectedBrands = this.getSelectedBrands
-        let searchDepartment = this.getSearchDepartment
+        let searchDepartment = this.getSearchCustomCatalog
 
         if (searchDepartment === null || searchDepartment === undefined) {
           searchDepartment = ''
@@ -112,23 +116,21 @@ export default {
 
   watch: {
     filteredItems(newVal) {
-      this.setCountFilteredDep(newVal?.length)
+      this.setCountFilteredCC(newVal?.length)
     },
   },
 
   mounted() {
     window.scrollTo(0, 0)
-    this.setCountFilteredDep(this.filteredItems?.length)
+    this.setCountFilteredCC(this.filteredItems?.length)
   },
 
   methods: {
-    ...mapActions('shoppingcart/categories', [
-      'setSelectProductsByElement',
-      'setCountFilteredDep',
-    ]),
+    ...mapActions('customshopping/customcatalog', ['setCountFilteredCC']),
     setLink(catalogToken) {
       return (
-        `/portal/customshopping/${this.customerId}/${catalogToken}` ?? this.link
+        `/portal/customshopping/${this.getCustomerId}/${catalogToken}` ??
+        this.link
       )
     },
   },

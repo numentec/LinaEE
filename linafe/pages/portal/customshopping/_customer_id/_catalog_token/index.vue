@@ -59,13 +59,17 @@ export default {
     Slideshow,
   },
 
-  async asyncData({ store, error }) {
+  async asyncData({ params, store, error }) {
     try {
       // await store.dispatch('shoppingcart/products/fetchProducts')
-      /* Dejaré comentado este código por si se necesita en un futuro. 
+      /* Dejaré comentado este código por si se necesita en un futuro.
       Mientras no se complete la paginación desde el backend, 
       se podría necesitar para pruebas en desarrollo.
       */
+      // eslint-disable-next-line camelcase
+      const { customer_id, catalog_token } = params
+      console.log('Customer ID:', customer_id)
+      console.log('Catalog Token:', catalog_token)
       await store.dispatch('shoppingcart/products/fetchData', {
         name: 'Product',
         link: '',
