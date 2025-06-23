@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'apps.linabi',
     'apps.shoppingcart',
     'apps.wms',
+    'apps.catalog',
 ]
 
 #CORS_ORIGIN_ALLOW_ALL = True
