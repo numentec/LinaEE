@@ -97,7 +97,7 @@ export default {
 
         this.$router.push({
           path: this.category.link,
-          query: { category: catname },
+          query: this.category?.token ? {} : { category: catname },
         })
       }
     },

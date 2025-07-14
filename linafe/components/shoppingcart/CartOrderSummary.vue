@@ -12,7 +12,7 @@
               <div class="my-0">
                 <v-autocomplete
                   v-model="cartCustomer"
-                  label="Customer"
+                  :label="isCustomerCart ? 'Saleperson' : 'Customer'"
                   return-object
                   :items="customersList"
                   item-text="name"
@@ -165,6 +165,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isCustomerCart: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data() {
@@ -207,9 +211,16 @@ export default {
       return this.$vuetify.breakpoint.smAndDown
     },
     isSelectedCustomer() {
+      // if (this.cartCustomer) return true
       const k = Object.keys(this.cartCustomer ?? {})
       return this.cartCustomer && k.length !== 0
     },
+  },
+
+  mounted() {
+    if (this.customersList.length > 0 && this.isCustomerCart) {
+      this.cartCustomer = this.customersList[0] // Establece el primer ítem como predeterminado
+    }
   },
 
   methods: {

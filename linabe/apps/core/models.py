@@ -11,6 +11,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+from ulid import ULID
+
 from . import managers
 
 def img_profile_path(instance, filename):
@@ -21,6 +23,9 @@ def img_profile_path(instance, filename):
 
     return os.path.join('images/profiles/', filename)
 
+def genULID():
+    """Genera un ULID único para el modelo"""
+    return str(ULID())
 
 # def colsToRemoveOrig(user, idVista):
 #     """Devuelve lista de columnas a excluir de una vista dada
@@ -189,12 +194,24 @@ class Common(models.Model):
     is_active   = models.BooleanField('Activo', default=True)
     created_at  = models.DateTimeField('Fecha de creación', auto_now_add=True, editable=False)
     modified_at = models.DateTimeField('Fecha de modificación', auto_now=True, editable=False)
-    created_by  = models.ForeignKey(LinaUserModel, null=True, db_index=True, editable=False, 
-                    verbose_name='Creado por', on_delete=models.SET_NULL,
-                    related_name='%(class)s_created')
-    modified_by = models.ForeignKey(LinaUserModel, null=True, db_index=True, editable=False, 
-                    verbose_name='Modificado por', on_delete=models.SET_NULL,
-                    related_name='%(class)s_modified')
+    created_by  = models.ForeignKey(
+        LinaUserModel, null=True, db_index=True, editable=False,
+        verbose_name='Creado por', on_delete=models.SET_NULL,
+        related_name='%(class)s_created'
+    )
+    modified_by = models.ForeignKey(
+        LinaUserModel, null=True, db_index=True, editable=False,
+        verbose_name='Modificado por', on_delete=models.SET_NULL,
+        related_name='%(class)s_modified'
+    )
+
+    # def save(self, *args, **kwargs):
+    #     user = kwargs.pop('user', None)
+    #     if not self.pk and not self.created_by:
+    #         self.created_by = user
+    #     if user:
+    #         self.modified_by = user
+    #     super().save(*args, **kwargs)
 
     class Meta:
         abstract = True
@@ -208,7 +225,7 @@ class Identidad(models.Model):
         ('J', 'Jurídica'),
     ]
 
-    codigo = models.CharField('Código', max_length=10, unique=True, help_text='Código Interno')
+    codigo = models.CharField('Código', max_length=10, help_text='Código Interno')
     nombre = models.CharField('Nombre', max_length=100, blank=True, db_index=True, default='')
     ruc = models.CharField('RUC', max_length=30, blank=True, default='')
     dv = models.CharField('DV', max_length=2, blank=True, default='')
@@ -462,6 +479,8 @@ class StakeHolder(Common, Identidad):
     locale = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
     website = models.URLField('URL', blank=True, null=True)
 
+    ulid = models.CharField('ULID', max_length=26, unique=True, default=genULID, editable=False, help_text='Identificador único de 26 caracteres')
+
     objects =  models.Manager()
     stakeholders =  managers.StakeHolder()
 
@@ -488,6 +507,30 @@ class StakeHolder(Common, Identidad):
                             ("view_socio", "View partner details or list"),
                             ("create_socio", "Create partner"),
                             ("update_socio", "Update partner"),
+                        )
+
+class Customer(Common, Identidad):
+    """Modelo para clientes"""
+    # Hereda de StakeHolder, por lo que no es necesario definir los campos de Identidad nuevamente
+
+    # Aquí puedes agregar campos específicos para el cliente si es necesario
+    # Por ejemplo, un campo adicional para el cliente
+    ulid = models.CharField('ULID', max_length=26, unique=True, default=genULID, editable=False, help_text='Identificador único de 26 caracteres')
+    additional_info = models.TextField('Información Adicional', blank=True, null=True)
+
+    def __str__(self):
+        return '{} ({} - {})'.format(self.nombre, self.id, self.codigo)
+
+    class Meta:
+        db_table = 'core_customer'
+        verbose_name = 'Cliente'
+        verbose_name_plural = 'Clientes'
+
+        permissions =   (
+                            ("view_cliente", "View customers details or list"),
+                            ("create_cliente", "Create customer"),
+                            ("update_cliente", "Update customer"),
+                            ("change_cliente_cr", "Edit customer credit"),
                         )
 
 

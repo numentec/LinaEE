@@ -27,6 +27,14 @@
             <v-spacer></v-spacer>
 
             <v-btn
+              v-show="getCartItems.length > 0"
+              icon
+              small
+              @click.stop="clearCart()"
+            >
+              <v-icon>mdi-cart-remove</v-icon>
+            </v-btn>
+            <v-btn
               v-show="isMobile"
               icon
               small
@@ -160,6 +168,7 @@ export default {
 
   methods: {
     ...mapActions('shoppingcart/orders', ['createOrder']),
+    ...mapActions('shoppingcart/cart', ['clearCart']),
     async goToCheckout() {
       this.snackbar = true
       if (this.getCartItems.length === 0) {

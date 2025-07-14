@@ -1,7 +1,11 @@
 <template>
   <v-app dark>
     <CoreAppBar ref="appbarx" />
-    <component :is="useDrawer" ref="appdrawerx" />
+    <component
+      :is="useDrawer.component"
+      ref="appdrawerx"
+      v-bind="useDrawer.props"
+    />
     <v-main>
       <v-container>
         <nuxt keep-alive :keep-alive-props="{ exclude: ['modal'] }" />
@@ -55,6 +59,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
+import DrawerDefaultList from '../components/core/DrawerDefaultList.vue'
 
 const CoreDrawer = () => import('../components/core/Drawer')
 const CoreDrawerMobile = () => import('../components/core/DrawerMobile')
@@ -63,6 +68,7 @@ export default {
   name: 'LinaHome',
   components: {
     CoreAppBar: () => import('../components/core/AppBar'),
+    DrawerDefaultList,
   },
   middleware: 'setcias',
   data() {
@@ -113,9 +119,19 @@ export default {
     ...mapGetters(['loggedInUser']),
     useDrawer() {
       if (this.$vuetify.breakpoint.mobile) {
-        return CoreDrawerMobile
+        return {
+          component: CoreDrawerMobile,
+          props: {
+            drawerListComponent: DrawerDefaultList,
+          },
+        }
       } else {
-        return CoreDrawer
+        return {
+          component: CoreDrawer,
+          props: {
+            drawerListComponent: DrawerDefaultList,
+          },
+        }
       }
     },
   },

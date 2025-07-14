@@ -98,6 +98,7 @@
                   </v-col>
                   <v-col cols="12">
                     <v-text-field
+                      v-if="showPrice"
                       v-model="itemPrice"
                       label="Precio"
                       class="centered-input"
@@ -237,6 +238,18 @@ export default {
     item: {
       type: Object,
       required: true,
+    },
+    showPrice: {
+      type: Boolean,
+      default: true,
+    },
+    minQty: {
+      type: Number,
+      default: 1,
+    },
+    maxQty: {
+      type: Number,
+      default: 999,
     },
   },
   data() {

@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 # from django.contrib.auth import user_login_failed, user_logged_in
 from django.contrib.auth.models import Group, update_last_login
 from django.contrib.sessions.serializers import  JSONSerializer
-from .models import Cia, StakeHolder, User, IpWhiteList
+from .models import Cia, StakeHolder, Customer, User, IpWhiteList
 from .serializers import (
     CiaSerializer,
     UserSerializer,
@@ -18,6 +18,7 @@ from .serializers import (
     ProfileSerializer,
     GroupsSerializer,
     StakeHolderSerializer,
+    CustomerSerializer,
     RenewPasswordSerializer,
 )
 from apps.core import models
@@ -316,6 +317,12 @@ class StakeHolderViewSet(CommonViewSet):
         resultset = serializer.data
 
         return Response(resultset)
+
+
+class CustomerViewSet(CommonViewSet):
+    """ViewSet de clientes"""
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
 
 
 class UserList(ListAPIView):

@@ -11,6 +11,7 @@ app_name = "core"
 router = DefaultRouter()
 router.register(r'cias', views.CiaViewSet, basename='cias')
 router.register(r'stakeholders', views.StakeHolderViewSet, basename='stakeholders')
+router.register(r'customers', views.CustomerViewSet, basename='customers')
 router.register(r'modulos', views.ModuloViewSet, basename='modulos')
 router.register(r'vistas', views.VistaViewSet, basename='vistas')
 router.register(r'vistas-conf', views.VistaConfigViewSet, basename='vistas-conf')

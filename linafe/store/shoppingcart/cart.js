@@ -66,7 +66,11 @@ export const mutations = {
     updateCartState(state.cart)
   },
   CLEAR_CART(state) {
-    state.cart = initCart
+    state.cart = {
+      cartCustomer: {},
+      total: 0,
+      items: [],
+    }
     localStorage.removeItem('lina_cart')
   },
   DECREASE_QUANTITY(state, index) {

@@ -12,6 +12,7 @@ cx-Oracle>=8.1.0,<8.2.0
 drf-dx-datagrid>=0.4.1,<1.0.1
 django-ipware>=3.0.2,<3.1.0
 weasyprint==52.5
+python-ulid==1.1.0
 
 # Celery and related tools
 celery>=5.2.0,<5.3.0
