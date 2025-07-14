@@ -12,6 +12,7 @@ from rest_framework import status
 from rest_framework import authentication, permissions
 from rest_framework.filters import SearchFilter, OrderingFilter
 from ..core.models import SQLQuery
+from ..core.views import CommonViewSet
 from .models import ExtOrderMaster, ExtOrderItem
 from .serializers import ExtOrderMasterSerializer, ExtOrderMasterOnlySerializer, ExtOrderItemSerializer
 
@@ -23,6 +24,7 @@ from django.shortcuts import render
 from django.views import View
 
 from .tasks import send_order_email
+
 
 class CategoryBrandListAPIView(APIView):
     """ This view returns the list of Departments (DEPTO), Categories (CAT), or Subcategories (SUBCAT)
@@ -186,7 +188,7 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
     serializer_class = ExtOrderMasterSerializer
 
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['id', 'created_ad', 'status', 'created_by__username', 'customer_name']
+    search_fields = ['id', 'created_at', 'status', 'created_by__username', 'customer_name']
     ordering_fields = ['id', 'created_at', 'status', 'created_by__username', 'customer_name']
 
     ordering = ['-created_at']
@@ -202,7 +204,7 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
         serializer.save(modified_by=self.request.user)
 
 
-class ExtOrderMasterOnlyViewSet(viewsets.ModelViewSet):
+class ExtOrderMasterOnlyViewSet(CommonViewSet):
     """
     A simple ViewSet for viewing and editing ExtOrderMaster.
     """
@@ -213,7 +215,7 @@ class ExtOrderMasterOnlyViewSet(viewsets.ModelViewSet):
     serializer_class = ExtOrderMasterOnlySerializer
 
 
-class ExtOrderItemViewSet(viewsets.ModelViewSet):
+class ExtOrderItemViewSet(CommonViewSet):
     """
     A simple ViewSet for viewing and editing ExtOrderItem.
     """

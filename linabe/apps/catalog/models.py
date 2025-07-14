@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
-from ..core.models import Common, StakeHolder
+from ..core.models import Common, Customer
 
 LinaUserModel = get_user_model()
 
@@ -14,7 +14,7 @@ def defaultTTL():
     que es la fecha de expiración del catálogo 
     por defecto es 5 días a partir de la fecha actual
     """
-    return timezone.now() + timedelta(days=5)
+    return (timezone.now() + timedelta(days=5)).date()
 
 def genToken():
     """Genera un token único para el catálogo
@@ -28,9 +28,9 @@ def catalog_path(instance, filename):
     La ruta se construye con el ID del item del catálogo para mantener las imágenes organizadas
     """
     itemd = getattr(instance, 'itemdetail')
-    cpath = 'cp' + str(itemd.catalog.id) + '/'
+    cpath = 'cp' + str(itemd.catalog.id) # + '/'
 
-    return os.path.join('images/catalogs/', cpath + filename)
+    return os.path.join('images/catalogs/', cpath, filename)
 
 
 class Category(Common):
@@ -48,6 +48,7 @@ class Category(Common):
     )
     description = models.TextField(blank=True, null=True)
     ext_related_id = models.CharField("ID Externo", max_length=100, blank=True, null=True)
+    image = models.ImageField("Imagen", upload_to='images/categories/', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -84,7 +85,7 @@ class CatalogMaster(Common):
     ttl = models.DateField("TTL", default=defaultTTL)
     seller = models.ForeignKey(LinaUserModel, on_delete=models.SET_NULL, \
              verbose_name='Vendedor', related_name='catalogs_by_seller', null=True)
-    stakeholder = models.ManyToManyField(StakeHolder, verbose_name='Cliente', \
+    customer = models.ManyToManyField(Customer, verbose_name='Customer', \
                   related_name='catalogs_by_customer', blank=True)
 
     def save(self, *args, **kwargs):
@@ -126,7 +127,7 @@ class CatalogDetail(Common):
 
 
 # Modelo para imágenes adicionales para cada item del detalle de catálogo
-class CatalogDetailImage(models.Model):
+class CatalogDetailImage(Common):
     """Modelo para imágenes adicionales para items del detalle de catálogo"""
     itemdetail = models.ForeignKey(CatalogDetail, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField('Imagen', upload_to=catalog_path, blank=True)

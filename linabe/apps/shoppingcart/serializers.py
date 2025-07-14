@@ -18,6 +18,7 @@ class ExtOrderItemSerializer(serializers.ModelSerializer):
 
 
 class ExtOrderMasterSerializer(serializers.ModelSerializer):
+    """Serializer para el modelo ExtOrderMaster con items anidados."""
     items = ExtOrderItemSerializer(many=True)
 
     created_by = serializers.StringRelatedField(default=serializers.CurrentUserDefault(), read_only=True)

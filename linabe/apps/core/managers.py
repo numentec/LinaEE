@@ -4,7 +4,7 @@ from django.db import models
 
 class StakeHolder(models.Manager):
 
-    def get_StakeHolders(self, tipo='all', only_actives=True):
+    def get_StakeHolders(self, tipo=['all'], only_actives=True):
 
         if 'cli' in tipo:
             if only_actives:

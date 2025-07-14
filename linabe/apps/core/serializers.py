@@ -272,6 +272,17 @@ class SQLQuerySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.SQLQuery
         fields = ('id', 'name', 'is_active', 'content', 'ordinal', 'dbtype', 'dbuser', 'dbpass', 'vista')
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    """Serializer para el modelo de cliente"""
+
+    class Meta:
+        model = models.Customer
+        fields = ('id', 'ulid', 'nombre', 'codigo', 'email', 'tel1', 'direccion', 'created_at', 'modified_at', 'is_active')
+        read_only_fields = ('id', 'ulid', 'created_at', 'modified_at', 'created_by', 'modified_by')
+
+
 # class VistaElementAccessSerializer(serializers.ModelSerializer):
 
 #     class Meta:
