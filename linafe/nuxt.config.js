@@ -47,8 +47,8 @@ export default {
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {
     baseURL: process.env.API_URL_SERVER,
-    // browserBaseURL: process.env.API_URL_CLIENT,
-    browserBaseURL: 'http://192.168.97.70:8001/linapi/',
+    browserBaseURL: process.env.API_URL_CLIENT,
+    // browserBaseURL: 'http://192.168.97.70:8001/linapi/',
   },
 
   auth: {

@@ -25,7 +25,7 @@
 <script>
 export default {
   name: 'LinaErrorPage',
-  // layout: 'empty',
+  // layout: 'portal',
   props: {
     error: {
       type: Object,
@@ -45,6 +45,19 @@ export default {
     message() {
       return this.error.message
     },
+  },
+  layout(context) {
+    // Puedes acceder al store desde context
+    // Si usas Nuxt 2, context.$auth o context.store.state.sistema.curuser, etc.
+    // Ejemplo usando Vuex:
+    if (
+      context.store &&
+      context.store.state &&
+      context.store.state.isAuthenticated
+    ) {
+      return 'default'
+    }
+    return 'portal'
   },
   head() {
     // const title =

@@ -100,6 +100,10 @@ class ActiveCustomerCatalogsAPIView(APIView):
     """
     Devuelve los catálogos vigentes de un cliente identificado por ULID.
     """
+
+    authentication_classes = []
+    permission_classes = []
+
     queryset = CatalogMaster.objects.all()
     serializer_class = CatalogMasterSerializer
 

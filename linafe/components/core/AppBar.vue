@@ -60,7 +60,7 @@
                 v-bind="attrs"
                 v-on="{ ...tooltip, ...menu }"
               >
-                <img v-if="loggedInUser.foto" :src="imgSrc" alt="U" />
+                <img v-if="imgSrc" :src="imgSrc" alt="U" />
                 <v-icon v-else dark>mdi-account-circle</v-icon>
               </v-avatar>
             </template>
@@ -137,9 +137,15 @@ export default {
       'getCartProductCount',
     ]),
     imgSrc() {
+      if (!this.isAuthenticated) {
+        return ''
+      }
       return this.$config.publicURL + this.loggedInUser.foto
     },
     capUserName() {
+      if (!this.isAuthenticated) {
+        return 'Guest'
+      }
       const lu = this.loggedInUser.username
       if (lu) {
         return lu.charAt(0).toUpperCase() + lu.slice(1)
@@ -152,6 +158,10 @@ export default {
     ...mapActions('core', ['setDrawer', 'setIsMini', 'setIsExpanded']),
     ...mapActions('sistema', ['userLogout', 'userProfile', 'setCurCia']),
     goProfile() {
+      if (!this.isAuthenticated) {
+        this.$router.push('/login')
+        return
+      }
       const curID = this.loggedInUser.id
       if (this.getUsers.length === 0) {
         this.userProfile(curID).then(() => {

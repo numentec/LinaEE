@@ -1,3 +1,6 @@
+import axios from 'axios'
+const axiosInstance = axios
+
 export const namespaced = true
 
 // Mock data for custom catalog items
@@ -156,17 +159,22 @@ export const actions = {
     commit('SET_LOADING_STATUS')
   },
 
-  async fetchItems({ commit, state }, payload) {
+  async fetchItems({ commit }, payload) {
     commit('SET_LOADING_STATUS')
-
-    return await this.$axios
-      .get('catalog/catalogs/', {
-        params: { type: 'customer', ulid: payload.ulid, cia: '01' },
-      })
+    const APIURL = this.$browserBaseURL || process.env.API_URL_CLIENT
+    console.log('***** APIURL *****', APIURL)
+    return await axiosInstance
+      .get(`${APIURL}catalog/by-customer/${payload.ulid}`)
       .then((response) => {
         commit('SET_CUSTOM_CATALOGS', response.data)
         commit('SET_LOADING_STATUS')
+        // commit('SET_CUSTOMER')
         return { items: response.data }
+      })
+      .catch((error) => {
+        commit('SET_LOADING_STATUS')
+        console.error('Error fetching items:', error)
+        throw error
       })
   },
 
