@@ -1,4 +1,4 @@
-FROM python:latest
+FROM python:3.9.6
 LABEL maintainer="Numentec"
 
 # Installing Oracle instant client

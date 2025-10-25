@@ -4,16 +4,17 @@ services:
   # MariaDB service
   db:
     container_name: linadb
-    image: mariadb/server:10.4
+    image: linuxserver/mariadb:10.5.17
     # restart: on-failure:1
     restart: always
     environment: 
-        MARIADB_ROOT_PASSWORD: "${DB_ROOT_PW}"
-        MARIADB_DATABASE: "${DB_NAME}"
-        MARIADB_USER: "${DB_USER}"
-        MARIADB_PASSWORD: "${DB_USER_PW}"
-        MARIADB_TZ: "${LOC_TZ}"
-        TZ: "${LOC_TZ}"
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PW}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_USER_PW}
+      - TZ=${LOC_TZ}
     networks: 
       net:
         ipv4_address: 192.168.15.5
@@ -30,6 +31,7 @@ services:
     build:
       context: ./linabe
       dockerfile: Dockerfile
+    image: ${IMAGE_BE}:${TAG}
     container_name: linabe
     env_file:
       - ./.env
@@ -51,22 +53,45 @@ services:
     build:
       context: ./linafe
       dockerfile: Dockerfile
+    image: ${IMAGE_FE}:${TAG}
     container_name: linafe
     environment:
       HOST: 0.0.0.0
       TZ: "${LOC_TZ}"
-    volumes:
-      - ./linafe:/linafe
     networks: 
       net:
         ipv4_address: 192.168.15.3
     ports:
       - 3001:3001
+    volumes:
+      - ./linafe:/linafe
+
     command: 'npm run dev'
     depends_on:
       - be
     restart: unless-stopped
 
+  # Perfil PROD como servicio separado, apuntando a la MISMA imagen
+  fe_prod:
+    image: ${IMAGE_FE}:${TAG}         # misma imagen construida arriba
+    container_name: linafe_prod
+    environment:
+      HOST: 0.0.0.0
+      TZ: "${LOC_TZ}"
+    networks:
+      net:
+        ipv4_address: 192.168.15.13
+    ports:
+      - "3005:3005"
+    # Sin volúmenes: ejecuta lo que trae la imagen
+    command: "npm run start"
+    depends_on:
+      - be
+    restart: unless-stopped
+
+
+  # Redis service for Celery
+  
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -118,6 +143,7 @@ services:
 
 volumes:
   dbdata:
+  linafe_node_modules:
 
 networks:
   net:
