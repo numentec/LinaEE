@@ -110,7 +110,7 @@ class ActiveCustomerCatalogsAPIView(APIView):
     def get(self, request, ulid):
         # Validar que el parámetro sea un ULID válido
         if not is_ulid(ulid):
-            return Response({'detail': 'ULID inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Identificador inválido.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Buscar el cliente
         try:
@@ -122,8 +122,21 @@ class ActiveCustomerCatalogsAPIView(APIView):
         now = timezone.now()
         catalogs = CatalogMaster.objects.filter(customer=customer, ttl__gte=now)
 
-        serializer = CatalogMasterSerializer(catalogs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        catalog_serializer = CatalogMasterSerializer(catalogs, many=True)
+        
+        # Construir la respuesta con información del customer y los catálogos
+        response_data = {
+            'customer': {
+                'id': customer.id,
+                'name': customer.nombre,
+                'email': customer.email,
+                'ulid': customer.ulid,
+            },
+            'catalogs': catalog_serializer.data,
+            'total_catalogs': catalogs.count()
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class ValidCustomerCatalogAPIView(APIView):

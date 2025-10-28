@@ -478,7 +478,7 @@ class StakeHolder(Common, Identidad):
     birth_date = models.DateField('Fecha de Nacimiento', blank=True, null=True)
     locale = models.CharField('Localización', max_length=5, choices=LOCALE_CHOICES, default='es_PA')
     website = models.URLField('URL', blank=True, null=True)
-
+    
     ulid = models.CharField('ULID', max_length=26, unique=True, default=genULID, editable=False, help_text='Identificador único de 26 caracteres')
 
     objects =  models.Manager()
@@ -511,8 +511,6 @@ class StakeHolder(Common, Identidad):
 
 class Customer(Common, Identidad):
     """Modelo para clientes"""
-    # Hereda de StakeHolder, por lo que no es necesario definir los campos de Identidad nuevamente
-
     # Aquí puedes agregar campos específicos para el cliente si es necesario
     # Por ejemplo, un campo adicional para el cliente
     ulid = models.CharField('ULID', max_length=26, unique=True, default=genULID, editable=False, help_text='Identificador único de 26 caracteres')
