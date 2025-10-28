@@ -1,6 +1,3 @@
-import axios from 'axios'
-const axiosInstance = axios
-
 export const namespaced = true
 
 // Mock data for custom catalog items
@@ -161,21 +158,34 @@ export const actions = {
 
   async fetchItems({ commit }, payload) {
     commit('SET_LOADING_STATUS')
-    const APIURL = this.$browserBaseURL || process.env.API_URL_CLIENT
-    console.log('***** APIURL *****', APIURL)
-    return await axiosInstance
-      .get(`${APIURL}catalog/by-customer/${payload.ulid}`)
-      .then((response) => {
-        commit('SET_CUSTOM_CATALOGS', response.data)
-        commit('SET_LOADING_STATUS')
-        // commit('SET_CUSTOMER')
-        return { items: response.data }
-      })
-      .catch((error) => {
-        commit('SET_LOADING_STATUS')
-        console.error('Error fetching items:', error)
-        throw error
-      })
+
+    try {
+      const response = await this.$axios.get(
+        `catalog/by-customer/${payload.ulid}`
+      )
+
+      // La estructura de respuesta incluye customer y catalogs
+      if (response.data.customer) {
+        commit('SET_CUSTOMER', response.data.customer)
+      }
+
+      // Los catálogos están en response.data.catalogs
+      const catalogs = response.data.catalogs || response.data || []
+      commit('SET_CUSTOM_CATALOGS', catalogs)
+      commit('SET_LOADING_STATUS')
+
+      // return {
+      //   items: catalogs,
+      //   customer: response.data.customer,
+      //   total_catalogs: response.data.total_catalogs || catalogs.length,
+      // }
+    } catch (error) {
+      commit('SET_CUSTOM_CATALOGS', [])
+      commit('SET_LOADING_STATUS')
+      // eslint-disable-next-line no-console
+      console.error('Error fetching items:', error)
+      throw error
+    }
   },
 
   // Función temporal para generar datos de prueba para los productos
@@ -231,6 +241,7 @@ export const actions = {
 export const getters = {
   getCustomCatalog: (state) => state.customCatalog,
   getAllCustomCatalogs: (state) => state.customCatalogs,
+  getTotalCatalogs: (state) => state.customCatalogs.length,
   getCustomCatalogById: (state) => (id) =>
     state.customCatalogs.find((cc) => cc.id === id),
   getCustomCatalogsLoaded: (state) => state.customCatalogsLoaded,
@@ -238,6 +249,7 @@ export const getters = {
   getCustomCatalogCount: (state) => state.customCatalogs.length,
   getCustomer: (state) => state.customer,
   getCustomerId: (state) => state.customer.id || null,
+  getCustomerULID: (state) => state.customer.ulid || '',
   getCustomCatalogToken: (state) => {
     return state.customCatalog.token || null
   },

@@ -1,9 +1,9 @@
 <template>
   <div>
-    <h1>All Custom Catalogs</h1>
+    <h1>{{ title }}</h1>
     <p>
       Aquí puedes ver todos los catálogos personalizados para
-      {{ $route.params.customer_id }}.
+      {{ getCustomer.name }}.
     </p>
     <v-row>
       <v-col cols="12">
@@ -47,30 +47,24 @@ export default {
 
   async asyncData({ params, store, error }) {
     try {
-      // const cId = store.getters['customshopping/customcatalog/getCustomerId']
-      const cId = params.customer_id
-      console.log('***** Customer ID: *****', cId)
+      const cULID = params.customer_ulid
 
-      if (!cId) {
+      if (!cULID) {
         error({
           statusCode: 404,
           message: 'Customer ID is required',
         })
         return
       }
-      console.log('***** Customer ID Fine: *****')
-      // Set the customer ID in the store
-      // await store.dispatch('customshopping/customcatalog/setCustomerId', cId)
 
       await store.dispatch('customshopping/customcatalog/fetchItems', {
-        ulid: cId,
+        ulid: cULID,
       })
       // await store.dispatch('customshopping/customcatalog/fetchData', {
       //   name: 'Catalog',
       //   link: '',
       // })
     } catch (err) {
-      console.log('***** ERROR *****', err)
       if (err.response) {
         error({
           statusCode: err.response.status,
@@ -79,7 +73,8 @@ export default {
       } else {
         error({
           statusCode: 503,
-          message: 'No se pudo cargar la lista. Intente luego',
+          message:
+            'No se pudo cargar la lista. Intente luego por favor. (INDEX)',
         })
       }
     }
@@ -96,11 +91,11 @@ export default {
       'getSelectedBrands',
       'getSearchCustomCatalog',
       'getAllCustomCatalogs',
-      'getCustomerId',
+      'getTotalCatalogs',
+      'getCustomer',
+      'getCustomerULID',
       'isListView',
     ]),
-
-    // ...mapGetters({ customerId: 'customshopping/customcatalog/getCustomerId' }),
 
     filteredItems() {
       return this.getAllCustomCatalogs.filter((item) => {
@@ -126,6 +121,18 @@ export default {
         return item.name.toLowerCase().includes(searchDepartment.toLowerCase())
       })
     },
+
+    title() {
+      if (!this.getTotalCatalogs) {
+        return 'No Custom Catalogs Available'
+      }
+
+      if (this.getTotalCatalogs === 1) {
+        return `${this.getTotalCatalogs} Custom Catalog`
+      }
+
+      return `${this.getTotalCatalogs} Custom Catalogs`
+    },
   },
 
   watch: {
@@ -143,7 +150,7 @@ export default {
     ...mapActions('customshopping/customcatalog', ['setCountFilteredCC']),
     setLink(catalogToken) {
       return (
-        `/portal/customshopping/${this.getCustomerId}/${catalogToken}` ??
+        `/portal/customshopping/${this.getCustomer.ulid}/${catalogToken}` ??
         this.link
       )
     },

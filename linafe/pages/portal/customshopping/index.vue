@@ -43,7 +43,7 @@
 <script>
 export default {
   name: 'CustomShopping',
-  layout: 'publicapps',
+  layout: 'portal',
   data: () => ({
     attrs: {
       class: 'mb-6',
