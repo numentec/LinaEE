@@ -50,7 +50,7 @@ export default {
     },
     showLogout: {
       type: Boolean,
-      default: false, // Por defecto, mostrar el botón de logout
+      default: true, // Por defecto, mostrar el botón de logout
     },
   },
 
