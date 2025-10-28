@@ -1,5 +1,4 @@
-version: '3'
-
+version: '3.8'
 services:
   # MariaDB service
   db:
@@ -42,14 +41,14 @@ services:
         ipv4_address: 192.168.15.4
     ports:
       - 8001:8001
-    command: 'python ./manage.py runserver 0.0.0.0:8001'
+    command: ['./be.sh']
     stop_signal: SIGINT
     depends_on:
       - db
     restart: unless-stopped
 
   # Nuxt frontend service
-  fe:
+  fe_dev:
     build:
       context: ./linafe
       dockerfile: Dockerfile
@@ -57,7 +56,9 @@ services:
     container_name: linafe
     environment:
       HOST: 0.0.0.0
+      PORT: 3001
       TZ: "${LOC_TZ}"
+      NODE_ENV: development
     networks: 
       net:
         ipv4_address: 192.168.15.3
@@ -65,8 +66,8 @@ services:
       - 3001:3001
     volumes:
       - ./linafe:/linafe
-
-    command: 'npm run dev'
+      - linafe_node_modules:/linafe/node_modules
+    command: ['./fe.sh']
     depends_on:
       - be
     restart: unless-stopped
@@ -77,14 +78,16 @@ services:
     container_name: linafe_prod
     environment:
       HOST: 0.0.0.0
+      PORT: 3005
       TZ: "${LOC_TZ}"
+      NODE_ENV: production
     networks:
       net:
         ipv4_address: 192.168.15.13
     ports:
       - "3005:3005"
     # Sin volúmenes: ejecuta lo que trae la imagen
-    command: "npm run start"
+    command: ['./fe.sh']
     depends_on:
       - be
     restart: unless-stopped
