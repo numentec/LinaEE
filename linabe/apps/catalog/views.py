@@ -6,6 +6,7 @@ from .serializers import (
     CategorySerializer,
     TagSerializer,
     CatalogSerializer,
+    CatalogCustomerSerializer,
     CatalogMasterSerializer,
     CatalogDetailSerializer,
     CatalogDetailImageSerializer,
@@ -143,8 +144,12 @@ class ValidCustomerCatalogAPIView(APIView):
     """
     Devuelve un catálogo vigente de un cliente identificado por ULID y token.
     """
+
+    authentication_classes = []
+    permission_classes = []
+
     queryset = CatalogMaster.objects.all()
-    serializer_class = CatalogSerializer
+    serializer_class = CatalogCustomerSerializer
 
     def get(self, request, ulid, token):
         # Validar que el parámetro sea un ULID válido
@@ -160,13 +165,30 @@ class ValidCustomerCatalogAPIView(APIView):
         # Obtener el catálogo vigente con el token dado
         now = timezone.now()
         try:
-            catalog = CatalogMaster.objects.get(
+            catalog = CatalogMaster.objects.filter(
                 customer=customer,
                 token=token,
                 ttl__gte=now
-            )
-        except CatalogMaster.DoesNotExist:
-            return Response({'detail': 'Catálogo no encontrado o no vigente.'}, status=status.HTTP_404_NOT_FOUND)
+            ).prefetch_related('catalog_details', 'customer').first()
+            
+            if not catalog:
+                return Response({'detail': 'Catálogo no encontrado o no vigente.'}, status=status.HTTP_404_NOT_FOUND)
+                
+        except Exception as e:
+            return Response({'detail': 'Error al buscar el catálogo.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        serializer = CatalogSerializer(catalog)
+        serializer = CatalogCustomerSerializer(catalog)
+        
+        # Opción alternativa: Modificar respuesta manualmente
+        # serializer = CatalogSerializer(catalog)
+        # response_data = serializer.data.copy()
+        # 
+        # # Mapear campos con nombres alternativos
+        # response_data['catalog_id'] = response_data.pop('id', None)
+        # response_data['catalog_name'] = response_data.pop('name', None)
+        # response_data['valid_until'] = response_data.pop('ttl', None)
+        # response_data['access_token'] = response_data.pop('token', None)
+        # 
+        # return Response(response_data, status=status.HTTP_200_OK)
+        
         return Response(serializer.data, status=status.HTTP_200_OK)

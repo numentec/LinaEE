@@ -116,6 +116,8 @@ class CatalogDetail(Common):
     tags = models.ManyToManyField(Tag, related_name='catalog_details_tag', blank=True)
     category = models.ForeignKey(Category, related_name='catalog_details_category', blank=True, null=True, on_delete=models.SET_NULL)
     catalog =  models.ForeignKey(CatalogMaster, related_name='catalog_details', on_delete=models.CASCADE)
+    brand = models.CharField("Marca", max_length=100, blank=True, null=True)
+    description = models.TextField("Descripción", blank=True, null=True)
 
     class Meta:
         db_table = 'catalog_catalogd'

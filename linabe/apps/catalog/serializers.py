@@ -29,6 +29,44 @@ class CatalogDetailImageSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'modified_at', 'created_by', 'modified_by')
 
 
+class CatalogDetailCustomerSerializer(serializers.ModelSerializer):
+    """Serializer para items del catálogo con nombres de campos personalizados."""
+    item_id = serializers.IntegerField(source='id')
+    id = serializers.CharField(source='sku')
+    instock = serializers.IntegerField(source='stock')
+    image = serializers.SerializerMethodField()
+
+    # def get_image(self, obj):
+    #     """Obtiene la URL de la imagen principal del item del catálogo."""
+    #     if obj.images.exists():
+    #         request = self.context.get('request')
+    #         image_url = obj.images.first().image.url
+    #         return request.build_absolute_uri(image_url) if request else image_url
+    #     return None
+    
+    def get_image(self, obj):
+        """Genera imagen .jpg a partir del sku del item del catálogo."""
+        # Lógica para generar la imagen basada en el SKU
+        return f"{obj.sku}.jpg"
+
+
+    class Meta:
+        model = CatalogDetail
+        fields = ('item_id', 'id', 'name', 'description', 'price', 'instock', 
+                 'image', 'brand', 'minqty', 'maxqty')
+
+
+class CatalogCustomerSerializer(serializers.ModelSerializer):
+    """Serializer personalizado para el catálogo con items anidados. Para vista de clientes"""
+
+    items = CatalogDetailCustomerSerializer(source='catalog_details', many=True)
+    
+    class Meta:
+        model = CatalogMaster
+        fields = '__all__'
+        read_only_fields = ('id', 'created_at', 'modified_at', 'seller')
+
+
 class CatalogSerializer(serializers.ModelSerializer):
     """Serializer para el modelo CatalogMaster con items anidados."""
     catalog_details = CatalogDetailSerializer(many=True)
