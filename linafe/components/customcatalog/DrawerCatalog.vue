@@ -1,10 +1,6 @@
 <template>
   <v-list shaped>
-    <v-list-item
-      link
-      nuxt
-      :to="`/portal/customshopping/${customerId}/all_custom_catalogs`"
-    >
+    <v-list-item link nuxt :to="`/portal/customshopping/${customerULID}/`">
       <v-list-item-icon>
         <v-icon>mdi-bookshelf</v-icon>
       </v-list-item-icon>
@@ -15,7 +11,7 @@
     <v-list-item
       link
       nuxt
-      :to="`/portal/customshopping/${customerId}/${catalogToken}`"
+      :to="`/portal/customshopping/${customerULID}/${catalogToken}`"
     >
       <v-list-item-icon>
         <v-icon>mdi-sort-alphabetical-variant</v-icon>
@@ -70,6 +66,7 @@ export default {
   computed: {
     ...mapGetters({
       customerId: 'customshopping/customcatalog/getCustomerId',
+      customerULID: 'customshopping/customcatalog/getCustomerULID',
       catalogToken: 'customshopping/customcatalog/getCustomCatalogToken',
     }),
   },

@@ -156,22 +156,42 @@ export const actions = {
     commit('SET_LOADING_STATUS')
   },
 
-  async fetchItems({ commit }, payload) {
+  async fetchItems({ commit, dispatch }, payload) {
     commit('SET_LOADING_STATUS')
 
+    let mutC = ''
+
     try {
-      const response = await this.$axios.get(
-        `catalog/by-customer/${payload.ulid}`
-      )
+      // Construir endpoint dependiendo de si existe token
+      const { endpoint, mutCatalog } = payload.token
+        ? {
+            endpoint: `catalog/by-customer/${payload.ulid}/${payload.token}`,
+            mutCatalog: 'SET_CUSTOM_CATALOG',
+          }
+        : {
+            endpoint: `catalog/by-customer/${payload.ulid}`,
+            mutCatalog: 'SET_CUSTOM_CATALOGS',
+          }
+
+      mutC = mutCatalog
+
+      const response = await this.$axios.get(endpoint)
 
       // La estructura de respuesta incluye customer y catalogs
-      if (response.data.customer) {
+      if (mutCatalog === 'SET_CUSTOM_CATALOGS') {
         commit('SET_CUSTOMER', response.data.customer)
       }
 
       // Los catálogos están en response.data.catalogs
       const catalogs = response.data.catalogs || response.data || []
-      commit('SET_CUSTOM_CATALOGS', catalogs)
+      commit(mutCatalog, catalogs)
+
+      // Ejecutar acción de otro módulo Vuex
+      if (catalogs.items) {
+        await dispatch('shoppingcart/products/setProducts', catalogs.items, {
+          root: true,
+        })
+      }
       commit('SET_LOADING_STATUS')
 
       // return {
@@ -180,8 +200,7 @@ export const actions = {
       //   total_catalogs: response.data.total_catalogs || catalogs.length,
       // }
     } catch (error) {
-      commit('SET_CUSTOM_CATALOGS', [])
-      commit('SET_LOADING_STATUS')
+      commit(mutC, [])
       // eslint-disable-next-line no-console
       console.error('Error fetching items:', error)
       throw error

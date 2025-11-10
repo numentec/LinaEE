@@ -6,7 +6,7 @@
           {{ `${is_expanded ? 'mdi-backburger' : 'mdi-menu'}` }}
         </v-icon>
       </v-app-bar-nav-icon>
-      <v-toolbar-title>LinaEE Demo Portal</v-toolbar-title>
+      <v-toolbar-title>LinaEE Customer Portal</v-toolbar-title>
       <v-spacer />
       <v-badge
         v-show="getCartItemCount > 0"
@@ -31,10 +31,7 @@
           Login
         </v-btn>
       </v-card-actions>
-      <v-btn
-        icon
-        @click="$router.push('/portal/customshopping/Demo/my-catalog')"
-      >
+      <v-btn icon @click="$router.push('/login')">
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </v-app-bar>

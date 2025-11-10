@@ -129,8 +129,6 @@ export const actions = {
       return
     }
 
-    console.log('***** src *****', src)
-
     await this.$axios
       .get(`shoppingcart/itemimages/${src.imgID}`)
       .then((response) => {
@@ -144,6 +142,10 @@ export const actions = {
         commit('SET_ITEM_IMAGES', [src.imgSrc])
         console.error(error)
       })
+  },
+
+  setProducts({ commit }, products) {
+    commit('SET_PRODUCTS', products)
   },
 
   setSearchProduct({ commit }, search) {

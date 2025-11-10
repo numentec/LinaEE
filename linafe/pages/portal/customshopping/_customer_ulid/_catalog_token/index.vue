@@ -3,11 +3,11 @@
     <v-row>
       <v-col cols="12" md="12">
         <h1 class="text-center">
-          Custom Shopping Cart {{ $route.params.catalog_token }}
+          Custom Shopping Cart {{ getCustomCatalog.name }}
         </h1>
         <p class="text-center">
           This is a custom shopping cart page for
-          {{ $route.params.customer_id }}.
+          {{ getCustomer.name }}
         </p>
       </v-col>
     </v-row>
@@ -67,12 +67,11 @@ export default {
       se podría necesitar para pruebas en desarrollo.
       */
       // eslint-disable-next-line camelcase
-      const { customer_id, catalog_token } = params
-      console.log('Customer ID:', customer_id)
-      console.log('Catalog Token:', catalog_token)
-      await store.dispatch('shoppingcart/products/fetchData', {
-        name: 'Product',
-        link: '',
+      const { customer_ulid, catalog_token } = params
+
+      await store.dispatch('customshopping/customcatalog/fetchItems', {
+        ulid: customer_ulid,
+        token: catalog_token,
       })
     } catch (err) {
       if (err.response) {
@@ -81,7 +80,7 @@ export default {
           message: err.response.data.message || 'Error fetching products',
         })
       } else {
-        error({ statusCode: 500, message: 'Server Error' })
+        error({ statusCode: 500, message: 'Unknown Error' })
       }
     }
   },
@@ -105,6 +104,11 @@ export default {
       'getAllProducts',
       'getSearchProduct',
       'getItemImages',
+    ]),
+
+    ...mapGetters('customshopping/customcatalog', [
+      'getCustomCatalog',
+      'getCustomer',
     ]),
 
     filteredItems() {
@@ -146,26 +150,26 @@ export default {
     window.scrollTo(0, 0)
     this.setCountFilteredProducts(this.filteredItems?.length)
 
-    const customerId = this.$route.params.customer_id
-    const token = this.$route.params.catalog_token
+    // const customerId = this.$route.params.customer_id
+    // const token = this.$route.params.catalog_token
 
-    this.setCustomCatalog({
-      id: '1',
-      token,
-      name: 'Custom Shopping',
-      link: `/portal/customshopping/${customerId}/${token}`,
-      type: 'custom',
-      salemanName: 'Demo Salesman',
-      salemanEmail: 'demosaleman@numen.pa',
-      salemanId: 'demo-salesmanId',
-      customerId,
-    })
+    // this.setCustomCatalog({
+    //   id: '1',
+    //   token,
+    //   name: 'Custom Shopping',
+    //   link: `/portal/customshopping/${customerId}/${token}`,
+    //   type: 'custom',
+    //   salemanName: 'Demo Salesman',
+    //   salemanEmail: 'demosaleman@numen.pa',
+    //   salemanId: 'demo-salesmanId',
+    //   customerId,
+    // })
 
-    this.setCustomer({
-      id: customerId,
-      name: 'Demo Customer',
-      email: 'demo@example.com',
-    })
+    // this.setCustomer({
+    //   id: customerId,
+    //   name: 'Demo Customer',
+    //   email: 'demo@example.com',
+    // })
   },
 
   methods: {
