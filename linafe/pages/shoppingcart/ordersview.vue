@@ -11,12 +11,12 @@
                 v-bind="attrs"
                 color="cyan lighten-1"
                 v-on="on"
-                @click="$router.back()"
+                @click="returnBack()"
               >
                 <v-icon>mdi-chevron-left</v-icon>
               </v-btn>
             </template>
-            <span>Back to previous view</span>
+            <span>{{ returnBackMessage }}</span>
           </v-tooltip>
           <v-spacer></v-spacer>
           <v-btn
@@ -63,16 +63,24 @@
             @input="updateFilter"
           ></v-text-field>
           <v-spacer></v-spacer>
-          <v-btn
-            v-show="!isMobile"
-            class="ma-2"
-            icon
-            color="cyan lighten-1"
-            @click="changeView"
-          >
-            <v-icon v-if="isListView">mdi-view-grid</v-icon>
-            <v-icon v-else>mdi-format-list-text</v-icon>
-          </v-btn>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                v-show="!isMobile"
+                class="ma-2"
+                icon
+                color="cyan lighten-1"
+                v-bind="attrs"
+                v-on="on"
+                @click="changeView"
+              >
+                <v-icon>{{
+                  isListView ? 'mdi-view-grid' : 'mdi-format-list-text'
+                }}</v-icon>
+              </v-btn>
+            </template>
+            <span>{{ isListView ? 'Grid view' : 'List view' }}</span>
+          </v-tooltip>
           <v-menu v-model="vmenu" :close-on-content-click="false" offset-y>
             <template v-slot:activator="{ on, attrs }">
               <v-btn icon color="cyan lighten-1" v-bind="attrs" v-on="on">
@@ -303,6 +311,9 @@ export default {
     cOrderID() {
       return this.curOrder ? String(this.curOrder?.id) : ''
     },
+    returnBackMessage() {
+      return this.isListView ? 'Back to previous view' : 'List view'
+    },
   },
 
   watch: {
@@ -386,6 +397,13 @@ export default {
           window.scrollTo(0, 0)
         }
       })
+    },
+    returnBack() {
+      if (this.isListView) {
+        this.$router.back()
+        return
+      }
+      this.changeView()
     },
     goToOrder(id) {
       // await this.setCurrentIndex(this.getIndexByOrderID(id))

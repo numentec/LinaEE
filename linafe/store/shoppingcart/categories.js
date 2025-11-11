@@ -56,6 +56,7 @@ export const state = () => ({
     cat: '0',
     scat: '0',
   },
+  parent_category: '',
   customers: [],
   isLoading: false,
   breadcrumbs: [],
@@ -215,6 +216,60 @@ export const actions = {
           type: 'CAT',
           cia: '01',
           dep: state.select_products_by.depto || 'ALL',
+        }
+        break
+      case 'Subcategory':
+        curMutation = 'SET_SUBCATEGORIES'
+        endpointParams = {
+          type: 'SCAT',
+          cia: '01',
+          dep: state.select_products_by.depto || 'ALL',
+          cat: state.select_products_by.cat || 'ALL',
+        }
+        break
+      case 'Product':
+        curMutation = 'SET_PRODUCTS'
+        endpointParams = { type: 'PROD', cia: '01' }
+        break
+      case 'Brand':
+        curMutation = 'SET_BRANDS'
+        endpointParams = { type: 'BRAND', cia: '01' }
+        break
+      case 'Cliente':
+        curMutation = 'SET_CUSTOMERS'
+        endpointParams = { type: 'CLI', cia: '01' }
+        break
+    }
+
+    return await this.$axios
+      .get('shoppingcart/catsbrands/', {
+        params: endpointParams,
+      })
+      .then((response) => {
+        commit(curMutation, response.data)
+        commit('SET_LOADING_STATUS')
+        return { items: response.data }
+      })
+  },
+
+  async fetchCategories({ commit, state }, payload) {
+    commit('SET_LOADING_STATUS')
+
+    let curMutation = ''
+    let endpointParams = {}
+
+    switch (payload.name) {
+      case 'Department':
+      case 'Catalog':
+        curMutation = 'SET_DEPARTMENTS'
+        endpointParams = { type: 'DEPTO', cia: '01' }
+        break
+      case 'Category':
+        curMutation = 'SET_CATEGORIES'
+        endpointParams = {
+          type: 'CAT',
+          cia: '01',
+          parent: state.parent_category || 'ALL',
         }
         break
       case 'Subcategory':
