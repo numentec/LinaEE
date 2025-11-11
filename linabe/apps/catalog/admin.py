@@ -5,7 +5,8 @@ from apps.catalog import models
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'parent', 'description', 'ext_related_id')
     search_fields = ('name', 'description')
-    list_filter = ('parent',)
+    list_filter = ('parent', 'available_for_companies')
+    filter_horizontal = ('available_for_companies',)  # Widget mejorado para M2M
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')

@@ -4,6 +4,8 @@ from ..core.views import CommonViewSet
 from .models import Category, Tag, CatalogMaster, CatalogDetail, CatalogDetailImage
 from .serializers import (
     CategorySerializer,
+    CategoryWithCompaniesSerializer,
+    CategoryHierarchySerializer,
     TagSerializer,
     CatalogSerializer,
     CatalogCustomerSerializer,
@@ -11,7 +13,7 @@ from .serializers import (
     CatalogDetailSerializer,
     CatalogDetailImageSerializer,
 )
-from ..core.models import Customer
+from ..core.models import Customer, Cia
 
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -192,3 +194,122 @@ class ValidCustomerCatalogAPIView(APIView):
         # return Response(response_data, status=status.HTTP_200_OK)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CategoriesListAPIView(APIView):
+    """
+    1. Listado general de todas las categorías que incluya para qué compañías está disponible cada una.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        """Retorna todas las categorías con información de compañías disponibles"""
+        categories = Category.objects.filter(is_active=True).prefetch_related('available_for_companies')
+        serializer = CategoryWithCompaniesSerializer(categories, many=True)
+        
+        return Response({
+            'categories': serializer.data,
+            'total': categories.count()
+        }, status=status.HTTP_200_OK)
+
+
+class TopCategoriesByCompanyAPIView(APIView):
+    """
+    2. Listado de categorías que no tengan padre y que estén disponibles para una Cia específica.
+    Es decir los top fathers de una cía específica.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, company_id):
+        """Retorna categorías padre (sin parent) disponibles para una compañía específica"""
+        try:
+            company = Cia.objects.get(id=company_id)
+        except Cia.DoesNotExist:
+            return Response({'detail': 'Compañía no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Categorías padre (sin parent) que están disponibles para esta compañía
+        # O que no tienen restricciones de compañía (disponibles para todas)
+        from django.db.models import Q
+        
+        top_categories = Category.objects.filter(
+            parent__isnull=True,  # Sin padre (categorías raíz)
+            is_active=True
+        ).filter(
+            Q(available_for_companies=company) |  # Disponible para esta compañía
+            Q(available_for_companies__isnull=True)  # Sin restricciones
+        ).distinct().prefetch_related('available_for_companies', 'children')
+
+        serializer = CategoryHierarchySerializer(
+            top_categories, 
+            many=True, 
+            context={'company_id': company_id, 'include_children': False}
+        )
+        
+        return Response({
+            'company': {
+                'id': company.id,
+                'codigo': company.codigo,
+                'nombre': company.nombre
+            },
+            'top_categories': serializer.data,
+            'total': top_categories.count()
+        }, status=status.HTTP_200_OK)
+
+
+class CategoriesByParentAndCompanyAPIView(APIView):
+    """
+    3. Listado de categorías dados un padre y Cía específicos.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, company_id, parent_id):
+        """Retorna subcategorías de un padre específico disponibles para una compañía"""
+        try:
+            company = Cia.objects.get(id=company_id)
+        except Cia.DoesNotExist:
+            return Response({'detail': 'Compañía no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            parent_category = Category.objects.get(id=parent_id, is_active=True)
+        except Category.DoesNotExist:
+            return Response({'detail': 'Categoría padre no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar que la categoría padre esté disponible para esta compañía
+        if not parent_category.is_available_for_company(company):
+            return Response({'detail': 'La categoría padre no está disponible para esta compañía.'}, 
+                          status=status.HTTP_403_FORBIDDEN)
+
+        # Obtener subcategorías del padre que estén disponibles para esta compañía
+        from django.db.models import Q
+        
+        subcategories = Category.objects.filter(
+            parent=parent_category,
+            is_active=True
+        ).filter(
+            Q(available_for_companies=company) |  # Disponible para esta compañía
+            Q(available_for_companies__isnull=True)  # Sin restricciones
+        ).distinct().prefetch_related('available_for_companies', 'children')
+
+        serializer = CategoryHierarchySerializer(
+            subcategories, 
+            many=True, 
+            context={'company_id': company_id, 'include_children': True}
+        )
+        
+        return Response({
+            'company': {
+                'id': company.id,
+                'codigo': company.codigo,
+                'nombre': company.nombre
+            },
+            'parent_category': {
+                'id': parent_category.id,
+                'name': parent_category.name,
+                'description': parent_category.description
+            },
+            'subcategories': serializer.data,
+            'total': subcategories.count()
+        }, status=status.HTTP_200_OK)

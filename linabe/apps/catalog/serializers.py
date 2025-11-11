@@ -1,11 +1,71 @@
 from rest_framework import serializers
 from .models import Category, Tag, CatalogMaster, CatalogDetail, CatalogDetailImage
+from ..core.models import Cia
+
+
+class CiaSimpleSerializer(serializers.ModelSerializer):
+    """Serializer simple para mostrar información básica de Cia"""
+    class Meta:
+        model = Cia
+        fields = ('id', 'codigo', 'nombre', 'nombre_corto')
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
+
+
+class CategoryWithCompaniesSerializer(serializers.ModelSerializer):
+    """Serializer para Category que incluye las compañías disponibles"""
+    available_companies = CiaSimpleSerializer(source='available_for_companies', many=True, read_only=True)
+    available_companies_count = serializers.SerializerMethodField()
+    parent_name = serializers.CharField(source='parent.name', read_only=True)
+    children_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'parent', 'parent_name', 'description', 'ext_related_id', 
+                 'image', 'available_companies', 'available_companies_count', 'children_count',
+                 'created_at', 'modified_at', 'is_active')
+    
+    def get_available_companies_count(self, obj):
+        """Retorna el número de compañías para las que está disponible"""
+        return obj.available_for_companies.count()
+    
+    def get_children_count(self, obj):
+        """Retorna el número de subcategorías"""
+        return obj.children.count()
+
+
+class CategoryHierarchySerializer(serializers.ModelSerializer):
+    """Serializer para mostrar categorías en jerarquía (padre e hijos)"""
+    available_for_company = serializers.SerializerMethodField()
+    children = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'description', 'ext_related_id', 'image', 
+                 'available_for_company', 'children', 'created_at', 'is_active')
+    
+    def get_available_for_company(self, obj):
+        """Verifica si está disponible para la compañía del contexto"""
+        company_id = self.context.get('company_id')
+        if not company_id:
+            return True
+        try:
+            company = Cia.objects.get(id=company_id)
+            return obj.is_available_for_company(company)
+        except Cia.DoesNotExist:
+            return False
+    
+    def get_children(self, obj):
+        """Retorna las subcategorías si es necesario"""
+        include_children = self.context.get('include_children', False)
+        if include_children:
+            children = obj.children.filter(is_active=True)
+            return CategoryHierarchySerializer(children, many=True, context=self.context).data
+        return []
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:

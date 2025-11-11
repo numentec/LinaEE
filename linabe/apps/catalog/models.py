@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth import get_user_model
-from ..core.models import Common, Customer
+from ..core.models import Common, Customer, Cia
 
 LinaUserModel = get_user_model()
 
@@ -49,6 +49,15 @@ class Category(Common):
     description = models.TextField(blank=True, null=True)
     ext_related_id = models.CharField("ID Externo", max_length=100, blank=True, null=True)
     image = models.ImageField("Imagen", upload_to='images/categories/', blank=True, null=True)
+    
+    # Relación con Cia - Una categoría puede estar disponible para múltiples compañías
+    available_for_companies = models.ManyToManyField(
+        Cia,
+        verbose_name="Disponible para Compañías",
+        related_name='available_categories',
+        blank=True,
+        help_text="Selecciona las compañías para las cuales esta categoría está disponible"
+    )
 
     def __str__(self):
         return self.name
@@ -61,6 +70,23 @@ class Category(Common):
             ancestors.append(current)
             current = current.parent
         return ancestors
+    
+    def is_available_for_company(self, company):
+        """Verifica si la categoría está disponible para una compañía específica."""
+        if not self.available_for_companies.exists():
+            # Si no hay compañías asignadas, está disponible para todas
+            return True
+        return self.available_for_companies.filter(id=company.id).exists()
+    
+    def get_available_companies(self):
+        """Devuelve las compañías para las cuales está disponible esta categoría."""
+        return self.available_for_companies.all()
+    
+    class Meta:
+        # db_table = 'catalog_category'
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
+        ordering = ['name']
 
 
 class Tag(Common):
