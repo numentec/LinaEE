@@ -1,0 +1,6 @@
+# Asegurar que los scripts shell mantengan LF
+*.sh text eol=lf
+*.py text eol=lf
+
+# Archivos de texto general
+* text=auto
