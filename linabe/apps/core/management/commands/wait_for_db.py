@@ -11,7 +11,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Handle the command
         self.stdout.write('Waiting for linaee database.')
-        time_out = int(environ.get('DB_WAIT_TIME_OUT','45'))
+        # time_out = int(environ.get('DB_WAIT_TIME_OUT','45'))
+        time_out = 5
         time_out_count = 0
         db_conn = None
         while not db_conn:
@@ -25,6 +26,8 @@ class Command(BaseCommand):
                 time.sleep(1)
 
         if time_out_count == 0:
-            time.sleep(int(environ.get('DB_WAIT_TIME_EXTRA','45')))
+            # time.sleep(int(environ.get('DB_WAIT_TIME_EXTRA','45')))
+            time.sleep(5)
 
         self.stdout.write(self.style.SUCCESS('Database available! (' + str(time_out_count) + 'sec)' ))
+
