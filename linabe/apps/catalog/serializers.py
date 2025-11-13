@@ -42,11 +42,12 @@ class CategoryHierarchySerializer(serializers.ModelSerializer):
     """Serializer para mostrar categorías en jerarquía (padre e hijos)"""
     available_for_company = serializers.SerializerMethodField()
     children = serializers.SerializerMethodField()
+    brands = serializers.SerializerMethodField()
     
     class Meta:
         model = Category
         fields = ('id', 'name', 'description', 'ext_related_id', 'image', 
-                 'available_for_company', 'children', 'created_at', 'is_active')
+                 'available_for_company', 'children', 'brands', 'created_at', 'is_active')
     
     def get_available_for_company(self, obj):
         """Verifica si está disponible para la compañía del contexto"""
@@ -65,6 +66,14 @@ class CategoryHierarchySerializer(serializers.ModelSerializer):
         if include_children:
             children = obj.children.filter(is_active=True)
             return CategoryHierarchySerializer(children, many=True, context=self.context).data
+        return []
+    
+    def get_brands(self, obj):
+        """Retorna las marcas asociadas a la categoría"""
+        include_brands = self.context.get('include_brands', False)
+        if include_brands:
+            brands = obj.brands.filter(is_active=True)
+            return TagSerializer(brands, many=True).data
         return []
 
 class TagSerializer(serializers.ModelSerializer):
