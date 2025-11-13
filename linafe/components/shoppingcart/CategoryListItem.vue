@@ -48,7 +48,9 @@ export default {
     return {
       loadingView: false,
       overlay: false,
-      imgSrc: this.$config.fotosURL + this.category.image,
+      imgSrc: this.category.img_full_path
+        ? this.$config.publicURL + this.category.img_full_path
+        : this.$config.fotosURL + this.category.image,
       // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
@@ -97,7 +99,7 @@ export default {
 
         this.$router.push({
           path: this.category.link,
-          query: this.category?.token ? {} : { category: catname },
+          query: { parent_id: this.category.id, category: catname },
         })
       }
     },

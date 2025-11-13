@@ -130,6 +130,9 @@ export const mutations = {
       JSON.stringify(state.select_products_by)
     )
   },
+  SET_PARENT_CATEGORY(state, value) {
+    state.parent_category = value
+  },
   SET_CUSTOMERS(state, customers) {
     state.customers = customers
   },
@@ -252,57 +255,56 @@ export const actions = {
       })
   },
 
+  async fetchTopCategories({ commit, state }, payload) {
+    commit('SET_LOADING_STATUS')
+
+    return await this.$axios
+      .get(`catalog/categories/top-by-company/${payload.company_id}`)
+      .then((response) => {
+        commit('SET_DEPARTMENTS', response.data.top_categories)
+        commit('SET_LOADING_STATUS')
+        // return { items: response.data.top_categories }
+      })
+  },
+
   async fetchCategories({ commit, state }, payload) {
     commit('SET_LOADING_STATUS')
 
     let curMutation = ''
-    let endpointParams = {}
 
     switch (payload.name) {
-      case 'Department':
-      case 'Catalog':
-        curMutation = 'SET_DEPARTMENTS'
-        endpointParams = { type: 'DEPTO', cia: '01' }
-        break
       case 'Category':
+        // state.parent_category = state.select_products_by.depto
         curMutation = 'SET_CATEGORIES'
-        endpointParams = {
-          type: 'CAT',
-          cia: '01',
-          parent: state.parent_category || 'ALL',
-        }
         break
       case 'Subcategory':
+        // state.parent_category = state.select_products_by.cat
         curMutation = 'SET_SUBCATEGORIES'
-        endpointParams = {
-          type: 'SCAT',
-          cia: '01',
-          dep: state.select_products_by.depto || 'ALL',
-          cat: state.select_products_by.cat || 'ALL',
-        }
-        break
-      case 'Product':
-        curMutation = 'SET_PRODUCTS'
-        endpointParams = { type: 'PROD', cia: '01' }
-        break
-      case 'Brand':
-        curMutation = 'SET_BRANDS'
-        endpointParams = { type: 'BRAND', cia: '01' }
-        break
-      case 'Cliente':
-        curMutation = 'SET_CUSTOMERS'
-        endpointParams = { type: 'CLI', cia: '01' }
         break
     }
 
     return await this.$axios
-      .get('shoppingcart/catsbrands/', {
-        params: endpointParams,
-      })
+      .get(
+        `catalog/categories/by-parent/${payload.company_id}/${payload.parent_id}`
+      )
       .then((response) => {
-        commit(curMutation, response.data)
+        commit(curMutation, response.data.subcategories)
         commit('SET_LOADING_STATUS')
-        return { items: response.data }
+        // return { items: response.data.top_categories }
+      })
+  },
+
+  async fetchSubCategories({ commit, state }, payload) {
+    commit('SET_LOADING_STATUS')
+
+    return await this.$axios
+      .get(
+        `catalog/categories/by-parent/${payload.company_id}/${state.parent_category}`
+      )
+      .then((response) => {
+        commit('SET_SUBCATEGORIES', response.data.subcategories)
+        commit('SET_LOADING_STATUS')
+        // return { items: response.data.top_categories }
       })
   },
 
@@ -378,6 +380,13 @@ export const actions = {
   },
   setSelectProductsByElement({ commit }, { key, value }) {
     commit('SET_SELECT_PRODUCTS_BY_ELEMENT', { key, value })
+    // Más adelante podrá quedar solo el siguiente commit.
+    // El anterior se deja por compatibilidad momentánea.
+    // Recordar que esa acción era necesaria porque las categorías no respondían a gerarquía en la db del cliente Vértigo.
+    commit('SET_PARENT_CATEGORY', value)
+  },
+  setParentCategory({ commit }, value) {
+    commit('SET_PARENT_CATEGORY', value)
   },
   setCustomers({ commit }, customers) {
     commit('SET_CUSTOMERS', customers)
@@ -421,6 +430,7 @@ export const getters = {
   },
   getSelectProductsBy: (state) => state.select_products_by,
   getSelectProductsByElement: (state) => (key) => state.select_products_by[key],
+  getParentCategory: (state) => state.parent_category,
   getCustomers: (state) => state.customers,
   getCustomerById: (state) => (id) =>
     state.customers.find((customer) => customer.id === id),

@@ -7,7 +7,12 @@
             <CategoryListItem
               v-for="item in filteredItems"
               :key="item.id"
-              :category="{ ...item, type: 'depto', link: setLink() }"
+              :category="{
+                ...item,
+                type: 'depto',
+                link: setLink(),
+                img_full_path: item.image,
+              }"
               @card-clicked="setSelectProductsByElement"
             />
           </v-list>
@@ -16,7 +21,12 @@
           <CategoryCard
             v-for="item in filteredItems"
             :key="item.id"
-            :category="{ ...item, type: 'depto', link: setLink() }"
+            :category="{
+              ...item,
+              type: 'depto',
+              link: setLink(),
+              img_full_path: item.image,
+            }"
             @card-clicked="setSelectProductsByElement"
           />
         </div>
@@ -38,9 +48,13 @@ export default {
 
   async asyncData({ store, error }) {
     try {
-      await store.dispatch('shoppingcart/categories/fetchItems', {
+      await store.dispatch('shoppingcart/categories/fetchTopCategories', {
         name: 'Department',
+        company_id: '1',
       })
+      // await store.dispatch('shoppingcart/categories/fetchItems', {
+      //   name: 'Department',
+      // })
       // await store.dispatch('shoppingcart/categories/fetchData', {
       //   name: 'Department',
       //   link: '',
