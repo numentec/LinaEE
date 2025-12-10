@@ -24,6 +24,8 @@ from django.shortcuts import render
 from django.views import View
 
 from .tasks import send_order_email
+from .pagination_utils import paginate_stored_procedure_results
+from .pagination_utils import paginate_stored_procedure_results
 
 
 class CategoryBrandListAPIView(APIView):
@@ -85,12 +87,16 @@ class CategoryBrandListAPIView(APIView):
 
 class ProductsAPIView(APIView):
     """ Returns the list of products according to the filters passed as parameters.
-        Parameters: depto, cat, scat, brands, cia
+        Parameters: depto, cat, scat, brands, cia, page, page_size
         depto - Department
         cat - Category
         scat - Subcategory
         brands - Brands
         cia - Company
+        page - Page number (default: 1)
+        page_size - Items per page (default: 20, max: 1000)
+        
+        Returns paginated results from external stored procedure.
         If no parameters are passed, an error message will be returned.
     """
     # Vista 36
@@ -144,7 +150,15 @@ class ProductsAPIView(APIView):
 
             result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
-        return Response(result, status=status.HTTP_200_OK)
+        # Aplicar paginación en memoria
+        paginated_result = paginate_stored_procedure_results(
+            result, 
+            request, 
+            page_size=20,  # Tamaño por defecto
+            max_page_size=1000  # Máximo permitido
+        )
+
+        return Response(paginated_result, status=status.HTTP_200_OK)
 
 
 class ItemImagesAPIView(APIView):

@@ -46,11 +46,28 @@ export const state = () => ({
   countFilteredProducts: 0,
   isLoading: false,
   itemImages: [],
+  countProds: 0,
+  // Estados para paginación e infinite scrolling
+  currentPage: 1,
+  pageSize: 20,
+  hasNextPage: false,
+  totalPages: 0,
+  isLoadingMore: false,
+  allDataLoaded: false,
 })
 
 export const mutations = {
   SET_PRODUCTS(state, products) {
     state.products = products
+  },
+  ADD_PRODUCTS(state, products) {
+    // Para infinite scrolling - agregar productos a la lista existente
+    state.products = [...state.products, ...products]
+  },
+  RESET_PRODUCTS(state) {
+    state.products = []
+    state.currentPage = 1
+    state.allDataLoaded = false
   },
   SET_IMAGES(state, images) {
     state.images = images
@@ -73,6 +90,24 @@ export const mutations = {
   SET_ITEM_IMAGES(state, itemImages) {
     state.itemImages = itemImages
   },
+  SET_COUNT_PRODS(state, countProds) {
+    state.countProds = countProds
+  },
+  SET_PAGINATION_DATA(state, paginationData) {
+    state.currentPage = paginationData.current_page
+    state.hasNextPage = !!paginationData.next
+    state.totalPages = paginationData.total_pages
+    state.allDataLoaded = !paginationData.has_next
+  },
+  SET_LOADING_MORE(state, status) {
+    state.isLoadingMore = status
+  },
+  INCREMENT_PAGE(state) {
+    state.currentPage += 1
+  },
+  SET_PAGE_SIZE(state, size) {
+    state.pageSize = size
+  },
 }
 
 export const actions = {
@@ -87,8 +122,16 @@ export const actions = {
     }
   },
 
-  async fetchProducts({ commit, rootGetters }) {
-    commit('SET_LOADING_STATUS')
+  async fetchProducts(
+    { commit, rootGetters, state },
+    { page = 1, resetData = true } = {}
+  ) {
+    if (resetData) {
+      commit('SET_LOADING_STATUS')
+      commit('RESET_PRODUCTS')
+    } else {
+      commit('SET_LOADING_MORE', true)
+    }
 
     const selectedBrands =
       rootGetters['shoppingcart/categories/getSelectedBrands']
@@ -99,18 +142,62 @@ export const actions = {
 
     const endpointParams = {
       ...selectProductsBy,
-      brands, // '1,2,3,4,5,187,188,189,190,191',
+      brands,
       cia: '01',
+      page,
+      page_size: state.pageSize,
     }
 
-    return await this.$axios
-      .get('shoppingcart/products/', {
+    try {
+      const response = await this.$axios.get('shoppingcart/products/', {
         params: endpointParams,
       })
-      .then((response) => {
-        commit('SET_PRODUCTS', response.data)
-        commit('SET_LOADING_STATUS')
+
+      const { results, count, page_info: pageInfo } = response.data
+
+      if (resetData) {
+        commit('SET_PRODUCTS', results)
+      } else {
+        commit('ADD_PRODUCTS', results)
+      }
+
+      commit('SET_COUNT_PRODS', count)
+      commit('SET_PAGINATION_DATA', {
+        current_page: pageInfo.current_page,
+        total_pages: pageInfo.total_pages,
+        next: response.data.next,
+        has_next: pageInfo.has_next,
       })
+
+      if (resetData) {
+        commit('SET_LOADING_STATUS')
+      } else {
+        commit('SET_LOADING_MORE', false)
+      }
+
+      return response.data
+    } catch (error) {
+      if (resetData) {
+        commit('SET_LOADING_STATUS')
+      } else {
+        commit('SET_LOADING_MORE', false)
+      }
+      throw error
+    }
+  },
+
+  async loadMoreProducts({ commit, dispatch, state, rootGetters }) {
+    // Evitar múltiples cargas simultáneas
+    if (state.isLoadingMore || state.allDataLoaded) {
+      return
+    }
+
+    const nextPage = state.currentPage + 1
+
+    return await dispatch('fetchProducts', {
+      page: nextPage,
+      resetData: false,
+    })
   },
 
   // Función temporal para generar datos de prueba para los productos
@@ -138,9 +225,8 @@ export const actions = {
 
         commit('SET_ITEM_IMAGES', itemImages)
       })
-      .catch((error) => {
+      .catch(() => {
         commit('SET_ITEM_IMAGES', [src.imgSrc])
-        console.error(error)
       })
   },
 
@@ -167,6 +253,14 @@ export const actions = {
   setitemImages({ commit }, itemImages) {
     commit('SET_ITEM_IMAGES', itemImages)
   },
+
+  setcountProds({ commit }, countProds) {
+    commit('SET_COUNT_PRODS', countProds)
+  },
+
+  setPageSize({ commit }, size) {
+    commit('SET_PAGE_SIZE', size)
+  },
 }
 
 export const getters = {
@@ -178,4 +272,12 @@ export const getters = {
   getImage: (state) => (id) => state.images[id],
   getIsLoading: (state) => state.isLoading,
   getItemImages: (state) => state.itemImages,
+  getCountProds: (state) => state.countProds,
+  // Nuevos getters para paginación
+  getCurrentPage: (state) => state.currentPage,
+  getHasNextPage: (state) => state.hasNextPage,
+  getTotalPages: (state) => state.totalPages,
+  getIsLoadingMore: (state) => state.isLoadingMore,
+  getAllDataLoaded: (state) => state.allDataLoaded,
+  getPageSize: (state) => state.pageSize,
 }

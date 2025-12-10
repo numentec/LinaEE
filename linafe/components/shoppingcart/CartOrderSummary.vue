@@ -53,6 +53,7 @@
                             v-model="editEmail"
                             label="email"
                             class="centered-input"
+                            maxlength="50"
                           ></v-text-field>
                         </v-col>
                         <v-col cols="12">
@@ -60,6 +61,7 @@
                             v-model="editTel"
                             label="Tel"
                             class="centered-input"
+                            maxlength="15"
                           ></v-text-field>
                         </v-col>
                       </v-row>
@@ -228,9 +230,9 @@ export default {
 
     editCustomer() {
       this.setCartCustomer({
-        ...this.cartCustomer,
-        email: this.editEmail,
-        tel: this.editTel,
+        ...this.cartCustomer.substring(0, 100),
+        email: this.editEmail.substring(0, 100),
+        tel: this.editTel.substring(0, 15),
       })
     },
 

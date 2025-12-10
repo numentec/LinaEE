@@ -145,10 +145,10 @@
         </div>
         <div>
           <p
-            v-show="countChildItems > 0"
+            v-show="countChildrenItems.count > 0"
             :class="[isXSScreen ? 'primary-text-xs' : 'primary-text my-2']"
           >
-            {{ `${countChildItems} ${countChildItems > 1 ? 'Items' : 'Item'}` }}
+            {{ countChildrenItems.msg }}
           </p>
         </div>
       </v-row>
@@ -255,6 +255,7 @@ export default {
     ...mapGetters('shoppingcart/products', [
       'getSearchProduct',
       'getCountFilteredProducts',
+      'getCountProds',
     ]),
     isMobile() {
       return this.$vuetify.breakpoint.mobile
@@ -313,25 +314,43 @@ export default {
       return crumbs
     },
 
-    countChildItems() {
+    countChildrenItems() {
       const index = this.cur_child_view.lastIndexOf('-')
       const curChild =
         index !== -1
           ? this.cur_child_view.substring(index + 1)
           : this.cur_child_view
 
+      let count = 0
+      let msg = ''
+
       switch (curChild) {
         case 'departments':
-          return this.getCountFilteredDep
+          count = this.getCountFilteredDep
+          msg = `${count}` + (count > 1 ? ' Items' : ' Item')
+          break
         case 'categoriesmain':
-          return this.getCountFilteredCat
+          count = this.getCountFilteredCat
+          msg = `${count}` + (count > 1 ? ' Items' : ' Item')
+          break
         case 'categoriessub':
-          return this.getCountFilteredSubcat
+          count = this.getCountFilteredSubcat
+          msg = `${count}` + (count > 1 ? ' Items' : ' Item')
+          break
         case 'products':
-          return this.getCountFilteredProducts
+          count = this.getCountFilteredProducts
+
+          msg =
+            `${count}` +
+            (this.getCountProds > count ? `/${this.getCountProds}` : '')
+          msg += count > 1 ? ' Items' : ' Item'
+
+          break
         default:
           return 0
       }
+
+      return { count, msg }
     },
   },
 

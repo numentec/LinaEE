@@ -20,7 +20,7 @@ class ExtOrderMaster(Common):
 
     ciaext = models.CharField("External cia", max_length=10, default='01')
     customer_id = models.CharField("Customer ID", max_length=25, default='0')
-    customer_name = models.CharField("Customer Name", max_length=25, default='X customer', null=True)
+    customer_name = models.CharField("Customer Name", max_length=100, default='X customer', null=True)
     customer_email = models.CharField("Customer Email", max_length=100, null=True)
     customer_cel = models.CharField("Customer Cell", max_length=15, null=True)
     sendto = models.CharField("Send to", max_length=300, null=True)

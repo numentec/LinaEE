@@ -82,7 +82,12 @@ export default {
 
       this.$emit('card-clicked', {
         key: this.category.type,
-        value: this.category.id,
+        // Por lo pronto se utiliza el id externo si existe
+        // para mantener compatibilidad con el backend legacy
+        // en futuras versiones se debería estandarizar el uso del id interno
+        value: this.category?.ext_related_id
+          ? this.category.ext_related_id
+          : this.category.id,
       })
       if (
         this.category.link === null ||
