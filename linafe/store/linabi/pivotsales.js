@@ -40,11 +40,15 @@ export const actions = {
   renewStore(context, curparams = null) {
     context.commit('SET_LOADING_STATUS')
 
+    const endPoint = curparams?.rpt
+      ? 'linabi/rptpivotsales/'
+      : 'linabi/extbidashboard/'
+
     const ax = this.$axios
 
     async function load() {
       return await ax
-        .get('linabi/extbidashboard/', {
+        .get(endPoint, {
           params: curparams,
         })
         .then((response) => response.data)
@@ -55,10 +59,9 @@ export const actions = {
       load,
       onLoaded: (data) => {
         context.commit('SET_CUR_STORE', data)
+        context.commit('SET_LOADING_STATUS')
       },
     })
-
-    context.commit('SET_LOADING_STATUS')
 
     return store
   },

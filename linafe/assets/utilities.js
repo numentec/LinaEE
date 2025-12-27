@@ -370,7 +370,7 @@ export const modulos = [
       {
         icon: 'mdi-info',
         title: 'Reportes',
-        to: '/linabi/reportes',
+        to: '/linabi/reports/',
         perm: 'core.acc_linabi',
       },
     ],
