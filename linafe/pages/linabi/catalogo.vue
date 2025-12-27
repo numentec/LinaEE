@@ -504,7 +504,7 @@ import { selFunction } from '~/assets/utilities'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
-let customTemplate = false
+// let customTemplate = false
 
 function fileDownloader(url, ax) {
   // url = this.$config.publicURL + url
@@ -690,6 +690,7 @@ export default {
         },
       }),
       imgListForPDF: {},
+      customTemplate: false,
     }
   },
   computed: {
@@ -957,7 +958,7 @@ export default {
 
         // Exportar a Excel usando plantilla
         if (opc === 2) {
-          customTemplate = true
+          this.customTemplate = true
           const template = 'plantillas/' + this.plantilla.name
           const axx = this.$axios.create({
             baseURL: this.$config.mediaURL,
@@ -1094,7 +1095,8 @@ export default {
         component: this.curGrid,
         worksheet,
         topLeftCell,
-        autoFilterEnabled: !customTemplate,
+        autoFilterEnabled: !this.customTemplate,
+        exportHeaders: !this.customTemplate,
         selectedRowsOnly: true,
         customizeCell: ({ excelCell, gridCell }) => {
           if (gridCell.rowType === 'data') {
@@ -1169,7 +1171,7 @@ export default {
               })
             }
           }
-          if (customTemplate) {
+          if (this.customTemplate) {
             if (gridCell.rowType === 'totalFooter' && excelCell.value) {
               excelCell.value = null
             }
@@ -1177,7 +1179,7 @@ export default {
         },
       })
         .then((cellRange) => {
-          if (customTemplate) {
+          if (this.customTemplate) {
             const row = worksheet.getRow(cellRange.from.row)
             row.values = []
             // row.hidden = true
@@ -1286,6 +1288,137 @@ export default {
           })
         })
     },
+
+    // doExportExcelSchema(
+    //   workbook,
+    //   worksheet,
+    //   savingFilename,
+    //   topLeftCell = { row: 1, column: 1 }
+    // ) {
+    //   const PromiseArray = []
+    //   const rowsMetadata = []
+
+    //   this.busyWith = true
+
+    //   exportDataGridToExcel({
+    //     component: this.curGrid,
+    //     worksheet,
+    //     topLeftCell,
+    //     autoFilterEnabled: false,
+    //     selectedRowsOnly: true,
+    //     customizeCell: ({ excelCell, gridCell }) => {
+    //       // Guardar metadata de las filas para aplicar outlineLevel después
+    //       if (gridCell.rowType === 'group') {
+    //         rowsMetadata.push({
+    //           rowNumber: excelCell.fullAddress.row,
+    //           type: 'group',
+    //           groupLevel: gridCell.groupIndex || 0,
+    //         })
+    //       } else if (gridCell.rowType === 'data') {
+    //         // Obtener el nivel de grupo basado en los grupos activos
+    //         const groupCount = this.curGrid.getVisibleColumns().filter(col => col.groupIndex !== undefined).length
+
+    //         rowsMetadata.push({
+    //           rowNumber: excelCell.fullAddress.row,
+    //           type: 'data',
+    //           groupLevel: groupCount,
+    //         })
+
+    //         // Manejar columna FOTO
+    //         if (gridCell.column.name === 'FOTO') {
+    //           excelCell.value = undefined
+    //           if (gridCell.value) {
+    //             const imgfile = gridCell.value
+
+    //             PromiseArray.push(
+    //               new Promise((resolve, reject) => {
+    //                 this.addImageExcel(
+    //                   imgfile,
+    //                   workbook,
+    //                   worksheet,
+    //                   excelCell,
+    //                   topLeftCell.row,
+    //                   resolve
+    //                 )
+    //               })
+    //             )
+    //           }
+    //         }
+
+    //         // Manejar columna FICHA
+    //         if (gridCell.column.name === 'FICHA') {
+    //           if (gridCell.value) {
+    //             excelCell.value =
+    //               'SKU: ' +
+    //               gridCell.data.SKU +
+    //               '\n' +
+    //               gridCell.data.DESCRIP +
+    //               '\n' +
+    //               'Marca: ' +
+    //               gridCell.data.MARCA +
+    //               '\n' +
+    //               'Talla: ' +
+    //               gridCell.data.TALLA +
+    //               '\n' +
+    //               'Dist.: ' +
+    //               gridCell.data.DISTRIBUCION
+    //             excelCell.alignment = { horizontal: 'justify', vertical: 'top' }
+    //           }
+    //         }
+    //       } else if (gridCell.rowType === 'groupFooter') {
+    //         rowsMetadata.push({
+    //           rowNumber: excelCell.fullAddress.row,
+    //           type: 'groupFooter',
+    //           groupLevel: gridCell.groupIndex || 0,
+    //         })
+    //       } else if (gridCell.rowType === 'totalFooter') {
+    //         rowsMetadata.push({
+    //           rowNumber: excelCell.fullAddress.row,
+    //           type: 'totalFooter',
+    //           groupLevel: 0,
+    //         })
+    //       }
+    //     },
+    //   })
+    //     .then((cellRange) => {
+    //       // Aplicar outlineLevel a las filas según su nivel de agrupación
+    //       rowsMetadata.forEach((rowMeta) => {
+    //         const row = worksheet.getRow(rowMeta.rowNumber)
+
+    //         if (rowMeta.type === 'group') {
+    //           // Las filas de grupo tienen outlineLevel igual a su nivel de grupo
+    //           row.outlineLevel = rowMeta.groupLevel
+    //         } else if (rowMeta.type === 'data') {
+    //           // Las filas de datos tienen outlineLevel igual al número de grupos
+    //           row.outlineLevel = rowMeta.groupLevel
+    //         } else if (rowMeta.type === 'groupFooter') {
+    //           // Los pies de grupo tienen el mismo nivel que su grupo
+    //           row.outlineLevel = rowMeta.groupLevel + 1
+    //         } else if (rowMeta.type === 'totalFooter') {
+    //           // El pie total no tiene outline
+    //           row.outlineLevel = 0
+    //         }
+    //       })
+
+    //       // Configurar las propiedades de outline del worksheet
+    //       worksheet.properties.outlineLevelCol = 0
+    //       worksheet.properties.outlineLevelRow = Math.max(
+    //         ...rowsMetadata.map(r => r.groupLevel),
+    //         0
+    //       )
+    //     })
+    //     .then(() => {
+    //       Promise.all(PromiseArray).then(() => {
+    //         workbook.xlsx.writeBuffer().then((buffer) => {
+    //           saveAs(
+    //             new Blob([buffer], { type: 'application/octet-stream' }),
+    //             savingFilename
+    //           )
+    //           this.busyWith = false
+    //         })
+    //       })
+    //     })
+    // },
     manageCellClick(e) {
       if (e.column) {
         if (e.column.name === 'FOTO') {
