@@ -3,6 +3,9 @@ version: '3'
 services:
   # MariaDB service for LinaEE
   linadb:
+    # Descomentar la siguiente línea para nuevos despliegues
+    # image: linuxserver/mariadb:10.5.17
+    # Comentar la siguiente línea para nuevos despliegues
     image: ghcr.io/linuxserver/mariadb
     container_name: linadb
     environment:
@@ -25,9 +28,10 @@ services:
 
   # Django backend service
   be:
-    build:
-      context: ./linabe
-      dockerfile: Dockerfile
+    # build:
+    #  context: ./linabe
+    #  dockerfile: Dockerfile
+    image: galvanino/linabe:0.0.1
     container_name: linabe
     env_file:
       - ./.env
@@ -46,14 +50,17 @@ services:
 
   # Nuxt frontend service
   fe:
-    build:
-      context: ./linafe
-      dockerfile: Dockerfile
+    # build:
+    #  context: ./linafe
+    #  dockerfile: Dockerfile
+    image: galvanino/linafe:0.0.1
     container_name: linafe
     environment:
       HOST: 0.0.0.0
+      PORT: 3005
       TZ: ${LOC_TZ}
       NODE_OPTIONS: --max_old_space_size=8048
+      NODE_ENV: production
     volumes:
       - ./linafe:/linafe
     networks:
