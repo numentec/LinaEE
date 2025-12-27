@@ -26,5 +26,6 @@ urlpatterns = [
     path('tallasbc/', views.TallasBCAPIView.as_view(), name='tallasbc'),
     path('coloresbc/', views.ColoresBCAPIView.as_view(), name='coloresbc'),
     path('extbidashboard/', views.BIDashboardExt.as_view(), name='extbidashboard'),
+    path('rptpivotsales/', views.RptPivotsalesExt.as_view(), name='rptpivotsales'),
     path('cxcantig/', views.CxCAntigAPIView.as_view(), name='cxcantig'),
 ]

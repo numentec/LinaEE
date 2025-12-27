@@ -563,6 +563,7 @@ class BIDashboardExt(APIView):
         if pvals == '1012022-01-012022-03-31false1000':
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
+        # Devuelve: LINAEE_BIDASHBOARD y LINAEE_VENTA_TOT
         qrys = SQLQuery.objects.filter(vista=31)
 
         # Preparar parametros
@@ -615,6 +616,64 @@ class BIDashboardExt(APIView):
                 cursor.callproc(qrycalling, params + [r1, r2, r3] )
 
                 result = [dict({'V1': r1.getvalue(), 'V2': r2.getvalue(), 'V3': r3.getvalue()})]
+
+        return Response(result, status=status.HTTP_200_OK)
+    
+
+class RptPivotsalesExt(APIView):
+    """Consultar datos externos para la pivot table en Reports - Lina BI"""
+    # Vista 31
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # p01 - Switch par seleccionar consulta
+        # p02 - Cia en curso
+        # p03 - Fecha inicial del periodo a consultar
+        # p04 - Fecha final del periodo a consultar
+        # p05 - Filtro adicional para el tipo de marca (Marca externa)
+        # p06 - Cantidad de registros a recuperar (SQL LIMIT)
+
+
+        p01 = str(request.query_params.get('p01', '1')).lower().strip()
+        p02 = str(request.query_params.get('p02', '01')).lower().strip()
+        p03 = str(request.query_params.get('p03', '2024-01-01')).strip()
+        p04 = str(request.query_params.get('p04', '2024-03-31')).strip()
+        p05 = str(request.query_params.get('p05', 'false')).strip()
+        p06 = str(request.query_params.get('p06', '1000000')).strip()
+        
+
+        pvals = p01 + p02 + p03 + p04 + p05 + p06
+
+        if pvals == '1012024-01-012024-03-31false1000000':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        # Devuelve: LINAEE_BIDASHBOARD con datos para pivot table en reports LINAEE BI
+        params = [p01, p02, p03, p04, p05, p06]
+        qrycalling = 'DMC.LINAEE_BIDASHBOARD'
+        # qrys = SQLQuery.objects.filter(vista=31)
+
+        # # Preparar parametros
+        # if p01 != '0':
+        #     params = [p01, p02, p03, p04, p05, p06]
+        #     qrycalling = qrys[0].content
+        # else:
+        #     params = [p02, p03, p04, p05]
+        #     qrycalling = qrys[1].content
+
+        result = []
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc(qrycalling, params + [refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
 
         return Response(result, status=status.HTTP_200_OK)
 
