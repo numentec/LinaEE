@@ -166,6 +166,39 @@ export const modulos = [
     ],
   },
   {
+    name: 'catalog',
+    icon: 'mdi-view-dashboard-outline',
+    title: 'Catalog',
+    perm: 'core.acc_crm',
+    items: [
+      {
+        icon: 'mdi-format-list-text',
+        title: 'Inicio',
+        // to: '/shoppingcart/',
+        to: '/catalogos',
+        perm: 'core.acc_crm',
+      },
+      // {
+      //   icon: 'mdi-cart-arrow-right',
+      //   title: 'Go to cart',
+      //   to: '/shoppingcart/cart',
+      //   perm: 'core.acc_crm',
+      // },
+      // {
+      //   icon: 'mdi-format-list-text',
+      //   title: 'Orders',
+      //   to: '/shoppingcart/ordersview',
+      //   perm: 'core.acc_crm',
+      // },
+      {
+        icon: 'mdi-cog-outline',
+        title: 'Tools',
+        to: '/catalogos/tools',
+        perm: 'core.acc_crm',
+      },
+    ],
+  },
+  {
     name: 'inv',
     icon: 'mdi-package-variant',
     title: 'Inventario',
