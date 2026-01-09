@@ -344,6 +344,112 @@ export const mutations = {
       [catalogId]: nextActive,
     }
   },
+
+  RENAME_PAGE(state, { catalogId, pageId, name }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+    const pIdx = pages.findIndex((p) => p.id === pageId)
+    if (pIdx === -1) return
+
+    const now = new Date().toISOString()
+
+    const nextPages = pages.map((p) => {
+      if (p.id !== pageId) return p
+      return { ...p, name }
+    })
+
+    const next = {
+      ...catalog,
+      pages: nextPages,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+  },
+
+  ENSURE_COVER_PAGE(state, { catalogId }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+
+    const hasCover = pages.some((p) => p.id === 'cover')
+    if (hasCover) return
+
+    const cover = {
+      id: 'cover',
+      name: 'Portada',
+      layout: 'cover',
+      items: [],
+      cover: {
+        title: catalog.name || 'Catálogo',
+        subtitle: '',
+        logo_url: '',
+        hero_url: '',
+      },
+    }
+
+    const nextPages = [cover, ...pages]
+
+    const now = new Date().toISOString()
+
+    const next = {
+      ...catalog,
+      pages: nextPages,
+      pages_count: nextPages.length,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+
+    const active = state.activePageByCatalogId[catalogId]
+    const isNum = typeof active === 'number'
+
+    if (isNum) {
+      state.activePageByCatalogId = {
+        ...state.activePageByCatalogId,
+        [catalogId]: active + 1,
+      }
+    }
+  },
+
+  UPDATE_COVER(state, { catalogId, patch }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+
+    const nextPages = pages.map((p) => {
+      if (p.id !== 'cover') return p
+
+      const cover = p.cover || {
+        title: catalog.name || 'Catálogo',
+        subtitle: '',
+        logo_url: '',
+        hero_url: '',
+      }
+
+      return {
+        ...p,
+        cover: { ...cover, ...patch },
+      }
+    })
+
+    const now = new Date().toISOString()
+
+    const next = {
+      ...catalog,
+      pages: nextPages,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+  },
 }
 
 export const actions = {
@@ -448,5 +554,17 @@ export const actions = {
 
   movePage({ commit }, { catalogId, fromIndex, toIndex }) {
     commit('MOVE_PAGE', { catalogId, fromIndex, toIndex })
+  },
+
+  renamePage({ commit }, { catalogId, pageId, name }) {
+    commit('RENAME_PAGE', { catalogId, pageId, name })
+  },
+
+  ensureCoverPage({ commit }, { catalogId }) {
+    commit('ENSURE_COVER_PAGE', { catalogId })
+  },
+
+  updateCover({ commit }, { catalogId, patch }) {
+    commit('UPDATE_COVER', { catalogId, patch })
   },
 }
