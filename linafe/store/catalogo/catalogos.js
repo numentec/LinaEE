@@ -502,24 +502,45 @@ export const actions = {
     if (!catalog) return
 
     const pages = Array.isArray(catalog.pages) ? catalog.pages : []
-    const all = pages.reduce((acc, p) => {
+
+    const cover = pages.find((p) => p && p.layout === 'cover') || null
+    const contentPages = pages.filter((p) => !(p && p.layout === 'cover'))
+
+    const all = contentPages.reduce((acc, p) => {
       const items = Array.isArray(p.items) ? p.items : []
       return acc.concat(items)
     }, [])
 
-    if (!all.length) return
+    if (!all.length) {
+      // Si no hay items, igual preservamos la portada y al menos 1 página vacía
+      const nextPages = []
+
+      if (cover) nextPages.push(cover)
+
+      nextPages.push({
+        id: 'page_1',
+        name: 'Página 1',
+        layout: layout || 'grid_2x4',
+        items: [],
+      })
+
+      commit('SET_PAGES', { catalogId, pages: nextPages })
+      return
+    }
 
     const chunks = chunkArray(all, capacity)
 
-    const nextPages = chunks.map((items, idx) => {
+    const distributed = chunks.map((items, idx) => {
       const n = idx + 1
       return {
         id: `page_${n}`,
         name: `Página ${n}`,
-        layout,
+        layout: layout || 'grid_2x4',
         items,
       }
     })
+
+    const nextPages = cover ? [cover, ...distributed] : distributed
 
     commit('SET_PAGES', { catalogId, pages: nextPages })
   },

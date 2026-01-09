@@ -693,10 +693,10 @@ export default {
     })
 
     // opcional: mostrar portada al abrir
-    // this.$store.dispatch('catalogo/catalogos/setActivePage', {
-    //   catalogId: this.$route.params.id,
-    //   pageIndex: 0,
-    // })
+    this.$store.dispatch('catalogo/catalogos/setActivePage', {
+      catalogId: this.$route.params.id,
+      pageIndex: 0,
+    })
   },
 
   methods: {
