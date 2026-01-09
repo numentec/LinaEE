@@ -2,62 +2,84 @@
   <v-container>
     <v-card outlined class="pa-3 mb-3">
       <div class="d-flex align-center">
-        <v-btn
-          icon
-          @click="$router.push(`/catalogos/${$route.params.id}/edit`)"
-        >
+        <v-btn icon @click="goBack">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
+
         <div class="ml-2">
           <div class="text-subtitle-1 font-weight-medium">Vista previa</div>
           <div class="text-caption text--secondary">
             {{ catalogName }}
           </div>
         </div>
+
+        <v-spacer />
+
+        <v-chip small outlined> {{ pages.length }} páginas </v-chip>
       </div>
     </v-card>
 
-    <v-sheet class="pa-8" outlined :style="paperStyle">
-      <div class="text-h5 mb-2">{{ catalogName }}</div>
-      <div class="text-body-2 text--secondary">
-        (MVP) Esto será la vista web compartible y también base para PDF.
+    <div v-if="!catalog" class="text-body-2 text--secondary">
+      Catálogo no encontrado
+    </div>
+
+    <div v-else>
+      <div v-for="(p, idx) in pages" :key="p.id" class="mb-8">
+        <div class="d-flex align-center mb-2">
+          <div class="text-caption text--secondary">
+            {{ pageLabel(p, idx) }}
+          </div>
+        </div>
+
+        <CatalogPageRender :page="p" :orientation="catalog.orientation" />
       </div>
-    </v-sheet>
+    </div>
   </v-container>
 </template>
 
 <script>
+import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
+
 export default {
   name: 'CatalogosPreviewPage',
+  components: { CatalogPageRender },
+
   computed: {
     catalog() {
       return this.$store.getters['catalogo/catalogos/byId'](
         this.$route.params.id
       )
     },
-    catalogName() {
-      return (this.catalog && this.catalog.name) || 'Catalog Name'
-    },
-    paperStyle() {
-      const width = 700
-      const portraitRatio = 11 / 8.5
-      const landscapeRatio = 8.5 / 11
-      const ratio =
-        this.catalog?.orientation === 'landscape'
-          ? landscapeRatio
-          : portraitRatio
-      const height = Math.round(width * ratio)
 
-      return {
-        width: `${width}px`,
-        height: `${height}px`,
-        margin: '0 auto',
-        background: 'white',
-      }
+    catalogName() {
+      return (this.catalog && this.catalog.name) || 'Catálogo'
+    },
+
+    pages() {
+      const pages =
+        this.catalog && Array.isArray(this.catalog.pages)
+          ? this.catalog.pages
+          : []
+
+      return pages
     },
   },
+
   mounted() {
     this.$store.dispatch('catalogo/catalogos/init')
+  },
+
+  methods: {
+    goBack() {
+      this.$router.push(`/catalogos/${this.$route.params.id}/edit`)
+    },
+
+    pageLabel(p, idx) {
+      if (p && p.layout === 'cover') return 'Portada'
+      const n = idx + 1
+      const name = p && p.name ? p.name : `Página ${n}`
+      return `${name}`
+    },
   },
 }
 </script>
