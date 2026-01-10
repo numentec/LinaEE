@@ -18,7 +18,7 @@
               contain
               class="mr-3"
             />
-            <div>
+            <div class="title-overlay pa-3 rounded">
               <div class="text-h5 font-weight-bold">
                 {{ coverTitle }}
               </div>
@@ -204,6 +204,13 @@ export default {
   position: absolute;
   inset: 0;
   padding: 24px;
+  /* background: linear-gradient(
+    rgba(255, 255, 255, 0.92),
+    rgba(255, 255, 255, 0.78)
+  ); */
+}
+
+.title-overlay {
   background: linear-gradient(
     rgba(255, 255, 255, 0.92),
     rgba(255, 255, 255, 0.78)

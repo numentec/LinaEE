@@ -61,6 +61,13 @@ function clonePage(page, newId, newName) {
   }
 }
 
+function generateToken() {
+  return (
+    Math.random().toString(36).slice(2, 10) +
+    Math.random().toString(36).slice(2, 10)
+  )
+}
+
 /**
  * Estado:
  * - items: lista de catálogos
@@ -86,6 +93,9 @@ export const getters = {
   activePageIndex: (state) => (catalogId) => {
     const idx = state.activePageByCatalogId[catalogId]
     return typeof idx === 'number' ? idx : 0
+  },
+  byToken: (state) => (token) => {
+    return state.items.find((c) => c.share_token === token) || null
   },
 }
 
@@ -450,10 +460,39 @@ export const mutations = {
 
     state.items.splice(cIdx, 1, next)
   },
+  SET_SHARE_TOKEN(state, { catalogId, token }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const now = new Date().toISOString()
+
+    const next = {
+      ...catalog,
+      share_token: token,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+    localStorage.setItem('lina_itemsCatalog', JSON.stringify(state.items))
+  },
 }
 
 export const actions = {
+  nuxtClientInit({ commit }) {
+    if (process.client) {
+      const itemsCatalog =
+        JSON.parse(localStorage.getItem('lina_itemsCatalog')) || []
+      commit('SET_ITEMS', itemsCatalog)
+    }
+  },
+
   init({ state, commit }) {
+    const itemsCatalog =
+      JSON.parse(localStorage.getItem('lina_itemsCatalog')) || []
+
+    if (itemsCatalog.length > 0) commit('SET_ITEMS', itemsCatalog)
+
     if (state.items.length) return
 
     const normalized = (mockCatalogos || []).map(ensurePages)
@@ -587,5 +626,22 @@ export const actions = {
 
   updateCover({ commit }, { catalogId, patch }) {
     commit('UPDATE_COVER', { catalogId, patch })
+  },
+
+  ensureShareToken({ getters, commit }, { catalogId }) {
+    const catalog = getters.byId(catalogId)
+    if (!catalog) return ''
+
+    if (catalog.share_token) return catalog.share_token
+
+    const token = generateToken()
+    commit('SET_SHARE_TOKEN', { catalogId, token })
+    return token
+  },
+
+  regenerateShareToken({ commit }, { catalogId }) {
+    const token = generateToken()
+    commit('SET_SHARE_TOKEN', { catalogId, token })
+    return token
   },
 }

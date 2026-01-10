@@ -14,13 +14,22 @@
           </div>
         </div>
         <v-spacer />
-        <v-btn class="mr-2" color="primary" @click="openPicker">
+        <v-btn
+          class="mr-2"
+          color="primary"
+          :disabled="isCoverPage"
+          @click="openPicker"
+        >
           <v-icon left>mdi-package-variant-closed-plus</v-icon>
           Agregar productos
         </v-btn>
         <v-btn color="primary" @click="goPreview">
           <v-icon left>mdi-file-eye-outline</v-icon>
           Vista previa
+        </v-btn>
+        <v-btn class="mr-2" outlined @click="openShare">
+          <v-icon left>mdi-share-variant</v-icon>
+          Compartir
         </v-btn>
       </div>
     </v-card>
@@ -105,6 +114,7 @@
                     <v-btn
                       icon
                       small
+                      :disabled="isCoverPage"
                       v-bind="attrs"
                       v-on="on"
                       @click.stop="onAddHere(idx)"
@@ -137,7 +147,7 @@
                       icon
                       small
                       v-bind="attrs"
-                      :disabled="idx === pages.length - 1"
+                      :disabled="idx === pages.length - 1 || isCoverPage"
                       v-on="on"
                       @click.stop="movePageDown(idx)"
                     >
@@ -159,7 +169,10 @@
                       <v-list-item-title>Renombrar</v-list-item-title>
                     </v-list-item>
 
-                    <v-list-item @click="duplicatePage(idx)">
+                    <v-list-item
+                      :disabled="isCoverPage"
+                      @click="duplicatePage(idx)"
+                    >
                       <v-list-item-title>Duplicar página</v-list-item-title>
                     </v-list-item>
 
@@ -478,6 +491,52 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="showShareDialog" max-width="640">
+      <v-card>
+        <v-card-title class="text-subtitle-1 font-weight-medium">
+          Compartir catálogo
+        </v-card-title>
+
+        <v-card-text>
+          <div class="text-body-2 text--secondary mb-4">
+            Comparte este link con tus clientes. Verán el catálogo sin iniciar
+            sesión.
+          </div>
+
+          <v-text-field
+            :value="publicLink"
+            label="Link público"
+            outlined
+            dense
+            hide-details
+            readonly
+          />
+
+          <div class="d-flex mt-4">
+            <v-btn outlined @click="copyLink">
+              <v-icon left>mdi-content-copy</v-icon>
+              Copiar
+            </v-btn>
+
+            <v-spacer />
+
+            <v-btn text @click="regenerateToken"> Regenerar token </v-btn>
+          </div>
+
+          <v-alert dense text type="info" class="mt-4">
+            Si regeneras el token, el link anterior dejará de funcionar.
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="showShareDialog = false">
+            Listo
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <ProductPickerDialog v-model="showPicker" @add="onAddProducts" />
   </v-container>
 </template>
@@ -515,6 +574,9 @@ export default {
         { text: 'Grid 2 x 3 (6)', value: 'grid_2x3' },
         { text: 'Lista compacta (16)', value: 'list_compact' },
       ],
+
+      showShareDialog: false,
+      shareToken: '',
     }
   },
 
@@ -682,6 +744,12 @@ export default {
         backgroundPosition: 'top center',
       }
     },
+    publicLink() {
+      if (!this.shareToken) return ''
+      const origin = process.client ? window.location.origin : ''
+      return `${origin}/portal/shared-catalog/${this.shareToken}`
+      // return `${origin}/catalogos/${this.shareToken}`
+    },
   },
 
   mounted() {
@@ -706,6 +774,7 @@ export default {
 
     openPicker() {
       // this.showPicker = true
+      if (this.isCoverPage) return
       this.openPickerForIndex(this.activePageIndex)
     },
 
@@ -932,6 +1001,40 @@ export default {
         catalogId,
         patch,
       })
+    },
+
+    async openShare() {
+      const catalogId = this.$route.params.id
+
+      const token = await this.$store.dispatch(
+        'catalogo/catalogos/ensureShareToken',
+        { catalogId }
+      )
+
+      this.shareToken = token
+      this.showShareDialog = true
+    },
+
+    async regenerateToken() {
+      const catalogId = this.$route.params.id
+
+      const token = await this.$store.dispatch(
+        'catalogo/catalogos/regenerateShareToken',
+        { catalogId }
+      )
+
+      this.shareToken = token
+    },
+
+    async copyLink() {
+      if (!this.publicLink) return
+
+      try {
+        await navigator.clipboard.writeText(this.publicLink)
+        this.$toast?.success?.('Link copiado')
+      } catch (e) {
+        this.$toast?.info?.('Copia manualmente el link')
+      }
     },
   },
 }
