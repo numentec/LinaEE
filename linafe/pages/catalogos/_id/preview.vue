@@ -31,7 +31,11 @@
           </div>
         </div>
 
-        <CatalogPageRender :page="p" :orientation="catalog.orientation" />
+        <CatalogPageRender
+          :page="p"
+          :orientation="catalog.orientation"
+          :settings="catalog.settings"
+        />
       </div>
     </div>
   </v-container>

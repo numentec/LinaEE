@@ -26,7 +26,11 @@
 
     <div v-else>
       <div v-for="(p, idx) in pages" :key="idx" class="mb-8">
-        <CatalogPageRender :page="p" :orientation="catalog.orientation" />
+        <CatalogPageRender
+          :page="p"
+          :orientation="catalog.orientation"
+          :settings="catalog.settings"
+        />
       </div>
     </div>
   </v-container>

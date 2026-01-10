@@ -42,6 +42,7 @@
           <v-card outlined class="pa-2">
             <div class="d-flex">
               <v-img
+                v-if="effectiveSettings.show_images"
                 :src="p.selected_image_url"
                 :lazy-src="p.selected_image_url"
                 width="72"
@@ -51,25 +52,55 @@
               />
 
               <div class="flex-grow-1">
-                <div class="text-caption text--secondary">
+                <div
+                  v-if="effectiveSettings.show_brand"
+                  class="text-caption text--secondary"
+                >
                   {{ p.brand_name }}
                 </div>
 
-                <div class="text-subtitle-2 font-weight-medium">
+                <div
+                  v-if="effectiveSettings.show_sku"
+                  class="text-subtitle-2 font-weight-medium"
+                >
                   {{ p.sku }}
                 </div>
 
-                <div class="text-body-2 text--secondary item-desc">
+                <div
+                  v-if="effectiveSettings.show_description"
+                  class="text-body-2 text--secondary item-desc"
+                >
                   {{ p.description }}
                 </div>
 
                 <div class="text-caption text--secondary mt-1">
-                  Precio: {{ p.price }} · Min: {{ p.min_qty }} · Max:
-                  {{ p.max_qty }}
+                  <span v-if="effectiveSettings.show_price">
+                    Precio: {{ p.price }}
+                  </span>
+
+                  <span
+                    v-if="
+                      effectiveSettings.show_price &&
+                      effectiveSettings.show_min_max
+                    "
+                  >
+                    ·
+                  </span>
+
+                  <span v-if="effectiveSettings.show_min_max">
+                    Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
+                  </span>
                 </div>
               </div>
 
-              <div v-if="p.images && p.images.length > 1" class="ml-2">
+              <div
+                v-if="
+                  effectiveSettings.show_images &&
+                  p.images &&
+                  p.images.length > 1
+                "
+                class="ml-2"
+              >
                 <v-chip x-small outlined> +{{ p.images.length - 1 }} </v-chip>
               </div>
             </div>
@@ -91,9 +122,23 @@ export default {
   props: {
     page: { type: Object, required: true },
     orientation: { type: String, default: 'portrait' },
+    settings: { type: Object, default: () => ({}) },
   },
 
   computed: {
+    effectiveSettings() {
+      const defaults = {
+        show_price: true,
+        show_brand: true,
+        show_min_max: true,
+        show_sku: true,
+        show_description: true,
+        show_images: true,
+      }
+
+      return { ...defaults, ...(this.settings || {}) }
+    },
+
     isCover() {
       return this.page && this.page.layout === 'cover'
     },

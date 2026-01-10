@@ -1,4 +1,5 @@
 // store/catalogos.js
+// Mock data (to be replaced with API calls)
 import { mockCatalogos } from '~/mock/catalogos'
 
 export const namespaced = true
@@ -20,6 +21,14 @@ function ensurePages(catalog) {
     ...catalog,
     pages,
     pages_count: catalog.pages_count || 1,
+  }
+}
+
+function ensureSettings(catalog) {
+  const settings = catalog.settings || {}
+  return {
+    ...catalog,
+    settings: { ...defaultSettings(), ...settings },
   }
 }
 
@@ -68,6 +77,18 @@ function generateToken() {
   )
 }
 
+function defaultSettings() {
+  return {
+    show_price: true,
+    show_brand: true,
+    show_min_max: true,
+    show_sku: true,
+    show_description: true,
+    show_images: true,
+  }
+}
+// ************ End of helpers ************
+
 /**
  * Estado:
  * - items: lista de catálogos
@@ -101,7 +122,7 @@ export const getters = {
 
 export const mutations = {
   SET_ITEMS(state, items) {
-    state.items = (items || []).map(ensurePages)
+    state.items = (items || []).map(ensurePages).map(ensureSettings)
   },
   ADD_ITEM(state, item) {
     state.items.unshift(item)
@@ -476,6 +497,25 @@ export const mutations = {
     state.items.splice(cIdx, 1, next)
     localStorage.setItem('lina_itemsCatalog', JSON.stringify(state.items))
   },
+
+  UPDATE_SETTINGS(state, { catalogId, patch }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const now = new Date().toISOString()
+
+    const current = catalog.settings || defaultSettings()
+    const settings = { ...defaultSettings(), ...current, ...patch }
+
+    const next = {
+      ...catalog,
+      settings,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+  },
 }
 
 export const actions = {
@@ -495,7 +535,9 @@ export const actions = {
 
     if (state.items.length) return
 
-    const normalized = (mockCatalogos || []).map(ensurePages)
+    const normalized = (mockCatalogos || [])
+      .map(ensurePages)
+      .map(ensureSettings)
 
     commit('SET_ITEMS', normalized)
   },
@@ -643,5 +685,9 @@ export const actions = {
     const token = generateToken()
     commit('SET_SHARE_TOKEN', { catalogId, token })
     return token
+  },
+
+  updateSettings({ commit }, { catalogId, patch }) {
+    commit('UPDATE_SETTINGS', { catalogId, patch })
   },
 }

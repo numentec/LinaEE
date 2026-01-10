@@ -114,7 +114,7 @@
                     <v-btn
                       icon
                       small
-                      :disabled="isCoverPage"
+                      :disabled="p.id === 'cover'"
                       v-bind="attrs"
                       v-on="on"
                       @click.stop="onAddHere(idx)"
@@ -131,7 +131,7 @@
                       icon
                       small
                       v-bind="attrs"
-                      :disabled="idx === 0"
+                      :disabled="idx === 0 || p.id === 'cover'"
                       v-on="on"
                       @click.stop="movePageUp(idx)"
                     >
@@ -147,7 +147,7 @@
                       icon
                       small
                       v-bind="attrs"
-                      :disabled="idx === pages.length - 1 || isCoverPage"
+                      :disabled="idx === pages.length - 1 || p.id === 'cover'"
                       v-on="on"
                       @click.stop="movePageDown(idx)"
                     >
@@ -170,7 +170,7 @@
                     </v-list-item>
 
                     <v-list-item
-                      :disabled="isCoverPage"
+                      :disabled="p.id === 'cover'"
                       @click="duplicatePage(idx)"
                     >
                       <v-list-item-title>Duplicar página</v-list-item-title>
@@ -208,7 +208,7 @@
                 <v-btn
                   small
                   outlined
-                  :disabled="pageItems.length <= layoutCapacity"
+                  :disabled="isCoverPage || pageItems.length <= layoutCapacity"
                   @click="openDistributeDialog"
                 >
                   Auto-distribuir
@@ -219,100 +219,29 @@
               </div>
             </v-row>
           </div>
-          <v-sheet class="pa-6" outlined :style="paperStyle">
-            <template v-if="isCoverPage">
-              <div class="cover-hero" :style="coverHeroStyle">
-                <div class="cover-overlay">
-                  <v-img
-                    v-if="coverLogoUrl"
-                    :src="coverLogoUrl"
-                    max-width="140"
-                    contain
-                    class="mb-4"
-                  />
-                  <div class="text-h4 font-weight-bold white--text">
-                    {{ coverTitle }}
-                  </div>
-                  <div class="text-subtitle-1 white--text mt-2">
-                    {{ coverSubtitle }}
-                  </div>
-                </div>
-              </div>
-            </template>
+          <div v-if="!page" class="text-body-2 text--secondary">
+            Página no disponible
+          </div>
 
-            <template v-else>
-              <!-- tu render actual de productos -->
-              <v-row dense>
-                <v-col
-                  v-for="p in visibleItems"
-                  :key="p.product_id || p.sku"
-                  cols="12"
-                  v-bind="gridCols"
-                >
-                  <v-card outlined class="pa-2">
-                    <div class="d-flex">
-                      <v-img
-                        :src="p.selected_image_url"
-                        :lazy-src="p.selected_image_url"
-                        width="72"
-                        height="72"
-                        class="mr-3"
-                        contain
-                      />
-
-                      <div class="flex-grow-1">
-                        <div class="text-caption text--secondary">
-                          {{ p.brand_name }}
-                        </div>
-
-                        <div class="text-subtitle-2 font-weight-medium">
-                          {{ p.sku }}
-                        </div>
-
-                        <div class="text-body-2 text--secondary item-desc">
-                          {{ p.description }}
-                        </div>
-
-                        <div class="text-caption text--secondary mt-1">
-                          Precio: {{ p.price }} · Min: {{ p.min_qty }} · Max:
-                          {{ p.max_qty }}
-                        </div>
-                      </div>
-
-                      <div v-if="p.images && p.images.length > 1" class="ml-2">
-                        <v-chip x-small outlined>
-                          +{{ p.images.length - 1 }}
-                        </v-chip>
-                      </div>
-                    </div>
-                  </v-card>
-                </v-col>
-              </v-row>
-              <v-alert
-                v-if="hiddenCount > 0"
-                dense
-                text
-                type="info"
-                class="mt-4"
-              >
-                Hay {{ hiddenCount }} productos más. Usa
-                <strong>Auto-distribuir</strong> para crear páginas.
-              </v-alert>
-
-              <v-sheet
-                v-if="pageItems.length === 0"
-                class="pa-8 text-center"
-                outlined
-              >
-                <div class="text-subtitle-1 font-weight-medium mb-1">
-                  Catálogo vacío
-                </div>
-                <div class="text-body-2 text--secondary">
-                  Agrega productos para comenzar.
-                </div>
-              </v-sheet>
-            </template>
+          <v-sheet
+            v-else-if="!isCoverPage && pageItems.length === 0"
+            class="pa-8 text-center"
+            outlined
+          >
+            <div class="text-subtitle-1 font-weight-medium mb-1">
+              Catálogo vacío
+            </div>
+            <div class="text-body-2 text--secondary">
+              Agrega productos para comenzar.
+            </div>
           </v-sheet>
+
+          <CatalogPageRender
+            v-else
+            :page="page"
+            :orientation="catalog.orientation"
+            :settings="catalog.settings"
+          />
         </v-sheet>
       </v-col>
 
@@ -373,9 +302,41 @@
               @change="onLayoutChange"
             />
 
-            <v-switch label="Mostrar precios" :value="true" disabled />
-            <v-switch label="Mostrar marca" :value="true" disabled />
-            <v-switch label="Mostrar min/max compra" :value="true" disabled />
+            <v-switch
+              label="Mostrar imágenes"
+              :input-value="catalogSettings.show_images"
+              @change="onSettingsChange({ show_images: $event })"
+            />
+
+            <v-switch
+              label="Mostrar marca"
+              :input-value="catalogSettings.show_brand"
+              @change="onSettingsChange({ show_brand: $event })"
+            />
+
+            <v-switch
+              label="Mostrar SKU"
+              :input-value="catalogSettings.show_sku"
+              @change="onSettingsChange({ show_sku: $event })"
+            />
+
+            <v-switch
+              label="Mostrar descripción"
+              :input-value="catalogSettings.show_description"
+              @change="onSettingsChange({ show_description: $event })"
+            />
+
+            <v-switch
+              label="Mostrar precios"
+              :input-value="catalogSettings.show_price"
+              @change="onSettingsChange({ show_price: $event })"
+            />
+
+            <v-switch
+              label="Mostrar min/max compra"
+              :input-value="catalogSettings.show_min_max"
+              @change="onSettingsChange({ show_min_max: $event })"
+            />
           </div>
 
           <div class="text-caption text--secondary">
@@ -543,11 +504,15 @@
 
 <script>
 import ProductPickerDialog from '~/components/catalogos/ProductPickerDialog.vue'
+import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
 
 export default {
   name: 'CatalogosEditPage',
 
-  components: { ProductPickerDialog },
+  components: {
+    ProductPickerDialog,
+    CatalogPageRender,
+  },
 
   data() {
     return {
@@ -601,23 +566,6 @@ export default {
         : 'Horizontal'
     },
 
-    paperStyle() {
-      // Carta a un ancho fijo; alto según orientación (ratio aproximado)
-      const width = 700 // px
-      const portraitRatio = 11 / 8.5 // alto/ancho
-      const landscapeRatio = 8.5 / 11
-      const isLand = this.catalog && this.catalog.orientation === 'landscape'
-      const ratio = isLand ? landscapeRatio : portraitRatio
-      const height = Math.round(width * ratio)
-
-      return {
-        width: `${width}px`,
-        height: `${height}px`,
-        margin: '0 auto',
-        background: 'white',
-      }
-    },
-
     pageHeaderLabel() {
       const n = this.activePageIndex + 1
       const total = this.pages.length
@@ -644,9 +592,6 @@ export default {
     },
 
     page() {
-      // if (!this.catalog) return null
-      // const pages = Array.isArray(this.catalog.pages) ? this.catalog.pages : []
-      // return pages[0] || null
       return this.pages[this.activePageIndex] || null
     },
 
@@ -670,26 +615,10 @@ export default {
       return items
     },
 
-    visibleItems() {
-      return this.pageItems.slice(0, this.layoutCapacity)
-    },
-
-    hiddenCount() {
-      const n = this.pageItems.length - this.visibleItems.length
-      return n > 0 ? n : 0
-    },
-
     showingLabel() {
       const total = this.pageItems.length
-      const shown = this.visibleItems.length
+      const shown = Math.min(total, this.layoutCapacity)
       return `Mostrando ${shown} de ${total}`
-    },
-
-    gridCols() {
-      if (this.layoutKey === 'list_compact') return { md: 12 }
-      if (this.layoutKey === 'grid_3x3') return { md: 4 }
-      if (this.layoutKey === 'grid_2x3') return { md: 6 }
-      return { md: 6 }
     },
 
     thumbItemsByPage() {
@@ -749,6 +678,18 @@ export default {
       const origin = process.client ? window.location.origin : ''
       return `${origin}/portal/shared-catalog/${this.shareToken}`
       // return `${origin}/catalogos/${this.shareToken}`
+    },
+    catalogSettings() {
+      return (
+        (this.catalog && this.catalog.settings) || {
+          show_price: true,
+          show_brand: true,
+          show_min_max: true,
+          show_sku: true,
+          show_description: true,
+          show_images: true,
+        }
+      )
     },
   },
 
@@ -1036,20 +977,20 @@ export default {
         this.$toast?.info?.('Copia manualmente el link')
       }
     },
+
+    onSettingsChange(patch) {
+      const catalogId = this.$route.params.id
+
+      this.$store.dispatch('catalogo/catalogos/updateSettings', {
+        catalogId,
+        patch,
+      })
+    },
   },
 }
 </script>
 
 <style scoped>
-.item-desc {
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* For older browsers */
-  line-clamp: 2; /* Standard property */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .page-thumb {
   position: relative;
   width: 76px;
