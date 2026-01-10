@@ -197,7 +197,7 @@
       <v-col cols="12" md="6">
         <v-sheet outlined class="pa-4">
           <div class="d-flex align-center mb-3">
-            <v-row dense justify="space-between" class="align-center">
+            <div class="d-flex align-center">
               <div class="text-subtitle-2 font-weight-medium">Lienzo</div>
 
               <div class="text-caption text--secondary mr-3">
@@ -217,7 +217,7 @@
                   {{ showingLabel }}
                 </div>
               </div>
-            </v-row>
+            </div>
           </div>
           <div v-if="!page" class="text-body-2 text--secondary">
             Página no disponible
@@ -239,8 +239,8 @@
           <CatalogPageRender
             v-else
             :page="page"
-            :orientation="catalog.orientation"
-            :settings="catalog.settings"
+            :orientation="catalog && catalog.orientation"
+            :settings="catalog && catalog.settings"
           />
         </v-sheet>
       </v-col>
@@ -289,6 +289,10 @@
               hide-details
               @input="onCoverChange({ hero_url: $event })"
             />
+
+            <div class="text-caption text--secondary">
+              Edita el contenido de la portada
+            </div>
           </div>
           <div v-else>
             <v-select
@@ -337,10 +341,10 @@
               :input-value="catalogSettings.show_min_max"
               @change="onSettingsChange({ show_min_max: $event })"
             />
-          </div>
 
-          <div class="text-caption text--secondary">
-            (MVP) El layout afecta cuántos productos entran por página.
+            <div class="text-caption text--secondary">
+              El layout afecta cuántos productos entran por página.
+            </div>
           </div>
         </v-sheet>
       </v-col>
@@ -561,6 +565,8 @@ export default {
     },
 
     catalogOrientation() {
+      // const o = this.catalog && this.catalog.orientation
+      // return o === 'portrait' ? 'Vertical' : 'Horizontal'
       return this.catalog?.orientation === 'portrait'
         ? 'Vertical'
         : 'Horizontal'
@@ -575,11 +581,8 @@ export default {
       return `${name} (${n}/${total})`
     },
 
-    currentCatalog() {
-      return this.$store.getters['catalogo/catalogos/current']
-    },
     pages() {
-      return (this.currentCatalog && this.currentCatalog.pages) || []
+      return (this.catalog && this.catalog.pages) || []
     },
 
     activePageIndex() {
@@ -644,15 +647,6 @@ export default {
       return this.activePage && this.activePage.layout === 'cover'
     },
 
-    coverData() {
-      if (!this.page) return null
-      return this.page.id === 'cover' ? this.page.cover || {} : null
-    },
-
-    cover() {
-      if (!this.isCoverPage) return null
-      return this.activePage.cover || {}
-    },
     coverTitle() {
       return (this.cover && this.cover.title) || this.catalogName || 'Catálogo'
     },
@@ -665,14 +659,7 @@ export default {
     coverHeroUrl() {
       return (this.cover && this.cover.hero_url) || ''
     },
-    coverHeroStyle() {
-      const url = this.coverHeroUrl
-      return {
-        backgroundImage: url ? `url('${url}')` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'top center',
-      }
-    },
+
     publicLink() {
       if (!this.shareToken) return ''
       const origin = process.client ? window.location.origin : ''
@@ -737,18 +724,6 @@ export default {
       })
 
       this.pickerTargetIndex = null
-    },
-
-    autoDistribute() {
-      const catalogId = this.$route.params.id
-
-      this.$store.dispatch('catalogo/catalogos/autoDistribute', {
-        catalogId,
-        layout: this.layoutKey,
-        capacity: this.layoutCapacity,
-      })
-
-      this.setActivePage(0)
     },
 
     setActivePage(pageIndex) {
