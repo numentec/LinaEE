@@ -24,12 +24,25 @@ export default {
   layout: 'publicapps',
   components: { CatalogPageRender },
 
+  async asyncData({ app, params, error }) {
+    try {
+      const catalog = await app.$api.getCatalog(params.id)
+      return { catalog }
+    } catch (e) {
+      error({ statusCode: 404, message: 'Catálogo no encontrado' })
+    }
+  },
+
+  data() {
+    return { catalog: null }
+  },
+
   computed: {
-    catalog() {
-      return this.$store.getters['catalogo/catalogos/byId'](
-        this.$route.params.id
-      )
-    },
+    // catalog() {
+    //   return this.$store.getters['catalogo/catalogos/byId'](
+    //     this.$route.params.id
+    //   )
+    // },
 
     pages() {
       const pages =
@@ -41,14 +54,14 @@ export default {
     },
   },
 
-  async mounted() {
-    await this.$store.dispatch('catalogo/catalogos/init')
+  mounted() {
+    this.$store.dispatch('catalogo/catalogos/init')
 
     this.$nextTick(() => {
       // pequeño delay para que carguen imágenes
       setTimeout(() => {
         window.print()
-      }, 1200)
+      }, 400)
     })
   },
 }

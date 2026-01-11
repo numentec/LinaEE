@@ -49,12 +49,25 @@ export default {
   name: 'CatalogosPreviewPage',
   components: { CatalogPageRender },
 
+  async asyncData({ app, params, error }) {
+    try {
+      const catalog = await app.$api.getCatalog(params.id)
+      return { catalog }
+    } catch (e) {
+      error({ statusCode: 404, message: 'Catálogo no encontrado' })
+    }
+  },
+
+  data() {
+    return { catalog: null }
+  },
+
   computed: {
-    catalog() {
-      return this.$store.getters['catalogo/catalogos/byId'](
-        this.$route.params.id
-      )
-    },
+    // catalog() {
+    //   return this.$store.getters['catalogo/catalogos/byId'](
+    //     this.$route.params.id
+    //   )
+    // },
 
     catalogName() {
       return (this.catalog && this.catalog.name) || 'Catálogo'
@@ -67,6 +80,7 @@ export default {
           : []
 
       return pages
+      // return (this.catalog && this.catalog.pages) || []
     },
   },
 

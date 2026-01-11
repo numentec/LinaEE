@@ -24,7 +24,11 @@ export default {
   loading: { color: 'success', height: '5px' },
 
   // Plugins to run before rendering page (https://go.nuxtjs.dev/config-plugins)
-  plugins: ['~/plugins/saveRoute.js', '~/plugins/cartState.js'],
+  plugins: [
+    '~/plugins/saveRoute.js',
+    '~/plugins/cartState.js',
+    '~/plugins/api.js',
+  ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)
   components: true,
