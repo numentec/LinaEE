@@ -35,6 +35,7 @@
           :page="p"
           :orientation="catalog.orientation"
           :settings="catalog.settings"
+          :theme="catalog.theme"
         />
       </div>
     </div>

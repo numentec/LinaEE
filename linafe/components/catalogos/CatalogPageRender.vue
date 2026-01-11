@@ -1,118 +1,125 @@
 <template>
-  <v-sheet class="pa-6" outlined :style="paperStyle">
-    <template v-if="isCover">
-      <div class="cover">
-        <div
-          v-if="coverHeroUrl"
-          class="cover-hero"
-          :style="{ backgroundImage: `url('${coverHeroUrl}')` }"
-        />
-        <div class="cover-overlay">
-          <div class="d-flex align-center mb-4">
-            <v-img
-              v-if="coverLogoUrl"
-              :src="coverLogoUrl"
-              :lazy-src="coverLogoUrl"
-              width="56"
-              height="56"
-              contain
-              class="mr-3"
-            />
-            <div class="title-overlay pa-3 rounded">
-              <div class="text-h5 font-weight-bold">
-                {{ coverTitle }}
-              </div>
-              <div class="text-body-2 text--secondary">
-                {{ coverSubtitle }}
+  <div :style="pageVars">
+    <v-sheet class="pa-6" outlined :style="paperStyle">
+      <template v-if="isCover">
+        <div class="cover">
+          <div
+            v-if="coverHeroUrl"
+            class="cover-hero"
+            :style="{ backgroundImage: `url('${coverHeroUrl}')` }"
+          />
+          <div class="cover-overlay" :class="coverOverlayClass">
+            <div class="d-flex align-center mb-4">
+              <v-img
+                v-if="coverLogoUrl"
+                :src="coverLogoUrl"
+                :lazy-src="coverLogoUrl"
+                width="56"
+                height="56"
+                contain
+                class="mr-3"
+              />
+              <!-- <div class="title-overlay pa-3 rounded"> -->
+              <div class="pa-3 rounded">
+                <div class="text-h5 font-weight-bold cover-title">
+                  {{ coverTitle }}
+                </div>
+                <div class="text-body-2 text--secondary">
+                  {{ coverSubtitle }}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template v-else>
-      <v-row dense>
-        <v-col
-          v-for="p in visibleItems"
-          :key="p.product_id || p.sku"
-          cols="12"
-          v-bind="gridCols"
-        >
-          <v-card outlined class="pa-2">
-            <div class="d-flex">
-              <v-img
-                v-if="effectiveSettings.show_images"
-                :src="p.selected_image_url"
-                :lazy-src="p.selected_image_url"
-                width="72"
-                height="72"
-                class="mr-3"
-                contain
-              />
+      <template v-else>
+        <v-row dense>
+          <v-col
+            v-for="p in visibleItems"
+            :key="p.product_id || p.sku"
+            cols="12"
+            v-bind="gridCols"
+          >
+            <v-card
+              :outlined="effectiveTheme.card_style !== 'flat'"
+              class="pa-2 cat-card"
+              :class="cardClass"
+            >
+              <div class="d-flex">
+                <v-img
+                  v-if="effectiveSettings.show_images"
+                  :src="p.selected_image_url"
+                  :lazy-src="p.selected_image_url"
+                  width="72"
+                  height="72"
+                  class="mr-3"
+                  contain
+                />
 
-              <div class="flex-grow-1">
-                <div
-                  v-if="effectiveSettings.show_brand"
-                  class="text-caption text--secondary"
-                >
-                  {{ p.brand_name }}
-                </div>
-
-                <div
-                  v-if="effectiveSettings.show_sku"
-                  class="text-subtitle-2 font-weight-medium"
-                >
-                  {{ p.sku }}
-                </div>
-
-                <div
-                  v-if="effectiveSettings.show_description"
-                  class="text-body-2 text--secondary item-desc"
-                >
-                  {{ p.description }}
-                </div>
-
-                <div class="text-caption text--secondary mt-1">
-                  <span v-if="effectiveSettings.show_price">
-                    Precio: {{ p.price }}
-                  </span>
-
-                  <span
-                    v-if="
-                      effectiveSettings.show_price &&
-                      effectiveSettings.show_min_max
-                    "
+                <div class="flex-grow-1">
+                  <div
+                    v-if="effectiveSettings.show_brand"
+                    class="text-caption text--secondary"
                   >
-                    ·
-                  </span>
+                    {{ p.brand_name }}
+                  </div>
 
-                  <span v-if="effectiveSettings.show_min_max">
-                    Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
-                  </span>
+                  <div
+                    v-if="effectiveSettings.show_sku"
+                    class="text-subtitle-2 font-weight-medium"
+                  >
+                    {{ p.sku }}
+                  </div>
+
+                  <div
+                    v-if="effectiveSettings.show_description"
+                    class="text-body-2 text--secondary item-desc"
+                  >
+                    {{ p.description }}
+                  </div>
+
+                  <div class="text-caption text--secondary mt-1">
+                    <span v-if="effectiveSettings.show_price">
+                      Precio: {{ p.price }}
+                    </span>
+
+                    <span
+                      v-if="
+                        effectiveSettings.show_price &&
+                        effectiveSettings.show_min_max
+                      "
+                    >
+                      ·
+                    </span>
+
+                    <span v-if="effectiveSettings.show_min_max">
+                      Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  v-if="
+                    effectiveSettings.show_images &&
+                    p.images &&
+                    p.images.length > 1
+                  "
+                  class="ml-2"
+                >
+                  <v-chip x-small outlined> +{{ p.images.length - 1 }} </v-chip>
                 </div>
               </div>
+            </v-card>
+          </v-col>
+        </v-row>
 
-              <div
-                v-if="
-                  effectiveSettings.show_images &&
-                  p.images &&
-                  p.images.length > 1
-                "
-                class="ml-2"
-              >
-                <v-chip x-small outlined> +{{ p.images.length - 1 }} </v-chip>
-              </div>
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <v-alert v-if="hiddenCount > 0" dense text type="info" class="mt-4">
-        Hay {{ hiddenCount }} productos más en esta página
-      </v-alert>
-    </template>
-  </v-sheet>
+        <v-alert v-if="hiddenCount > 0" dense text type="info" class="mt-4">
+          Hay {{ hiddenCount }} productos más en esta página
+        </v-alert>
+      </template>
+    </v-sheet>
+  </div>
 </template>
 
 <script>
@@ -123,6 +130,7 @@ export default {
     page: { type: Object, required: true },
     orientation: { type: String, default: 'portrait' },
     settings: { type: Object, default: () => ({}) },
+    theme: { type: Object, default: () => ({}) },
   },
 
   computed: {
@@ -216,6 +224,35 @@ export default {
       if (this.layoutKey === 'grid_2x3') return { md: 6 }
       return { md: 6 }
     },
+
+    effectiveTheme() {
+      const defaults = {
+        primary: '#1976d2',
+        cover_overlay: 'light',
+        card_style: 'outlined',
+      }
+
+      return { ...defaults, ...(this.theme || {}) }
+    },
+
+    pageVars() {
+      return {
+        '--cat-primary': this.effectiveTheme.primary,
+      }
+    },
+
+    cardClass() {
+      const style = this.effectiveTheme.card_style
+      if (style === 'flat') return 'cat-card-flat'
+      return 'cat-card-outlined'
+    },
+
+    coverOverlayClass() {
+      const overlay = this.effectiveTheme.cover_overlay
+      if (overlay === 'dark') return 'cover-overlay-dark'
+      if (overlay === 'light') return 'cover-overlay-light'
+      return ''
+    },
   },
 }
 </script>
@@ -224,6 +261,7 @@ export default {
 .item-desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -245,6 +283,23 @@ export default {
   filter: saturate(1.05);
 }
 
+.cover-title {
+  color: var(--cat-primary);
+}
+
+.cat-card {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.cat-card-outlined:hover {
+  border-color: var(--cat-primary);
+}
+
+.cat-card-flat {
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .cover-overlay {
   position: absolute;
   inset: 0;
@@ -253,6 +308,25 @@ export default {
     rgba(255, 255, 255, 0.92),
     rgba(255, 255, 255, 0.78)
   ); */
+}
+
+.cover-overlay-light {
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.92),
+    rgba(255, 255, 255, 0.78)
+  );
+}
+
+.cover-overlay-dark {
+  background: linear-gradient(rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.65));
+}
+
+.cover-overlay-dark .text-body-2 {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.cover-overlay-dark .cover-title {
+  color: white;
 }
 
 .title-overlay {

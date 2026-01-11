@@ -32,6 +32,14 @@ function ensureSettings(catalog) {
   }
 }
 
+function ensureTheme(catalog) {
+  const theme = catalog.theme || {}
+  return {
+    ...catalog,
+    theme: { ...defaultTheme(), ...theme },
+  }
+}
+
 function chunkArray(arr, size) {
   const out = []
   for (let i = 0; i < arr.length; i += size) {
@@ -87,6 +95,92 @@ function defaultSettings() {
     show_images: true,
   }
 }
+
+function templatePresets() {
+  return {
+    minimal: {
+      template: 'Minimal',
+      settings: {
+        show_images: true,
+        show_brand: true,
+        show_sku: true,
+        show_description: true,
+        show_price: true,
+        show_min_max: true,
+      },
+      default_layout: 'grid_2x4',
+      cover: {
+        subtitle: 'Selección recomendada',
+        logo_url: '',
+        hero_url: '',
+      },
+    },
+
+    fashion: {
+      template: 'Fashion',
+      settings: {
+        show_images: true,
+        show_brand: true,
+        show_sku: false,
+        show_description: false,
+        show_price: true,
+        show_min_max: false,
+      },
+      default_layout: 'grid_3x3',
+      cover: {
+        subtitle: 'Nueva colección',
+        logo_url: '',
+        hero_url: '',
+      },
+    },
+
+    promo: {
+      template: 'Promo',
+      settings: {
+        show_images: true,
+        show_brand: true,
+        show_sku: true,
+        show_description: false,
+        show_price: true,
+        show_min_max: true,
+      },
+      default_layout: 'list_compact',
+      cover: {
+        subtitle: 'Ofertas por tiempo limitado',
+        logo_url: '',
+        hero_url: '',
+      },
+    },
+  }
+}
+
+function defaultTheme() {
+  return {
+    primary: '#1976d2',
+    cover_overlay: 'light',
+    card_style: 'outlined',
+  }
+}
+
+function themePresets() {
+  return {
+    minimal: {
+      primary: '#1976d2',
+      cover_overlay: 'light',
+      card_style: 'outlined',
+    },
+    fashion: {
+      primary: '#111827',
+      cover_overlay: 'dark',
+      card_style: 'flat',
+    },
+    promo: {
+      primary: '#b91c1c',
+      cover_overlay: 'dark',
+      card_style: 'outlined',
+    },
+  }
+}
 // ************ End of helpers ************
 
 /**
@@ -122,7 +216,10 @@ export const getters = {
 
 export const mutations = {
   SET_ITEMS(state, items) {
-    state.items = (items || []).map(ensurePages).map(ensureSettings)
+    state.items = (items || [])
+      .map(ensurePages)
+      .map(ensureSettings)
+      .map(ensureTheme)
   },
   ADD_ITEM(state, item) {
     state.items.unshift(item)
@@ -516,6 +613,84 @@ export const mutations = {
 
     state.items.splice(cIdx, 1, next)
   },
+
+  APPLY_TEMPLATE(state, { catalogId, key, applyToPages }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const presets = templatePresets()
+    const preset = presets[key]
+    if (!preset) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+    const now = new Date().toISOString()
+
+    const currentSettings = catalog.settings || {}
+    const nextSettings = { ...currentSettings, ...preset.settings }
+
+    const presetTheme = themePresets()[key] || {}
+    const currentTheme = catalog.theme || defaultTheme()
+    const nextTheme = { ...currentTheme, ...presetTheme }
+
+    const nextPages = pages.map((p) => {
+      if (!p) return p
+
+      if (p.layout === 'cover') {
+        const cover = p.cover || {
+          title: catalog.name || 'Catálogo',
+          subtitle: '',
+          logo_url: '',
+          hero_url: '',
+        }
+
+        return {
+          ...p,
+          cover: {
+            ...cover,
+            ...preset.cover,
+            title: cover.title || catalog.name || 'Catálogo',
+          },
+        }
+      }
+
+      if (applyToPages) {
+        return { ...p, layout: preset.default_layout }
+      }
+
+      return p
+    })
+
+    const next = {
+      ...catalog,
+      template: preset.template,
+      settings: nextSettings,
+      pages: nextPages,
+      updated_at: now,
+      theme: nextTheme,
+    }
+
+    state.items.splice(cIdx, 1, next)
+  },
+
+  UPDATE_THEME(state, { catalogId, patch }) {
+    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const now = new Date().toISOString()
+
+    const current = catalog.theme || defaultTheme()
+    const theme = { ...defaultTheme(), ...current, ...patch }
+
+    const next = {
+      ...catalog,
+      theme,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+  },
 }
 
 export const actions = {
@@ -538,6 +713,7 @@ export const actions = {
     const normalized = (mockCatalogos || [])
       .map(ensurePages)
       .map(ensureSettings)
+      .map(ensureTheme)
 
     commit('SET_ITEMS', normalized)
   },
@@ -689,5 +865,13 @@ export const actions = {
 
   updateSettings({ commit }, { catalogId, patch }) {
     commit('UPDATE_SETTINGS', { catalogId, patch })
+  },
+
+  applyTemplate({ commit }, { catalogId, key, applyToPages }) {
+    commit('APPLY_TEMPLATE', { catalogId, key, applyToPages })
+  },
+
+  updateTheme({ commit }, { catalogId, patch }) {
+    commit('UPDATE_THEME', { catalogId, patch })
   },
 }

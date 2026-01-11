@@ -14,16 +14,11 @@
           </div>
         </div>
         <v-spacer />
-        <v-btn
-          class="mr-2"
-          color="primary"
-          :disabled="isCoverPage"
-          @click="openPicker"
-        >
+        <v-btn color="primary" :disabled="isCoverPage" @click="openPicker">
           <v-icon left>mdi-package-variant-closed-plus</v-icon>
           Agregar productos
         </v-btn>
-        <v-btn color="primary" @click="goPreview">
+        <v-btn class="mx-2" color="primary" @click="goPreview">
           <v-icon left>mdi-file-eye-outline</v-icon>
           Vista previa
         </v-btn>
@@ -196,26 +191,24 @@
       <!-- Canvas -->
       <v-col cols="12" md="6">
         <v-sheet outlined class="pa-4">
-          <div class="d-flex align-center mb-3">
-            <div class="d-flex align-center">
-              <div class="text-subtitle-2 font-weight-medium">Lienzo</div>
+          <div class="canvas-header">
+            <div class="text-subtitle-2 font-weight-medium">Lienzo</div>
 
-              <div class="text-caption text--secondary mr-3">
-                {{ pageHeaderLabel }}
-              </div>
+            <div class="text-caption text--secondary mr-3">
+              {{ pageHeaderLabel }}
+            </div>
 
-              <div>
-                <v-btn
-                  small
-                  outlined
-                  :disabled="isCoverPage || pageItems.length <= layoutCapacity"
-                  @click="openDistributeDialog"
-                >
-                  Auto-distribuir
-                </v-btn>
-                <div class="text-caption text--secondary mt-1">
-                  {{ showingLabel }}
-                </div>
+            <div>
+              <v-btn
+                small
+                outlined
+                :disabled="isCoverPage || pageItems.length <= layoutCapacity"
+                @click="openDistributeDialog"
+              >
+                Auto-distribuir
+              </v-btn>
+              <div class="text-caption text--secondary mt-1">
+                {{ showingLabel }}
               </div>
             </div>
           </div>
@@ -241,6 +234,7 @@
             :page="page"
             :orientation="catalog && catalog.orientation"
             :settings="catalog && catalog.settings"
+            :theme="catalog && catalog.theme"
           />
         </v-sheet>
       </v-col>
@@ -249,6 +243,46 @@
       <v-col cols="12" md="3">
         <v-sheet outlined class="pa-3">
           <div class="text-subtitle-2 font-weight-medium mb-2">Propiedades</div>
+          <div class="d-flex align-center mb-3">
+            <div class="text-body-2 font-weight-medium">
+              Plantilla: {{ catalogTemplate }}
+            </div>
+            <v-spacer />
+            <v-btn small outlined @click="openTemplateDialog"> Cambiar </v-btn>
+          </div>
+          <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">Tema</div>
+
+          <v-text-field
+            :value="catalogTheme.primary"
+            label="Color primario (hex)"
+            outlined
+            dense
+            hide-details
+            class="mb-3"
+            @input="onThemeChange({ primary: $event })"
+          />
+
+          <v-select
+            :value="catalogTheme.cover_overlay"
+            :items="coverOverlayItems"
+            label="Overlay portada"
+            outlined
+            dense
+            hide-details
+            class="mb-3"
+            @change="onThemeChange({ cover_overlay: $event })"
+          />
+
+          <v-select
+            :value="catalogTheme.card_style"
+            :items="cardStyleItems"
+            label="Estilo de tarjeta"
+            outlined
+            dense
+            hide-details
+            class="mb-2"
+            @change="onThemeChange({ card_style: $event })"
+          />
 
           <div v-if="isCoverPage">
             <v-text-field
@@ -502,6 +536,42 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="showTemplateDialog" max-width="560">
+      <v-card>
+        <v-card-title class="text-subtitle-1 font-weight-medium">
+          Aplicar plantilla
+        </v-card-title>
+
+        <v-card-text>
+          <v-select
+            v-model="templateKey"
+            :items="templateItems"
+            label="Plantilla"
+            outlined
+            dense
+            hide-details
+            class="mb-4"
+          />
+
+          <v-switch
+            v-model="applyTemplateToPages"
+            label="Aplicar layout a todas las páginas"
+          />
+
+          <v-alert dense text type="info" class="mt-4">
+            La plantilla ajusta settings del catálogo y defaults de portada. Si
+            aplicas a todas las páginas, también cambia el layout.
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn text @click="showTemplateDialog = false">Cancelar</v-btn>
+          <v-spacer />
+          <v-btn color="primary" @click="applyTemplate"> Aplicar </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <ProductPickerDialog v-model="showPicker" @add="onAddProducts" />
   </v-container>
 </template>
@@ -546,6 +616,27 @@ export default {
 
       showShareDialog: false,
       shareToken: '',
+
+      // Configuración de template del catálogo
+      templateKey: 'minimal',
+      applyTemplateToPages: true,
+      showTemplateDialog: false,
+      templateItems: [
+        { text: 'Minimal', value: 'minimal' },
+        { text: 'Fashion', value: 'fashion' },
+        { text: 'Promo', value: 'promo' },
+      ],
+
+      coverOverlayItems: [
+        { text: 'Claro', value: 'light' },
+        { text: 'Oscuro', value: 'dark' },
+        { text: 'Ninguno', value: '' },
+      ],
+
+      cardStyleItems: [
+        { text: 'Outlined', value: 'outlined' },
+        { text: 'Flat', value: 'flat' },
+      ],
     }
   },
 
@@ -647,6 +738,11 @@ export default {
       return this.activePage && this.activePage.layout === 'cover'
     },
 
+    cover() {
+      if (!this.isCoverPage) return null
+      return this.activePage.cover || {}
+    },
+
     coverTitle() {
       return (this.cover && this.cover.title) || this.catalogName || 'Catálogo'
     },
@@ -675,6 +771,16 @@ export default {
           show_sku: true,
           show_description: true,
           show_images: true,
+        }
+      )
+    },
+
+    catalogTheme() {
+      return (
+        (this.catalog && this.catalog.theme) || {
+          primary: '#1976d2',
+          cover_overlay: 'light',
+          card_style: 'outlined',
         }
       )
     },
@@ -783,7 +889,15 @@ export default {
     },
 
     openNewPageDialog() {
-      this.newPageLayout = this.layoutKey
+      const map = {
+        Minimal: 'grid_2x4',
+        Fashion: 'grid_3x3',
+        Promo: 'list_compact',
+      }
+
+      const t = (this.catalog && this.catalog.template) || 'Minimal'
+      this.newPageLayout = map[t] || this.layoutKey
+
       this.newPageAddProducts = true
       this.showNewPageDialog = true
     },
@@ -961,6 +1075,50 @@ export default {
         patch,
       })
     },
+
+    openTemplateDialog() {
+      const t = (this.catalog && this.catalog.template) || 'Minimal'
+
+      const map = {
+        Minimal: 'minimal',
+        Fashion: 'fashion',
+        Promo: 'promo',
+      }
+
+      this.templateKey = map[t] || 'minimal'
+      this.applyTemplateToPages = true
+      this.showTemplateDialog = true
+    },
+
+    applyTemplate() {
+      const catalogId = this.$route.params.id
+
+      this.$store.dispatch('catalogo/catalogos/applyTemplate', {
+        catalogId,
+        key: this.templateKey,
+        applyToPages: this.applyTemplateToPages,
+      })
+
+      this.showTemplateDialog = false
+    },
+
+    onThemeChange(patch) {
+      const catalogId = this.$route.params.id
+
+      const next = { ...patch }
+
+      if (Object.prototype.hasOwnProperty.call(next, 'primary')) {
+        const v = String(next.primary || '').trim()
+        const ok = /^#([0-9a-fA-F]{6})$/.test(v)
+        if (!ok) return
+        next.primary = v
+      }
+
+      this.$store.dispatch('catalogo/catalogos/updateTheme', {
+        catalogId,
+        patch: next,
+      })
+    },
   },
 }
 </script>
@@ -1019,5 +1177,12 @@ export default {
   justify-content: flex-end;
   padding: 24px;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.55));
+}
+
+.canvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 </style>
