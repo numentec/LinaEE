@@ -13,13 +13,11 @@ export const mockProductos = Array.from({ length: 200 }).map((_, i) => {
     max_qty: ((i % 6) + 1) * 12,
     images: [
       {
-        url: `https://via.placeholder.com/300x300.png?text=${encodeURIComponent(
-          sku
-        )}`,
+        url: `https://picsum.photos/300?text=${encodeURIComponent(sku)}`,
         is_primary: true,
       },
     ],
-    selected_image_url: `https://via.placeholder.com/300x300.png?text=${encodeURIComponent(
+    selected_image_url: `https://picsum.photos/300?text=${encodeURIComponent(
       sku
     )}`,
   }

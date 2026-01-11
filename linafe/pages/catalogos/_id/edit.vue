@@ -26,6 +26,10 @@
           <v-icon left>mdi-share-variant</v-icon>
           Compartir
         </v-btn>
+        <v-btn class="mr-2" outlined @click="exportPdf">
+          <v-icon left>mdi-file-pdf-box</v-icon>
+          Exportar PDF
+        </v-btn>
       </div>
     </v-card>
 
@@ -605,7 +609,7 @@ export default {
 
       distributeLayout: 'grid_2x4',
       distributeCapacity: 8,
-      capacityItems: [6, 8, 9, 12, 16],
+      capacityItems: [4, 5, 6, 7, 8, 9, 12, 16],
 
       layoutItems: [
         { text: 'Grid 2 x 4 (8)', value: 'grid_2x4' },
@@ -1118,6 +1122,13 @@ export default {
         catalogId,
         patch: next,
       })
+    },
+
+    exportPdf() {
+      const catalogId = this.$route.params.id
+      const route = `/catalogos/${catalogId}/print`
+      // this.$router.push(`/catalogos/${this.$route.params.id}/print`)
+      window.open(route, '_blank')
     },
   },
 }

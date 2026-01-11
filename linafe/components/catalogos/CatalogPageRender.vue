@@ -131,6 +131,7 @@ export default {
     orientation: { type: String, default: 'portrait' },
     settings: { type: Object, default: () => ({}) },
     theme: { type: Object, default: () => ({}) },
+    isPrint: { type: Boolean, default: false },
   },
 
   computed: {
@@ -152,12 +153,23 @@ export default {
     },
 
     paperStyle() {
-      const width = 700
       const portraitRatio = 11 / 8.5
       const landscapeRatio = 8.5 / 11
 
       const isLand = this.orientation === 'landscape'
       const ratio = isLand ? landscapeRatio : portraitRatio
+
+      if (this.isPrint) {
+        return {
+          width: '100%',
+          height: 'auto',
+          aspectRatio: `${isLand ? '11 / 8.5' : '8.5 / 11'}`,
+          margin: '0 auto',
+          background: 'white',
+        }
+      }
+
+      const width = 700
       const height = Math.round(width * ratio)
 
       return {
