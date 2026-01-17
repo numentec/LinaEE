@@ -22,7 +22,7 @@ router = DefaultRouter()
 
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'tags', TagViewSet, basename='tags')
-router.register(r'catalogs', CatalogViewSet, basename='catalogs') # Devuelve Master y detalles del catálogo
+router.register(r'api/catalogs', CatalogViewSet, basename='catalogs')
 router.register(r'catalogsonly', CatalogMasterViewSet, basename='catalogsonly') # Devuelve solo el maestro del catálogo
 router.register(r'catalog-details', CatalogDetailViewSet, basename='catalog-details') # Devuelve detalles del catálogo
 router.register(r'catalog-detail-images', CatalogDetailImageViewSet, basename='catalog-detail-images') # Devuelve imágenes de detalles del catálogo

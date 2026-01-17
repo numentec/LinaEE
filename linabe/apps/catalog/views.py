@@ -90,8 +90,9 @@ class CatalogViewSet(CommonViewSet):
     """
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "patch", "put"]
 
-    queryset = CatalogMaster.objects.all()
+    # queryset = CatalogMaster.objects.all()
     serializer_class = CatalogSerializer
 
     filter_backends = [SearchFilter, OrderingFilter]
@@ -100,6 +101,8 @@ class CatalogViewSet(CommonViewSet):
 
     ordering = ['-created_at']
 
+    def get_queryset(self):
+        return CatalogMaster.objects.filter(owner=self.request.user)
 
 class ActiveCustomerCatalogsAPIView(APIView):
     """
