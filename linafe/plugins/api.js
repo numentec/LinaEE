@@ -1,10 +1,10 @@
 export default function ({ $axios }, inject) {
   const api = {
     getCatalog(id) {
-      return $axios.$get(`/api/catalogos/${id}/`)
+      return $axios.$get(`catalog/api/catalogos/${id}/`)
     },
     getPublicCatalog(token) {
-      return $axios.$get(`/api/public/catalogos/${token}/`)
+      return $axios.$get(`catalog/api/public/catalogos/${token}/`)
     },
   }
 

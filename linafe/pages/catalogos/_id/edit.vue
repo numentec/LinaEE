@@ -87,7 +87,8 @@
                   <v-chip
                     v-if="hiddenCountByPage[p.id] > 0"
                     x-small
-                    outlined
+                    color="rgba(0, 0, 0, 0.50)"
+                    text-color="white"
                     class="thumb-more"
                   >
                     +{{ hiddenCountByPage[p.id] }}
@@ -1152,7 +1153,7 @@ export default {
   position: absolute;
   right: 2px;
   bottom: 2px;
-  background: white;
+  /* background: white; */
 }
 
 .thumb-empty {

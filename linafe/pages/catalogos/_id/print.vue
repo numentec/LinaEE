@@ -55,7 +55,7 @@ export default {
   },
 
   mounted() {
-    this.$store.dispatch('catalogo/catalogos/init')
+    // this.$store.dispatch('catalogo/catalogos/init')
 
     this.$nextTick(() => {
       // pequeño delay para que carguen imágenes

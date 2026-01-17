@@ -47,7 +47,7 @@ export default {
 
   async asyncData({ app, params, error }) {
     try {
-      const catalog = await app.$api.getPublicCatalog(params.id)
+      const catalog = await app.$api.getPublicCatalog(params.token)
       return { catalog }
     } catch (e) {
       error({ statusCode: 404, message: 'Catálogo no encontrado' })
