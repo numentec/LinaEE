@@ -12,6 +12,8 @@ from .views import (
     CategoriesListAPIView,
     TopCategoriesByCompanyAPIView,
     CategoriesByParentAndCompanyAPIView,
+    CatalogDetailView,
+    PublicCatalogByTokenView,
 )
 
 app_name = "catalog"
@@ -31,7 +33,10 @@ urlpatterns = [
     # y el token para validar el acceso a un catálogo específico
     path('by-customer/<str:ulid>/', ActiveCustomerCatalogsAPIView.as_view(), name='active-customer-catalogs'),
     path('by-customer/<str:ulid>/<str:token>/', ValidCustomerCatalogAPIView.as_view(), name='valid-customer-catalog'),
-    
+
+    path("api/catalogos/<int:pk>/", CatalogDetailView.as_view()),
+    path("api/public/catalogos/<str:token>/", PublicCatalogByTokenView.as_view()),
+
     # Endpoints para consultas de categorías
     # 1. Listado general de todas las categorías con compañías disponibles
     path('categories/list/', CategoriesListAPIView.as_view(), name='categories-list'),

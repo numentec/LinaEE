@@ -4,6 +4,7 @@ from ..core.views import CommonViewSet
 from .models import Category, Tag, CatalogMaster, CatalogDetail, CatalogDetailImage
 from .serializers import (
     CategorySerializer,
+    PublicCatalogSerializer,
     CategoryWithCompaniesSerializer,
     CategoryHierarchySerializer,
     TagSerializer,
@@ -18,8 +19,9 @@ from ..core.models import Customer, Cia
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 from rest_framework import status
-from rest_framework import authentication, permissions
+from rest_framework import authentication, permissions, generics
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 import ulid
@@ -313,3 +315,25 @@ class CategoriesByParentAndCompanyAPIView(APIView):
             'subcategories': serializer.data,
             'total': subcategories.count()
         }, status=status.HTTP_200_OK)
+
+class CatalogDetailView(generics.RetrieveAPIView):
+    serializer_class = CatalogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Si tu app maneja company activa, filtra también por company_id aquí
+        return CatalogMaster.objects.filter(owner=self.request.user)
+
+
+class PublicCatalogByTokenView(generics.GenericAPIView):
+    serializer_class = PublicCatalogSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, token):
+        try:
+            catalog = CatalogMaster.objects.get(share_token=token)
+        except CatalogMaster.DoesNotExist:
+            raise NotFound("Catalog not found")
+
+        data = self.get_serializer(catalog).data
+        return Response(data)

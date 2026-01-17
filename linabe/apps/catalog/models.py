@@ -104,15 +104,38 @@ class Tag(Common):
 
 class CatalogMaster(Common):
     """Modelo para maestro de catálogo"""
+    company_id = models.CharField(max_length=32, default='01')
+    owner = models.ForeignKey(
+        LinaUserModel,
+        on_delete=models.CASCADE,
+        related_name="catalogs",
+    )
     name = models.CharField("Nombre", max_length=20, blank=True, default='Custom Catalog')
     descrip = models.TextField("Descripción", blank = True)
-    note =  models.TextField("Nota", blank = True)
+    note =  models.TextField("Nota", blank = True, default='No additional notes')
     token = models.CharField("Token", max_length=45, unique=True, default=genToken)
     ttl = models.DateField("TTL", default=defaultTTL)
     seller = models.ForeignKey(LinaUserModel, on_delete=models.SET_NULL, \
              verbose_name='Vendedor', related_name='catalogs_by_seller', null=True)
     customer = models.ManyToManyField(Customer, verbose_name='Customer', \
                   related_name='catalogs_by_customer', blank=True)
+    template = models.CharField(max_length=32, default="Minimal")
+    orientation = models.CharField(
+        max_length=16,
+        choices=(("portrait", "portrait"), ("landscape", "landscape")),
+        default="portrait",
+    )
+
+    # JSON "source of truth"
+    settings = models.JSONField(default=dict, blank=True)
+    theme = models.JSONField(default=dict, blank=True)
+    pages = models.JSONField(default=list, blank=True)
+
+    share_token = models.CharField(
+        max_length=64, unique=True, default=genToken, db_index=True
+    )
+
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
 
     def save(self, *args, **kwargs):
         # Si el vendedor no está definido, se asigna el creador del catálogo
@@ -121,6 +144,9 @@ class CatalogMaster(Common):
         super(CatalogMaster, self).save(*args, **kwargs)
         
     class Meta:
+        indexes = [
+            models.Index(fields=["company_id", "owner"]),
+        ]
         db_table = 'catalog_catalogm'
         verbose_name = 'Catalog'
         verbose_name_plural = 'Catalogs'
