@@ -199,7 +199,8 @@ export const getters = {
     return state.items
   },
   byId: (state) => (id) => {
-    return state.items.find((c) => c.id === id) || null
+    const cid = Number(id)
+    return state.items.find((c) => c.id === cid) || null
   },
   current(state, getters) {
     if (!state.currentId) return null
@@ -215,11 +216,14 @@ export const getters = {
 }
 
 export const mutations = {
+  // SET_ITEMS(state, items) {
+  //   state.items = (items || [])
+  //     .map(ensurePages)
+  //     .map(ensureSettings)
+  //     .map(ensureTheme)
+  // },
   SET_ITEMS(state, items) {
-    state.items = (items || [])
-      .map(ensurePages)
-      .map(ensureSettings)
-      .map(ensureTheme)
+    state.items = items || []
   },
   ADD_ITEM(state, item) {
     state.items.unshift(item)
@@ -716,6 +720,10 @@ export const actions = {
       .map(ensureTheme)
 
     commit('SET_ITEMS', normalized)
+  },
+
+  setItems({ commit }, items) {
+    commit('SET_ITEMS', items)
   },
 
   createCatalog({ commit }, { name, template, orientation, companyId }) {

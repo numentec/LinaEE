@@ -85,7 +85,7 @@ export default {
   },
 
   mounted() {
-    this.$store.dispatch('catalogo/catalogos/init')
+    // this.$store.dispatch('catalogo/catalogos/init')
   },
 
   methods: {

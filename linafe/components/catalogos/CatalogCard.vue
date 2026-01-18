@@ -76,6 +76,7 @@ export default {
         draft: 'Borrador',
         ready: 'Listo',
         sent: 'Enviado',
+        expired: 'Expirado',
         archived: 'Archivado',
       }
       return map[this.item.status] || this.item.status
@@ -85,6 +86,7 @@ export default {
         draft: 'grey',
         ready: 'blue',
         sent: 'green',
+        expired: 'orange',
         archived: 'brown',
       }
       return map[this.item.status] || 'grey'

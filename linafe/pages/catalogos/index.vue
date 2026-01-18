@@ -36,6 +36,18 @@ export default {
   name: 'CatalogosIndexPage',
   components: { CatalogToolbar, CatalogFilters, CatalogGrid },
 
+  async asyncData({ app, error, store }) {
+    try {
+      const catalogs = await app.$api.getCatalogs()
+
+      store.dispatch('catalogo/catalogos/setItems', catalogs)
+
+      return { catalogs }
+    } catch (e) {
+      error({ statusCode: 500, message: 'Error al cargar los catálogos' })
+    }
+  },
+
   data() {
     return {
       search: '',
@@ -89,7 +101,7 @@ export default {
   //   },
 
   mounted() {
-    this.$store.dispatch('catalogo/catalogos/init')
+    // this.$store.dispatch('catalogo/catalogos/init')
   },
 
   methods: {

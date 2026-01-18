@@ -18,6 +18,21 @@
           <v-icon left>mdi-package-variant-closed-plus</v-icon>
           Agregar productos
         </v-btn>
+        <v-btn
+          class="mr-2"
+          color="primary"
+          :loading="saving"
+          :disabled="!hasPendingChanges || saving"
+          @click="saveCatalog"
+        >
+          <v-icon left>mdi-content-save</v-icon>
+          Guardar
+        </v-btn>
+
+        <v-chip v-if="saveStateLabel" small outlined class="mr-2">
+          {{ saveStateLabel }}
+        </v-chip>
+
         <v-btn class="mx-2" color="primary" @click="goPreview">
           <v-icon left>mdi-file-eye-outline</v-icon>
           Vista previa
@@ -622,6 +637,9 @@ export default {
       showShareDialog: false,
       shareToken: '',
 
+      saving: false,
+      lastSavedHash: '',
+
       // Configuración de template del catálogo
       templateKey: 'minimal',
       applyTemplateToPages: true,
@@ -646,10 +664,12 @@ export default {
   },
 
   computed: {
+    catalogId() {
+      return Number(this.$route.params.id)
+    },
+
     catalog() {
-      return this.$store.getters['catalogo/catalogos/byId'](
-        this.$route.params.id
-      )
+      return this.$store.getters['catalogo/catalogos/byId'](this.catalogId)
     },
 
     catalogName() {
@@ -657,7 +677,9 @@ export default {
     },
 
     catalogTemplate() {
-      return (this.catalog && this.catalog.template) || 'Template'
+      const t = (this.catalog && this.catalog.template) || 'minimal'
+      const map = { minimal: 'Minimal', fashion: 'Fashion', promo: 'Promo' }
+      return map[t] || t
     },
 
     catalogOrientation() {
@@ -683,7 +705,7 @@ export default {
 
     activePageIndex() {
       return this.$store.getters['catalogo/catalogos/activePageIndex'](
-        this.$route.params.id
+        this.catalogId
       )
     },
     activePage() {
@@ -789,26 +811,71 @@ export default {
         }
       )
     },
+
+    catalogSnapshot() {
+      if (!this.catalog) return null
+
+      return {
+        name: this.catalog.name,
+        template: this.catalog.template,
+        orientation: this.catalog.orientation,
+        settings: this.catalog.settings,
+        theme: this.catalog.theme,
+        pages: this.catalog.pages,
+      }
+    },
+
+    snapshotHash() {
+      try {
+        return JSON.stringify(this.catalogSnapshot || {})
+      } catch (e) {
+        return ''
+      }
+    },
+
+    hasPendingChanges() {
+      if (!this.catalog) return false
+      if (!this.lastSavedHash) return true
+      return this.snapshotHash !== this.lastSavedHash
+    },
+
+    saveStateLabel() {
+      if (!this.catalog) return ''
+      if (this.saving) return 'Guardando...'
+      if (!this.lastSavedHash) return 'No guardado'
+      if (this.hasPendingChanges) return 'Cambios pendientes'
+      return 'Guardado'
+    },
+  },
+
+  watch: {
+    catalog: {
+      immediate: true,
+      handler(val) {
+        if (!val) return
+        if (!this.lastSavedHash) this.lastSavedHash = this.snapshotHash
+      },
+    },
   },
 
   mounted() {
-    this.$store.dispatch('catalogo/catalogos/init')
-    this.$store.dispatch('catalogo/catalogos/setCurrent', this.$route.params.id)
+    // this.$store.dispatch('catalogo/catalogos/init')
+    this.$store.dispatch('catalogo/catalogos/setCurrent', this.catalogId)
 
     this.$store.dispatch('catalogo/catalogos/ensureCoverPage', {
-      catalogId: this.$route.params.id,
+      catalogId: this.catalogId,
     })
 
     // opcional: mostrar portada al abrir
     this.$store.dispatch('catalogo/catalogos/setActivePage', {
-      catalogId: this.$route.params.id,
+      catalogId: this.catalogId,
       pageIndex: 0,
     })
   },
 
   methods: {
     goPreview() {
-      this.$router.push(`/catalogos/${this.$route.params.id}/preview`)
+      this.$router.push(`/catalogos/${this.catalogId}/preview`)
     },
 
     openPicker() {
@@ -818,7 +885,7 @@ export default {
     },
 
     async onAddProducts(products) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       const idx =
         typeof this.pickerTargetIndex === 'number'
@@ -838,7 +905,7 @@ export default {
     },
 
     setActivePage(pageIndex) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       this.$store.dispatch('catalogo/catalogos/setActivePage', {
         catalogId,
@@ -847,7 +914,7 @@ export default {
     },
 
     onLayoutChange(layout) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
       const pageId = this.page ? this.page.id : null
 
       if (!pageId) return
@@ -881,7 +948,7 @@ export default {
     },
 
     async confirmDistribute() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/autoDistribute', {
         catalogId,
@@ -908,7 +975,7 @@ export default {
     },
 
     async createNewPage() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       const idx = await this.$store.dispatch(
         'catalogo/catalogos/addEmptyPage',
@@ -928,7 +995,7 @@ export default {
     },
 
     async duplicatePage(idx) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/duplicatePage', {
         catalogId,
@@ -940,7 +1007,7 @@ export default {
       const ok = window.confirm('¿Eliminar esta página?')
       if (!ok) return
 
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/deletePage', {
         catalogId,
@@ -950,7 +1017,7 @@ export default {
 
     async movePageUp(idx) {
       if (idx <= 0) return
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/movePage', {
         catalogId,
@@ -961,7 +1028,7 @@ export default {
 
     async movePageDown(idx) {
       if (idx >= this.pages.length - 1) return
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/movePage', {
         catalogId,
@@ -998,7 +1065,7 @@ export default {
       const name = (this.renameValue || '').trim()
       if (!name) return
 
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/renamePage', {
         catalogId,
@@ -1020,7 +1087,7 @@ export default {
     },
 
     async addCover() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       await this.$store.dispatch('catalogo/catalogos/ensureCoverPage', {
         catalogId,
@@ -1030,7 +1097,7 @@ export default {
     },
 
     onCoverChange(patch) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       this.$store.dispatch('catalogo/catalogos/updateCover', {
         catalogId,
@@ -1039,7 +1106,7 @@ export default {
     },
 
     async openShare() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       const token = await this.$store.dispatch(
         'catalogo/catalogos/ensureShareToken',
@@ -1051,7 +1118,7 @@ export default {
     },
 
     async regenerateToken() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       const token = await this.$store.dispatch(
         'catalogo/catalogos/regenerateShareToken',
@@ -1073,7 +1140,7 @@ export default {
     },
 
     onSettingsChange(patch) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       this.$store.dispatch('catalogo/catalogos/updateSettings', {
         catalogId,
@@ -1096,7 +1163,7 @@ export default {
     },
 
     applyTemplate() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       this.$store.dispatch('catalogo/catalogos/applyTemplate', {
         catalogId,
@@ -1108,7 +1175,7 @@ export default {
     },
 
     onThemeChange(patch) {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
 
       const next = { ...patch }
 
@@ -1126,10 +1193,36 @@ export default {
     },
 
     exportPdf() {
-      const catalogId = this.$route.params.id
+      const catalogId = this.catalogId
       const route = `/catalogos/${catalogId}/print`
       // this.$router.push(`/catalogos/${this.$route.params.id}/print`)
       window.open(route, '_blank')
+    },
+
+    async saveCatalog() {
+      if (!this.catalog) return
+
+      this.saving = true
+
+      try {
+        const id = this.catalogId
+
+        await this.$axios.$patch(`/catalog/api/catalogs/${id}/`, {
+          name: this.catalog.name,
+          template: this.catalog.template,
+          orientation: this.catalog.orientation,
+          settings: this.catalog.settings,
+          theme: this.catalog.theme,
+          pages: this.catalog.pages,
+        })
+
+        this.lastSavedHash = this.snapshotHash
+        this.$toast?.success?.('Guardado')
+      } catch (e) {
+        this.$toast?.error?.('No se pudo guardar')
+      } finally {
+        this.saving = false
+      }
     },
   },
 }

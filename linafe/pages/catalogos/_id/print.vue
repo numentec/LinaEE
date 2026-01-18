@@ -26,6 +26,7 @@ export default {
 
   async asyncData({ app, params, error }) {
     try {
+      // console.log('Fetching catalog for print:', params.id)
       const catalog = await app.$api.getCatalog(params.id)
       return { catalog }
     } catch (e) {
@@ -61,7 +62,7 @@ export default {
       // pequeño delay para que carguen imágenes
       setTimeout(() => {
         window.print()
-      }, 400)
+      }, 1200)
     })
   },
 }
