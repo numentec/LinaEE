@@ -113,7 +113,6 @@ class CatalogMaster(Common):
     name = models.CharField("Nombre", max_length=20, blank=True, default='Custom Catalog')
     descrip = models.TextField("Descripción", blank = True)
     note =  models.TextField("Nota", blank = True, default='No additional notes')
-    token = models.CharField("Token", max_length=45, unique=True, default=genToken)
     ttl = models.DateField("TTL", default=defaultTTL)
     seller = models.ForeignKey(LinaUserModel, on_delete=models.SET_NULL, \
              verbose_name='Vendedor', related_name='catalogs_by_seller', null=True)
@@ -137,12 +136,34 @@ class CatalogMaster(Common):
 
     updated_at = models.DateTimeField(auto_now=True, editable=False)
 
+    status = models.CharField(
+        max_length=16,
+        choices=(("draft", "draft"), ("ready", "ready"), ("sent", "sent"), ("expired", "expired"), ("archived", "archived")),
+        default="draft",
+    )
+
+    def ensure_share_token(self) -> None:
+        if self.share_token:
+            return
+        token = genToken()
+        # reintento por si choca, muy raro
+        for _ in range(5):
+            if not CatalogMaster.objects.filter(share_token=token).exists():
+                self.share_token = token
+                return
+            token = genToken()
+        self.share_token = token
+
     def save(self, *args, **kwargs):
         # Si el vendedor no está definido, se asigna el creador del catálogo
         if not self.seller and self.created_by:
             self.seller = self.created_by
+
+        if not self.share_token:
+            self.ensure_share_token()
+
         super(CatalogMaster, self).save(*args, **kwargs)
-        
+
     class Meta:
         indexes = [
             models.Index(fields=["company_id", "owner"]),
@@ -151,8 +172,9 @@ class CatalogMaster(Common):
         verbose_name = 'Catalog'
         verbose_name_plural = 'Catalogs'
 
+
     def __str_(self):
-        return "Catalog {} / {}".format(self.name, self.token)
+        return "Catalog {} / {}".format(self.name, self.share_token)
 
 
 # Modelo para detalle de catálogo

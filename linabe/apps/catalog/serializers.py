@@ -189,6 +189,7 @@ class CatalogSerializer(serializers.ModelSerializer):
             "pages",
             "share_token",
             "updated_at",
+            "status",
         )
         read_only_fields = ("id", "share_token", "updated_at")
 
@@ -203,4 +204,5 @@ class PublicCatalogSerializer(serializers.ModelSerializer):
             "settings",
             "theme",
             "pages",
+            "status",
         )
