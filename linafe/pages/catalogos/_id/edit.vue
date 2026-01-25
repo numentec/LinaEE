@@ -14,7 +14,12 @@
           </div>
         </div>
         <v-spacer />
-        <v-btn color="primary" :disabled="isCoverPage" @click="openPicker">
+        <v-btn
+          color="primary"
+          class="mr-2"
+          :disabled="isCoverPage"
+          @click="openPicker"
+        >
           <v-icon left>mdi-package-variant-closed-plus</v-icon>
           Agregar productos
         </v-btn>
@@ -29,9 +34,15 @@
           Guardar
         </v-btn>
 
-        <v-chip v-if="saveStateLabel" small outlined class="mr-2">
-          {{ saveStateLabel }}
-        </v-chip>
+        <v-btn
+          v-if="lastSaveError"
+          small
+          outlined
+          :disabled="saving"
+          @click="saveCatalog()"
+        >
+          Reintentar
+        </v-btn>
 
         <v-btn class="mx-2" color="primary" @click="goPreview">
           <v-icon left>mdi-file-eye-outline</v-icon>
@@ -45,6 +56,10 @@
           <v-icon left>mdi-file-pdf-box</v-icon>
           Exportar PDF
         </v-btn>
+
+        <v-chip v-if="saveStateLabel" small outlined class="mr-2">
+          {{ saveStateLabel }}
+        </v-chip>
       </div>
     </v-card>
 
@@ -637,9 +652,6 @@ export default {
       showShareDialog: false,
       shareToken: '',
 
-      saving: false,
-      lastSavedHash: '',
-
       // Configuración de template del catálogo
       templateKey: 'minimal',
       applyTemplateToPages: true,
@@ -660,6 +672,14 @@ export default {
         { text: 'Outlined', value: 'outlined' },
         { text: 'Flat', value: 'flat' },
       ],
+
+      saving: false,
+      lastSavedHash: '',
+
+      autosaveTimer: null,
+      autosaveDelayMs: 1800,
+      autosaveEnabled: true,
+      lastSaveError: '',
     }
   },
 
@@ -841,6 +861,7 @@ export default {
 
     saveStateLabel() {
       if (!this.catalog) return ''
+      if (this.lastSaveError) return 'Error'
       if (this.saving) return 'Guardando...'
       if (!this.lastSavedHash) return 'No guardado'
       if (this.hasPendingChanges) return 'Cambios pendientes'
@@ -855,6 +876,17 @@ export default {
         if (!val) return
         if (!this.lastSavedHash) this.lastSavedHash = this.snapshotHash
       },
+    },
+
+    snapshotHash(val, oldVal) {
+      if (!this.autosaveEnabled) return
+      if (!this.catalog) return
+      if (!this.lastSavedHash) return
+
+      if (val === oldVal) return
+      if (val === this.lastSavedHash) return
+
+      this.queueAutosave()
     },
   },
 
@@ -871,6 +903,25 @@ export default {
       catalogId: this.catalogId,
       pageIndex: 0,
     })
+
+    window.addEventListener('beforeunload', this.onBeforeUnload)
+  },
+
+  beforeRouteLeave(to, from, next) {
+    if (this.shouldBlockNavigation()) {
+      const ok = window.confirm(
+        'Tienes cambios pendientes. ¿Salir sin guardar?'
+      )
+      if (!ok) return next(false)
+    }
+
+    next()
+  },
+
+  beforeDestroy() {
+    if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
+
+    window.removeEventListener('beforeunload', this.onBeforeUnload)
   },
 
   methods: {
@@ -1199,10 +1250,19 @@ export default {
       window.open(route, '_blank')
     },
 
-    async saveCatalog() {
+    queueAutosave() {
+      if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
+
+      this.autosaveTimer = setTimeout(() => {
+        this.saveCatalog({ silent: true })
+      }, this.autosaveDelayMs)
+    },
+
+    async saveCatalog({ silent } = { silent: false }) {
       if (!this.catalog) return
 
       this.saving = true
+      this.lastSaveError = ''
 
       try {
         const id = this.catalogId
@@ -1217,12 +1277,30 @@ export default {
         })
 
         this.lastSavedHash = this.snapshotHash
-        this.$toast?.success?.('Guardado')
+        if (!silent) this.$toast?.success?.('Guardado')
       } catch (e) {
-        this.$toast?.error?.('No se pudo guardar')
+        this.lastSaveError = 'No se pudo guardar'
+        if (!silent) this.$toast?.error?.('No se pudo guardar')
       } finally {
         this.saving = false
       }
+    },
+
+    shouldBlockNavigation() {
+      if (!this.catalog) return false
+      if (this.saving) return false
+
+      // Si hay autosave activo, normalmente los cambios se guardan solos,
+      // pero si hay error o aún hay cambios pendientes, bloqueamos.
+      if (this.lastSaveError) return true
+      return this.hasPendingChanges
+    },
+
+    onBeforeUnload(e) {
+      if (!this.shouldBlockNavigation()) return
+
+      e.preventDefault()
+      e.returnValue = ''
     },
   },
 }
