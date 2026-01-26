@@ -1243,11 +1243,23 @@ export default {
       })
     },
 
-    exportPdf() {
+    async exportPdf() {
       const catalogId = this.catalogId
-      const route = `/catalogos/${catalogId}/print`
-      // this.$router.push(`/catalogos/${this.$route.params.id}/print`)
-      window.open(route, '_blank')
+      const res = await this.$axios.request({
+        url: `/catalog/api/catalogs/${catalogId}/export-pdf/`,
+        method: 'POST',
+        responseType: 'blob',
+      })
+
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `catalogo-${catalogId}.pdf`
+      a.click()
+
+      window.URL.revokeObjectURL(url)
     },
 
     queueAutosave() {

@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-card outlined class="pa-3 mb-3">
+    <v-card v-if="!isPdf" outlined class="pa-3 mb-3">
       <div class="d-flex align-center">
         <div>
           <div class="text-subtitle-1 font-weight-medium">
@@ -25,12 +25,13 @@
     </v-sheet>
 
     <div v-else>
-      <div v-for="(p, idx) in pages" :key="idx" class="mb-8">
+      <div v-for="p in pages" :key="p.id" :class="isPdf ? 'pdf-page' : 'mb-8'">
         <CatalogPageRender
           :page="p"
           :orientation="catalog.orientation"
           :settings="catalog.settings"
           :theme="catalog.theme"
+          :is-print="isPdf"
         />
       </div>
     </div>
@@ -42,7 +43,7 @@ import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
 
 export default {
   name: 'PublicCatalogPage',
-  layout: 'publicapps',
+  layout: 'clean',
   components: { CatalogPageRender },
 
   async asyncData({ app, params, error }) {
@@ -79,6 +80,10 @@ export default {
 
       return pages
     },
+
+    isPdf() {
+      return this.$route.query.pdf === '1'
+    },
   },
 
   mounted() {
@@ -99,3 +104,20 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+@media print {
+  .pdf-page {
+    page-break-after: always;
+    break-after: page;
+  }
+  .pdf-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
+
+.pdf-page {
+  margin-bottom: 0;
+}
+</style>
