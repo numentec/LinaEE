@@ -233,6 +233,14 @@ const setFields = (row, hasPermissions) => {
       visible: hasPermissions,
     },
     {
+      dataField: 'MARGEN',
+      dataType: 'number',
+      summaryType: 'sum',
+      format: '#,##0.00',
+      isMeasure: true,
+      visible: hasPermissions,
+    },
+    {
       dataField: 'FOB',
       dataType: 'number',
       summaryType: 'sum',
