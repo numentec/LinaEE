@@ -43,3 +43,6 @@ COPY ./requirements.txt ./requirements.txt
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+# RUN pip install --no-cache-dir playwright==1.37.0
+RUN playwright install --with-deps chromium

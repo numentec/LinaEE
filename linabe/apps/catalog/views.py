@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from ..core.views import CommonViewSet
@@ -20,9 +21,12 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
-from rest_framework import status
-from rest_framework import authentication, permissions, generics
+from rest_framework import authentication, permissions, generics, status
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.decorators import action
+from rest_framework.viewsets import ModelViewSet
+
+from .pdf import render_url_to_pdf, PdfOptions
 
 import ulid
 
@@ -30,7 +34,7 @@ import ulid
 LinaUserModel = get_user_model()
 # Create your views here.
 
-# class CommonViewSet(viewsets.ModelViewSet):
+# class CommonViewSet(ModelViewSet):
 #     """Ensure the models are updated with the requesting user."""
 
 #     def perform_create(self, serializer):
@@ -90,7 +94,7 @@ class CatalogViewSet(CommonViewSet):
     """
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ["get", "patch", "put"]
+    http_method_names = ["get", "patch", "put", "post"]
 
     # queryset = CatalogMaster.objects.all()
     serializer_class = CatalogSerializer
@@ -103,6 +107,30 @@ class CatalogViewSet(CommonViewSet):
 
     def get_queryset(self):
         return CatalogMaster.objects.filter(owner=self.request.user)
+
+    @action(detail=True, methods=["post"], url_path="export-pdf")
+    def export_pdf(self, request, pk=None):
+        catalog = self.get_object()
+
+        # Asegura share_token para poder usar URL pública
+        if not catalog.share_token:
+            catalog.ensure_share_token()
+            catalog.save(update_fields=["share_token"])
+
+        base = settings.FRONTEND_BASE_URL.rstrip("/")
+        url = f"{base}/portal/shared-catalog/{catalog.share_token}?pdf=1"
+
+        landscape = catalog.orientation == "landscape"
+        pdf_bytes = render_url_to_pdf(url, PdfOptions(landscape=landscape))
+
+        filename = f"catalogo-{catalog.id}.pdf"
+        resp = Response(
+            pdf_bytes,
+            status=status.HTTP_200_OK,
+            content_type="application/pdf",
+        )
+        resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return resp
 
 class ActiveCustomerCatalogsAPIView(APIView):
     """
