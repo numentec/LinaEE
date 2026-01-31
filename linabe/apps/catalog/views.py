@@ -1,6 +1,21 @@
 from django.conf import settings
 from django.utils import timezone
+from django.http import HttpResponse
 from django.contrib.auth import get_user_model
+
+from rest_framework import viewsets
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from rest_framework import authentication, permissions, generics, status
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.decorators import action
+from rest_framework.viewsets import ModelViewSet
+
+from urllib.parse import urljoin, urlencode
+
+import ulid
+
 from ..core.views import CommonViewSet
 from .models import Category, Tag, CatalogMaster, CatalogDetail, CatalogDetailImage
 from .serializers import (
@@ -17,18 +32,7 @@ from .serializers import (
 )
 from ..core.models import Customer, Cia
 
-from rest_framework import viewsets
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
-from rest_framework import authentication, permissions, generics, status
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.decorators import action
-from rest_framework.viewsets import ModelViewSet
-
 from .pdf import render_url_to_pdf, PdfOptions
-
-import ulid
 
 
 LinaUserModel = get_user_model()
@@ -117,18 +121,28 @@ class CatalogViewSet(CommonViewSet):
             catalog.ensure_share_token()
             catalog.save(update_fields=["share_token"])
 
-        base = settings.FRONTEND_BASE_URL.rstrip("/")
-        url = f"{base}/portal/shared-catalog/{catalog.share_token}?pdf=1"
+        base = settings.FRONTEND_BASE_URL.rstrip("/") + "/"
+
+        path = f"portal/shared-catalog/{catalog.share_token}/print"
+        query = urlencode({"pdf": "1"})
+        url = f"{base}/portal/shared-catalog/{catalog.share_token}/print?pdf=1"
+        url = urljoin(base, path) + "?" + query
+        # Ej: http://linafe:3001/portal/shared-catalog/<token>/print?pdf=1
 
         landscape = catalog.orientation == "landscape"
-        pdf_bytes = render_url_to_pdf(url, PdfOptions(landscape=landscape))
+
+        try:
+            pdf_bytes = render_url_to_pdf(url, PdfOptions(landscape=landscape))
+        except Exception as e:
+            return HttpResponse(
+                f"Error generating PDF: {str(e)}",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content_type="text/plain",
+            )
 
         filename = f"catalogo-{catalog.id}.pdf"
-        resp = Response(
-            pdf_bytes,
-            status=status.HTTP_200_OK,
-            content_type="application/pdf",
-        )
+
+        resp = HttpResponse(pdf_bytes, content_type="application/pdf")
         resp["Content-Disposition"] = f'attachment; filename="{filename}"'
         return resp
 
