@@ -86,8 +86,47 @@ export default {
     },
   },
 
+  watch: {
+    catalog: {
+      immediate: true,
+      async handler(val) {
+        if (!process.client) return
+        if (!val) return
+
+        const isPdf = this.$route.query.pdf === '1'
+        if (!isPdf) return
+
+        // Espera a que el DOM pinte
+        await this.$nextTick()
+
+        // Espera a que se hayan renderizado items (evita imprimir antes de tiempo)
+        const start = Date.now()
+        while (Date.now() - start < 15000) {
+          const items = document.querySelectorAll('.catalog-item')
+          if (items && items.length > 0) break
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
+
+        // Espera a que carguen imágenes (best effort)
+        const imgs = Array.from(document.images || [])
+        await Promise.all(
+          imgs.map((img) => {
+            if (img.complete) return Promise.resolve()
+            return new Promise((resolve) => {
+              img.addEventListener('load', resolve, { once: true })
+              img.addEventListener('error', resolve, { once: true })
+            })
+          })
+        )
+
+        window.__PDF_READY__ = true
+      },
+    },
+  },
+
   mounted() {
-    this.$store.dispatch('catalogo/catalogos/init')
+    // this.$store.dispatch('catalogo/catalogos/init')
+    window.__PDF_READY__ = false
   },
 
   head() {
