@@ -124,10 +124,10 @@ services:
 
 
   flower:
-    build:
-      context: ./linabe
-      dockerfile: Dockerfile
-    image: linabe_celery_flower
+    # build:
+    #   context: ./linabe
+    #   dockerfile: Dockerfile
+    image: linabe_celery_worker
     container_name: celeryflower
     command: /start-flower
     volumes:
