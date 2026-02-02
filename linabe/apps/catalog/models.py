@@ -1,5 +1,6 @@
 import os
 import secrets
+import uuid
 from datetime import timedelta
 from django.utils import timezone
 from django.db import models
@@ -215,3 +216,30 @@ class CatalogDetailImage(Common):
 
     def __str__(self):
         return "Image {} - {}".format(self.id, self.itemdetail.sku)
+
+
+class PdfJob(models.Model):
+    """Modelo para trabajos de generación de PDF de catálogo"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(LinaUserModel, on_delete=models.CASCADE)
+    catalog = models.ForeignKey(CatalogMaster, on_delete=models.CASCADE)
+
+    status = models.CharField(
+        max_length=16,
+        choices=(("queued","queued"),("running","running"),("success","success"),("failed","failed")),
+        default="queued",
+    )
+    file_path = models.TextField(blank=True, default="")
+    error = models.TextField(blank=True, default="")
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'catalog_pdfjob'
+        verbose_name = 'PDF Job'
+        verbose_name_plural = 'PDF Jobs'
+        indexes = [
+            models.Index(fields=["owner", "status"]),
+            models.Index(fields=["catalog", "status"]),
+        ]

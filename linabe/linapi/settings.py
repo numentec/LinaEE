@@ -240,6 +240,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 FRONTEND_BASE_URL = environ.get("FRONTEND_BASE_URL", "http://linafe:3001/")
+BACKEND_BASE_URL = environ.get("BACKEND_BASE_URL", "http://linabe:8001/")
+BACKEND_PUBLIC_URL = environ.get("BACKEND_PUBLIC_URL", "http://localhost:8001/")
 
 # IPWARE_META_PRECEDENCE_ORDER = (
 #     'HTTP_X_FORWARDED_FOR', 'X_FORWARDED_FOR',  # <client>, <proxy1>, <proxy2>

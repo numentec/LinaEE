@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from playwright.sync_api import sync_playwright
+from pathlib import Path
 
 @dataclass
 class PdfOptions:
@@ -90,63 +91,17 @@ def render_url_to_pdf(url: str, options) -> bytes:
         return pdf_bytes
 
 
-# def render_url_to_pdf(url: str, options: PdfOptions) -> bytes:
-#     with sync_playwright() as p:
-#         browser = p.chromium.launch(
-#             headless=True,
-#             args=["--no-sandbox", "--disable-dev-shm-usage"],
-#         )
+# pdf_cache.py
+CACHE_DIR = Path("/linabe/var/pdf-cache")  # monta volumen
 
-#         context = browser.new_context()
-#         page = context.new_page()
+def catalog_pdf_cache_key(catalog) -> str:
+    ts = catalog.updated_at.strftime("%Y%m%dT%H%M%S")
+    template = (catalog.template or "template").replace(" ", "_")
+    orient = (catalog.orientation or "portrait")
 
-#         # Logs útiles (si algo falla, te dirá por qué)
-#         page.on("console", lambda msg: print(f"[PDF console] {msg.type}: {msg.text}"))
-#         page.on("pageerror", lambda exc: print(f"[PDF pageerror] {exc}"))
-#         page.on("requestfailed", lambda req: print(f"[PDF requestfailed] {req.url}"))
+    # versiona el template de impresión por si cambia el CSS/HTML
+    return f"catalog_{catalog.id}_{ts}_{template}_{orient}_v1.pdf"
 
-#         # 1) No uses networkidle para SPAs
-#         # page.emulate_media(media="print")
-#         page.set_viewport_size({"width": 1280, "height": 720})
-#         page.goto(url, wait_until="domcontentloaded", timeout=120000)
-
-#         # 2) Espera a que Nuxt monte + datos listos
-#         # Esto lo pondremos en el frontend: window.__PDF_READY__ = true
-#         page.wait_for_function("window.__PDF_READY__ === true", timeout=120000)
-
-#         pdf_bytes = page.pdf(
-#             format="Letter",
-#             landscape=options.landscape,
-#             print_background=True,
-#             margin={"top": "10mm", "right": "10mm", "bottom": "10mm", "left": "10mm"},
-#         )
-
-#         context.close()
-#         browser.close()
-#         return pdf_bytes
-    
-# def render_url_to_pdf(url: str, options: PdfOptions) -> bytes:
-#     with sync_playwright() as p:
-#         browser = p.chromium.launch(
-#             headless=True,
-#             args=["--no-sandbox", "--disable-dev-shm-usage"],
-#         )
-
-#         context = browser.new_context()
-#         page = context.new_page()
-
-#         # Logs útiles (si algo falla, te dirá por qué)
-#         page.on("console", lambda msg: print(f"[PDF console] {msg.type}: {msg.text}"))
-#         page.on("pageerror", lambda exc: print(f"[PDF pageerror] {exc}"))
-#         page.on("requestfailed", lambda req: print(f"[PDF requestfailed] {req.url}"))
-
-#         # 1) No uses networkidle para SPAs
-#         # page.emulate_media(media="print")
-#         # page.set_viewport_size({"width": 1280, "height": 720})
-#         page.goto(url, wait_until="load", timeout=60000)
-
-#         page.pdf(
-#             format="Letter",
-#             print_background=True,
-#             margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
-#         )
+def catalog_pdf_cache_path(catalog) -> Path:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    return CACHE_DIR / catalog_pdf_cache_key(catalog)
