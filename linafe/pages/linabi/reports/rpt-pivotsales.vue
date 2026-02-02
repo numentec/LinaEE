@@ -235,7 +235,7 @@ const setFields = (row, hasPermissions) => {
     {
       dataField: 'MARGEN',
       dataType: 'number',
-      summaryType: 'sum',
+      summaryType: 'avg',
       format: '#,##0.00',
       isMeasure: true,
       visible: hasPermissions,
