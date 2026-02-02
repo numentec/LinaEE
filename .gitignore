@@ -235,6 +235,8 @@ sw.*
 
 media
 linabe/static/*
+/var/pdf-cache/
+!linabe/static/.gitkeep
 
 # Mr Developer
 .mr.developer.cfg
