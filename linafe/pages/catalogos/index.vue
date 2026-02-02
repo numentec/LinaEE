@@ -132,7 +132,6 @@ export default {
     exportPdf(id) {
       // MVP: placeholder
       this.$toast?.info?.('Exportar PDF: pendiente (MVP botón listo)')
-      console.log('Export PDF', id)
     },
     archive(id) {
       this.$store.commit('catalogo/catalogos/UPDATE_ITEM', {

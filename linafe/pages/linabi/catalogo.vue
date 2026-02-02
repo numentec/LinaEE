@@ -567,7 +567,7 @@ const contextItems = [
 ]
 
 export default {
-  name: 'Catalogo',
+  name: 'BICatalogo',
   components: {
     DxDataGrid,
     DxColumn,

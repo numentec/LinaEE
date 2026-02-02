@@ -192,6 +192,10 @@ export const state = () => ({
   items: [],
   currentId: null,
   activePageByCatalogId: {},
+  pdfJobs: {
+    items: {}, // jobId -> job
+  },
+  toast: { show: false, text: '', type: 'info' },
 })
 
 export const getters = {
@@ -213,6 +217,14 @@ export const getters = {
   byToken: (state) => (token) => {
     return state.items.find((c) => c.share_token === token) || null
   },
+  pdfJobsActive: (state) =>
+    Object.values(state.pdfJobs.items).filter(
+      (j) => j.status === 'queued' || j.status === 'running'
+    ),
+  pdfJobsActiveByCatalog: (state, getters) => (catalogId) =>
+    getters.pdfJobsActive.filter((j) => j.catalogId === catalogId),
+  pdfJobById: (state) => (jobId) => state.pdfJobs.items[jobId],
+  toast: (state) => state.toast,
 }
 
 export const mutations = {
@@ -695,6 +707,34 @@ export const mutations = {
 
     state.items.splice(cIdx, 1, next)
   },
+
+  UPSERT_PDF_JOB(state, payload) {
+    const prev = state.pdfJobs.items[payload.jobId] || {}
+    state.pdfJobs.items = {
+      ...state.pdfJobs.items,
+      [payload.jobId]: { ...prev, ...payload },
+    }
+  },
+
+  STOP_PDF_JOB_POLLING(state, jobId) {
+    const job = state.pdfJobs.items[jobId]
+    if (!job) return
+
+    if (job._timer) clearInterval(job._timer)
+
+    state.pdfJobs.items = {
+      ...state.pdfJobs.items,
+      [jobId]: { ...job, _timer: null, _polling: false },
+    }
+  },
+
+  SHOW_TOAST(state, payload) {
+    state.toast = { show: true, ...payload }
+  },
+
+  HIDE_TOAST(state) {
+    state.toast.show = false
+  },
 }
 
 export const actions = {
@@ -881,5 +921,185 @@ export const actions = {
 
   updateTheme({ commit }, { catalogId, patch }) {
     commit('UPDATE_THEME', { catalogId, patch })
+  },
+
+  async exportPdfStart({ commit, dispatch }, { catalogId, totalPages }) {
+    // POST export
+    const { data } = await this.$axios.post(
+      `catalog/api/catalogs/${catalogId}/export-pdf/`
+    )
+
+    const jobId = data.job_id
+
+    commit('UPSERT_PDF_JOB', {
+      jobId,
+      catalogId,
+      status: data.status || 'queued',
+      progress: 0,
+      totalPages: totalPages || null,
+      downloadUrl: null,
+      error: '',
+      startedAt: Date.now(),
+      finishedAt: null,
+      isEstimated: true,
+      _polling: false,
+      _timer: null,
+    })
+
+    dispatch('exportPdfPoll', { jobId })
+    return jobId
+  },
+
+  exportPdfEstimateProgress({ state, commit }, { jobId }) {
+    const job = state.pdfJobs.items[jobId]
+    if (!job) return
+    if (job.status === 'success' || job.status === 'failed') return
+
+    const elapsedSec = (Date.now() - (job.startedAt || Date.now())) / 1000
+
+    // Curva suave: sube rápido al inicio, se frena cerca de 90%
+    const raw = 100 * (1 - Math.exp(-elapsedSec / 8))
+    const capped = Math.min(raw, 90)
+
+    const next = Math.max(job.progress || 0, Math.floor(capped))
+    commit('UPSERT_PDF_JOB', { jobId, progress: next })
+  },
+
+  async exportPdfPoll({ state, commit, dispatch }, { jobId }) {
+    const job = state.pdfJobs.items[jobId]
+    if (!job) return
+    if (job._polling) return
+
+    commit('UPSERT_PDF_JOB', { jobId, _polling: true })
+
+    const tick = async () => {
+      try {
+        const { data } = await this.$axios.get(`catalog/api/pdf-jobs/${jobId}/`)
+
+        commit('UPSERT_PDF_JOB', {
+          jobId,
+          status: data.status,
+          downloadUrl: data.download_url || null,
+          error: data.error || '',
+        })
+
+        dispatch('exportPdfEstimateProgress', { jobId })
+
+        if (data.status === 'success' && data.download_url) {
+          commit('UPSERT_PDF_JOB', {
+            jobId,
+            progress: 100,
+            finishedAt: Date.now(),
+          })
+
+          commit('STOP_PDF_JOB_POLLING', jobId)
+
+          dispatch('uiToast', {
+            type: 'success',
+            text: 'Tu PDF está listo. Descargando…',
+          })
+          dispatch('exportPdfDownload', { jobId })
+        }
+
+        if (data.status === 'failed') {
+          commit('STOP_PDF_JOB_POLLING', jobId)
+          dispatch('uiToast', {
+            type: 'error',
+            text: `Falló la generación del PDF: ${
+              state.pdfJobs.items[jobId]?.error || 'error desconocido'
+            }`,
+          })
+        }
+      } catch (e) {
+        // No rompemos el polling por fallos transitorios
+        dispatch('exportPdfEstimateProgress', { jobId })
+      }
+    }
+
+    const timer = setInterval(tick, 1500)
+    commit('UPSERT_PDF_JOB', { jobId, _timer: timer })
+
+    await tick()
+  },
+
+  exportPdfStopPolling({ commit }, { jobId }) {
+    commit('STOP_PDF_JOB_POLLING', jobId)
+  },
+
+  exportPdfDownload_AuthCookie({ state }, { jobId }) {
+    const job = state.pdfJobs.items[jobId]
+    if (!job || !job.downloadUrl) return
+
+    // Si tu backend requiere auth por cookie, esto funciona bien.
+    // Si dependes de Authorization header, usa descarga por blob (te la doy si la necesitas).
+    window.location.href = job.downloadUrl
+  },
+
+  async exportPdfDownload({ state, commit, dispatch }, { jobId }) {
+    const job = state.pdfJobs.items[jobId]
+    if (!job || !job.downloadUrl) return
+
+    try {
+      // 1) Descarga binaria con axios (mantiene Authorization header vía interceptor)
+      console.log('Iniciando descarga de PDF desde', job.downloadUrl)
+      const res = await this.$axios.request({
+        url: job.downloadUrl,
+        method: 'GET',
+        responseType: 'blob',
+        // Opcional: si el backend tarda en preparar stream
+        timeout: 120000,
+      })
+
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+
+      // 2) Determina filename (ideal: desde Content-Disposition)
+      const cd =
+        (res.headers &&
+          (res.headers['content-disposition'] ||
+            res.headers['Content-Disposition'])) ||
+        ''
+      const filename =
+        extractFilenameFromContentDisposition(cd) ||
+        `catalogo-${job.catalogId}.pdf`
+
+      // 3) Fuerza descarga en el navegador
+      const objectUrl = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(objectUrl)
+
+      // (Opcional) marca job como descargado
+      commit('UPSERT_PDF_JOB', { jobId, downloadedAt: Date.now() })
+    } catch (e) {
+      dispatch('uiToast', {
+        type: 'error',
+        text: 'No se pudo descargar el PDF.',
+      })
+    }
+
+    // Helper local (para no depender de libs)
+    function extractFilenameFromContentDisposition(contentDisposition) {
+      if (!contentDisposition) return null
+
+      // filename*=UTF-8''...
+      const m1 = contentDisposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i)
+      if (m1 && m1[1])
+        return decodeURIComponent(m1[1].trim().replace(/["']/g, ''))
+
+      // filename="..."
+      const m2 = contentDisposition.match(/filename\s*=\s*("?)([^";]+)\1/i)
+      if (m2 && m2[2]) return m2[2].trim()
+
+      return null
+    }
+  },
+
+  uiToast({ commit }, payload) {
+    commit('SHOW_TOAST', payload)
+    setTimeout(() => commit('HIDE_TOAST'), 4000)
   },
 }

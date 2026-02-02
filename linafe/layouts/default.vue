@@ -54,6 +54,9 @@
         </template>
       </v-sheet>
     </v-bottom-sheet>
+    <v-snackbar v-model="toast.show" :timeout="4000">
+      {{ toast.text }}
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -115,6 +118,7 @@ export default {
   },
   computed: {
     ...mapState('sistema', ['curuser']),
+    // ...mapState('catalogo/catalogos', ['toast']),
     ...mapGetters('sistema', ['getShowBottomNav']),
     ...mapGetters(['loggedInUser']),
     useDrawer() {
@@ -133,6 +137,9 @@ export default {
           },
         }
       }
+    },
+    toast() {
+      return this.$store.getters['catalogo/catalogos/toast']
     },
   },
   mounted() {

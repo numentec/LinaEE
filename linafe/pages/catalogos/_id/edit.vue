@@ -24,17 +24,6 @@
           Agregar productos
         </v-btn>
         <v-btn
-          class="mr-2"
-          color="primary"
-          :loading="saving"
-          :disabled="!hasPendingChanges || saving"
-          @click="saveCatalog"
-        >
-          <v-icon left>mdi-content-save</v-icon>
-          Guardar
-        </v-btn>
-
-        <v-btn
           v-if="lastSaveError"
           small
           outlined
@@ -56,10 +45,38 @@
           <v-icon left>mdi-file-pdf-box</v-icon>
           Exportar PDF
         </v-btn>
-
+        <v-btn
+          class="mr-2"
+          color="primary"
+          :loading="saving"
+          :disabled="!hasPendingChanges || saving"
+          @click="saveCatalog"
+        >
+          <v-icon left>mdi-content-save</v-icon>
+          Guardar
+        </v-btn>
+      </div>
+      <div class="d-flex">
+        <v-spacer />
+        <v-chip
+          v-if="toast.show"
+          :color="toast.type"
+          small
+          outlined
+          class="mr-2"
+        >
+          {{ toast.text }}
+        </v-chip>
         <v-chip v-if="saveStateLabel" small outlined class="mr-2">
           {{ saveStateLabel }}
         </v-chip>
+        <div v-for="j in pdfJobs" :key="j.jobId" class="mt-2">
+          <div class="d-flex justify-space-between">
+            <small>Generando PDF (estimado)</small>
+            <small>{{ j.progress }}%</small>
+          </div>
+          <v-progress-linear :value="j.progress" height="8" />
+        </div>
       </div>
     </v-card>
 
@@ -612,6 +629,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import ProductPickerDialog from '~/components/catalogos/ProductPickerDialog.vue'
 import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
 
@@ -684,6 +702,8 @@ export default {
   },
 
   computed: {
+    ...mapState('catalogo/catalogos', ['toast']),
+
     catalogId() {
       return Number(this.$route.params.id)
     },
@@ -866,6 +886,11 @@ export default {
       if (!this.lastSavedHash) return 'No guardado'
       if (this.hasPendingChanges) return 'Cambios pendientes'
       return 'Guardado'
+    },
+    pdfJobs() {
+      return this.$store.getters['catalogo/catalogos/pdfJobsActiveByCatalog'](
+        this.catalogId
+      )
     },
   },
 
@@ -1243,32 +1268,32 @@ export default {
       })
     },
 
-    async exportPdf() {
-      const catalogId = this.catalogId
-      const res = await this.$axios.request({
-        url: `/catalog/api/catalogs/${catalogId}/export-pdf/`,
-        method: 'POST',
-        responseType: 'blob',
-      })
+    // async exportPdf() {
+    //   const catalogId = this.catalogId
+    //   const res = await this.$axios.request({
+    //     url: `/catalog/api/catalogs/${catalogId}/export-pdf/`,
+    //     method: 'POST',
+    //     responseType: 'blob',
+    //   })
 
-      const blob = new Blob([res.data], { type: 'application/pdf' })
-      const url = window.URL.createObjectURL(blob)
+    //   const blob = new Blob([res.data], { type: 'application/pdf' })
+    //   const url = window.URL.createObjectURL(blob)
 
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `catalogo-${catalogId}.pdf`
-      a.click()
+    //   const a = document.createElement('a')
+    //   a.href = url
+    //   a.download = `catalogo-${catalogId}.pdf`
+    //   a.click()
 
-      window.URL.revokeObjectURL(url)
-    },
+    //   window.URL.revokeObjectURL(url)
+    // },
 
-    queueAutosave() {
-      if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
+    // queueAutosave() {
+    //   if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
 
-      this.autosaveTimer = setTimeout(() => {
-        this.saveCatalog({ silent: true })
-      }, this.autosaveDelayMs)
-    },
+    //   this.autosaveTimer = setTimeout(() => {
+    //     this.saveCatalog({ silent: true })
+    //   }, this.autosaveDelayMs)
+    // },
 
     async saveCatalog({ silent } = { silent: false }) {
       if (!this.catalog) return
@@ -1313,6 +1338,15 @@ export default {
 
       e.preventDefault()
       e.returnValue = ''
+    },
+
+    async exportPdf() {
+      // totalPages lo puedes tomar de tu estado actual del catálogo:
+      const totalPages = (this.catalog?.pages || []).length
+      await this.$store.dispatch('catalogo/catalogos/exportPdfStart', {
+        catalogId: this.catalogId,
+        totalPages,
+      })
     },
   },
 }
