@@ -83,16 +83,8 @@
                     <span v-if="effectiveSettings.show_price">
                       Precio: {{ p.price }}
                     </span>
-
-                    <span
-                      v-if="
-                        effectiveSettings.show_price &&
-                        effectiveSettings.show_min_max
-                      "
-                    >
-                      ·
-                    </span>
-
+                  </div>
+                  <div class="text-caption text--secondary mt-1">
                     <span v-if="effectiveSettings.show_min_max">
                       Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
                     </span>
