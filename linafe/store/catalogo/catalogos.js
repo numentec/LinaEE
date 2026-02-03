@@ -195,7 +195,13 @@ export const state = () => ({
   pdfJobs: {
     items: {}, // jobId -> job
   },
-  toast: { show: false, text: '', type: 'info' },
+  toast: {
+    show: false,
+    text: '',
+    type: 'info',
+    actionText: '',
+    actionJobId: null,
+  },
 })
 
 export const getters = {
@@ -729,11 +735,40 @@ export const mutations = {
   },
 
   SHOW_TOAST(state, payload) {
-    state.toast = { show: true, ...payload }
+    state.toast = {
+      show: true,
+      text: '',
+      type: 'info',
+      actionText: '',
+      actionJobId: null,
+      ...payload,
+    }
   },
 
   HIDE_TOAST(state) {
     state.toast.show = false
+    state.toast.actionText = ''
+    state.toast.actionJobId = null
+  },
+
+  LOAD_PDF_JOBS_FROM_STORAGE(state, items) {
+    state.pdfJobs.items = items || {}
+  },
+
+  CLEANUP_OLD_PDF_JOBS(state, { maxAgeHours = 24 }) {
+    const now = Date.now()
+    const maxAgeMs = maxAgeHours * 3600 * 1000
+
+    const cleaned = {}
+    for (const [jobId, job] of Object.entries(state.pdfJobs.items || {})) {
+      // Conserva jobs recientes o aún activos
+      const age = now - (job.startedAt || now)
+      const isActive = job.status === 'queued' || job.status === 'running'
+      const isRecent = age <= maxAgeMs
+
+      if (isActive || isRecent) cleaned[jobId] = job
+    }
+    state.pdfJobs.items = cleaned
   },
 }
 
@@ -924,6 +959,8 @@ export const actions = {
   },
 
   async exportPdfStart({ commit, dispatch }, { catalogId, totalPages }) {
+    commit('CLEANUP_OLD_PDF_JOBS', { maxAgeHours: 24 })
+
     // POST export
     const { data } = await this.$axios.post(
       `catalog/api/catalogs/${catalogId}/export-pdf/`
@@ -973,6 +1010,8 @@ export const actions = {
     commit('UPSERT_PDF_JOB', { jobId, _polling: true })
 
     const tick = async () => {
+      if (!state.pdfJobs.items[jobId]) return
+
       try {
         const { data } = await this.$axios.get(`catalog/api/pdf-jobs/${jobId}/`)
 
@@ -996,9 +1035,11 @@ export const actions = {
 
           dispatch('uiToast', {
             type: 'success',
-            text: 'Tu PDF está listo. Descargando…',
+            text: 'Tu PDF está listo.',
+            actionText: 'Descargar ahora',
+            actionJobId: jobId,
           })
-          dispatch('exportPdfDownload', { jobId })
+          // dispatch('exportPdfDownload', { jobId })
         }
 
         if (data.status === 'failed') {
@@ -1072,7 +1113,7 @@ export const actions = {
       a.remove()
       window.URL.revokeObjectURL(objectUrl)
 
-      // (Opcional) marca job como descargado
+      // Marca job como descargado
       commit('UPSERT_PDF_JOB', { jobId, downloadedAt: Date.now() })
     } catch (e) {
       dispatch('uiToast', {
@@ -1100,6 +1141,7 @@ export const actions = {
 
   uiToast({ commit }, payload) {
     commit('SHOW_TOAST', payload)
-    setTimeout(() => commit('HIDE_TOAST'), 4000)
+    const ms = payload && payload.actionText ? 15000 : 4000
+    setTimeout(() => commit('HIDE_TOAST'), ms)
   },
 }

@@ -1287,13 +1287,13 @@ export default {
     //   window.URL.revokeObjectURL(url)
     // },
 
-    // queueAutosave() {
-    //   if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
+    queueAutosave() {
+      if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
 
-    //   this.autosaveTimer = setTimeout(() => {
-    //     this.saveCatalog({ silent: true })
-    //   }, this.autosaveDelayMs)
-    // },
+      this.autosaveTimer = setTimeout(() => {
+        this.saveCatalog({ silent: true })
+      }, this.autosaveDelayMs)
+    },
 
     async saveCatalog({ silent } = { silent: false }) {
       if (!this.catalog) return

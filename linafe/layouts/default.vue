@@ -54,8 +54,25 @@
         </template>
       </v-sheet>
     </v-bottom-sheet>
-    <v-snackbar v-model="toast.show" :timeout="4000">
+    <v-snackbar
+      v-model="toast.show"
+      :timeout="toast.actionText ? 15000 : 4000"
+      :color="toast.type"
+    >
       {{ toast.text }}
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          v-if="toast.actionText"
+          text
+          v-bind="attrs"
+          @click="downloadToastJob"
+        >
+          {{ toast.actionText }}
+        </v-btn>
+
+        <v-btn text v-bind="attrs" @click="closeToast">Cerrar</v-btn>
+      </template>
     </v-snackbar>
   </v-app>
 </template>
@@ -210,6 +227,16 @@ export default {
         // eslint-disable-next-line no-console
         // console.log('Appdrawer z-index:', this.appdrawerZIndex)
       }
+    },
+    downloadToastJob() {
+      const jobId = this.toast.actionJobId
+      if (!jobId) return
+      this.$store.dispatch('catalogo/catalogos/exportPdfDownload', { jobId })
+      // opcional: cerrar toast
+      this.closeToast()
+    },
+    closeToast() {
+      this.$store.commit('catalogo/catalogos/HIDE_TOAST')
     },
   },
 }
