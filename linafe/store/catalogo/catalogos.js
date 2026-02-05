@@ -192,6 +192,7 @@ export const state = () => ({
   items: [],
   currentId: null,
   activePageByCatalogId: {},
+  needsReflowByCatalogId: {},
   pdfJobs: {
     items: {}, // jobId -> job
   },
@@ -231,6 +232,9 @@ export const getters = {
     getters.pdfJobsActive.filter((j) => j.catalogId === catalogId),
   pdfJobById: (state) => (jobId) => state.pdfJobs.items[jobId],
   toast: (state) => state.toast,
+  needsReflow: (state) => (catalogId) => {
+    return Boolean(state.needsReflowByCatalogId[String(catalogId)])
+  },
 }
 
 export const mutations = {
@@ -302,14 +306,22 @@ export const mutations = {
       [catalogId]: pageIndex,
     }
   },
+
   SET_PAGE_LAYOUT(state, { catalogId, pageId, layout }) {
-    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    const cid = Number(catalogId)
+
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
     if (cIdx === -1) return
 
     const catalog = state.items[cIdx]
     const pages = Array.isArray(catalog.pages) ? catalog.pages : []
     const pIdx = pages.findIndex((p) => p.id === pageId)
     if (pIdx === -1) return
+
+    const currentPage = pages[pIdx]
+
+    // Si el layout es el mismo, no hacemos nada (retornar)
+    if (currentPage.layout === layout) return
 
     const now = new Date().toISOString()
 
@@ -325,10 +337,17 @@ export const mutations = {
     }
 
     state.items.splice(cIdx, 1, next)
+
+    state.needsReflowByCatalogId = {
+      ...state.needsReflowByCatalogId,
+      [String(cid)]: true,
+    }
   },
 
   ADD_EMPTY_PAGE(state, { catalogId, layout }) {
-    const cIdx = state.items.findIndex((c) => c.id === catalogId)
+    const cid = Number(catalogId)
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+
     if (cIdx === -1) return
 
     const catalog = state.items[cIdx]
@@ -770,6 +789,13 @@ export const mutations = {
     }
     state.pdfJobs.items = cleaned
   },
+
+  SET_NEEDS_REFLOW(state, { catalogId, value }) {
+    state.needsReflowByCatalogId = {
+      ...state.needsReflowByCatalogId,
+      [String(catalogId)]: Boolean(value),
+    }
+  },
 }
 
 export const actions = {
@@ -865,6 +891,7 @@ export const actions = {
       })
 
       commit('SET_PAGES', { catalogId, pages: nextPages })
+      commit('SET_NEEDS_REFLOW', { catalogId, value: false })
       return
     }
 
@@ -883,6 +910,7 @@ export const actions = {
     const nextPages = cover ? [cover, ...distributed] : distributed
 
     commit('SET_PAGES', { catalogId, pages: nextPages })
+    commit('SET_NEEDS_REFLOW', { catalogId, value: false })
   },
 
   setActivePage({ commit }, { catalogId, pageIndex }) {
@@ -891,6 +919,7 @@ export const actions = {
 
   setPageLayout({ commit }, { catalogId, pageId, layout }) {
     commit('SET_PAGE_LAYOUT', { catalogId, pageId, layout })
+    // commit('SET_NEEDS_REFLOW', { catalogId, value: true })
   },
 
   addEmptyPage({ getters, commit }, { catalogId, layout }) {

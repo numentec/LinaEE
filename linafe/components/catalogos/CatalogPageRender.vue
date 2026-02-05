@@ -199,10 +199,14 @@ export default {
 
     capacity() {
       const map = {
-        grid_2x4: 8,
-        grid_3x3: 9,
         grid_2x3: 6,
-        list_compact: 16,
+        grid_2x4: 8,
+        grid_2x5: 10,
+        grid_2x6: 12,
+        grid_3x3: 9,
+        grid_3x4: 12,
+        grid_3x5: 15,
+        list_compact: 6,
       }
       return map[this.layoutKey] || 8
     },
@@ -226,6 +230,11 @@ export default {
       if (this.layoutKey === 'list_compact') return { md: 12 }
       if (this.layoutKey === 'grid_3x3') return { md: 4 }
       if (this.layoutKey === 'grid_2x3') return { md: 6 }
+      if (this.layoutKey === 'grid_2x4') return { md: 6 }
+      if (this.layoutKey === 'grid_2x5') return { md: 6 }
+      if (this.layoutKey === 'grid_2x6') return { md: 6 }
+      if (this.layoutKey === 'grid_3x4') return { md: 4 }
+      if (this.layoutKey === 'grid_3x5') return { md: 4 }
       return { md: 6 }
     },
 

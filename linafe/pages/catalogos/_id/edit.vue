@@ -254,10 +254,10 @@
               <v-btn
                 small
                 outlined
-                :disabled="isCoverPage || pageItems.length <= layoutCapacity"
+                :disabled="!canAutoDistribute"
                 @click="openDistributeDialog"
               >
-                Auto-distribuir
+                {{ autoDistributeLabel }}
               </v-btn>
               <div class="text-caption text--secondary mt-1">
                 {{ showingLabel }}
@@ -658,13 +658,18 @@ export default {
 
       distributeLayout: 'grid_2x4',
       distributeCapacity: 8,
-      capacityItems: [4, 5, 6, 7, 8, 9, 12, 16],
+      capacityItems: [4, 5, 6, 7, 8, 9, 10, 12, 15, 16],
 
       layoutItems: [
-        { text: 'Grid 2 x 4 (8)', value: 'grid_2x4' },
-        { text: 'Grid 3 x 3 (9)', value: 'grid_3x3' },
         { text: 'Grid 2 x 3 (6)', value: 'grid_2x3' },
-        { text: 'Lista compacta (16)', value: 'list_compact' },
+        { text: 'Grid 2 x 4 (8)', value: 'grid_2x4' },
+        { text: 'Grid 2 x 5 (10)', value: 'grid_2x5' },
+        { text: 'Grid 2 x 6 (12)', value: 'grid_2x6' },
+        { text: 'Grid 3 x 3 (9)', value: 'grid_3x3' },
+        { text: 'Grid 3 x 4 (12)', value: 'grid_3x4' },
+        { text: 'Grid 3 x 5 (15)', value: 'grid_3x5' },
+
+        { text: 'Lista compacta (6)', value: 'list_compact' },
       ],
 
       showShareDialog: false,
@@ -762,10 +767,14 @@ export default {
 
     layoutCapacity() {
       const map = {
-        grid_2x4: 8,
-        grid_3x3: 9,
         grid_2x3: 6,
-        list_compact: 16,
+        grid_2x4: 8,
+        grid_2x5: 10,
+        grid_2x6: 12,
+        grid_3x3: 9,
+        grid_3x4: 12,
+        grid_3x5: 15,
+        list_compact: 6,
       }
       return map[this.layoutKey] || 8
     },
@@ -887,10 +896,31 @@ export default {
       if (this.hasPendingChanges) return 'Cambios pendientes'
       return 'Guardado'
     },
+
     pdfJobs() {
       return this.$store.getters['catalogo/catalogos/pdfJobsActiveByCatalog'](
         this.catalogId
       )
+    },
+
+    needsReflow() {
+      return this.$store.getters['catalogo/catalogos/needsReflow'](
+        this.catalogId
+      )
+    },
+
+    canAutoDistribute() {
+      if (this.isCoverPage) return false
+      if (!this.page) return false
+
+      return this.needsReflow || this.pageItems.length > this.layoutCapacity
+    },
+
+    autoDistributeLabel() {
+      if (this.needsReflow && this.pageItems.length <= this.layoutCapacity) {
+        return 'Reacomodar'
+      }
+      return 'Auto-distribuir'
     },
   },
 
@@ -1004,10 +1034,14 @@ export default {
 
     capacityForLayout(layout) {
       const map = {
-        grid_2x4: 8,
-        grid_3x3: 9,
         grid_2x3: 6,
-        list_compact: 16,
+        grid_2x4: 8,
+        grid_2x5: 10,
+        grid_2x6: 12,
+        grid_3x3: 9,
+        grid_3x4: 12,
+        grid_3x5: 15,
+        list_compact: 6,
       }
       return map[layout] || 8
     },
