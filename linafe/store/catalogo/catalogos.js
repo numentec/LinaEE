@@ -796,6 +796,39 @@ export const mutations = {
       [String(catalogId)]: Boolean(value),
     }
   },
+
+  UPDATE_CATALOG_META(state, { catalogId, patch }) {
+    const cid = Number(catalogId)
+
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const now = new Date().toISOString()
+
+    const next = {
+      ...catalog,
+      ...patch,
+      updated_at: now,
+    }
+
+    state.items.splice(cIdx, 1, next)
+
+    const changedOrientation =
+      Object.prototype.hasOwnProperty.call(patch, 'orientation') &&
+      patch.orientation !== catalog.orientation
+
+    const changedTemplate =
+      Object.prototype.hasOwnProperty.call(patch, 'template') &&
+      patch.template !== catalog.template
+
+    if (changedOrientation || changedTemplate) {
+      state.needsReflowByCatalogId = {
+        ...state.needsReflowByCatalogId,
+        [String(cid)]: true,
+      }
+    }
+  },
 }
 
 export const actions = {
@@ -1172,5 +1205,9 @@ export const actions = {
     commit('SHOW_TOAST', payload)
     const ms = payload && payload.actionText ? 15000 : 4000
     setTimeout(() => commit('HIDE_TOAST'), ms)
+  },
+
+  updateCatalogMeta({ commit }, { catalogId, patch }) {
+    commit('UPDATE_CATALOG_META', { catalogId, patch })
   },
 }

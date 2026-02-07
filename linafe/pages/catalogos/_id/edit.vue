@@ -264,6 +264,15 @@
               </div>
             </div>
           </div>
+          <div v-if="needsReflow" class="text-caption text--secondary mt-1">
+            El diseño cambió. Usa <strong>Reacomodar</strong> para ajustar las
+            páginas.
+          </div>
+          <v-alert v-if="needsReflow" type="info" dense text class="mt-2">
+            Cambiaste la plantilla u orientación. Reacomoda para aprovechar el
+            espacio del nuevo diseño.
+          </v-alert>
+
           <div v-if="!page" class="text-body-2 text--secondary">
             Página no disponible
           </div>
@@ -295,13 +304,41 @@
       <v-col cols="12" md="3">
         <v-sheet outlined class="pa-3">
           <div class="text-subtitle-2 font-weight-medium mb-2">Propiedades</div>
+
+          <!-- Catálogo -->
+          <div class="text-subtitle-2 font-weight-medium mt-2 mb-2">
+            Catálogo
+          </div>
+
+          <v-text-field
+            :value="catalogName"
+            label="Nombre"
+            outlined
+            dense
+            hide-details
+            class="mb-3"
+            @input="onCatalogMetaChange({ name: $event })"
+          />
+
           <div class="d-flex align-center mb-3">
             <div class="text-body-2 font-weight-medium">
               Plantilla: {{ catalogTemplate }}
             </div>
             <v-spacer />
-            <v-btn small outlined @click="openTemplateDialog"> Cambiar </v-btn>
+            <v-btn small outlined @click="openTemplateDialog">Cambiar</v-btn>
           </div>
+
+          <v-select
+            :value="catalog && catalog.orientation"
+            :items="orientationItems"
+            label="Orientación"
+            outlined
+            dense
+            hide-details
+            class="mb-3"
+            @change="onCatalogMetaChange({ orientation: $event })"
+          />
+
           <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">Tema</div>
 
           <v-text-field
@@ -335,6 +372,49 @@
             class="mb-2"
             @change="onThemeChange({ card_style: $event })"
           />
+
+          <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">
+            Contenido
+          </div>
+
+          <v-switch
+            label="Mostrar imágenes"
+            :input-value="catalogSettings.show_images"
+            @change="onSettingsChange({ show_images: $event })"
+          />
+
+          <v-switch
+            label="Mostrar marca"
+            :input-value="catalogSettings.show_brand"
+            @change="onSettingsChange({ show_brand: $event })"
+          />
+
+          <v-switch
+            label="Mostrar SKU"
+            :input-value="catalogSettings.show_sku"
+            @change="onSettingsChange({ show_sku: $event })"
+          />
+
+          <v-switch
+            label="Mostrar descripción"
+            :input-value="catalogSettings.show_description"
+            @change="onSettingsChange({ show_description: $event })"
+          />
+
+          <v-switch
+            label="Mostrar precios"
+            :input-value="catalogSettings.show_price"
+            @change="onSettingsChange({ show_price: $event })"
+          />
+
+          <v-switch
+            label="Mostrar min/max compra"
+            :input-value="catalogSettings.show_min_max"
+            @change="onSettingsChange({ show_min_max: $event })"
+          />
+
+          <!-- Página -->
+          <div class="text-subtitle-2 font-weight-medium mt-6 mb-2">Página</div>
 
           <div v-if="isCoverPage">
             <v-text-field
@@ -376,10 +456,11 @@
               @input="onCoverChange({ hero_url: $event })"
             />
 
-            <div class="text-caption text--secondary">
+            <div class="text-caption text--secondary mt-2">
               Edita el contenido de la portada
             </div>
           </div>
+
           <div v-else>
             <v-select
               :value="layoutKey"
@@ -388,44 +469,8 @@
               outlined
               dense
               hide-details
-              class="mb-4"
+              class="mb-2"
               @change="onLayoutChange"
-            />
-
-            <v-switch
-              label="Mostrar imágenes"
-              :input-value="catalogSettings.show_images"
-              @change="onSettingsChange({ show_images: $event })"
-            />
-
-            <v-switch
-              label="Mostrar marca"
-              :input-value="catalogSettings.show_brand"
-              @change="onSettingsChange({ show_brand: $event })"
-            />
-
-            <v-switch
-              label="Mostrar SKU"
-              :input-value="catalogSettings.show_sku"
-              @change="onSettingsChange({ show_sku: $event })"
-            />
-
-            <v-switch
-              label="Mostrar descripción"
-              :input-value="catalogSettings.show_description"
-              @change="onSettingsChange({ show_description: $event })"
-            />
-
-            <v-switch
-              label="Mostrar precios"
-              :input-value="catalogSettings.show_price"
-              @change="onSettingsChange({ show_price: $event })"
-            />
-
-            <v-switch
-              label="Mostrar min/max compra"
-              :input-value="catalogSettings.show_min_max"
-              @change="onSettingsChange({ show_min_max: $event })"
             />
 
             <div class="text-caption text--secondary">
@@ -922,6 +967,13 @@ export default {
       }
       return 'Auto-distribuir'
     },
+
+    orientationItems() {
+      return [
+        { text: 'Vertical (Carta)', value: 'portrait' },
+        { text: 'Horizontal (Carta)', value: 'landscape' },
+      ]
+    },
   },
 
   watch: {
@@ -1272,9 +1324,25 @@ export default {
       this.showTemplateDialog = true
     },
 
+    onCatalogMetaChange(patch) {
+      const catalogId = this.catalogId
+
+      this.$store.dispatch('catalogo/catalogos/updateCatalogMeta', {
+        catalogId,
+        patch,
+      })
+    },
+
     applyTemplate() {
       const catalogId = this.catalogId
 
+      // 1) asegura que el catálogo refleje el template elegido y marque reflow
+      //    Actualiza metadata del catálogo.
+      this.onCatalogMetaChange({
+        template: this.templateKey,
+      })
+
+      // 2) aplica defaults (settings/cover) y opcionalmente layout a páginas
       this.$store.dispatch('catalogo/catalogos/applyTemplate', {
         catalogId,
         key: this.templateKey,
@@ -1382,6 +1450,15 @@ export default {
         totalPages,
       })
     },
+
+    // applyTemplateDefaults() {
+    //   const catalogId = this.catalogId
+
+    //   this.$store.dispatch('catalogo/catalogos/applyTemplateDefaults', {
+    //     catalogId,
+    //     template: this.templateKey,
+    //   })
+    // },
   },
 }
 </script>
