@@ -34,78 +34,139 @@
       </template>
 
       <template v-else>
-        <v-row dense>
-          <v-col
-            v-for="p in visibleItems"
+        <div v-if="isHero" class="hero-wrap">
+          <div
+            v-for="p in heroItems"
             :key="p.product_id || p.sku"
-            cols="12"
-            v-bind="gridCols"
+            class="hero-item"
+            :class="layout === 'hero_2' ? 'hero-2' : 'hero-1'"
           >
-            <v-card
-              :outlined="effectiveTheme.card_style !== 'flat'"
-              class="pa-2 cat-card"
-              :class="cardClass"
-            >
-              <div class="d-flex">
-                <v-img
-                  v-if="effectiveSettings.show_images"
-                  :src="p.selected_image_url"
-                  :lazy-src="p.selected_image_url"
-                  width="72"
-                  height="72"
-                  class="mr-3"
-                  contain
+            <div class="hero-media">
+              <img class="hero-img" :src="p.selected_image_url" alt="" />
+
+              <div v-if="p.images && p.images.length > 1" class="hero-thumbs">
+                <img
+                  v-for="(img, idx) in p.images.slice(0, 4)"
+                  :key="idx"
+                  class="hero-thumb"
+                  :src="img.url || img"
+                  alt=""
                 />
-
-                <div class="flex-grow-1">
-                  <div
-                    v-if="effectiveSettings.show_brand"
-                    class="text-caption text--secondary"
-                  >
-                    {{ p.brand_name }}
-                  </div>
-
-                  <div
-                    v-if="effectiveSettings.show_sku"
-                    class="text-subtitle-2 font-weight-medium"
-                  >
-                    {{ p.sku }}
-                  </div>
-
-                  <div
-                    v-if="effectiveSettings.show_description"
-                    class="text-body-2 text--secondary item-desc"
-                  >
-                    {{ p.description }}
-                  </div>
-
-                  <div class="text-caption text--secondary mt-1">
-                    <span v-if="effectiveSettings.show_price">
-                      Precio: {{ p.price }}
-                    </span>
-                  </div>
-                  <div class="text-caption text--secondary mt-1">
-                    <span v-if="effectiveSettings.show_min_max">
-                      Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  v-if="
-                    effectiveSettings.show_images &&
-                    p.images &&
-                    p.images.length > 1
-                  "
-                  class="ml-2"
-                >
-                  <v-chip x-small outlined> +{{ p.images.length - 1 }} </v-chip>
-                </div>
               </div>
-            </v-card>
-          </v-col>
-        </v-row>
+            </div>
 
+            <div class="hero-body">
+              <div v-if="settings && settings.show_brand" class="hero-brand">
+                {{ p.brand_name }}
+              </div>
+
+              <div v-if="settings && settings.show_sku" class="hero-sku">
+                {{ p.sku }}
+              </div>
+
+              <div class="hero-title">
+                {{ p.name || p.description || p.product_name || '' }}
+              </div>
+
+              <div
+                v-if="settings && settings.show_description"
+                class="hero-desc"
+              >
+                {{ p.description }}
+              </div>
+
+              <div class="hero-meta">
+                <span v-if="settings && settings.show_price">
+                  Precio: {{ p.price }}
+                </span>
+
+                <span v-if="settings && settings.show_min_max">
+                  · Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="items.length > heroItems.length" class="hero-note">
+            Hay {{ items.length - heroItems.length }} producto(s) extra en esta
+            página. Usa Reacomodar para distribuirlos.
+          </div>
+        </div>
+        <div v-else>
+          <v-row dense>
+            <v-col
+              v-for="p in visibleItems"
+              :key="p.product_id || p.sku"
+              cols="12"
+              v-bind="gridCols"
+            >
+              <v-card
+                :outlined="effectiveTheme.card_style !== 'flat'"
+                class="pa-2 cat-card"
+                :class="cardClass"
+              >
+                <div class="d-flex">
+                  <v-img
+                    v-if="effectiveSettings.show_images"
+                    :src="p.selected_image_url"
+                    :lazy-src="p.selected_image_url"
+                    width="72"
+                    height="72"
+                    class="mr-3"
+                    contain
+                  />
+
+                  <div class="flex-grow-1">
+                    <div
+                      v-if="effectiveSettings.show_brand"
+                      class="text-caption text--secondary"
+                    >
+                      {{ p.brand_name }}
+                    </div>
+
+                    <div
+                      v-if="effectiveSettings.show_sku"
+                      class="text-subtitle-2 font-weight-medium"
+                    >
+                      {{ p.sku }}
+                    </div>
+
+                    <div
+                      v-if="effectiveSettings.show_description"
+                      class="text-body-2 text--secondary item-desc"
+                    >
+                      {{ p.description }}
+                    </div>
+
+                    <div class="text-caption text--secondary mt-1">
+                      <span v-if="effectiveSettings.show_price">
+                        Precio: {{ p.price }}
+                      </span>
+                    </div>
+                    <div class="text-caption text--secondary mt-1">
+                      <span v-if="effectiveSettings.show_min_max">
+                        Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="
+                      effectiveSettings.show_images &&
+                      p.images &&
+                      p.images.length > 1
+                    "
+                    class="ml-2"
+                  >
+                    <v-chip x-small outlined>
+                      +{{ p.images.length - 1 }}
+                    </v-chip>
+                  </div>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </div>
         <v-alert v-if="hiddenCount > 0" dense text type="info" class="mt-4">
           Hay {{ hiddenCount }} productos más en esta página
         </v-alert>
@@ -199,6 +260,8 @@ export default {
 
     capacity() {
       const map = {
+        hero_1: 1,
+        hero_2: 2,
         grid_2x3: 6,
         grid_2x4: 8,
         grid_2x5: 10,
@@ -211,10 +274,23 @@ export default {
       return map[this.layoutKey] || 8
     },
 
+    layout() {
+      return (this.page && this.page.layout) || 'grid_2x4'
+    },
+
     items() {
       const items =
         this.page && Array.isArray(this.page.items) ? this.page.items : []
       return items
+    },
+
+    heroItems() {
+      const cap = this.layout === 'hero_2' ? 2 : 1
+      return this.items.slice(0, cap)
+    },
+
+    isHero() {
+      return this.layout === 'hero_1' || this.layout === 'hero_2'
     },
 
     visibleItems() {
@@ -228,6 +304,8 @@ export default {
 
     gridCols() {
       if (this.layoutKey === 'list_compact') return { md: 12 }
+      if (this.layoutKey === 'hero_1') return { md: 12 }
+      if (this.layoutKey === 'hero_2') return { md: 12 }
       if (this.layoutKey === 'grid_3x3') return { md: 4 }
       if (this.layoutKey === 'grid_2x3') return { md: 6 }
       if (this.layoutKey === 'grid_2x4') return { md: 6 }
@@ -347,5 +425,89 @@ export default {
     rgba(255, 255, 255, 0.92),
     rgba(255, 255, 255, 0.78)
   );
+}
+
+.hero-wrap {
+  display: grid;
+  grid-gap: 12px;
+}
+
+.hero-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.hero-item.hero-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.hero-item.hero-1 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.hero-media {
+  display: grid;
+  gap: 8px;
+}
+
+.hero-img {
+  width: 100%;
+  height: 260px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.hero-thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.hero-thumb {
+  width: 100%;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.hero-body {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.hero-brand {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.hero-sku {
+  font-weight: 600;
+}
+
+.hero-title {
+  font-weight: 600;
+}
+
+.hero-desc {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hero-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.hero-note {
+  font-size: 12px;
+  opacity: 0.8;
 }
 </style>

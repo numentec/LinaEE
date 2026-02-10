@@ -181,6 +181,13 @@ function themePresets() {
     },
   }
 }
+
+// function ensurePageFlags(p) {
+//   if (!p) return p
+//   if (Object.prototype.hasOwnProperty.call(p, 'locked')) return p
+//   return { ...p, locked: false }
+// }
+
 // ************ End of helpers ************
 
 /**
@@ -829,6 +836,74 @@ export const mutations = {
       }
     }
   },
+
+  APPLY_LAYOUT_TO_PAGES(state, { catalogId, pageIds, layout, skipCover }) {
+    const cid = Number(catalogId)
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+
+    const idSet = new Set((pageIds || []).map((x) => String(x)))
+    const nextPages = pages.map((p) => {
+      if (!p) return p
+      if (skipCover && (p.id === 'cover' || p.layout === 'cover')) return p
+      if (!idSet.has(String(p.id))) return p
+      if (p.layout === layout) return p
+      return { ...p, layout }
+    })
+
+    const changed = pages.some((p, i) =>
+      p && nextPages[i] ? p.layout !== nextPages[i].layout : false
+    )
+    if (!changed) return
+
+    const now = new Date().toISOString()
+
+    state.items.splice(cIdx, 1, {
+      ...catalog,
+      pages: nextPages,
+      updated_at: now,
+    })
+
+    state.needsReflowByCatalogId = {
+      ...state.needsReflowByCatalogId,
+      [String(cid)]: true,
+    }
+  },
+
+  SET_PAGE_LOCKED(state, { catalogId, pageId, locked }) {
+    const cid = Number(catalogId)
+
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+
+    const pIdx = pages.findIndex((p) => p && p.id === pageId)
+    if (pIdx === -1) return
+
+    const page = pages[pIdx]
+    const nextLocked = Boolean(locked)
+
+    if (Boolean(page.locked) === nextLocked) return
+
+    const now = new Date().toISOString()
+
+    const nextPages = pages.map((p) => {
+      if (!p) return p
+      if (p.id !== pageId) return p
+      return { ...p, locked: nextLocked }
+    })
+
+    state.items.splice(cIdx, 1, {
+      ...catalog,
+      pages: nextPages,
+      updated_at: now,
+    })
+  },
 }
 
 export const actions = {
@@ -902,25 +977,50 @@ export const actions = {
 
     const pages = Array.isArray(catalog.pages) ? catalog.pages : []
 
-    const cover = pages.find((p) => p && p.layout === 'cover') || null
-    const contentPages = pages.filter((p) => !(p && p.layout === 'cover'))
+    const isCover = (p) => p && (p.id === 'cover' || p.layout === 'cover')
+    const isLocked = (p) => p && !isCover(p) && Boolean(p.locked)
 
-    const all = contentPages.reduce((acc, p) => {
+    const coverPages = pages.filter((p) => isCover(p))
+    const lockedPages = pages.filter((p) => isLocked(p))
+
+    const normalPages = pages.filter((p) => {
+      if (!p) return false
+      if (isCover(p)) return false
+      if (isLocked(p)) return false
+      return true
+    })
+
+    const all = normalPages.reduce((acc, p) => {
       const items = Array.isArray(p.items) ? p.items : []
       return acc.concat(items)
     }, [])
 
+    const reservedIds = new Set(
+      [...coverPages, ...lockedPages]
+        .map((p) => String(p.id || ''))
+        .filter(Boolean)
+    )
+
+    const nextFreePageId = (n) => {
+      let i = n
+      while (reservedIds.has(`page_${i}`)) i += 1
+      return i
+    }
+
     if (!all.length) {
-      // Si no hay items, igual preservamos la portada y al menos 1 página vacía
       const nextPages = []
 
-      if (cover) nextPages.push(cover)
+      coverPages.forEach((p) => nextPages.push(p))
+      lockedPages.forEach((p) => nextPages.push(p))
+
+      const n = nextFreePageId(1)
 
       nextPages.push({
-        id: 'page_1',
-        name: 'Página 1',
+        id: `page_${n}`,
+        name: `Página ${n}`,
         layout: layout || 'grid_2x4',
         items: [],
+        locked: false,
       })
 
       commit('SET_PAGES', { catalogId, pages: nextPages })
@@ -930,17 +1030,28 @@ export const actions = {
 
     const chunks = chunkArray(all, capacity)
 
-    const distributed = chunks.map((items, idx) => {
-      const n = idx + 1
-      return {
-        id: `page_${n}`,
+    let n = nextFreePageId(1)
+
+    const distributed = chunks.map((items) => {
+      const id = `page_${n}`
+      reservedIds.add(id)
+
+      const page = {
+        id,
         name: `Página ${n}`,
         layout: layout || 'grid_2x4',
         items,
+        locked: false,
       }
+
+      n = nextFreePageId(n + 1)
+      return page
     })
 
-    const nextPages = cover ? [cover, ...distributed] : distributed
+    const nextPages = []
+    coverPages.forEach((p) => nextPages.push(p))
+    lockedPages.forEach((p) => nextPages.push(p))
+    distributed.forEach((p) => nextPages.push(p))
 
     commit('SET_PAGES', { catalogId, pages: nextPages })
     commit('SET_NEEDS_REFLOW', { catalogId, value: false })
@@ -1209,5 +1320,18 @@ export const actions = {
 
   updateCatalogMeta({ commit }, { catalogId, patch }) {
     commit('UPDATE_CATALOG_META', { catalogId, patch })
+  },
+
+  applyLayoutToPages({ commit }, { catalogId, pageIds, layout, skipCover }) {
+    commit('APPLY_LAYOUT_TO_PAGES', {
+      catalogId,
+      pageIds,
+      layout,
+      skipCover: skipCover !== false,
+    })
+  },
+
+  setPageLocked({ commit }, { catalogId, pageId, locked }) {
+    commit('SET_PAGE_LOCKED', { catalogId, pageId, locked })
   },
 }

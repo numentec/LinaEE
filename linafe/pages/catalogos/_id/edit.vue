@@ -93,6 +93,31 @@
             <v-btn small text @click="addCover">
               <v-icon left small>mdi-image-frame</v-icon> Portada
             </v-btn>
+            <div class="d-flex align-center mb-2">
+              <v-btn
+                x-small
+                text
+                :disabled="allSelected"
+                @click="selectAllPages"
+              >
+                Seleccionar todas
+              </v-btn>
+
+              <v-btn
+                x-small
+                text
+                :disabled="!hasSelection"
+                @click="clearSelection"
+              >
+                Limpiar selección
+              </v-btn>
+
+              <v-spacer />
+
+              <div v-if="hasSelection" class="text-caption text--secondary">
+                {{ selectedPageIds.length }} seleccionada(s)
+              </div>
+            </div>
           </div>
           <div class="text-caption text--secondary">
             Total páginas: {{ pages.length }}
@@ -144,16 +169,55 @@
               </v-list-item-avatar>
 
               <v-list-item-content>
-                <v-list-item-title>
-                  {{ p.name || `Página ${idx + 1}` }}
+                <v-list-item-title class="d-flex align-center">
+                  <span class="mr-1">
+                    {{ p.name || `Página ${idx + 1}` }}
+                  </span>
                   <v-chip v-if="p.id === 'cover'" x-small class="ml-2" outlined>
                     PORTADA
                   </v-chip>
+                  <v-icon v-if="p.locked" x-small class="ml-1">
+                    mdi-lock
+                  </v-icon>
                 </v-list-item-title>
                 <v-list-item-subtitle>
                   {{ p.layout }} · {{ (p.items && p.items.length) || 0 }} items
                 </v-list-item-subtitle>
               </v-list-item-content>
+
+              <!-- Lock and select Page list actions -->
+              <v-list-item-action v-if="p.id !== 'cover'">
+                <v-tooltip bottom>
+                  <template #activator="{ on, attrs }">
+                    <v-btn
+                      icon
+                      small
+                      :disabled="p.id === 'cover'"
+                      v-bind="attrs"
+                      v-on="on"
+                      @click.stop="toggleLock(p)"
+                    >
+                      <v-icon small>
+                        {{ p.locked ? 'mdi-lock' : 'mdi-lock-open-variant' }}
+                      </v-icon>
+                    </v-btn>
+                  </template>
+                  <span>{{ p.locked ? 'Desbloquear' : 'Bloquear' }}</span>
+                </v-tooltip>
+
+                <v-checkbox
+                  v-if="p.id !== 'cover'"
+                  class="ml-1"
+                  dense
+                  :disabled="p.locked"
+                  hide-details
+                  :input-value="isSelected(p.id)"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click.stop
+                  @change="setSelected(p.id, $event)"
+                />
+              </v-list-item-action>
 
               <v-list-item-action class="d-flex align-center">
                 <v-tooltip bottom>
@@ -233,10 +297,6 @@
               </v-list-item-action>
             </v-list-item>
           </v-list>
-
-          <div class="text-caption text--secondary mt-2">
-            (MVP) Luego agregaremos miniaturas y reordenamiento.
-          </div>
         </v-sheet>
       </v-col>
 
@@ -481,6 +541,7 @@
       </v-col>
     </v-row>
     <!-- Diálogos -->
+    <!-- Reusable dialog for auto-distributing products with layout and capacity options -->
     <v-dialog v-model="showDistributeDialog" max-width="520">
       <v-card>
         <v-card-title class="text-subtitle-1 font-weight-medium">
@@ -525,6 +586,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <!-- Reusable dialog for creating new pages with layout and product options -->
     <v-dialog v-model="showNewPageDialog" max-width="520">
       <v-card>
         <v-card-title class="text-subtitle-1 font-weight-medium">
@@ -560,7 +622,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+    <!-- Reusable dialog for renaming pages -->
     <v-dialog v-model="showRenameDialog" max-width="520">
       <v-card>
         <v-card-title class="text-subtitle-1 font-weight-medium">
@@ -586,7 +648,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+    <!-- Reusable dialog for sharing catalog with public link and token management -->
     <v-dialog v-model="showShareDialog" max-width="640">
       <v-card>
         <v-card-title class="text-subtitle-1 font-weight-medium">
@@ -632,7 +694,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+    <!-- Reusable dialog for selecting and applying catalog templates -->
     <v-dialog v-model="showTemplateDialog" max-width="560">
       <v-card>
         <v-card-title class="text-subtitle-1 font-weight-medium">
@@ -665,6 +727,52 @@
           <v-btn text @click="showTemplateDialog = false">Cancelar</v-btn>
           <v-spacer />
           <v-btn color="primary" @click="applyTemplate"> Aplicar </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Reusable dialog for confirming layout changes with scope options -->
+    <v-dialog v-model="showLayoutScopeDialog" max-width="420">
+      <v-card>
+        <v-card-title class="text-subtitle-1 font-weight-medium">
+          Aplicar layout
+        </v-card-title>
+
+        <v-card-text>
+          <div class="text-body-2 mb-3">
+            ¿Dónde deseas aplicar el layout seleccionado?
+          </div>
+
+          <v-radio-group v-model="layoutScope">
+            <v-radio label="Todas las páginas" value="all" />
+            <v-radio
+              label="Páginas seleccionadas"
+              value="selected"
+              :disabled="!selectedPageIds.length"
+            />
+            <v-radio label="Solo esta página" value="current" />
+          </v-radio-group>
+
+          <v-alert
+            v-if="lockedCountInScope > 0"
+            type="warning"
+            dense
+            text
+            class="mt-3"
+          >
+            {{ lockedCountInScope }}
+            página(s) bloqueada(s) no se modificarán.
+          </v-alert>
+
+          <div class="text-caption text--secondary">
+            Portada no se modifica.
+          </div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn text @click="showLayoutScopeDialog = false">Cancelar</v-btn>
+          <v-spacer />
+          <v-btn color="primary" @click="confirmApplyLayout">Aplicar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -703,19 +811,25 @@ export default {
 
       distributeLayout: 'grid_2x4',
       distributeCapacity: 8,
-      capacityItems: [4, 5, 6, 7, 8, 9, 10, 12, 15, 16],
+      capacityItems: [1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 15],
 
       layoutItems: [
-        { text: 'Grid 2 x 3 (6)', value: 'grid_2x3' },
-        { text: 'Grid 2 x 4 (8)', value: 'grid_2x4' },
-        { text: 'Grid 2 x 5 (10)', value: 'grid_2x5' },
-        { text: 'Grid 2 x 6 (12)', value: 'grid_2x6' },
-        { text: 'Grid 3 x 3 (9)', value: 'grid_3x3' },
-        { text: 'Grid 3 x 4 (12)', value: 'grid_3x4' },
-        { text: 'Grid 3 x 5 (15)', value: 'grid_3x5' },
-
-        { text: 'Lista compacta (6)', value: 'list_compact' },
+        { text: 'Destacado 1 producto (HERO)', value: 'hero_1' },
+        { text: 'Destacado 2 productos (HERO)', value: 'hero_2' },
+        { text: 'Cuadrícula 2×3 (6)', value: 'grid_2x3' },
+        { text: 'Cuadrícula 2×4 (8)', value: 'grid_2x4' },
+        { text: 'Cuadrícula 2×5 (10)', value: 'grid_2x5' },
+        { text: 'Cuadrícula 2×6 (12)', value: 'grid_2x6' },
+        { text: 'Cuadrícula 3×3 (9)', value: 'grid_3x3' },
+        { text: 'Cuadrícula 3×4 (12)', value: 'grid_3x4' },
+        { text: 'Cuadrícula 3×5 (15)', value: 'grid_3x5' },
+        { text: 'Lista (6)', value: 'list_compact' },
       ],
+
+      selectedPageIds: [],
+      showLayoutScopeDialog: false,
+      pendingLayout: null,
+      layoutScope: 'all', // 'all' | 'selected' | 'current'
 
       showShareDialog: false,
       shareToken: '',
@@ -812,6 +926,8 @@ export default {
 
     layoutCapacity() {
       const map = {
+        hero_1: 1,
+        hero_2: 2,
         grid_2x3: 6,
         grid_2x4: 8,
         grid_2x5: 10,
@@ -974,6 +1090,53 @@ export default {
         { text: 'Horizontal (Carta)', value: 'landscape' },
       ]
     },
+
+    contentPages() {
+      return (this.pages || []).filter((p) => p && p.id !== 'cover')
+    },
+    allContentPageIds() {
+      return this.contentPages.map((p) => p.id)
+    },
+    currentPageId() {
+      return this.page ? this.page.id : null
+    },
+
+    contentPageIds() {
+      const pages = Array.isArray(this.pages) ? this.pages : []
+      return pages.filter((p) => p && p.id !== 'cover').map((p) => p.id)
+    },
+
+    hasSelection() {
+      return this.selectedPageIds.length > 0
+    },
+
+    allSelected() {
+      const all = this.contentPageIds
+      if (!all.length) return false
+      return all.every((id) => this.selectedPageIds.includes(id))
+    },
+
+    lockedPageIds() {
+      const pages = Array.isArray(this.pages) ? this.pages : []
+      return pages.filter((p) => p && p.locked).map((p) => p.id)
+    },
+
+    lockedCountInScope() {
+      if (!this.pendingLayout) return 0
+
+      let targetIds = []
+
+      if (this.layoutScope === 'all') {
+        targetIds = this.contentPageIds
+      } else if (this.layoutScope === 'selected') {
+        targetIds = this.selectedPageIds
+      } else if (this.layoutScope === 'current') {
+        targetIds = this.page ? [this.page.id] : []
+      }
+
+      const locked = new Set(this.lockedPageIds)
+      return targetIds.filter((id) => locked.has(id)).length
+    },
   },
 
   watch: {
@@ -1072,20 +1235,18 @@ export default {
     },
 
     onLayoutChange(layout) {
-      const catalogId = this.catalogId
-      const pageId = this.page ? this.page.id : null
+      if (!layout) return
+      if (!this.page || this.page.id === 'cover') return
 
-      if (!pageId) return
-
-      this.$store.dispatch('catalogo/catalogos/setPageLayout', {
-        catalogId,
-        pageId,
-        layout,
-      })
+      this.pendingLayout = layout
+      this.layoutScope = this.selectedPageIds.length ? 'selected' : 'all'
+      this.showLayoutScopeDialog = true
     },
 
     capacityForLayout(layout) {
       const map = {
+        hero_1: 1,
+        hero_2: 2,
         grid_2x3: 6,
         grid_2x4: 8,
         grid_2x5: 10,
@@ -1449,6 +1610,73 @@ export default {
         catalogId: this.catalogId,
         totalPages,
       })
+    },
+
+    async confirmApplyLayout() {
+      const catalogId = this.catalogId
+      const layout = this.pendingLayout
+      if (!layout) return
+
+      const pages = Array.isArray(this.pages) ? this.pages : []
+      const contentPages = pages.filter((p) => p && p.id !== 'cover')
+
+      let pageIds = []
+
+      if (this.layoutScope === 'all') {
+        pageIds = contentPages.map((p) => p.id)
+      } else if (this.layoutScope === 'selected') {
+        pageIds = this.selectedPageIds.slice()
+      } else if (this.layoutScope === 'current') {
+        pageIds = [this.page.id]
+      }
+
+      if (!pageIds.length) return
+
+      await this.$store.dispatch('catalogo/catalogos/applyLayoutToPages', {
+        catalogId,
+        pageIds,
+        layout,
+        skipCover: true,
+      })
+
+      this.showLayoutScopeDialog = false
+      this.pendingLayout = null
+    },
+
+    isSelected(pageId) {
+      return this.selectedPageIds.includes(pageId)
+    },
+
+    setSelected(pageId, checked) {
+      if (checked) {
+        this.selectedPageIds = Array.from(
+          new Set([...this.selectedPageIds, pageId])
+        )
+        return
+      }
+
+      this.selectedPageIds = this.selectedPageIds.filter((x) => x !== pageId)
+    },
+
+    async toggleLock(p) {
+      if (!p || p.id === 'cover') return
+
+      const catalogId = this.catalogId
+      const next = !p.locked
+
+      await this.$store.dispatch('catalogo/catalogos/setPageLocked', {
+        catalogId,
+        pageId: p.id,
+        locked: next,
+      })
+    },
+
+    selectAllPages() {
+      this.selectedPageIds = this.contentPageIds.slice()
+    },
+
+    clearSelection() {
+      this.selectedPageIds = []
     },
 
     // applyTemplateDefaults() {
