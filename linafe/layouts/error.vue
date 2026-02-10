@@ -47,9 +47,6 @@ export default {
     },
   },
   layout(context) {
-    // Puedes acceder al store desde context
-    // Si usas Nuxt 2, context.$auth o context.store.state.sistema.curuser, etc.
-    // Ejemplo usando Vuex:
     if (
       context.store &&
       context.store.state &&

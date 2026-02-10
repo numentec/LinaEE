@@ -1,7 +1,7 @@
 <template>
   <v-app id="portal">
     <v-app-bar color="primary" clipped-left fixed app dark>
-      <v-toolbar-title>LinaEE Demo Portal</v-toolbar-title>
+      <v-toolbar-title>LinaEE Portal</v-toolbar-title>
       <v-spacer />
       <v-badge
         v-show="getCartItemCount > 0"
