@@ -36,60 +36,80 @@
       <template v-else>
         <div v-if="isHero" class="hero-wrap">
           <div
-            v-for="p in heroItems"
-            :key="p.product_id || p.sku"
+            v-for="(s, idx) in heroSlots"
+            :key="idx"
             class="hero-item"
-            :class="layout === 'hero_2' ? 'hero-2' : 'hero-1'"
+            :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
           >
             <div class="hero-media">
-              <img class="hero-img" :src="p.selected_image_url" alt="" />
+              <img
+                v-if="s.main_url"
+                class="hero-img"
+                :src="s.main_url"
+                alt=""
+              />
+              <div v-else class="hero-img hero-img-empty">Sin imagen</div>
 
-              <div v-if="p.images && p.images.length > 1" class="hero-thumbs">
+              <div
+                v-if="s.gallery_urls && s.gallery_urls.length"
+                class="hero-thumbs"
+              >
                 <img
-                  v-for="(img, idx) in p.images.slice(0, 4)"
-                  :key="idx"
+                  v-for="u in s.gallery_urls"
+                  :key="u"
                   class="hero-thumb"
-                  :src="img.url || img"
+                  :src="u"
                   alt=""
                 />
               </div>
             </div>
 
             <div class="hero-body">
-              <div v-if="settings && settings.show_brand" class="hero-brand">
-                {{ p.brand_name }}
+              <div v-if="s.product" class="hero-brand">
+                {{
+                  settings && settings.show_brand ? s.product.brand_name : ''
+                }}
               </div>
 
-              <div v-if="settings && settings.show_sku" class="hero-sku">
-                {{ p.sku }}
+              <div v-if="s.product" class="hero-sku">
+                {{ settings && settings.show_sku ? s.product.sku : '' }}
               </div>
 
-              <div class="hero-title">
-                {{ p.name || p.description || p.product_name || '' }}
+              <div v-if="s.product" class="hero-title">
+                {{
+                  s.product.name ||
+                  s.product.product_name ||
+                  s.product.description ||
+                  ''
+                }}
               </div>
 
               <div
-                v-if="settings && settings.show_description"
+                v-if="s.product && settings && settings.show_description"
                 class="hero-desc"
               >
-                {{ p.description }}
+                {{ s.product.description }}
               </div>
 
-              <div class="hero-meta">
+              <div v-if="s.product" class="hero-meta">
                 <span v-if="settings && settings.show_price">
-                  Precio: {{ p.price }}
+                  Precio: {{ s.product.price }}
                 </span>
 
                 <span v-if="settings && settings.show_min_max">
-                  · Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
+                  · Min: {{ s.product.min_qty }} · Max: {{ s.product.max_qty }}
                 </span>
+              </div>
+
+              <div v-if="!s.product" class="hero-empty">
+                Configura HERO en Propiedades
               </div>
             </div>
           </div>
 
-          <div v-if="items.length > heroItems.length" class="hero-note">
-            Hay {{ items.length - heroItems.length }} producto(s) extra en esta
-            página. Usa Reacomodar para distribuirlos.
+          <div v-if="safeItems.length > heroSlotsCount" class="hero-note">
+            Hay {{ safeItems.length - heroSlotsCount }} producto(s) extra en
+            esta página
           </div>
         </div>
         <div v-else>
@@ -290,7 +310,44 @@ export default {
     },
 
     isHero() {
-      return this.layout === 'hero_1' || this.layout === 'hero_2'
+      return this.page && (this.layout === 'hero_1' || this.layout === 'hero_2')
+    },
+
+    heroSlotsCount() {
+      if (!this.page) return 1
+      return this.page.layout === 'hero_2' ? 2 : 1
+    },
+
+    safeItems() {
+      const items =
+        this.page && Array.isArray(this.page.items) ? this.page.items : []
+      return items
+    },
+
+    heroSlots() {
+      if (!this.isHero) return []
+
+      const hero = this.page && this.page.hero ? this.page.hero : null
+      const slots = hero && Array.isArray(hero.slots) ? hero.slots : []
+
+      const out = []
+
+      for (let i = 0; i < this.heroSlotsCount; i += 1) {
+        const slot = slots[i] || {}
+        const p = this.resolveProductByKey(slot.product_key)
+
+        const mainUrl = this.resolveMainUrl(p, slot)
+        const galleryUrls = this.resolveGalleryUrls(p, slot)
+
+        out.push({
+          product: p,
+          product_key: slot.product_key || '',
+          main_url: mainUrl,
+          gallery_urls: galleryUrls,
+        })
+      }
+
+      return out
     },
 
     visibleItems() {
@@ -343,6 +400,42 @@ export default {
       if (overlay === 'dark') return 'cover-overlay-dark'
       if (overlay === 'light') return 'cover-overlay-light'
       return ''
+    },
+  },
+
+  methods: {
+    productKey(p) {
+      if (!p) return ''
+      if (p.product_id) return `id:${p.product_id}`
+      if (p.sku) return `sku:${p.sku}`
+      return ''
+    },
+
+    resolveProductByKey(key) {
+      const k = String(key || '')
+      if (!k) return null
+      return this.safeItems.find((p) => this.productKey(p) === k) || null
+    },
+
+    resolveMainUrl(p, slot) {
+      if (slot && slot.main_url) return slot.main_url
+      if (p && p.selected_image_url) return p.selected_image_url
+
+      const imgs = p && Array.isArray(p.images) ? p.images : []
+      return imgs[0] && imgs[0].url ? imgs[0].url : ''
+    },
+
+    resolveGalleryUrls(p, slot) {
+      const urls =
+        slot && Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+
+      if (urls.length) return urls.filter(Boolean).slice(0, 4)
+
+      const imgs = p && Array.isArray(p.images) ? p.images : []
+      return imgs
+        .map((x) => x && x.url)
+        .filter(Boolean)
+        .slice(0, 4)
     },
   },
 }
@@ -462,6 +555,13 @@ export default {
   border-radius: 6px;
 }
 
+.hero-img-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
 .hero-thumbs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -504,6 +604,11 @@ export default {
   margin-top: 6px;
   font-size: 12px;
   opacity: 0.85;
+}
+
+.hero-empty {
+  font-size: 12px;
+  opacity: 0.75;
 }
 
 .hero-note {

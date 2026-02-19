@@ -904,6 +904,64 @@ export const mutations = {
       updated_at: now,
     })
   },
+
+  UNLOCK_ALL_PAGES(state, { catalogId, skipCover }) {
+    const cid = Number(catalogId)
+
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+
+    const nextPages = pages.map((p) => {
+      if (!p) return p
+      if (skipCover && (p.id === 'cover' || p.layout === 'cover')) return p
+      if (!p.locked) return p
+      return { ...p, locked: false }
+    })
+
+    const changed = pages.some((p, i) => {
+      if (!p || !nextPages[i]) return false
+      return Boolean(p.locked) !== Boolean(nextPages[i].locked)
+    })
+
+    if (!changed) return
+
+    const now = new Date().toISOString()
+
+    state.items.splice(cIdx, 1, {
+      ...catalog,
+      pages: nextPages,
+      updated_at: now,
+    })
+  },
+
+  UPDATE_PAGE_HERO(state, { catalogId, pageId, hero }) {
+    const cid = Number(catalogId)
+
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    const pages = Array.isArray(catalog.pages) ? catalog.pages : []
+    const pIdx = pages.findIndex((p) => p && p.id === pageId)
+    if (pIdx === -1) return
+
+    const now = new Date().toISOString()
+
+    const nextPages = pages.map((p) => {
+      if (!p) return p
+      if (p.id !== pageId) return p
+      return { ...p, hero: hero || null }
+    })
+
+    state.items.splice(cIdx, 1, {
+      ...catalog,
+      pages: nextPages,
+      updated_at: now,
+    })
+  },
 }
 
 export const actions = {
@@ -1333,5 +1391,16 @@ export const actions = {
 
   setPageLocked({ commit }, { catalogId, pageId, locked }) {
     commit('SET_PAGE_LOCKED', { catalogId, pageId, locked })
+  },
+
+  unlockAllPages({ commit }, { catalogId, skipCover }) {
+    commit('UNLOCK_ALL_PAGES', {
+      catalogId,
+      skipCover: skipCover !== false,
+    })
+  },
+
+  updatePageHero({ commit }, { catalogId, pageId, hero }) {
+    commit('UPDATE_PAGE_HERO', { catalogId, pageId, hero })
   },
 }

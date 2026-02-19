@@ -8,6 +8,9 @@
         <div class="ml-2">
           <div class="text-subtitle-1 font-weight-medium">
             {{ catalogName }}
+            <v-chip v-if="saveStateLabel" small outlined class="ml-4">
+              {{ saveStateLabel }}
+            </v-chip>
           </div>
           <div class="text-caption text--secondary">
             {{ catalogTemplate }} · {{ catalogOrientation }}
@@ -67,9 +70,6 @@
         >
           {{ toast.text }}
         </v-chip>
-        <v-chip v-if="saveStateLabel" small outlined class="mr-2">
-          {{ saveStateLabel }}
-        </v-chip>
         <div v-for="j in pdfJobs" :key="j.jobId" class="mt-2">
           <div class="d-flex justify-space-between">
             <small>Generando PDF (estimado)</small>
@@ -93,30 +93,62 @@
             <v-btn small text @click="addCover">
               <v-icon left small>mdi-image-frame</v-icon> Portada
             </v-btn>
-            <div class="d-flex align-center mb-2">
-              <v-btn
-                x-small
-                text
-                :disabled="allSelected"
-                @click="selectAllPages"
-              >
-                Seleccionar todas
-              </v-btn>
+          </div>
+          <div class="d-flex align-center mb-2">
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  icon
+                  x-small
+                  text
+                  :disabled="allSelected"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="selectAllPages"
+                >
+                  <v-icon left small>mdi-check-all</v-icon>
+                </v-btn>
+              </template>
+              <span>Seleccionar todas</span>
+            </v-tooltip>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  icon
+                  x-small
+                  text
+                  :disabled="!hasSelection"
+                  class="mx-4"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="clearSelection"
+                >
+                  <v-icon left small>mdi-close-circle-outline</v-icon>
+                </v-btn>
+              </template>
+              <span>Quitar selección</span>
+            </v-tooltip>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  icon
+                  x-small
+                  text
+                  :disabled="lockedCount === 0"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="unlockAll"
+                >
+                  <v-icon left small>mdi-lock-open-variant-outline</v-icon>
+                </v-btn>
+              </template>
+              <span>Desbloquear todas</span>
+            </v-tooltip>
 
-              <v-btn
-                x-small
-                text
-                :disabled="!hasSelection"
-                @click="clearSelection"
-              >
-                Limpiar selección
-              </v-btn>
+            <v-spacer />
 
-              <v-spacer />
-
-              <div v-if="hasSelection" class="text-caption text--secondary">
-                {{ selectedPageIds.length }} seleccionada(s)
-              </div>
+            <div v-if="hasSelection" class="text-caption text--secondary">
+              {{ selectedPageIds.length }} seleccionada(s)
             </div>
           </div>
           <div class="text-caption text--secondary">
@@ -212,8 +244,6 @@
                   :disabled="p.locked"
                   hide-details
                   :input-value="isSelected(p.id)"
-                  v-bind="attrs"
-                  v-on="on"
                   @click.stop
                   @change="setSelected(p.id, $event)"
                 />
@@ -520,7 +550,85 @@
               Edita el contenido de la portada
             </div>
           </div>
+          <div v-if="isHeroPage" class="mb-4">
+            <div class="text-subtitle-2 font-weight-medium mb-2">
+              Configuración HERO
+            </div>
 
+            <div
+              v-for="(slot, sIdx) in heroSlotModels"
+              :key="sIdx"
+              class="mb-4"
+            >
+              <div class="text-caption text--secondary mb-2">
+                Slot {{ sIdx + 1 }}
+              </div>
+
+              <v-select
+                :value="slot.product_key"
+                :items="heroProductOptions"
+                label="Producto"
+                outlined
+                dense
+                hide-details
+                class="mb-3"
+                @change="
+                  updateHeroSlot(sIdx, {
+                    product_key: $event,
+                    main_url: '',
+                    gallery_urls: [],
+                  })
+                "
+              />
+
+              <div v-if="slot.product_key">
+                <v-select
+                  :value="slot.main_url"
+                  :items="
+                    imagesForProductKey(slot.product_key).map((u) => ({
+                      text: u,
+                      value: u,
+                    }))
+                  "
+                  label="Imagen principal"
+                  outlined
+                  dense
+                  hide-details
+                  class="mb-3"
+                  @change="updateHeroSlot(sIdx, { main_url: $event })"
+                />
+
+                <div class="text-caption text--secondary mb-2">
+                  Galería (máx 4)
+                </div>
+
+                <v-checkbox
+                  v-for="u in imagesForProductKey(slot.product_key)"
+                  :key="u"
+                  dense
+                  hide-details
+                  class="mt-0 pt-0"
+                  :label="u"
+                  :input-value="slot.gallery_urls.includes(u)"
+                  @change="
+                    updateHeroSlot(sIdx, {
+                      gallery_urls: $event
+                        ? [...slot.gallery_urls, u]
+                        : slot.gallery_urls.filter((x) => x !== u),
+                    })
+                  "
+                />
+
+                <div class="text-caption text--secondary mt-1">
+                  Seleccionadas: {{ slot.gallery_urls.length }}/4
+                </div>
+              </div>
+
+              <div v-else class="text-caption text--secondary">
+                Selecciona un producto para configurar imágenes
+              </div>
+            </div>
+          </div>
           <div v-else>
             <v-select
               :value="layoutKey"
@@ -1137,6 +1245,49 @@ export default {
       const locked = new Set(this.lockedPageIds)
       return targetIds.filter((id) => locked.has(id)).length
     },
+
+    lockedCount() {
+      const pages = Array.isArray(this.pages) ? this.pages : []
+      return pages.filter((p) => p && p.id !== 'cover' && p.locked).length
+    },
+
+    isHeroPage() {
+      return (
+        this.page &&
+        (this.page.layout === 'hero_1' || this.page.layout === 'hero_2')
+      )
+    },
+
+    heroSlotsCount() {
+      if (!this.page) return 1
+      return this.page.layout === 'hero_2' ? 2 : 1
+    },
+
+    heroProductOptions() {
+      const items = Array.isArray(this.pageItems) ? this.pageItems : []
+      return items.map((p) => {
+        const key = p.product_id ? `id:${p.product_id}` : `sku:${p.sku}`
+        const text = `${p.sku} · ${p.brand_name || ''}`.trim()
+        return { text, value: key }
+      })
+    },
+
+    heroSlotModels() {
+      const hero = this.page && this.page.hero ? this.page.hero : null
+      const slots = hero && Array.isArray(hero.slots) ? hero.slots : []
+      const out = []
+
+      for (let i = 0; i < this.heroSlotsCount; i += 1) {
+        const s = slots[i] || {}
+        out.push({
+          product_key: s.product_key || '',
+          main_url: s.main_url || '',
+          gallery_urls: Array.isArray(s.gallery_urls) ? s.gallery_urls : [],
+        })
+      }
+
+      return out
+    },
   },
 
   watch: {
@@ -1679,6 +1830,16 @@ export default {
       this.selectedPageIds = []
     },
 
+    async unlockAll() {
+      const ok = window.confirm('¿Desbloquear todas las páginas?')
+      if (!ok) return
+
+      await this.$store.dispatch('catalogo/catalogos/unlockAllPages', {
+        catalogId: this.catalogId,
+        skipCover: true,
+      })
+    },
+
     // applyTemplateDefaults() {
     //   const catalogId = this.catalogId
 
@@ -1687,6 +1848,44 @@ export default {
     //     template: this.templateKey,
     //   })
     // },
+
+    imagesForProductKey(key) {
+      const items = Array.isArray(this.pageItems) ? this.pageItems : []
+
+      const p =
+        items.find((x) => {
+          const k = x.product_id ? `id:${x.product_id}` : `sku:${x.sku}`
+          return k === key
+        }) || null
+
+      const imgs = p && Array.isArray(p.images) ? p.images : []
+      return imgs.map((x) => x && x.url).filter(Boolean)
+    },
+
+    saveHeroSlots(nextSlots) {
+      const catalogId = this.catalogId
+      const pageId = this.page ? this.page.id : null
+      if (!pageId) return
+
+      this.$store.dispatch('catalogo/catalogos/updatePageHero', {
+        catalogId,
+        pageId,
+        hero: { slots: nextSlots },
+      })
+    },
+
+    updateHeroSlot(idx, patch) {
+      const slots = this.heroSlotModels.map((s) => ({ ...s }))
+      slots[idx] = { ...slots[idx], ...patch }
+
+      const g = Array.isArray(slots[idx].gallery_urls)
+        ? slots[idx].gallery_urls
+        : []
+
+      slots[idx].gallery_urls = Array.from(new Set(g)).slice(0, 4)
+
+      this.saveHeroSlots(slots)
+    },
   },
 }
 </script>
