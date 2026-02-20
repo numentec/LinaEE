@@ -452,6 +452,11 @@
       :no-img-list="noImgList"
       @hideSlideshow="slideshow = false"
     />
+    <SaleDetail
+      :show-sale-detail="showSaleDetail"
+      :sku-for-sale-detail="skuForSaleDetail"
+      @hideSaleDetail="showSaleDetail = false"
+    />
     <v-snackbar v-model="snackbar" timeout="2000">
       No implementado
       <template v-slot:action="{ attrs }">
@@ -501,6 +506,7 @@ import ImgForGrid from '~/components/utilities/ImgForGrid'
 import TableSettings from '~/components/utilities/TableSettings'
 import LoadingView from '~/components/utilities/LoadingView'
 import { selFunction } from '~/assets/utilities'
+import SaleDetail from '~/components/linabi/SaleDetail.vue'
 
 const curGridRefKey = 'cur-grid'
 let collapsed = false
@@ -594,6 +600,7 @@ export default {
     ProdVariants,
     TemplatesAdmin,
     Slideshow,
+    SaleDetail,
   },
   async asyncData({ $axios, store, error }) {
     const loggedInUser = store.getters.loggedInUser
@@ -691,6 +698,8 @@ export default {
       }),
       imgListForPDF: {},
       customTemplate: false,
+      showSaleDetail: false,
+      skuForSaleDetail: '',
     }
   },
   computed: {
@@ -1429,6 +1438,12 @@ export default {
             this.slideshow = true
           }
         }
+        // if (e.column.name === 'SKU') {
+        //   if (e.rowType === 'data') {
+        //     this.skuForSaleDetail = e.value
+        //     this.showSaleDetail = true
+        //   }
+        // }
       }
     },
     storeNoImg(imgfile) {
@@ -1462,6 +1477,19 @@ export default {
             },
           }
         )
+      }
+
+      if (e.target === 'content' && e.column.name === 'SKU') {
+        if (!e.items) e.items = []
+        e.items.push({
+          text: 'Ver últimas ventas',
+          icon: 'money',
+          onItemClick: () => {
+            const cellValue = e.component.cellValue(e.rowIndex, 'SKU')
+            this.skuForSaleDetail = cellValue
+            this.showSaleDetail = true
+          },
+        })
       }
     },
     handlePropertyChange(e) {
