@@ -53,6 +53,7 @@
                     :rules="[rules.required, rules.min]"
                     :type="show1 ? 'text' : 'password'"
                     name="pass"
+                    placeholder="Contraseña"
                     label="Contraseña"
                     hint="Mínimo 8 caracteres"
                     counter
