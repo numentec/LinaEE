@@ -10,17 +10,44 @@
     >
       <v-card flat tile class="mx-auto">
         <v-app-bar color="accent darken-3" dark flat>
-          <v-btn icon @click="$fetch">
-            <v-icon>mdi-refresh</v-icon>
-          </v-btn>
-          <v-toolbar-title> SKU: {{ skuForSaleDetail }} </v-toolbar-title>
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <v-btn icon v-bind="attrs" v-on="on" @click="$fetch">
+                <v-icon>mdi-refresh</v-icon>
+              </v-btn>
+            </template>
+            <span>Refresh</span>
+          </v-tooltip>
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <v-toolbar-title v-bind="attrs" v-on="on">
+                SKU: {{ skuForSaleDetail }}
+              </v-toolbar-title>
+            </template>
+            <span>{{ getDescription }}</span>
+          </v-tooltip>
           <v-spacer />
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <v-btn
+                icon
+                class="mr-4"
+                v-bind="attrs"
+                v-on="on"
+                @click="clearFilters"
+              >
+                <v-icon>mdi-filter-variant-remove</v-icon>
+              </v-btn>
+            </template>
+            <span>Clear all filters</span>
+          </v-tooltip>
           <v-app-bar-nav-icon @click="$emit('hideSaleDetail')">
             <v-icon>mdi-window-close</v-icon>
           </v-app-bar-nav-icon>
         </v-app-bar>
         <v-container>
           <DxDataGrid
+            ref="dataGrid"
             :show-borders="true"
             :remote-operations="false"
             :data-source="dataSource"
@@ -52,14 +79,31 @@
               format="$#,##0.00"
               caption="Precio"
             />
+            <DxColumn
+              data-field="MONTO"
+              data-type="number"
+              format="$#,##0.00"
+              caption="Monto"
+            />
             <DxFilterRow :visible="true" />
             <DxHeaderFilter :visible="true" />
             <DxScrolling mode="virtual" />
             <DxSummary>
               <DxTotalItem
-                :column="'CLIENTE'"
-                :summary-type="number"
+                column="CLIENTE"
+                summary-type="count"
                 display-format="{0} Regs."
+              />
+              <DxTotalItem
+                column="CANTIDAD"
+                summary-type="sum"
+                display-format="{0}"
+              />
+              <DxTotalItem
+                column="MONTO"
+                summary-type="sum"
+                value-format="$#,##0.00"
+                display-format="{0}"
               />
             </DxSummary>
           </DxDataGrid>
@@ -139,6 +183,25 @@ export default {
   },
   computed: {
     ...mapGetters('sistema', ['getCurCia']),
+
+    getDescription() {
+      if (!this.dataSource) return
+      if (this.dataSource.length === 0) return
+
+      // const dataGridInstance = this.$refs.dataGrid.instance
+      // const dataSourceInstance = dataGridInstance.getDataSource()
+
+      // const items = dataSourceInstance.items()
+
+      const items = this.dataSource.items()
+
+      if (items && items.length > 0) {
+        const item = items[0]
+        return item.DESCRIPTION
+      }
+
+      return 'Description not available'
+    },
   },
 
   watch: {
@@ -169,7 +232,11 @@ export default {
 
   mounted() {},
 
-  methods: {},
+  methods: {
+    clearFilters() {
+      this.$refs.dataGrid.instance.clearFilter()
+    },
+  },
 }
 </script>
 
