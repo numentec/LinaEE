@@ -394,257 +394,280 @@
       <v-col cols="12" md="3">
         <v-sheet outlined class="pa-3">
           <div class="text-subtitle-2 font-weight-medium mb-2">Propiedades</div>
+          <v-divider />
+          <v-expansion-panels flat multiple accordion hover>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <!-- Catálogo -->
+                <div class="text-subtitle-2 font-weight-medium mt-2 mb-2">
+                  Catálogo
+                </div>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <v-text-field
+                  :value="catalogName"
+                  label="Nombre"
+                  outlined
+                  dense
+                  hide-details
+                  class="mb-3 mt-3"
+                  @input="onCatalogMetaChange({ name: $event })"
+                />
 
-          <!-- Catálogo -->
-          <div class="text-subtitle-2 font-weight-medium mt-2 mb-2">
-            Catálogo
-          </div>
+                <div class="d-flex align-center mb-3">
+                  <div class="text-body-2 font-weight-medium">
+                    Plantilla: {{ catalogTemplate }}
+                  </div>
+                  <v-spacer />
+                  <v-btn small outlined @click="openTemplateDialog"
+                    >Cambiar</v-btn
+                  >
+                </div>
 
-          <v-text-field
-            :value="catalogName"
-            label="Nombre"
-            outlined
-            dense
-            hide-details
-            class="mb-3"
-            @input="onCatalogMetaChange({ name: $event })"
-          />
-
-          <div class="d-flex align-center mb-3">
-            <div class="text-body-2 font-weight-medium">
-              Plantilla: {{ catalogTemplate }}
-            </div>
-            <v-spacer />
-            <v-btn small outlined @click="openTemplateDialog">Cambiar</v-btn>
-          </div>
-
-          <v-select
-            :value="catalog && catalog.orientation"
-            :items="orientationItems"
-            label="Orientación"
-            outlined
-            dense
-            hide-details
-            class="mb-3"
-            @change="onCatalogMetaChange({ orientation: $event })"
-          />
-
-          <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">Tema</div>
-
-          <v-text-field
-            :value="catalogTheme.primary"
-            label="Color primario (hex)"
-            outlined
-            dense
-            hide-details
-            class="mb-3"
-            @input="onThemeChange({ primary: $event })"
-          />
-
-          <v-select
-            :value="catalogTheme.cover_overlay"
-            :items="coverOverlayItems"
-            label="Overlay portada"
-            outlined
-            dense
-            hide-details
-            class="mb-3"
-            @change="onThemeChange({ cover_overlay: $event })"
-          />
-
-          <v-select
-            :value="catalogTheme.card_style"
-            :items="cardStyleItems"
-            label="Estilo de tarjeta"
-            outlined
-            dense
-            hide-details
-            class="mb-2"
-            @change="onThemeChange({ card_style: $event })"
-          />
-
-          <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">
-            Contenido
-          </div>
-
-          <v-switch
-            label="Mostrar imágenes"
-            :input-value="catalogSettings.show_images"
-            @change="onSettingsChange({ show_images: $event })"
-          />
-
-          <v-switch
-            label="Mostrar marca"
-            :input-value="catalogSettings.show_brand"
-            @change="onSettingsChange({ show_brand: $event })"
-          />
-
-          <v-switch
-            label="Mostrar SKU"
-            :input-value="catalogSettings.show_sku"
-            @change="onSettingsChange({ show_sku: $event })"
-          />
-
-          <v-switch
-            label="Mostrar descripción"
-            :input-value="catalogSettings.show_description"
-            @change="onSettingsChange({ show_description: $event })"
-          />
-
-          <v-switch
-            label="Mostrar precios"
-            :input-value="catalogSettings.show_price"
-            @change="onSettingsChange({ show_price: $event })"
-          />
-
-          <v-switch
-            label="Mostrar min/max compra"
-            :input-value="catalogSettings.show_min_max"
-            @change="onSettingsChange({ show_min_max: $event })"
-          />
-
-          <!-- Página -->
-          <div class="text-subtitle-2 font-weight-medium mt-6 mb-2">Página</div>
-
-          <div v-if="isCoverPage">
-            <v-text-field
-              :value="coverTitle"
-              label="Título"
-              outlined
-              dense
-              hide-details
-              class="mb-3"
-              @input="onCoverChange({ title: $event })"
-            />
-
-            <v-text-field
-              :value="coverSubtitle"
-              label="Subtítulo"
-              outlined
-              dense
-              hide-details
-              class="mb-3"
-              @input="onCoverChange({ subtitle: $event })"
-            />
-
-            <v-text-field
-              :value="coverLogoUrl"
-              label="Logo URL"
-              outlined
-              dense
-              hide-details
-              class="mb-3"
-              @input="onCoverChange({ logo_url: $event })"
-            />
-
-            <v-text-field
-              :value="coverHeroUrl"
-              label="Imagen de portada URL"
-              outlined
-              dense
-              hide-details
-              @input="onCoverChange({ hero_url: $event })"
-            />
-
-            <div class="text-caption text--secondary mt-2">
-              Edita el contenido de la portada
-            </div>
-          </div>
-          <div v-if="isHeroPage" class="mb-4">
-            <div class="text-subtitle-2 font-weight-medium mb-2">
-              Configuración HERO
-            </div>
-
-            <div
-              v-for="(slot, sIdx) in heroSlotModels"
-              :key="sIdx"
-              class="mb-4"
-            >
-              <div class="text-caption text--secondary mb-2">
-                Slot {{ sIdx + 1 }}
-              </div>
-
-              <v-select
-                :value="slot.product_key"
-                :items="heroProductOptions"
-                label="Producto"
-                outlined
-                dense
-                hide-details
-                class="mb-3"
-                @change="
-                  updateHeroSlot(sIdx, {
-                    product_key: $event,
-                    main_url: '',
-                    gallery_urls: [],
-                  })
-                "
-              />
-
-              <div v-if="slot.product_key">
                 <v-select
-                  :value="slot.main_url"
-                  :items="
-                    imagesForProductKey(slot.product_key).map((u) => ({
-                      text: u,
-                      value: u,
-                    }))
-                  "
-                  label="Imagen principal"
+                  :value="catalog && catalog.orientation"
+                  :items="orientationItems"
+                  label="Orientación"
                   outlined
                   dense
                   hide-details
                   class="mb-3"
-                  @change="updateHeroSlot(sIdx, { main_url: $event })"
+                  @change="onCatalogMetaChange({ orientation: $event })"
                 />
 
-                <div class="text-caption text--secondary mb-2">
-                  Galería (máx 4)
+                <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">
+                  Tema
                 </div>
 
-                <v-checkbox
-                  v-for="u in imagesForProductKey(slot.product_key)"
-                  :key="u"
+                <v-row class="justify-center">
+                  <v-color-picker
+                    :value="catalogTheme.primary"
+                    dot-size="15"
+                    :hide-canvas="!showColorPicker"
+                    hide-mode-switch
+                    mode="hexa"
+                    class="ma-2 pa-0"
+                    @input="onThemeChange({ primary: $event })"
+                  ></v-color-picker>
+                  <v-btn icon @click="showColorPicker = !showColorPicker">
+                    <v-icon>mdi-palette</v-icon>
+                  </v-btn>
+                </v-row>
+
+                <v-select
+                  :value="catalogTheme.cover_overlay"
+                  :items="coverOverlayItems"
+                  label="Overlay portada"
+                  outlined
                   dense
                   hide-details
-                  class="mt-0 pt-0"
-                  :label="u"
-                  :input-value="slot.gallery_urls.includes(u)"
-                  @change="
-                    updateHeroSlot(sIdx, {
-                      gallery_urls: $event
-                        ? [...slot.gallery_urls, u]
-                        : slot.gallery_urls.filter((x) => x !== u),
-                    })
-                  "
+                  class="mb-3"
+                  @change="onThemeChange({ cover_overlay: $event })"
                 />
 
-                <div class="text-caption text--secondary mt-1">
-                  Seleccionadas: {{ slot.gallery_urls.length }}/4
+                <v-select
+                  :value="catalogTheme.card_style"
+                  :items="cardStyleItems"
+                  label="Estilo de tarjeta"
+                  outlined
+                  dense
+                  hide-details
+                  class="mb-2"
+                  @change="onThemeChange({ card_style: $event })"
+                />
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <!-- Contenido -->
+                <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">
+                  Contenido
                 </div>
-              </div>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <v-switch
+                  label="Mostrar imágenes"
+                  :input-value="catalogSettings.show_images"
+                  @change="onSettingsChange({ show_images: $event })"
+                />
 
-              <div v-else class="text-caption text--secondary">
-                Selecciona un producto para configurar imágenes
-              </div>
-            </div>
-          </div>
-          <div v-else>
-            <v-select
-              :value="layoutKey"
-              :items="layoutItems"
-              label="Layout de página"
-              outlined
-              dense
-              hide-details
-              class="mb-2"
-              @change="onLayoutChange"
-            />
+                <v-switch
+                  label="Mostrar marca"
+                  :input-value="catalogSettings.show_brand"
+                  @change="onSettingsChange({ show_brand: $event })"
+                />
 
-            <div class="text-caption text--secondary">
-              El layout afecta cuántos productos entran por página.
-            </div>
-          </div>
+                <v-switch
+                  label="Mostrar SKU"
+                  :input-value="catalogSettings.show_sku"
+                  @change="onSettingsChange({ show_sku: $event })"
+                />
+
+                <v-switch
+                  label="Mostrar descripción"
+                  :input-value="catalogSettings.show_description"
+                  @change="onSettingsChange({ show_description: $event })"
+                />
+
+                <v-switch
+                  label="Mostrar precios"
+                  :input-value="catalogSettings.show_price"
+                  @change="onSettingsChange({ show_price: $event })"
+                />
+
+                <v-switch
+                  label="Mostrar min/max compra"
+                  :input-value="catalogSettings.show_min_max"
+                  @change="onSettingsChange({ show_min_max: $event })"
+                />
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <!-- Página -->
+                <div class="text-subtitle-2 font-weight-medium mt-6 mb-2">
+                  Página
+                </div>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <div v-if="isCoverPage">
+                  <v-text-field
+                    :value="coverTitle"
+                    label="Título"
+                    outlined
+                    dense
+                    hide-details
+                    class="mb-3 mt-3"
+                    @input="onCoverChange({ title: $event })"
+                  />
+
+                  <v-text-field
+                    :value="coverSubtitle"
+                    label="Subtítulo"
+                    outlined
+                    dense
+                    hide-details
+                    class="mb-3"
+                    @input="onCoverChange({ subtitle: $event })"
+                  />
+
+                  <v-text-field
+                    :value="coverLogoUrl"
+                    label="Logo URL"
+                    outlined
+                    dense
+                    hide-details
+                    class="mb-3"
+                    @input="onCoverChange({ logo_url: $event })"
+                  />
+
+                  <v-text-field
+                    :value="coverHeroUrl"
+                    label="Imagen de portada URL"
+                    outlined
+                    dense
+                    hide-details
+                    @input="onCoverChange({ hero_url: $event })"
+                  />
+                </div>
+                <div v-if="isHeroPage" class="mb-4">
+                  <div class="text-subtitle-2 font-weight-medium mb-2">
+                    Configuración HERO
+                  </div>
+
+                  <div
+                    v-for="(slot, sIdx) in heroSlotModels"
+                    :key="sIdx"
+                    class="mb-4"
+                  >
+                    <div class="text-caption text--secondary mb-2">
+                      Slot {{ sIdx + 1 }}
+                    </div>
+
+                    <v-select
+                      :value="slot.product_key"
+                      :items="heroProductOptions"
+                      label="Producto"
+                      outlined
+                      dense
+                      hide-details
+                      class="mb-3"
+                      @change="
+                        updateHeroSlot(sIdx, {
+                          product_key: $event,
+                          main_url: '',
+                          gallery_urls: [],
+                        })
+                      "
+                    />
+
+                    <div v-if="slot.product_key">
+                      <v-select
+                        :value="slot.main_url"
+                        :items="
+                          imagesForProductKey(slot.product_key).map((u) => ({
+                            text: u,
+                            value: u,
+                          }))
+                        "
+                        label="Imagen principal"
+                        outlined
+                        dense
+                        hide-details
+                        class="mb-3"
+                        @change="updateHeroSlot(sIdx, { main_url: $event })"
+                      />
+
+                      <div class="text-caption text--secondary mb-2">
+                        Galería (máx 4)
+                      </div>
+
+                      <v-checkbox
+                        v-for="u in imagesForProductKey(slot.product_key)"
+                        :key="u"
+                        dense
+                        hide-details
+                        class="mt-0 pt-0"
+                        :label="u"
+                        :input-value="slot.gallery_urls.includes(u)"
+                        @change="
+                          updateHeroSlot(sIdx, {
+                            gallery_urls: $event
+                              ? [...slot.gallery_urls, u]
+                              : slot.gallery_urls.filter((x) => x !== u),
+                          })
+                        "
+                      />
+
+                      <div class="text-caption text--secondary mt-1">
+                        Seleccionadas: {{ slot.gallery_urls.length }}/4
+                      </div>
+                    </div>
+
+                    <div v-else class="text-caption text--secondary">
+                      Selecciona un producto para configurar imágenes
+                    </div>
+                  </div>
+                </div>
+                <v-divider class="my-4" />
+                <div>
+                  <v-select
+                    :value="layoutKey"
+                    :items="layoutItems"
+                    label="Layout de página"
+                    outlined
+                    dense
+                    hide-details
+                    @change="onLayoutChange"
+                  />
+
+                  <div class="text-caption text--secondary">
+                    El layout afecta cuántos productos entran por página.
+                  </div>
+                </div>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </v-sheet>
       </v-col>
     </v-row>
@@ -905,6 +928,7 @@ export default {
   data() {
     return {
       showPicker: false,
+      showColorPicker: false,
       showDistributeDialog: false,
 
       showNewPageDialog: false,
@@ -1123,7 +1147,7 @@ export default {
     catalogTheme() {
       return (
         (this.catalog && this.catalog.theme) || {
-          primary: '#1976d2',
+          primary: '#1976D2FF',
           cover_overlay: 'light',
           card_style: 'outlined',
         }
