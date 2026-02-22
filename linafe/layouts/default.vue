@@ -54,7 +54,7 @@
         </template>
       </v-sheet>
     </v-bottom-sheet>
-    <!-- <v-snackbar
+    <v-snackbar
       v-model="toast.show"
       :timeout="toast.actionText ? 15000 : 4000"
       :color="toast.type"
@@ -73,7 +73,7 @@
 
         <v-btn text v-bind="attrs" @click="closeToast">Cerrar</v-btn>
       </template>
-    </v-snackbar> -->
+    </v-snackbar>
   </v-app>
 </template>
 

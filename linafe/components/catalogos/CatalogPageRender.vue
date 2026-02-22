@@ -570,7 +570,7 @@ export default {
 
 .hero-thumb {
   width: 100%;
-  height: 56px;
+  height: 112px;
   object-fit: cover;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.12);
