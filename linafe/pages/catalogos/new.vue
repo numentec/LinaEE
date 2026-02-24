@@ -50,12 +50,15 @@ export default {
   },
   methods: {
     async create() {
-      const item = await this.$store.dispatch('catalogos/createCatalog', {
-        name: this.name,
-        template: 'minimal',
-        orientation: this.orientation,
-        company_id: this.companyId,
-      })
+      const item = await this.$store.dispatch(
+        'catalogo/catalogos/createCatalog',
+        {
+          name: this.name,
+          template: 'minimal',
+          orientation: this.orientation,
+          company_id: this.companyId,
+        }
+      )
       this.$router.push(`/catalogos/${item.id}/edit`)
     },
   },
