@@ -13,6 +13,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.viewsets import ModelViewSet
 
 from urllib.parse import urljoin, urlencode
+from urllib.parse import quote
+import random
 
 import ulid
 import uuid
@@ -37,6 +39,7 @@ from .serializers import (
     CatalogMasterSerializer,
     CatalogDetailSerializer,
     CatalogDetailImageSerializer,
+    MockProductSerializer,
 )
 from ..core.models import Customer, Cia
 
@@ -380,6 +383,67 @@ class CategoriesByParentAndCompanyAPIView(APIView):
             'subcategories': serializer.data,
             'total': subcategories.count()
         }, status=status.HTTP_200_OK)
+
+
+class MockProductsAPIView(APIView):
+    """
+    Devuelve mock data de productos con el mismo contrato del frontend.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        count_raw = request.query_params.get("count", "200")
+        try:
+            count = int(count_raw)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Parámetro 'count' inválido. Debe ser un número entero."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if count < 1 or count > 1000:
+            return Response(
+                {"detail": "Parámetro 'count' fuera de rango. Use un valor entre 1 y 1000."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        brands = ["Nike", "Adidas", "Puma", "Lina"]
+        products = []
+
+        for i in range(count):
+            n = i + 1
+            sku = f"SKU-{n:04d}"
+
+            image_count = random.randint(2, 4)
+            images = []
+
+            for j in range(image_count):
+                seed_value = sku if j == 0 else f"{sku}+{j}"
+                encoded_seed = quote(seed_value, safe="")
+                images.append(
+                    {
+                        "url": f"https://picsum.photos/seed/{encoded_seed}/300",
+                        "is_primary": j == 0,
+                    }
+                )
+
+            products.append(
+                {
+                    "product_id": f"prod_{n}",
+                    "sku": sku,
+                    "description": f"Producto {n} descripción corta",
+                    "brand_name": brands[i % 4],
+                    "price": float(f"{5 + (i % 40) * 0.75:.2f}"),
+                    "min_qty": (i % 6) + 1,
+                    "max_qty": ((i % 6) + 1) * 12,
+                    "images": images,
+                    "selected_image_url": images[0]["url"],
+                }
+            )
+
+        serializer = MockProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CatalogDetailView(generics.RetrieveAPIView):
     serializer_class = CatalogSerializer

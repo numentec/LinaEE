@@ -206,3 +206,20 @@ class PublicCatalogSerializer(serializers.ModelSerializer):
             "pages",
             "status",
         )
+
+
+class MockProductImageSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    is_primary = serializers.BooleanField()
+
+
+class MockProductSerializer(serializers.Serializer):
+    product_id = serializers.CharField()
+    sku = serializers.CharField()
+    description = serializers.CharField()
+    brand_name = serializers.CharField()
+    price = serializers.FloatField()
+    min_qty = serializers.IntegerField()
+    max_qty = serializers.IntegerField()
+    images = MockProductImageSerializer(many=True)
+    selected_image_url = serializers.URLField()

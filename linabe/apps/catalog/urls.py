@@ -14,6 +14,7 @@ from .views import (
     CategoriesByParentAndCompanyAPIView,
     CatalogDetailView,
     PublicCatalogByTokenView,
+    MockProductsAPIView,
 )
 from .api_pdf_jobs import pdf_job_status, pdf_job_download
 app_name = "catalog"
@@ -48,6 +49,9 @@ urlpatterns = [
     
     # 3. Subcategorías de un padre específico para una compañía
     path('categories/by-parent/<int:company_id>/<int:parent_id>/', CategoriesByParentAndCompanyAPIView.as_view(), name='categories-by-parent-and-company'),
+    
+    # Endpoint para mock de productos (solo para pruebas, no debe usarse en producción)
+    path('mock/productos/', MockProductsAPIView.as_view(), name='mock-productos'),
     
     path('', include(router.urls)),
 ]
