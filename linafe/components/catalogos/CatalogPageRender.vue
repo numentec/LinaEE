@@ -12,6 +12,7 @@
             <div class="d-flex align-center mb-4">
               <v-img
                 v-if="coverLogoUrl"
+                ref="img-cover"
                 :src="coverLogoUrl"
                 :lazy-src="coverLogoUrl"
                 width="56"
@@ -126,15 +127,32 @@
                 :class="cardClass"
               >
                 <div class="d-flex">
-                  <v-img
-                    v-if="effectiveSettings.show_images"
-                    :src="p.selected_image_url"
-                    :lazy-src="p.selected_image_url"
-                    width="72"
-                    height="72"
-                    class="mr-3"
-                    contain
-                  />
+                  <div>
+                    <v-img
+                      v-if="effectiveSettings.show_images"
+                      ref="img-item"
+                      :src="p.selected_image_url"
+                      :lazy-src="p.selected_image_url"
+                      width="72"
+                      height="72"
+                      class="d-flex mr-3 img-item-wrap"
+                      contain
+                    >
+                      <v-chip
+                        v-if="
+                          effectiveSettings.show_images &&
+                          p.images &&
+                          p.images.length > 1
+                        "
+                        x-small
+                        color="rgba(0, 0, 0, 0.50)"
+                        text-color="white"
+                        class="thumb-more"
+                      >
+                        +{{ p.images.length - 1 }}
+                      </v-chip>
+                    </v-img>
+                  </div>
 
                   <div class="flex-grow-1">
                     <div
@@ -168,19 +186,6 @@
                         Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
                       </span>
                     </div>
-                  </div>
-
-                  <div
-                    v-if="
-                      effectiveSettings.show_images &&
-                      p.images &&
-                      p.images.length > 1
-                    "
-                    class="ml-2"
-                  >
-                    <v-chip x-small outlined>
-                      +{{ p.images.length - 1 }}
-                    </v-chip>
                   </div>
                 </div>
               </v-card>
@@ -232,15 +237,15 @@ export default {
       const isLand = this.orientation === 'landscape'
       const ratio = isLand ? landscapeRatio : portraitRatio
 
-      if (this.isPrint) {
-        return {
-          width: '100%',
-          height: 'auto',
-          aspectRatio: `${isLand ? '11 / 8.5' : '8.5 / 11'}`,
-          margin: '0 auto',
-          background: 'white',
-        }
-      }
+      // if (this.isPrint) {
+      //   return {
+      //     width: '100%',
+      //     height: 'auto',
+      //     aspectRatio: `${isLand ? '11 / 8.5' : '8.5 / 11'}`,
+      //     margin: '0 auto',
+      //     background: 'white',
+      //   }
+      // }
 
       const width = 700
       const height = Math.round(width * ratio)
@@ -614,5 +619,19 @@ export default {
 .hero-note {
   font-size: 12px;
   opacity: 0.8;
+}
+
+.img-item-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.thumb-more {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
 }
 </style>

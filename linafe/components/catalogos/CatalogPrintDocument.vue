@@ -37,36 +37,46 @@
         </div>
       </div>
 
-      <!-- GRID 3x3 -->
-      <div v-else-if="page.layout == 'grid_3x3'" class="content grid-3x3">
+      <!-- GRID -->
+      <div
+        v-else-if="page.layout && page.layout.startsWith('grid')"
+        class="content"
+        :class="pageClass(page)"
+      >
         <div
           v-for="item in page.items"
           :key="item.product_id || item.sku"
           class="product-card"
           :class="cardStyleClass"
         >
-          <div v-if="showImages" class="product-image-wrap">
+          <div
+            v-if="showImages"
+            ref="productImageWrap"
+            class="product-image-wrap"
+          >
             <img class="product-image" :src="selectImage(item)" alt="" />
           </div>
 
-          <div class="product-info">
-            <div class="row row-top">
-              <div v-if="showSku" class="sku">{{ item.sku }}</div>
-              <div v-if="showPrice" class="price">
-                {{ formatPrice(item.price) }}
-              </div>
-            </div>
-
+          <div ref="productInfo" class="product-info">
             <div v-if="showBrand && item.brand_name" class="brand">
               {{ item.brand_name }}
             </div>
+
+            <div v-if="showSku" class="sku">{{ item.sku }}</div>
 
             <div v-if="showDescription && item.description" class="description">
               {{ item.description }}
             </div>
 
+            <div v-if="showPrice" class="price">
+              {{ formatPrice(item.price) }}
+            </div>
+
             <div v-if="showMinMax" class="minmax">
               <span v-if="item.min_qty !== null">Min: {{ item.min_qty }}</span>
+              <span v-if="item.min_qty !== null && item.max_qty !== null">
+                &emsp;·&emsp;
+              </span>
               <span v-if="item.max_qty !== null">Max: {{ item.max_qty }}</span>
             </div>
           </div>
@@ -132,13 +142,44 @@ export default {
     isLandscape() {
       return this.doc && this.doc.orientation === 'landscape'
     },
+
+    gridLayoutClass() {
+      if (!this.doc || !this.doc.pages) return ''
+      if (this.doc.pages.length < 2) return '' // si no hay página 2, no asumimos layout de grid
+      const page = this.doc.pages[1] // asumimos que la página 2 define el layout del grid
+      if (!page) return ''
+      switch (page.layout) {
+        case 'grid_2x3':
+          return 'layout-grid-2x3'
+        case 'grid_2x4':
+          return 'layout-grid-2x4'
+        case 'grid_2x5':
+          return 'layout-grid-2x5'
+        case 'grid_2x6':
+          return 'layout-grid-2x6'
+        case 'grid_3x3':
+          return 'layout-grid-3x3'
+        case 'grid_3x4':
+          return 'layout-grid-3x4'
+        case 'grid_3x5':
+          return 'layout-grid-3x5'
+        default:
+          return 'unknown'
+      }
+    },
   },
 
   methods: {
     pageClass(page) {
       return {
         cover: page.layout === 'cover',
+        'layout-grid-2x3': page.layout === 'grid_2x3',
+        'layout-grid-2x4': page.layout === 'grid_2x4',
+        'layout-grid-2x5': page.layout === 'grid_2x5',
+        'layout-grid-2x6': page.layout === 'grid_2x6',
         'layout-grid-3x3': page.layout === 'grid_3x3',
+        'layout-grid-3x4': page.layout === 'grid_3x4',
+        'layout-grid-3x5': page.layout === 'grid_3x5',
         landscape: this.isLandscape,
         portrait: !this.isLandscape,
       }
@@ -394,9 +435,53 @@ body {
 }
 
 /* =======================
+   GRID 2x3
+   ======================= */
+.content.layout-grid-2x3 {
+  height: calc(100% - 18mm);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: var(--gap);
+}
+
+/* =======================
+   GRID 2x4
+   ======================= */
+.content.layout-grid-2x4 {
+  height: calc(100% - 18mm);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: var(--gap);
+}
+
+/* =======================
+   GRID 2x5
+   ======================= */
+.content.layout-grid-2x5 {
+  height: calc(100% - 18mm);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: var(--gap);
+}
+
+/* =======================
+   GRID 2x6
+   ======================= */
+.content.layout-grid-2x6 {
+  height: calc(100% - 18mm);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: var(--gap);
+}
+
+/* =======================
    GRID 3x3
    ======================= */
-.content.grid-3x3 {
+.content.layout-grid-3x3 {
   height: calc(100% - 18mm);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -404,12 +489,37 @@ body {
   gap: var(--gap);
 }
 
+/* =======================
+   GRID 3x4
+   ======================= */
+.content.layout-grid-3x4 {
+  height: calc(100% - 18mm);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: var(--gap);
+}
+
+/* =======================
+   GRID 3x5
+   ======================= */
+.content.layout-grid-3x5 {
+  height: calc(100% - 18mm);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: var(--gap);
+}
+
 /* Card styles */
 .product-card {
   box-sizing: border-box;
   padding: 3.5mm;
-  display: grid;
-  grid-template-rows: 62% auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: var(--gap);
   overflow: hidden;
   background: #fff;
 }
@@ -422,8 +532,12 @@ body {
 }
 
 .product-image-wrap {
-  width: 100%;
+  flex: 0 0 35%;
   height: 100%;
+  margin-top: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
   overflow: hidden;
 }
 
@@ -431,10 +545,13 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: top right;
 }
 
 .product-info {
-  margin-top: 2mm;
+  flex: 1;
+  min-width: 0;
+  margin-top: 10px;
   display: grid;
   gap: 1.2mm;
 }
@@ -449,18 +566,18 @@ body {
 }
 
 .sku {
+  font-size: 10pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.price {
   font-size: 8pt;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 60%;
-}
-
-.price {
-  font-size: 10pt;
-  font-weight: 700;
-  white-space: nowrap;
 }
 
 .brand {
@@ -472,7 +589,8 @@ body {
 }
 
 .description {
-  font-size: 9pt;
+  font-size: 10pt;
+  color: var(--muted);
   line-height: 1.15;
   max-height: 22mm;
   overflow: hidden;
@@ -480,7 +598,7 @@ body {
 
 .minmax {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   font-size: 8pt;
   color: var(--muted);
 }

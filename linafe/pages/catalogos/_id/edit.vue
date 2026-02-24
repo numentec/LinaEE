@@ -40,6 +40,10 @@
           <v-icon left>mdi-file-eye-outline</v-icon>
           Vista previa
         </v-btn>
+        <v-btn class="mx-2" color="primary" @click="goPrint">
+          <v-icon left>mdi-printer</v-icon>
+          Imprimir
+        </v-btn>
         <v-btn class="mr-2" outlined @click="openShare">
           <v-icon left>mdi-share-variant</v-icon>
           Compartir
@@ -1372,6 +1376,12 @@ export default {
   methods: {
     goPreview() {
       this.$router.push(`/catalogos/${this.catalogId}/preview`)
+    },
+
+    goPrint() {
+      this.$router.push(`/portal/shared-catalog/${this.shareToken}/print`)
+      // this.$router.push(`/catalogos/${this.catalogId}/print`)
+      // window.open(`/catalogos/${this.catalogId}/print`, '_blank')
     },
 
     openPicker() {

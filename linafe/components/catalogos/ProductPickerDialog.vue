@@ -108,12 +108,11 @@
 </template>
 
 <script>
-import { mockProductos } from '~/mock/productos'
-
 export default {
   name: 'ProductPickerDialog',
   props: {
     value: { type: Boolean, default: false },
+    mockCount: { type: Number, default: 200 },
   },
 
   data() {
@@ -123,7 +122,8 @@ export default {
       brand: 'all',
       sort: 'sku_asc',
       selected: {},
-      productos: mockProductos,
+      productos: [],
+      loadingProductos: false,
       brandItems: [
         { text: 'Todas', value: 'all' },
         { text: 'Nike', value: 'Nike' },
@@ -181,10 +181,16 @@ export default {
   watch: {
     value(val) {
       this.openLocal = val
-      if (val) this.selected = {}
+      if (val) {
+        this.selected = {}
+        this.fetchProductos()
+      }
     },
     openLocal(val) {
       this.$emit('input', val)
+      if (val) {
+        this.fetchProductos()
+      }
     },
   },
 
@@ -212,6 +218,7 @@ export default {
 
   activated() {
     if (this.openLocal) {
+      this.fetchProductos()
       // Forzar render del virtual scroll después de abrir
       this.$nextTick(() => {
         window.dispatchEvent(new Event('resize'))
@@ -220,6 +227,26 @@ export default {
   },
 
   methods: {
+    async fetchProductos() {
+      if (this.loadingProductos) return
+      if (this.productos.length > 0) return
+
+      this.loadingProductos = true
+      try {
+        const count = Number.isFinite(this.mockCount)
+          ? Math.max(1, Math.floor(this.mockCount))
+          : 200
+        const data = await this.$axios.$get('/catalog/mock/productos/', {
+          params: { count },
+        })
+        this.productos = Array.isArray(data) ? data : []
+      } catch (error) {
+        this.productos = []
+      } finally {
+        this.loadingProductos = false
+      }
+    },
+
     close() {
       this.openLocal = false
     },
