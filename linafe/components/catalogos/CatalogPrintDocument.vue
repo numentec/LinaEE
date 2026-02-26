@@ -83,6 +83,93 @@
         </div>
       </div>
 
+      <!-- Listado -->
+
+      <!-- Destacado o Hero -->
+      <div
+        v-else-if="
+          page.layout &&
+          page.layout.startsWith('hero') &&
+          page.hero &&
+          page.hero.slots &&
+          page.hero.slots.length > 0
+        "
+        class="hero-wrap"
+      >
+        <div
+          v-for="(slot, idx) in resolvedHeroSlots(page)"
+          :key="slot.product_key || idx"
+          class="hero-item"
+          :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
+        >
+          <div class="hero-media">
+            <img
+              v-if="slot.main_url"
+              class="hero-img"
+              :src="slot.main_url"
+              alt=""
+            />
+            <div v-else class="hero-img hero-img-empty">Sin imagen</div>
+
+            <div
+              v-if="slot.gallery_urls && slot.gallery_urls.length"
+              class="hero-thumbs"
+            >
+              <img
+                v-for="u in slot.gallery_urls"
+                :key="u"
+                class="hero-thumb"
+                :src="u"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div class="hero-body">
+            <div v-if="slot.product" class="hero-brand">
+              {{ showBrand ? slot.product.brand_name : '' }}
+            </div>
+
+            <div v-if="slot.product" class="hero-sku">
+              {{ showSku ? slot.product.sku : '' }}
+            </div>
+
+            <div v-if="slot.product" class="hero-title">
+              {{
+                slot.product.name ||
+                slot.product.product_name ||
+                slot.product.description ||
+                ''
+              }}
+            </div>
+
+            <div v-if="slot.product && showDescription" class="hero-desc">
+              {{ slot.product.description }}
+            </div>
+
+            <div v-if="slot.product && showPrice" class="hero-meta">
+              Precio: {{ formatPrice(slot.product.price) }}
+            </div>
+
+            <div v-if="slot.product && showMinMax" class="hero-meta">
+              Min: {{ slot.product.min_qty }} · Max: {{ slot.product.max_qty }}
+            </div>
+
+            <div v-if="!slot.product" class="hero-empty">
+              Configura HERO en Propiedades
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-else-if="page.layout && page.layout.startsWith('hero')"
+        class="unknown-layout"
+      >
+        Esta sección destacada no está disponible todavía. Completa su
+        configuración para mostrarla.
+      </div>
+
       <!-- FALLBACK -->
       <div v-else class="unknown-layout">
         Layout no soportado: <b>{{ page.layout }}</b>
@@ -208,6 +295,48 @@ export default {
       const n = Number(value)
       if (Number.isNaN(n)) return String(value)
       return `$${n.toFixed(2)}`
+    },
+
+    productKey(p) {
+      if (!p) return ''
+      if (p.product_id) return `id:${p.product_id}`
+      if (p.sku) return `sku:${p.sku}`
+      return ''
+    },
+
+    buildProductIndex(pageItems) {
+      const index = {}
+      const items = Array.isArray(pageItems) ? pageItems : []
+      items.forEach((item) => {
+        const key = this.productKey(item)
+        if (key && !index[key]) index[key] = item
+      })
+      return index
+    },
+
+    resolveProductByKey(key, productIndex) {
+      const k = String(key || '')
+      if (!k) return null
+      return (productIndex && productIndex[k]) || null
+    },
+
+    resolvedHeroSlots(page) {
+      const hero = page && page.hero ? page.hero : null
+      const slots = hero && Array.isArray(hero.slots) ? hero.slots : []
+      if (!slots.length) return []
+
+      const productIndex = this.buildProductIndex(page && page.items)
+
+      return slots.map((slot) => {
+        const product = this.resolveProductByKey(
+          slot && slot.product_key,
+          productIndex
+        )
+        return {
+          ...slot,
+          product,
+        }
+      })
     },
   },
 }
@@ -606,6 +735,92 @@ body {
 .unknown-layout {
   font-size: 12pt;
   color: #b00;
+}
+
+/* =======================
+   HERO
+   ======================= */
+.hero-wrap {
+  display: grid;
+  grid-gap: 12px;
+}
+
+.hero-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.hero-media {
+  display: grid;
+  gap: 8px;
+}
+
+.hero-img {
+  width: 100%;
+  height: 260px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.hero-img-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+.hero-thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.hero-thumb {
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.hero-body {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.hero-brand {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.hero-sku {
+  font-weight: 600;
+}
+
+.hero-title {
+  font-weight: 600;
+}
+
+.hero-desc {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hero-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.hero-empty {
+  font-size: 12px;
+  opacity: 0.75;
 }
 
 @media print {
