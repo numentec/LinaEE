@@ -19,6 +19,10 @@ export default function ({ $axios }, inject) {
     getPublicCatalogs() {
       return $axios.$get('catalog/api/public/catalogs/')
     },
+
+    createCatalog(payload) {
+      return $axios.$post('/catalog/api/catalogs/', payload)
+    },
   }
 
   inject('api', api)

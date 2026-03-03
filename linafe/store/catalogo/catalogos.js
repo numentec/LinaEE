@@ -48,11 +48,37 @@ function chunkArray(arr, size) {
   return out
 }
 
-function generateId() {
-  // Suficiente para el MVP. Luego lo reemplazas por ULID/ID del backend.
-  return `cat_${Date.now().toString(36)}_${Math.random()
-    .toString(36)
-    .slice(2, 7)}`
+// function generateId() {
+//   // Suficiente para el MVP. Luego lo reemplazas por ULID/ID del backend.
+//   return `cat_${Date.now().toString(36)}_${Math.random()
+//     .toString(36)
+//     .slice(2, 7)}`
+// }
+
+function defaultThemeForTemplate(template) {
+  const t = template || 'minimal'
+
+  if (t === 'fashion') {
+    return {
+      density: 'comfortable',
+      radius: 'md',
+      image_fit: 'cover',
+    }
+  }
+
+  if (t === 'promo') {
+    return {
+      density: 'compact',
+      radius: 'sm',
+      image_fit: 'contain',
+    }
+  }
+
+  return {
+    density: 'comfortable',
+    radius: 'md',
+    image_fit: 'contain',
+  }
 }
 
 function nextPageNumber(pages) {
@@ -210,6 +236,7 @@ export const state = () => ({
     actionText: '',
     actionJobId: null,
   },
+  error: { statusCode: 0, message: '' },
 })
 
 export const getters = {
@@ -255,6 +282,14 @@ export const mutations = {
     state.items = items || []
   },
   ADD_ITEM(state, item) {
+    const id = item && item.id
+    if (!id) return
+
+    const idx = state.items.findIndex((x) => x && x.id === id)
+    if (idx !== -1) {
+      state.items.splice(idx, 1, item)
+      return
+    }
     state.items.unshift(item)
   },
   SET_CURRENT_ID(state, id) {
@@ -962,6 +997,10 @@ export const mutations = {
       updated_at: now,
     })
   },
+
+  SET_ERROR(state, payload) {
+    state.error = payload
+  },
 }
 
 export const actions = {
@@ -993,32 +1032,51 @@ export const actions = {
     commit('SET_ITEMS', items)
   },
 
-  createCatalog({ commit }, { name, template, orientation, companyId }) {
-    const now = new Date().toISOString()
-
-    const item = {
-      id: generateId(),
+  async createCatalog({ commit }, { name, template, orientation, companyId }) {
+    const payload = {
       company_id: companyId || 'cia_01',
-      name: name || 'Nuevo catálogo',
+      name: (name || '').trim() || 'Nuevo catálogo',
       template: template || 'minimal',
       orientation: orientation || 'portrait',
       status: 'draft',
-      pages_count: 1,
-      updated_at: now,
-      // En el MVP guardamos páginas “dummy” para el editor
+      settings: {
+        show_price: true,
+        show_brand: true,
+        show_min_max: true,
+        show_sku: true,
+        show_description: true,
+        show_images: true,
+      },
+      theme: defaultThemeForTemplate(template || 'minimal'),
       pages: [
         {
           id: 'page_1',
           name: 'Página 1',
-          layout: 'grid_2x4', // luego lo hacemos real
+          layout: 'grid_2x4',
           items: [],
+          locked: false,
         },
       ],
     }
 
-    commit('ADD_ITEM', item)
-    commit('SET_CURRENT_ID', item.id)
-    return item
+    try {
+      const created = await this.$api.createCatalog(payload)
+
+      commit('ADD_ITEM', created)
+      commit('SET_CURRENT_ID', created.id)
+      commit('SET_ACTIVE_PAGE', { catalogId: created.id, pageIndex: 0 })
+      commit('SET_NEEDS_REFLOW', { catalogId: created.id, value: false })
+
+      return created
+    } catch (e) {
+      // opcional: log técnico
+      commit(
+        'SET_ERROR',
+        e.response?.data?.message || 'Error al crear el catálogo'
+      )
+
+      throw e
+    }
   },
 
   setCurrent({ commit }, id) {
@@ -1285,6 +1343,7 @@ export const actions = {
       } catch (e) {
         // No rompemos el polling por fallos transitorios
         dispatch('exportPdfEstimateProgress', { jobId })
+        // commit('SET_ERROR', e.response?.data?.message || 'Error desconocido')
       }
     }
 
@@ -1313,7 +1372,7 @@ export const actions = {
 
     try {
       // 1) Descarga binaria con axios (mantiene Authorization header vía interceptor)
-      console.log('Iniciando descarga de PDF desde', job.downloadUrl)
+      // console.log('Iniciando descarga de PDF desde', job.downloadUrl)
       const res = await this.$axios.request({
         url: job.downloadUrl,
         method: 'GET',
