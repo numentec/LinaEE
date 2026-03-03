@@ -157,9 +157,14 @@ class CatalogMaster(Common):
 
     def save(self, *args, **kwargs):
         # Si el vendedor no está definido, se asigna el creador del catálogo
-        if not self.seller and self.created_by:
-            self.seller = self.created_by
+        if self.seller_id is None and self.created_by_id:
+            self.seller_id = self.created_by_id
 
+        # Si el owner no está definido, se asigna el creador del catálogo
+        if self.owner_id is None and self.created_by_id:
+            self.owner_id = self.created_by_id
+
+    
         if not self.share_token:
             self.ensure_share_token()
 

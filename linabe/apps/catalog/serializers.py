@@ -181,6 +181,7 @@ class CatalogSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "company_id",
+            "owner",
             "name",
             "template",
             "orientation",
@@ -191,7 +192,15 @@ class CatalogSerializer(serializers.ModelSerializer):
             "updated_at",
             "status",
         )
-        read_only_fields = ("id", "share_token", "updated_at")
+        read_only_fields = ("id", "share_token", "updated_at", "owner")
+
+    def validate_pages(self, value):
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError('pages must be a list')
+        return value
+
 
 # Serializer público para el modelo Catalog (AI generado)
 class PublicCatalogSerializer(serializers.ModelSerializer):
