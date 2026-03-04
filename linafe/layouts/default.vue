@@ -161,21 +161,21 @@ export default {
   },
   mounted() {
     // window.addEventListener('beforeunload', this.test)
-    if (!this.curuser.is_superuser) {
+    if (!this.curuser?.is_superuser) {
       let aT1 = []
       let aT2 = []
       let aT3 = []
 
       if (
-        this.curuser.ugroups.includes('ventas') ||
-        this.curuser.ugroups.includes('ventasadmin')
+        this.curuser?.ugroups.includes('ventas') ||
+        this.curuser?.ugroups.includes('ventasadmin')
       ) {
         aT1 = [0, 1]
       }
-      if (this.curuser.ugroups.includes('bodega')) {
+      if (this.curuser?.ugroups.includes('bodega')) {
         aT2 = [1, 2, 3, 4]
       }
-      if (this.curuser.ugroups.includes('gerencia')) {
+      if (this.curuser?.ugroups.includes('gerencia')) {
         aT3 = [0, 1, 2, 3, 4]
       }
 

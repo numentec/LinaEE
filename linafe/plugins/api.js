@@ -1,13 +1,7 @@
 export default function ({ $axios }, inject) {
   const api = {
-    // retrive one catalog by id
-    getCatalog(id) {
-      return $axios.$get(`catalog/api/catalogos/${id}/`)
-    },
-
-    // retrive one public catalog by token
-    getPublicCatalog(token) {
-      return $axios.$get(`catalog/api/public/catalogos/${token}/`)
+    createCatalog(payload) {
+      return $axios.$post('/catalog/api/catalogs/', payload)
     },
 
     // retrive all catalogs
@@ -15,13 +9,19 @@ export default function ({ $axios }, inject) {
       return $axios.$get('catalog/api/catalogs/')
     },
 
+    // retrive one catalog by id
+    getCatalog(id) {
+      return $axios.$get(`catalog/api/catalogs/${id}/`)
+    },
+
     // retrive all public catalogs
     getPublicCatalogs() {
       return $axios.$get('catalog/api/public/catalogs/')
     },
 
-    createCatalog(payload) {
-      return $axios.$post('/catalog/api/catalogs/', payload)
+    // retrive one public catalog by token
+    getPublicCatalog(token) {
+      return $axios.$get(`catalog/api/public/catalogs/${token}/`)
     },
   }
 

@@ -5,7 +5,7 @@
         <v-icon>mdi-home</v-icon>
       </v-list-item-icon>
       <v-list-item-content>
-        <v-list-item-title class="title">Inico</v-list-item-title>
+        <v-list-item-title class="title">Inicio</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
     <v-list-group
@@ -42,7 +42,7 @@ import { mapGetters } from 'vuex'
 import { modulos } from '~/assets/utilities'
 
 export default {
-  name: 'CoreDrawer',
+  name: 'DrawerDefaultList',
   async fetch() {
     await this.$axios.get('modul-actives/').then((response) => {
       const modulosActivos = response.data
