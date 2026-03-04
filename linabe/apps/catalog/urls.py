@@ -36,7 +36,7 @@ urlpatterns = [
     path('by-customer/<str:ulid>/<str:token>/', ValidCustomerCatalogAPIView.as_view(), name='valid-customer-catalog'),
 
     path("api/catalogos/<int:pk>/", CatalogDetailView.as_view()),
-    path("api/public/catalogos/<str:token>/", PublicCatalogByTokenView.as_view()),
+    path("api/public/catalogs/<str:token>/", PublicCatalogByTokenView.as_view()),
     path("api/pdf-jobs/<str:job_id>/", pdf_job_status),
     path("api/pdf-jobs/<str:job_id>/download/", pdf_job_download),
 
