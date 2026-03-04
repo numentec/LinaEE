@@ -272,12 +272,6 @@ export const getters = {
 }
 
 export const mutations = {
-  // SET_ITEMS(state, items) {
-  //   state.items = (items || [])
-  //     .map(ensurePages)
-  //     .map(ensureSettings)
-  //     .map(ensureTheme)
-  // },
   SET_ITEMS(state, items) {
     state.items = items || []
   },
@@ -1004,14 +998,6 @@ export const mutations = {
 }
 
 export const actions = {
-  nuxtClientInit({ commit }) {
-    if (process.client) {
-      const itemsCatalog =
-        JSON.parse(localStorage.getItem('lina_itemsCatalog')) || []
-      commit('SET_ITEMS', itemsCatalog)
-    }
-  },
-
   init({ state, commit }) {
     const itemsCatalog =
       JSON.parse(localStorage.getItem('lina_itemsCatalog')) || []
@@ -1461,5 +1447,34 @@ export const actions = {
 
   updatePageHero({ commit }, { catalogId, pageId, hero }) {
     commit('UPDATE_PAGE_HERO', { catalogId, pageId, hero })
+  },
+
+  async fetchCatalog({ getters, commit }, { id, force } = {}) {
+    const catalogId = Number(id)
+
+    if (!force) {
+      const existing = getters.byId(catalogId)
+      if (existing) return existing
+    }
+
+    const raw = await this.$api.getCatalog(catalogId)
+
+    const normalized = ensureTheme(ensureSettings(ensurePages(raw)))
+
+    commit('ADD_ITEM', normalized)
+
+    // importante para que edit.vue tenga contexto al refrescar
+    commit('SET_CURRENT_ID', normalized.id)
+
+    if (typeof getters.activePageIndex(normalized.id) !== 'number') {
+      commit('SET_ACTIVE_PAGE_INDEX', {
+        catalogId: normalized.id,
+        pageIndex: 0,
+      })
+    }
+
+    commit('SET_NEEDS_REFLOW', { catalogId: normalized.id, value: false })
+
+    return normalized
   },
 }

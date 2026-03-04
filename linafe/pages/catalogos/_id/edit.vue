@@ -929,6 +929,18 @@ export default {
     CatalogPageRender,
   },
 
+  async asyncData({ store, params, redirect }) {
+    try {
+      await store.dispatch('catalogo/catalogos/fetchCatalog', {
+        id: params.id,
+      })
+    } catch (e) {
+      redirect('/catalogos')
+    }
+
+    return {}
+  },
+
   data() {
     return {
       showPicker: false,
@@ -1340,18 +1352,18 @@ export default {
   },
 
   mounted() {
-    // this.$store.dispatch('catalogo/catalogos/init')
     this.$store.dispatch('catalogo/catalogos/setCurrent', this.catalogId)
 
-    this.$store.dispatch('catalogo/catalogos/ensureCoverPage', {
-      catalogId: this.catalogId,
-    })
+    const idx = this.$store.getters['catalogo/catalogos/activePageIndex'](
+      this.catalogId
+    )
 
-    // opcional: mostrar portada al abrir
-    this.$store.dispatch('catalogo/catalogos/setActivePage', {
-      catalogId: this.catalogId,
-      pageIndex: 0,
-    })
+    if (typeof idx !== 'number') {
+      this.$store.dispatch('catalogo/catalogos/setActivePage', {
+        catalogId: this.catalogId,
+        pageIndex: 0,
+      })
+    }
 
     window.addEventListener('beforeunload', this.onBeforeUnload)
   },
