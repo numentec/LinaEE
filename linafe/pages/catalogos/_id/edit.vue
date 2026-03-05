@@ -578,7 +578,18 @@
                   <div class="text-subtitle-2 font-weight-medium mb-2">
                     Configuración HERO
                   </div>
-
+                  <v-row dense justify="center">
+                    <v-btn
+                      x-small
+                      outlined
+                      rounded
+                      color="accent-darken-4"
+                      :disabled="isCoverPage || isLockedPage"
+                      @click="heroAutoFillScope({ fillMode: 'full' })"
+                    >
+                      Auto
+                    </v-btn>
+                  </v-row>
                   <div
                     v-for="(slot, sIdx) in heroSlotModels"
                     :key="sIdx"
@@ -621,7 +632,32 @@
                         class="mb-3"
                         @change="updateHeroSlot(sIdx, { main_url: $event })"
                       />
+                      <div v-if="slot.product_key" class="mt-2">
+                        <div class="text-caption text--secondary mb-2">
+                          Galería (click para hacer principal)
+                        </div>
 
+                        <div class="hero-gallery">
+                          <div
+                            v-for="u in slot.gallery_urls"
+                            :key="u"
+                            class="hero-thumb-wrap"
+                            @click="heroSetMainFromGallery(sIdx, u)"
+                          >
+                            <v-img
+                              :src="u"
+                              width="56"
+                              height="56"
+                              contain
+                              class="hero-thumb-img"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="text-caption text--secondary mt-1">
+                          Seleccionadas: {{ slot.gallery_urls.length }}/4
+                        </div>
+                      </div>
                       <div class="text-caption text--secondary mb-2">
                         Galería (máx 4)
                       </div>
@@ -1121,6 +1157,10 @@ export default {
 
     isCoverPage() {
       return this.activePage && this.activePage.layout === 'cover'
+    },
+
+    isLockedPage() {
+      return this.activePage && this.activePage.locked
     },
 
     cover() {
@@ -1932,6 +1972,170 @@ export default {
 
       this.saveHeroSlots(slots)
     },
+
+    heroSetMainFromGallery(slotIndex, url) {
+      const slot = this.heroSlotModels[slotIndex] || {}
+      const currentMain = slot.main_url || ''
+      const gallery = Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+
+      const nextMain = url || ''
+      if (!nextMain) return
+
+      // si ya es la principal, no hace nada
+      if (nextMain === currentMain) return
+
+      // quita nextMain de la galería
+      let nextGallery = gallery.filter((u) => u !== nextMain)
+
+      // mete la main anterior a la galería (si existe)
+      if (currentMain) nextGallery = [currentMain, ...nextGallery]
+
+      // normaliza: únicos y max 4
+      nextGallery = Array.from(new Set(nextGallery)).slice(0, 4)
+
+      this.updateHeroSlot(slotIndex, {
+        main_url: nextMain,
+        gallery_urls: nextGallery,
+      })
+    },
+
+    // ---- HERO quick actions ----
+
+    // Helper: devuelve un array de urls de imágenes para el slot idx
+    heroImagesForSlot(idx) {
+      const slot = this.heroSlotModels[idx] || {}
+      const key = slot.product_key || ''
+      if (!key) return []
+      return this.imagesForProductKey(key)
+    },
+
+    // Botón: auto-completar los slots de ESTA página (según items de la página)
+    heroAutoFillCurrentPage({ fillMode = 'full' } = {}) {
+      if (!this.isHeroPage || !this.page) return
+      if (this.page.locked) return
+
+      const items = Array.isArray(this.pageItems) ? this.pageItems : []
+      if (!items.length) return
+
+      // construye slots base (product_key si está vacío lo asigna por orden)
+      const slots = this.heroSlotModels.map((s) => ({ ...s }))
+
+      for (let i = 0; i < this.heroSlotsCount; i += 1) {
+        const item = items[i] || null
+        if (!item) continue
+
+        const key = item.product_id
+          ? `id:${item.product_id}`
+          : `sku:${item.sku}`
+        if (!slots[i].product_key) slots[i].product_key = key
+
+        // si pides "full", rellena main+gallery con las imágenes del producto
+        const imgs = Array.isArray(item.images)
+          ? item.images.map((x) => x?.url).filter(Boolean)
+          : []
+        if (!imgs.length) continue
+
+        if (fillMode === 'main') {
+          if (!slots[i].main_url) slots[i].main_url = imgs[0]
+        } else if (fillMode === 'gallery') {
+          const main = slots[i].main_url || imgs[0]
+          const gallery = Array.from(
+            new Set(imgs.filter((u) => u !== main))
+          ).slice(0, 4)
+          slots[i].gallery_urls = gallery
+        } else {
+          // full
+          slots[i].main_url = imgs[0]
+          slots[i].gallery_urls = Array.from(new Set(imgs.slice(1))).slice(0, 4)
+        }
+      }
+
+      this.saveHeroSlots(slots)
+    },
+
+    // Botón: aplicar auto-fill en lote (todas / seleccionadas / actual)
+    // - solo afecta páginas hero_1 / hero_2
+    // - respeta locked (no toca páginas bloqueadas)
+    async heroAutoFillScope({ fillMode = 'full' } = {}) {
+      const catalogId = this.catalogId
+      const pages = Array.isArray(this.pages) ? this.pages : []
+
+      // decide scope (si no te pasan scope, usa la misma lógica de layoutScope)
+      let effectiveScope = 'current'
+
+      if (this.allSelected) {
+        effectiveScope = 'all'
+      } else if (this.selectedPageIds.length) {
+        effectiveScope = 'selected'
+      }
+
+      let targetIds = []
+      if (effectiveScope === 'current') {
+        if (this.page?.id) targetIds = [this.page.id]
+      } else if (effectiveScope === 'selected') {
+        targetIds = this.selectedPageIds.slice()
+      } else {
+        // all
+        targetIds = pages.filter((p) => p && p.id !== 'cover').map((p) => p.id)
+      }
+
+      const pageById = new Map(pages.filter(Boolean).map((p) => [p.id, p]))
+
+      for (const pageId of targetIds) {
+        const p = pageById.get(pageId)
+        if (!p || p.id === 'cover') continue
+        if (p.locked) continue
+
+        if (!(p.layout === 'hero_1' || p.layout === 'hero_2')) continue
+
+        const slotsCount = p.layout === 'hero_2' ? 2 : 1
+        const items = Array.isArray(p.items) ? p.items : []
+        if (!items.length) continue
+
+        const nextSlots = []
+        for (let i = 0; i < slotsCount; i += 1) {
+          const item = items[i] || null
+          if (!item) {
+            nextSlots.push({ product_key: '', main_url: '', gallery_urls: [] })
+            continue
+          }
+
+          const key = item.product_id
+            ? `id:${item.product_id}`
+            : `sku:${item.sku}`
+          const imgs = Array.isArray(item.images)
+            ? item.images.map((x) => x?.url).filter(Boolean)
+            : []
+
+          const slot = {
+            product_key: key,
+            main_url: '',
+            gallery_urls: [],
+          }
+
+          if (imgs.length) {
+            if (fillMode === 'main') {
+              slot.main_url = imgs[0]
+            } else if (fillMode === 'gallery') {
+              slot.main_url = imgs[0]
+              slot.gallery_urls = Array.from(new Set(imgs.slice(1))).slice(0, 4)
+            } else {
+              // full
+              slot.main_url = imgs[0]
+              slot.gallery_urls = Array.from(new Set(imgs.slice(1))).slice(0, 4)
+            }
+          }
+
+          nextSlots.push(slot)
+        }
+
+        await this.$store.dispatch('catalogo/catalogos/updatePageHero', {
+          catalogId,
+          pageId,
+          hero: { slots: nextSlots },
+        })
+      }
+    },
   },
 }
 </script>
@@ -1997,5 +2201,27 @@ export default {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+}
+
+.hero-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hero-thumb-wrap {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.hero-thumb-wrap:hover {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.hero-thumb-img {
+  border-radius: 6px;
+  overflow: hidden;
 }
 </style>

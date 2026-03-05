@@ -6,11 +6,6 @@ export default function ({ $auth, redirect, route }) {
 
   if (!$auth.loggedIn) {
     const targetPath = route.fullPath || route.path || '/'
-    // console.log('***** User not authenticated, redirecting to login *****')
-    // console.log('fullPath:', route.fullPath)
-    // console.log('path:', route.path)
-    // console.log('Target Path:', targetPath)
-
     return redirect(`/login?redirect=${encodeURIComponent(targetPath)}`)
   }
 }
