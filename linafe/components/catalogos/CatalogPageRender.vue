@@ -36,75 +36,78 @@
 
       <template v-else>
         <div v-if="isHero" class="hero-wrap">
-          <div
-            v-for="(s, idx) in heroSlots"
-            :key="idx"
-            class="hero-item"
-            :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
-          >
-            <div class="hero-media">
-              <img
-                v-if="s.main_url"
-                class="hero-img"
-                :src="s.main_url"
-                alt=""
-              />
-              <div v-else class="hero-img hero-img-empty">Sin imagen</div>
-
-              <div
-                v-if="s.gallery_urls && s.gallery_urls.length"
-                class="hero-thumbs"
-              >
+          <div v-for="(s, idx) in heroSlots" :key="idx" class="hero-item">
+            <div
+              class="hero-item-top"
+              :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
+            >
+              <div class="hero-media">
                 <img
-                  v-for="u in s.gallery_urls"
-                  :key="u"
-                  class="hero-thumb"
-                  :src="u"
+                  v-if="s.main_url"
+                  class="hero-img"
+                  :src="s.main_url"
                   alt=""
                 />
+                <div v-else class="hero-img hero-img-empty">Sin imagen</div>
+              </div>
+
+              <div class="hero-body">
+                <div v-if="s.product" class="hero-brand">
+                  {{
+                    settings && settings.show_brand ? s.product.brand_name : ''
+                  }}
+                </div>
+
+                <div v-if="s.product" class="hero-sku">
+                  {{ settings && settings.show_sku ? s.product.sku : '' }}
+                </div>
+
+                <div v-if="s.product" class="hero-title">
+                  {{
+                    s.product.name ||
+                    s.product.product_name ||
+                    s.product.description ||
+                    ''
+                  }}
+                </div>
+
+                <div
+                  v-if="s.product && settings && settings.show_description"
+                  class="hero-desc"
+                >
+                  {{ s.product.description }}
+                </div>
+
+                <div
+                  v-if="s.product && settings && settings.show_price"
+                  class="hero-meta"
+                >
+                  Precio: {{ s.product.price }}
+                </div>
+                <div
+                  v-if="s.product && settings && settings.show_min_max"
+                  class="hero-meta"
+                >
+                  Min: {{ s.product.min_qty }} · Max: {{ s.product.max_qty }}
+                </div>
+
+                <div v-if="!s.product" class="hero-empty">
+                  Configura HERO en Propiedades
+                </div>
               </div>
             </div>
-
-            <div class="hero-body">
-              <div v-if="s.product" class="hero-brand">
-                {{
-                  settings && settings.show_brand ? s.product.brand_name : ''
-                }}
-              </div>
-
-              <div v-if="s.product" class="hero-sku">
-                {{ settings && settings.show_sku ? s.product.sku : '' }}
-              </div>
-
-              <div v-if="s.product" class="hero-title">
-                {{
-                  s.product.name ||
-                  s.product.product_name ||
-                  s.product.description ||
-                  ''
-                }}
-              </div>
-
-              <div
-                v-if="s.product && settings && settings.show_description"
-                class="hero-desc"
-              >
-                {{ s.product.description }}
-              </div>
-
-              <div v-if="s.product" class="hero-meta">
-                <span v-if="settings && settings.show_price">
-                  Precio: {{ s.product.price }}
-                </span>
-
-                <span v-if="settings && settings.show_min_max">
-                  · Min: {{ s.product.min_qty }} · Max: {{ s.product.max_qty }}
-                </span>
-              </div>
-
-              <div v-if="!s.product" class="hero-empty">
-                Configura HERO en Propiedades
-              </div>
+            <div
+              v-if="s.gallery_urls && s.gallery_urls.length"
+              class="hero-thumbs"
+            >
+              <img
+                v-for="u in s.gallery_urls"
+                :key="u"
+                class="hero-thumb"
+                :src="u"
+                alt=""
+                @click.stop="$emit('thumb-clicked', { slotIndex: idx, url: u })"
+              />
             </div>
           </div>
 
@@ -531,19 +534,23 @@ export default {
 }
 
 .hero-item {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 6px;
   padding: 12px;
 }
 
-.hero-item.hero-2 {
+.hero-item-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.hero-item-top.hero-2 {
   grid-template-columns: 1fr 1fr;
 }
 
-.hero-item.hero-1 {
+.hero-item-top.hero-1 {
   grid-template-columns: 1fr 1fr;
 }
 
@@ -575,10 +582,15 @@ export default {
 
 .hero-thumb {
   width: 100%;
-  height: 112px;
+  height: 124px;
   object-fit: cover;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.hero-thumb:hover {
+  opacity: 0.9;
 }
 
 .hero-body {

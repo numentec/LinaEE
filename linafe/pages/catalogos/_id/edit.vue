@@ -390,6 +390,7 @@
             :orientation="catalog && catalog.orientation"
             :settings="catalog && catalog.settings"
             :theme="catalog && catalog.theme"
+            @thumb-clicked="onHeroThumbClick"
           />
         </v-sheet>
       </v-col>
@@ -583,7 +584,7 @@
                       x-small
                       outlined
                       rounded
-                      color="accent-darken-4"
+                      color="primary"
                       :disabled="isCoverPage || isLockedPage"
                       @click="heroAutoFillScope({ fillMode: 'full' })"
                     >
@@ -632,55 +633,75 @@
                         class="mb-3"
                         @change="updateHeroSlot(sIdx, { main_url: $event })"
                       />
-                      <div v-if="slot.product_key" class="mt-2">
-                        <div class="text-caption text--secondary mb-2">
-                          Galería (click para hacer principal)
-                        </div>
-
-                        <div class="hero-gallery">
-                          <div
-                            v-for="u in slot.gallery_urls"
-                            :key="u"
-                            class="hero-thumb-wrap"
-                            @click="heroSetMainFromGallery(sIdx, u)"
-                          >
-                            <v-img
-                              :src="u"
-                              width="56"
-                              height="56"
-                              contain
-                              class="hero-thumb-img"
-                            />
-                          </div>
-                        </div>
-
-                        <div class="text-caption text--secondary mt-1">
-                          Seleccionadas: {{ slot.gallery_urls.length }}/4
-                        </div>
-                      </div>
                       <div class="text-caption text--secondary mb-2">
-                        Galería (máx 4)
+                        Imágenes del producto
                       </div>
 
-                      <v-checkbox
-                        v-for="u in imagesForProductKey(slot.product_key)"
-                        :key="u"
-                        dense
-                        hide-details
-                        class="mt-0 pt-0"
-                        :label="u"
-                        :input-value="slot.gallery_urls.includes(u)"
-                        @change="
-                          updateHeroSlot(sIdx, {
-                            gallery_urls: $event
-                              ? [...slot.gallery_urls, u]
-                              : slot.gallery_urls.filter((x) => x !== u),
-                          })
-                        "
-                      />
+                      <div class="hero-gallery-grid">
+                        <div
+                          v-for="u in imagesForProductKey(slot.product_key)"
+                          :key="u"
+                          class="hero-grid-item"
+                          :class="{
+                            selected: slot.gallery_urls.includes(u),
+                            principal: slot.main_url === u,
+                            disabled:
+                              !slot.gallery_urls.includes(u) &&
+                              slot.gallery_urls.length >= 4 &&
+                              slot.main_url !== u,
+                          }"
+                          @click="
+                            onToggleHeroGalleryImage(
+                              sIdx,
+                              u,
+                              slot.gallery_urls.includes(u)
+                            )
+                          "
+                        >
+                          <v-img
+                            :src="u"
+                            eager
+                            width="64"
+                            height="64"
+                            contain
+                            class="hero-grid-img"
+                          />
+                          <div
+                            v-if="slot.gallery_urls.includes(u)"
+                            class="hero-grid-check"
+                          >
+                            <v-icon small color="white">mdi-check</v-icon>
+                          </div>
+                          <!-- <div
+                            v-if="slot.main_url === u"
+                            class="hero-grid-main-badge"
+                          >
+                            Principal
+                          </div> -->
+
+                          <v-btn
+                            icon
+                            x-small
+                            class="hero-grid-main-btn"
+                            :class="
+                              slot.main_url === u
+                                ? 'hero-grid-main-btn-active'
+                                : ''
+                            "
+                            @click.stop="heroSetMainFromGallery(sIdx, u)"
+                          >
+                            <v-icon
+                              small
+                              :color="slot.main_url === u ? 'secondary' : ''"
+                            >
+                              mdi-star
+                            </v-icon>
+                          </v-btn>
+                        </div>
+                      </div>
 
                       <div class="text-caption text--secondary mt-1">
-                        Seleccionadas: {{ slot.gallery_urls.length }}/4
+                        Galería: {{ slot.gallery_urls.length }}/4
                       </div>
                     </div>
 
@@ -1973,28 +1994,71 @@ export default {
       this.saveHeroSlots(slots)
     },
 
+    onToggleHeroGalleryImage(slotIndex, url, isSelected) {
+      const slot = this.heroSlotModels[slotIndex] || {}
+      const mainUrl = slot.main_url || ''
+
+      // La imagen principal no se agrega ni se quita de galería con click normal
+      if (url === mainUrl) return
+
+      const current = Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+
+      // Si ya hay 4 y quiere agregar otra, no hacemos nada
+      if (!isSelected && current.length >= 4) return
+
+      const next = isSelected
+        ? current.filter((x) => x !== url)
+        : [...current, url]
+
+      this.updateHeroSlot(slotIndex, { gallery_urls: next })
+    },
+
+    // heroSetMainFromGallery(slotIndex, url) {
+    //   const slot = this.heroSlotModels[slotIndex] || {}
+    //   const currentMain = slot.main_url || ''
+    //   const gallery = Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+
+    //   const nextMain = url || ''
+    //   if (!nextMain) return
+
+    //   // si ya es la principal, no hace nada
+    //   if (nextMain === currentMain) return
+
+    //   // quita nextMain de la galería
+    //   let nextGallery = gallery.filter((u) => u !== nextMain)
+
+    //   // mete la main anterior a la galería (si existe)
+    //   if (currentMain) nextGallery = [currentMain, ...nextGallery]
+
+    //   // normaliza: únicos y max 4
+    //   nextGallery = Array.from(new Set(nextGallery)).slice(0, 4)
+
+    //   this.updateHeroSlot(slotIndex, {
+    //     main_url: nextMain,
+    //     gallery_urls: nextGallery,
+    //   })
+    // },
+
     heroSetMainFromGallery(slotIndex, url) {
       const slot = this.heroSlotModels[slotIndex] || {}
       const currentMain = slot.main_url || ''
-      const gallery = Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+      const currentGallery = Array.isArray(slot.gallery_urls)
+        ? slot.gallery_urls
+        : []
 
-      const nextMain = url || ''
-      if (!nextMain) return
+      if (!url) return
+      if (url === currentMain) return
 
-      // si ya es la principal, no hace nada
-      if (nextMain === currentMain) return
+      let nextGallery = currentGallery.filter((x) => x !== url)
 
-      // quita nextMain de la galería
-      let nextGallery = gallery.filter((u) => u !== nextMain)
+      if (currentMain) {
+        nextGallery = [currentMain, ...nextGallery]
+      }
 
-      // mete la main anterior a la galería (si existe)
-      if (currentMain) nextGallery = [currentMain, ...nextGallery]
-
-      // normaliza: únicos y max 4
       nextGallery = Array.from(new Set(nextGallery)).slice(0, 4)
 
       this.updateHeroSlot(slotIndex, {
-        main_url: nextMain,
+        main_url: url,
         gallery_urls: nextGallery,
       })
     },
@@ -2136,6 +2200,21 @@ export default {
         })
       }
     },
+
+    onHeroThumbClick(payload) {
+      if (!payload) return
+      if (!this.isHeroPage) return
+      if (this.isLockedPage) return
+
+      const slotIndex =
+        typeof payload.slotIndex === 'number' ? payload.slotIndex : null
+      const url = payload.url || ''
+
+      if (slotIndex === null) return
+      if (!url) return
+
+      this.heroSetMainFromGallery(slotIndex, url)
+    },
   },
 }
 </script>
@@ -2223,5 +2302,91 @@ export default {
 .hero-thumb-img {
   border-radius: 6px;
   overflow: hidden;
+  cursor: pointer;
+}
+
+.hero-thumb-img:hover {
+  opacity: 0.9;
+}
+
+.hero-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 68px);
+  gap: 8px;
+}
+
+.hero-grid-item {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 2px;
+  cursor: pointer;
+  background: #fff;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.hero-grid-item:hover {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.hero-grid-item.selected {
+  border-color: rgba(19, 204, 50, 0.65);
+}
+
+.hero-grid-item.principal {
+  border-color: rgba(19, 204, 50, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.hero-grid-item.principal:hover {
+  cursor: not-allowed;
+}
+
+.hero-grid-item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hero-grid-img {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.hero-grid-check {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+
+.hero-grid-main-badge {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.hero-grid-main-btn {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.hero-grid-main-btn-active {
+  background: rgba(4, 109, 138, 0.85);
 }
 </style>

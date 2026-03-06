@@ -100,64 +100,68 @@
           v-for="(slot, idx) in resolvedHeroSlots(page)"
           :key="slot.product_key || idx"
           class="hero-item"
-          :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
         >
-          <div class="hero-media">
-            <img
-              v-if="slot.main_url"
-              class="hero-img"
-              :src="slot.main_url"
-              alt=""
-            />
-            <div v-else class="hero-img hero-img-empty">Sin imagen</div>
-
-            <div
-              v-if="slot.gallery_urls && slot.gallery_urls.length"
-              class="hero-thumbs"
-            >
+          <div
+            class="hero-item-top"
+            :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
+          >
+            <div class="hero-media">
               <img
-                v-for="u in slot.gallery_urls"
-                :key="u"
-                class="hero-thumb"
-                :src="u"
+                v-if="slot.main_url"
+                class="hero-img"
+                :src="slot.main_url"
                 alt=""
               />
+              <div v-else class="hero-img hero-img-empty">Sin imagen</div>
+            </div>
+
+            <div class="hero-body">
+              <div v-if="slot.product" class="hero-brand">
+                {{ showBrand ? slot.product.brand_name : '' }}
+              </div>
+
+              <div v-if="slot.product" class="hero-sku">
+                {{ showSku ? slot.product.sku : '' }}
+              </div>
+
+              <div v-if="slot.product" class="hero-title">
+                {{
+                  slot.product.name ||
+                  slot.product.product_name ||
+                  slot.product.description ||
+                  ''
+                }}
+              </div>
+
+              <div v-if="slot.product && showDescription" class="hero-desc">
+                {{ slot.product.description }}
+              </div>
+
+              <div v-if="slot.product && showPrice" class="hero-meta">
+                Precio: {{ formatPrice(slot.product.price) }}
+              </div>
+
+              <div v-if="slot.product && showMinMax" class="hero-meta">
+                Min: {{ slot.product.min_qty }} · Max:
+                {{ slot.product.max_qty }}
+              </div>
+
+              <div v-if="!slot.product" class="hero-empty">
+                Configura HERO en Propiedades
+              </div>
             </div>
           </div>
-
-          <div class="hero-body">
-            <div v-if="slot.product" class="hero-brand">
-              {{ showBrand ? slot.product.brand_name : '' }}
-            </div>
-
-            <div v-if="slot.product" class="hero-sku">
-              {{ showSku ? slot.product.sku : '' }}
-            </div>
-
-            <div v-if="slot.product" class="hero-title">
-              {{
-                slot.product.name ||
-                slot.product.product_name ||
-                slot.product.description ||
-                ''
-              }}
-            </div>
-
-            <div v-if="slot.product && showDescription" class="hero-desc">
-              {{ slot.product.description }}
-            </div>
-
-            <div v-if="slot.product && showPrice" class="hero-meta">
-              Precio: {{ formatPrice(slot.product.price) }}
-            </div>
-
-            <div v-if="slot.product && showMinMax" class="hero-meta">
-              Min: {{ slot.product.min_qty }} · Max: {{ slot.product.max_qty }}
-            </div>
-
-            <div v-if="!slot.product" class="hero-empty">
-              Configura HERO en Propiedades
-            </div>
+          <div
+            v-if="slot.gallery_urls && slot.gallery_urls.length"
+            class="hero-thumbs"
+          >
+            <img
+              v-for="u in slot.gallery_urls"
+              :key="u"
+              class="hero-thumb"
+              :src="u"
+              alt=""
+            />
           </div>
         </div>
       </div>
@@ -746,12 +750,16 @@ body {
 }
 
 .hero-item {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 6px;
   padding: 12px;
+}
+
+.hero-item-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .hero-media {
@@ -782,7 +790,7 @@ body {
 
 .hero-thumb {
   width: 100%;
-  height: 112px;
+  height: 124px;
   object-fit: cover;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.12);
