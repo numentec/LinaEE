@@ -158,179 +158,196 @@
           <div class="text-caption text--secondary">
             Total páginas: {{ pages.length }}
           </div>
-          <v-list dense nav>
-            <v-list-item
-              v-for="(p, idx) in pages"
-              :key="p.id"
-              :input-value="idx === activePageIndex"
-              @click="setActivePage(idx)"
-            >
-              <v-list-item-avatar tile class="mr-2 page-thumb">
-                <div class="thumb-wrapper">
-                  <v-sheet outlined class="thumb-sheet">
-                    <v-row dense class="ma-0">
-                      <v-col
-                        v-for="(it, i) in thumbItemsByPage[p.id]"
-                        :key="(it.product_id || it.sku) + '_' + i"
-                        cols="6"
-                        class="pa-0"
+          <v-virtual-scroll
+            :items="pages"
+            :item-height="152"
+            height="calc(100vh - 300px)"
+            class="mt-2"
+          >
+            <template v-slot:default="{ item: p, index: idx }">
+              <v-list dense nav>
+                <v-list-item
+                  :input-value="idx === activePageIndex"
+                  @click="setActivePage(idx)"
+                >
+                  <v-list-item-avatar tile class="mr-2 page-thumb">
+                    <div class="thumb-wrapper">
+                      <v-sheet outlined class="thumb-sheet">
+                        <v-row dense class="ma-0">
+                          <v-col
+                            v-for="(it, i) in thumbItemsByPage[p.id]"
+                            :key="(it.product_id || it.sku) + '_' + i"
+                            cols="6"
+                            class="pa-0"
+                          >
+                            <v-img
+                              :src="it.selected_image_url"
+                              :lazy-src="it.selected_image_url"
+                              height="34"
+                              width="34"
+                              contain
+                            />
+                          </v-col>
+                        </v-row>
+                        <!-- <div
+                          v-if="(p.items && p.items.length) === 0"
+                          class="thumb-empty text-caption text--secondary"
+                        >
+                          Vacía
+                        </div> -->
+                      </v-sheet>
+
+                      <v-chip
+                        v-if="hiddenCountByPage[p.id] > 0"
+                        x-small
+                        color="rgba(0, 0, 0, 0.50)"
+                        text-color="white"
+                        class="thumb-more"
                       >
-                        <v-img
-                          :src="it.selected_image_url"
-                          :lazy-src="it.selected_image_url"
-                          height="34"
-                          width="34"
-                          contain
-                        />
-                      </v-col>
-                    </v-row>
-                    <!-- <div
-                      v-if="(p.items && p.items.length) === 0"
-                      class="thumb-empty text-caption text--secondary"
-                    >
-                      Vacía
-                    </div> -->
-                  </v-sheet>
+                        +{{ hiddenCountByPage[p.id] }}
+                      </v-chip>
+                    </div>
+                  </v-list-item-avatar>
 
-                  <v-chip
-                    v-if="hiddenCountByPage[p.id] > 0"
-                    x-small
-                    color="rgba(0, 0, 0, 0.50)"
-                    text-color="white"
-                    class="thumb-more"
-                  >
-                    +{{ hiddenCountByPage[p.id] }}
-                  </v-chip>
-                </div>
-              </v-list-item-avatar>
-
-              <v-list-item-content>
-                <v-list-item-title class="d-flex align-center">
-                  <span class="mr-1">
-                    {{ p.name || `Página ${idx + 1}` }}
-                  </span>
-                  <v-chip v-if="p.id === 'cover'" x-small class="ml-2" outlined>
-                    PORTADA
-                  </v-chip>
-                  <v-icon v-if="p.locked" x-small class="ml-1">
-                    mdi-lock
-                  </v-icon>
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ p.layout }} · {{ (p.items && p.items.length) || 0 }} items
-                </v-list-item-subtitle>
-              </v-list-item-content>
-
-              <!-- Lock and select Page list actions -->
-              <v-list-item-action v-if="p.id !== 'cover'">
-                <v-tooltip bottom>
-                  <template #activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      small
-                      :disabled="p.id === 'cover'"
-                      v-bind="attrs"
-                      v-on="on"
-                      @click.stop="toggleLock(p)"
-                    >
-                      <v-icon small>
-                        {{ p.locked ? 'mdi-lock' : 'mdi-lock-open-variant' }}
+                  <v-list-item-content>
+                    <v-list-item-title class="d-flex align-center">
+                      <span class="mr-1">
+                        {{ p.name || `Página ${idx + 1}` }}
+                      </span>
+                      <v-chip
+                        v-if="p.id === 'cover'"
+                        x-small
+                        class="ml-2"
+                        outlined
+                      >
+                        PORTADA
+                      </v-chip>
+                      <v-icon v-if="p.locked" x-small class="ml-1">
+                        mdi-lock
                       </v-icon>
-                    </v-btn>
-                  </template>
-                  <span>{{ p.locked ? 'Desbloquear' : 'Bloquear' }}</span>
-                </v-tooltip>
+                    </v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ p.layout }} ·
+                      {{ (p.items && p.items.length) || 0 }} items
+                    </v-list-item-subtitle>
+                  </v-list-item-content>
 
-                <v-checkbox
-                  v-if="p.id !== 'cover'"
-                  class="ml-1"
-                  dense
-                  :disabled="p.locked"
-                  hide-details
-                  :input-value="isSelected(p.id)"
-                  @click.stop
-                  @change="setSelected(p.id, $event)"
-                />
-              </v-list-item-action>
+                  <!-- Lock and select Page list actions -->
+                  <v-list-item-action v-if="p.id !== 'cover'">
+                    <v-tooltip bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          small
+                          :disabled="p.id === 'cover'"
+                          v-bind="attrs"
+                          v-on="on"
+                          @click.stop="toggleLock(p)"
+                        >
+                          <v-icon small>
+                            {{
+                              p.locked ? 'mdi-lock' : 'mdi-lock-open-variant'
+                            }}
+                          </v-icon>
+                        </v-btn>
+                      </template>
+                      <span>{{ p.locked ? 'Desbloquear' : 'Bloquear' }}</span>
+                    </v-tooltip>
 
-              <v-list-item-action class="d-flex align-center">
-                <v-tooltip bottom>
-                  <template #activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      small
-                      :disabled="p.id === 'cover'"
-                      v-bind="attrs"
-                      v-on="on"
-                      @click.stop="onAddHere(idx)"
-                    >
-                      <v-icon small>mdi-package-variant-closed-plus</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Agregar productos aquí</span>
-                </v-tooltip>
+                    <v-checkbox
+                      v-if="p.id !== 'cover'"
+                      class="ml-1"
+                      dense
+                      :disabled="p.locked"
+                      hide-details
+                      :input-value="isSelected(p.id)"
+                      @click.stop
+                      @change="setSelected(p.id, $event)"
+                    />
+                  </v-list-item-action>
 
-                <v-tooltip bottom>
-                  <template #activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      small
-                      v-bind="attrs"
-                      :disabled="idx === 0 || p.id === 'cover'"
-                      v-on="on"
-                      @click.stop="movePageUp(idx)"
-                    >
-                      <v-icon small>mdi-arrow-up</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Mover arriba</span>
-                </v-tooltip>
+                  <v-list-item-action class="d-flex align-center">
+                    <v-tooltip bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          small
+                          :disabled="p.id === 'cover'"
+                          v-bind="attrs"
+                          v-on="on"
+                          @click.stop="onAddHere(idx)"
+                        >
+                          <v-icon small>mdi-package-variant-closed-plus</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Agregar productos aquí</span>
+                    </v-tooltip>
 
-                <v-tooltip bottom>
-                  <template #activator="{ on, attrs }">
-                    <v-btn
-                      icon
-                      small
-                      v-bind="attrs"
-                      :disabled="idx === pages.length - 1 || p.id === 'cover'"
-                      v-on="on"
-                      @click.stop="movePageDown(idx)"
-                    >
-                      <v-icon small>mdi-arrow-down</v-icon>
-                    </v-btn>
-                  </template>
-                  <span>Mover abajo</span>
-                </v-tooltip>
+                    <v-tooltip bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          small
+                          v-bind="attrs"
+                          :disabled="idx === 0 || p.id === 'cover'"
+                          v-on="on"
+                          @click.stop="movePageUp(idx)"
+                        >
+                          <v-icon small>mdi-arrow-up</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Mover arriba</span>
+                    </v-tooltip>
 
-                <v-menu left bottom>
-                  <template #activator="{ on, attrs }">
-                    <v-btn icon small v-bind="attrs" v-on="on" @click.stop>
-                      <v-icon small>mdi-dots-vertical</v-icon>
-                    </v-btn>
-                  </template>
+                    <v-tooltip bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          small
+                          v-bind="attrs"
+                          :disabled="
+                            idx === pages.length - 1 || p.id === 'cover'
+                          "
+                          v-on="on"
+                          @click.stop="movePageDown(idx)"
+                        >
+                          <v-icon small>mdi-arrow-down</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Mover abajo</span>
+                    </v-tooltip>
 
-                  <v-list dense>
-                    <v-list-item @click="openRename(idx)">
-                      <v-list-item-title>Renombrar</v-list-item-title>
-                    </v-list-item>
+                    <v-menu left bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn icon small v-bind="attrs" v-on="on" @click.stop>
+                          <v-icon small>mdi-dots-vertical</v-icon>
+                        </v-btn>
+                      </template>
 
-                    <v-list-item
-                      :disabled="p.id === 'cover'"
-                      @click="duplicatePage(idx)"
-                    >
-                      <v-list-item-title>Duplicar página</v-list-item-title>
-                    </v-list-item>
+                      <v-list dense>
+                        <v-list-item @click="openRename(idx)">
+                          <v-list-item-title>Renombrar</v-list-item-title>
+                        </v-list-item>
 
-                    <v-list-item @click="deletePage(idx)">
-                      <v-list-item-title class="red--text">
-                        Eliminar página
-                      </v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
-              </v-list-item-action>
-            </v-list-item>
-          </v-list>
+                        <v-list-item
+                          :disabled="p.id === 'cover'"
+                          @click="duplicatePage(idx)"
+                        >
+                          <v-list-item-title>Duplicar página</v-list-item-title>
+                        </v-list-item>
+
+                        <v-list-item @click="deletePage(idx)">
+                          <v-list-item-title class="red--text">
+                            Eliminar página
+                          </v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
+                  </v-list-item-action>
+                </v-list-item>
+              </v-list>
+            </template>
+          </v-virtual-scroll>
         </v-sheet>
       </v-col>
 
