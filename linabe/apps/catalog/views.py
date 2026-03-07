@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.http import HttpResponse, FileResponse, Http404
 from django.contrib.auth import get_user_model
 
-from rest_framework import viewsets
+from copy import deepcopy
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -168,6 +169,26 @@ class CatalogViewSet(CommonViewSet):
         # resp = HttpResponse(pdf_bytes, content_type="application/pdf")
         # resp["Content-Disposition"] = f'attachment; filename="{filename}"'
         # return resp
+
+    @action(detail=True, methods=['post'], url_path='duplicate')
+    def duplicate(self, request, pk=None):
+        source = self.get_object()
+
+        duplicated = CatalogMaster.objects.create(
+            company_id=source.company_id,
+            name=f'{source.name} (copia)',
+            template=source.template,
+            orientation=source.orientation,
+            status='draft',
+            owner_id=request.user.id,
+            settings=deepcopy(source.settings or {}),
+            theme=deepcopy(source.theme or {}),
+            pages=deepcopy(source.pages or []),
+        )
+
+        serializer = self.get_serializer(duplicated)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class ActiveCustomerCatalogsAPIView(APIView):
     """

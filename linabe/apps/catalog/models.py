@@ -111,7 +111,7 @@ class CatalogMaster(Common):
         on_delete=models.CASCADE,
         related_name="catalogs",
     )
-    name = models.CharField("Nombre", max_length=20, blank=True, default='Custom Catalog')
+    name = models.CharField("Nombre", max_length=60, blank=True, default='Custom Catalog')
     descrip = models.TextField("Descripción", blank = True)
     note =  models.TextField("Nota", blank = True, default='No additional notes')
     ttl = models.DateField("TTL", default=defaultTTL)
