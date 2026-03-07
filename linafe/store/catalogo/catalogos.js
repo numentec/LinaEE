@@ -273,7 +273,9 @@ export const getters = {
 
 export const mutations = {
   SET_ITEMS(state, items) {
-    state.items = items || []
+    state.items = (items || []).map((x) =>
+      ensureTheme(ensureSettings(ensurePages(x)))
+    )
   },
   ADD_ITEM(state, item) {
     const id = item && item.id
@@ -1474,6 +1476,20 @@ export const actions = {
     }
 
     commit('SET_NEEDS_REFLOW', { catalogId: normalized.id, value: false })
+
+    return normalized
+  },
+
+  async fetchCatalogs({ commit }) {
+    const raw = await this.$api.getCatalogs()
+
+    const items = Array.isArray(raw) ? raw : []
+
+    const normalized = items.map((x) =>
+      ensureTheme(ensureSettings(ensurePages(x)))
+    )
+
+    commit('SET_ITEMS', normalized)
 
     return normalized
   },

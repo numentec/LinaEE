@@ -38,11 +38,8 @@ export default {
 
   async asyncData({ app, error, store }) {
     try {
-      const catalogs = await app.$api.getCatalogs()
-
-      store.dispatch('catalogo/catalogos/setItems', catalogs)
-
-      return { catalogs }
+      await store.dispatch('catalogo/catalogos/fetchCatalogs')
+      return {}
     } catch (e) {
       error({ statusCode: 500, message: 'Error al cargar los catálogos' })
     }
@@ -96,48 +93,30 @@ export default {
     },
   },
 
-  //   activated() {
-  //     console.log('CatalogosIndexPage activated')
-  //   },
-
-  mounted() {
-    // this.$store.dispatch('catalogo/catalogos/init')
-  },
-
   methods: {
     goNew() {
       this.$router.push('/catalogos/new')
     },
+
     openEdit(id) {
       this.$store.dispatch('catalogo/catalogos/setCurrent', id)
       this.$router.push(`/catalogos/${id}/edit`)
     },
+
     duplicate(id) {
-      // MVP: duplicación rápida en frontend (más adelante: backend)
-      const src = this.$store.getters['catalogo/catalogos/byId'](id)
-      if (!src) return
-      this.$store
-        .dispatch('catalogo/catalogos/createCatalog', {
-          name: `${src.name} (copia)`,
-          template: src.template,
-          orientation: src.orientation,
-          company_id: src.company_id,
-        })
-        .then((newCat) => this.$router.push(`/catalogos/${newCat.id}/edit`))
+      this.$toast?.info?.('Duplicar catálogo real: pendiente')
     },
+
     share(id) {
-      // MVP: placeholder (luego /share)
       this.$router.push(`/catalogos/${id}/preview`)
     },
+
     exportPdf(id) {
-      // MVP: placeholder
       this.$toast?.info?.('Exportar PDF: pendiente (MVP botón listo)')
     },
+
     archive(id) {
-      this.$store.commit('catalogo/catalogos/UPDATE_ITEM', {
-        id,
-        patch: { status: 'archived', updated_at: new Date().toISOString() },
-      })
+      this.$toast?.info?.('Archivar catálogo real: pendiente')
     },
   },
 }

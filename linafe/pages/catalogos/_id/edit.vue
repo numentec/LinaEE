@@ -160,8 +160,8 @@
           </div>
           <v-virtual-scroll
             :items="pages"
-            :item-height="152"
-            height="calc(100vh - 300px)"
+            :item-height="136"
+            height="calc(100vh - 55px)"
             class="mt-2"
           >
             <template v-slot:default="{ item: p, index: idx }">
@@ -189,12 +189,6 @@
                             />
                           </v-col>
                         </v-row>
-                        <!-- <div
-                          v-if="(p.items && p.items.length) === 0"
-                          class="thumb-empty text-caption text--secondary"
-                        >
-                          Vacía
-                        </div> -->
                       </v-sheet>
 
                       <v-chip
@@ -499,7 +493,7 @@
                 />
               </v-expansion-panel-content>
             </v-expansion-panel>
-            <v-expansion-panel>
+            <v-expansion-panel v-show="!isCoverPage">
               <v-expansion-panel-header>
                 <!-- Contenido -->
                 <div class="text-subtitle-2 font-weight-medium mt-4 mb-2">
@@ -727,8 +721,7 @@
                     </div>
                   </div>
                 </div>
-                <v-divider class="my-4" />
-                <div>
+                <div v-show="!isCoverPage">
                   <v-select
                     :value="layoutKey"
                     :items="layoutItems"
@@ -736,6 +729,7 @@
                     outlined
                     dense
                     hide-details
+                    class="mt-3"
                     @change="onLayoutChange"
                   />
 

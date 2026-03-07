@@ -17,10 +17,10 @@
     <v-card-subtitle class="pt-0">
       <div class="d-flex flex-wrap">
         <div class="mr-3">
-          Plantilla: <strong>{{ item.template }}</strong>
+          Plantilla: <strong>{{ itemTemplate }}</strong>
         </div>
         <div class="mr-3">
-          Páginas: <strong>{{ item.pages_count || 1 }}</strong>
+          Páginas: <strong>{{ pagesCount || 1 }}</strong>
         </div>
         <div>
           Orientación:
@@ -71,6 +71,15 @@ export default {
     item: { type: Object, required: true },
   },
   computed: {
+    pagesCount() {
+      return (this.item?.pages || []).length
+    },
+
+    itemTemplate() {
+      const template = this.item?.template || ''
+      return template.charAt(0).toUpperCase() + template.slice(1)
+    },
+
     statusLabel() {
       const map = {
         draft: 'Borrador',
@@ -81,6 +90,7 @@ export default {
       }
       return map[this.item.status] || this.item.status
     },
+
     statusColor() {
       const map = {
         draft: 'grey',
@@ -91,6 +101,7 @@ export default {
       }
       return map[this.item.status] || 'grey'
     },
+
     formattedUpdatedAt() {
       try {
         const d = new Date(this.item.updated_at)

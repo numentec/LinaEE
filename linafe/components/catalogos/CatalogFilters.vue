@@ -56,8 +56,8 @@ export default {
       templateItems: [
         { text: 'Todas', value: 'all' },
         { text: 'Minimal', value: 'minimal' },
-        { text: 'Fashion (próx.)', value: 'fashion', disabled: true },
-        { text: 'Promo (próx.)', value: 'promo', disabled: true },
+        { text: 'Fashion', value: 'fashion' },
+        { text: 'Promo', value: 'promo' },
       ],
       sortItems: [
         { text: 'Última edición (desc)', value: 'updated_desc' },
