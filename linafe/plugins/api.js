@@ -14,6 +14,15 @@ export default function ({ $axios }, inject) {
       return $axios.$get(`catalog/api/catalogs/${id}/`)
     },
 
+    // Duplicate a catalog by id
+    duplicateCatalog(id) {
+      return $axios.$post(`catalog/api/catalogs/${id}/duplicate/`)
+    },
+
+    updateCatalog(id, payload) {
+      return $axios.$patch(`catalog/api/catalogs/${id}/`, payload)
+    },
+
     // retrive all public catalogs
     getPublicCatalogs() {
       return $axios.$get('catalog/api/public/catalogs/')

@@ -1493,4 +1493,38 @@ export const actions = {
 
     return normalized
   },
+
+  async duplicateCatalog({ commit }, { id }) {
+    const raw = await this.$api.duplicateCatalog(id)
+
+    const normalized = ensureTheme(ensureSettings(ensurePages(raw)))
+
+    commit('ADD_ITEM', normalized)
+    commit('SET_CURRENT_ID', normalized.id)
+    commit('SET_ACTIVE_PAGE', {
+      catalogId: normalized.id,
+      pageIndex: 0,
+    })
+    commit('SET_NEEDS_REFLOW', {
+      catalogId: normalized.id,
+      value: false,
+    })
+
+    return normalized
+  },
+
+  async archiveCatalog({ commit }, { id }) {
+    const raw = await this.$api.updateCatalog(id, {
+      status: 'archived',
+    })
+
+    const normalized = ensureTheme(ensureSettings(ensurePages(raw)))
+
+    commit('UPDATE_ITEM', {
+      id: normalized.id,
+      patch: normalized,
+    })
+
+    return normalized
+  },
 }

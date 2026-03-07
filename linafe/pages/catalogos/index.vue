@@ -15,6 +15,34 @@
       @update:sort="sort = $event"
     />
 
+    <v-alert
+      v-if="duplicateError"
+      border="top"
+      colored-border
+      type="error"
+      elevation="2"
+      dismissible
+    >
+      {{ duplicateError }}
+    </v-alert>
+
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      rounded="pill"
+      timeout="5000"
+      absolute
+      top
+      left
+    >
+      {{ snackbar.message }}
+      <template v-slot:action="{ attrs }">
+        <v-btn icon dark v-bind="attrs" @click="snackbar.show = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+
     <CatalogGrid
       :items="filtered"
       @new="goNew"
@@ -51,6 +79,13 @@ export default {
       status: 'all',
       template: 'all',
       sort: 'updated_desc',
+      isDuplicating: false,
+      duplicateError: '',
+      snackbar: {
+        show: false,
+        message: '',
+        color: 'success',
+      },
     }
   },
 
@@ -94,6 +129,15 @@ export default {
   },
 
   methods: {
+    getErrorMessage(e, fallback = 'No se pudo duplicar el catálogo') {
+      return (
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        fallback
+      )
+    },
+
     goNew() {
       this.$router.push('/catalogos/new')
     },
@@ -103,8 +147,31 @@ export default {
       this.$router.push(`/catalogos/${id}/edit`)
     },
 
-    duplicate(id) {
-      this.$toast?.info?.('Duplicar catálogo real: pendiente')
+    async duplicate(id) {
+      if (this.isDuplicating) return null
+
+      this.isDuplicating = true
+      this.duplicateError = ''
+
+      try {
+        const newCat = await this.$store.dispatch(
+          'catalogo/catalogos/duplicateCatalog',
+          { id }
+        )
+
+        if (!newCat?.id) throw new Error('Respuesta inválida al duplicar')
+
+        this.$toast?.success?.('Catálogo duplicado')
+        await this.$router.push(`/catalogos/${newCat.id}/edit`)
+        return newCat
+      } catch (e) {
+        const message = this.getErrorMessage(e)
+        this.duplicateError = message
+        this.$toast?.error?.(message)
+        return null
+      } finally {
+        this.isDuplicating = false
+      }
     },
 
     share(id) {
@@ -115,8 +182,39 @@ export default {
       this.$toast?.info?.('Exportar PDF: pendiente (MVP botón listo)')
     },
 
-    archive(id) {
-      this.$toast?.info?.('Archivar catálogo real: pendiente')
+    async archive(id) {
+      if (this.items.find((c) => c.id === id)?.status === 'archived') {
+        this.snackbar = {
+          show: true,
+          message: 'Este catálogo ya está archivado',
+          color: 'info',
+        }
+        return
+      }
+
+      const ok = window.confirm('¿Archivar este catálogo?')
+      if (!ok) return
+
+      try {
+        await this.$store.dispatch('catalogo/catalogos/archiveCatalog', {
+          id,
+        })
+
+        this.snackbar = {
+          show: true,
+          message: 'Catálogo archivado con éxito',
+          color: 'success',
+        }
+
+        // this.$toast?.success?.('Catálogo archivado')
+      } catch (e) {
+        this.snackbar = {
+          show: true,
+          message: 'No se pudo archivar el catálogo',
+          color: 'error',
+        }
+        // this.$toast?.error?.('No se pudo archivar el catálogo')
+      }
     },
   },
 }
