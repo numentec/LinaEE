@@ -28,6 +28,7 @@ from .models import (
     CatalogDetail,
     CatalogDetailImage,
     PdfJob,
+    genToken,
 )
 from .serializers import (
     CategorySerializer,
@@ -46,6 +47,7 @@ from ..core.models import Customer, Cia
 
 from .pdf import render_url_to_pdf, PdfOptions
 from .tasks import generate_catalog_pdf
+
 
 LinaUserModel = get_user_model()
 # Create your views here.
@@ -188,6 +190,31 @@ class CatalogViewSet(CommonViewSet):
 
         serializer = self.get_serializer(duplicated)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='ensure-share-token')
+    def ensure_share_token(self, request, pk=None):
+        catalog = self.get_object()
+
+        if not catalog.share_token:
+            catalog.ensure_share_token()
+            catalog.save(update_fields=['share_token'])
+
+        return Response(
+            {'share_token': catalog.share_token},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=['post'], url_path='regenerate-share-token')
+    def regenerate_share_token(self, request, pk=None):
+        catalog = self.get_object()
+
+        catalog.share_token = genToken()
+        catalog.save(update_fields=['share_token'])
+
+        return Response(
+            {'share_token': catalog.share_token},
+            status=status.HTTP_200_OK,
+        )
 
 
 class ActiveCustomerCatalogsAPIView(APIView):
