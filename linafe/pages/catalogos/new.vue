@@ -86,12 +86,7 @@ export default {
   methods: {
     async create() {
       if (!this.canCreate) return
-      console.log('Creando catálogo con', {
-        name: this.name,
-        template: this.templateKey,
-        orientation: this.orientation,
-        companyId: this.companyId,
-      })
+
       this.loading = true
 
       try {

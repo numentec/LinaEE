@@ -23,6 +23,14 @@ export default function ({ $axios }, inject) {
       return $axios.$patch(`catalog/api/catalogs/${id}/`, payload)
     },
 
+    ensureShareToken(id) {
+      return $axios.$post(`catalog/api/catalogs/${id}/ensure-share-token/`)
+    },
+
+    regenerateShareToken(id) {
+      return $axios.$post(`catalog/api/catalogs/${id}/regenerate-share-token/`)
+    },
+
     // retrive all public catalogs
     getPublicCatalogs() {
       return $axios.$get('catalog/api/public/catalogs/')

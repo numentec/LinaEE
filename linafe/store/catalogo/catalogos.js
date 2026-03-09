@@ -104,12 +104,12 @@ function clonePage(page, newId, newName) {
   }
 }
 
-function generateToken() {
-  return (
-    Math.random().toString(36).slice(2, 10) +
-    Math.random().toString(36).slice(2, 10)
-  )
-}
+// function generateToken() {
+//   return (
+//     Math.random().toString(36).slice(2, 10) +
+//     Math.random().toString(36).slice(2, 10)
+//   )
+// }
 
 function defaultSettings() {
   return {
@@ -1206,20 +1206,42 @@ export const actions = {
     commit('UPDATE_COVER', { catalogId, patch })
   },
 
-  ensureShareToken({ getters, commit }, { catalogId }) {
-    const catalog = getters.byId(catalogId)
+  async ensureShareToken({ getters, commit }, { id }) {
+    const catalog = getters.byId(id)
     if (!catalog) return ''
 
     if (catalog.share_token) return catalog.share_token
 
-    const token = generateToken()
-    commit('SET_SHARE_TOKEN', { catalogId, token })
+    const res = await this.$api.ensureShareToken(id)
+    const token = res && res.share_token ? res.share_token : ''
+
+    if (token) {
+      commit('UPDATE_ITEM', {
+        id,
+        patch: {
+          share_token: token,
+          updated_at: new Date().toISOString(),
+        },
+      })
+    }
+
     return token
   },
 
-  regenerateShareToken({ commit }, { catalogId }) {
-    const token = generateToken()
-    commit('SET_SHARE_TOKEN', { catalogId, token })
+  async regenerateShareToken({ commit }, { id }) {
+    const res = await this.$api.regenerateShareToken(id)
+    const token = res && res.share_token ? res.share_token : ''
+
+    if (token) {
+      commit('UPDATE_ITEM', {
+        id,
+        patch: {
+          share_token: token,
+          updated_at: new Date().toISOString(),
+        },
+      })
+    }
+
     return token
   },
 

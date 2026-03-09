@@ -52,6 +52,52 @@
       @exportPdf="exportPdf"
       @archive="archive"
     />
+
+    <v-dialog v-model="showShareDialog" max-width="640">
+      <v-card>
+        <v-card-title class="text-subtitle-1 font-weight-medium">
+          Compartir catálogo
+        </v-card-title>
+
+        <v-card-text>
+          <div class="text-body-2 text--secondary mb-4">
+            Comparte este link con tus clientes. Verán el catálogo sin iniciar
+            sesión.
+          </div>
+
+          <v-text-field
+            :value="sharePublicLink"
+            label="Link público"
+            outlined
+            dense
+            hide-details
+            readonly
+          />
+
+          <div class="d-flex mt-4">
+            <v-btn outlined @click="copyShareLink">
+              <v-icon left>mdi-content-copy</v-icon>
+              Copiar
+            </v-btn>
+
+            <v-spacer />
+
+            <v-btn text :loading="shareLoading" @click="regenerateShare">
+              Regenerar token
+            </v-btn>
+          </div>
+
+          <v-alert dense text type="info" class="mt-4">
+            Si regeneras el token, el link anterior dejará de funcionar.
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="closeShareDialog"> Listo </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -81,6 +127,10 @@ export default {
       sort: 'updated_desc',
       isDuplicating: false,
       duplicateError: '',
+      showShareDialog: false,
+      shareCatalogId: null,
+      shareToken: '',
+      shareLoading: false,
       snackbar: {
         show: false,
         message: '',
@@ -125,6 +175,12 @@ export default {
       }
 
       return out
+    },
+
+    sharePublicLink() {
+      if (!this.shareToken) return ''
+      const origin = process.client ? window.location.origin : ''
+      return `${origin}/portal/shared-catalog/${this.shareToken}`
     },
   },
 
@@ -174,8 +230,60 @@ export default {
       }
     },
 
-    share(id) {
-      this.$router.push(`/catalogos/${id}/preview`)
+    async share(id) {
+      this.shareCatalogId = id
+      this.shareLoading = true
+
+      try {
+        const token = await this.$store.dispatch(
+          'catalogo/catalogos/ensureShareToken',
+          { id }
+        )
+
+        this.shareToken = token
+        this.showShareDialog = true
+      } catch (e) {
+        this.$toast?.error?.('No se pudo obtener el link público')
+      } finally {
+        this.shareLoading = false
+      }
+    },
+
+    async regenerateShare() {
+      if (!this.shareCatalogId) return
+
+      this.shareLoading = true
+
+      try {
+        const token = await this.$store.dispatch(
+          'catalogo/catalogos/regenerateShareToken',
+          { id: this.shareCatalogId }
+        )
+
+        this.shareToken = token
+        this.$toast?.success?.('Link regenerado')
+      } catch (e) {
+        this.$toast?.error?.('No se pudo regenerar el link')
+      } finally {
+        this.shareLoading = false
+      }
+    },
+
+    async copyShareLink() {
+      if (!this.sharePublicLink) return
+
+      try {
+        await navigator.clipboard.writeText(this.sharePublicLink)
+        this.$toast?.success?.('Link copiado')
+      } catch (e) {
+        this.$toast?.error?.('No se pudo copiar el link')
+      }
+    },
+
+    closeShareDialog() {
+      this.showShareDialog = false
+      this.shareCatalogId = null
+      this.shareToken = ''
     },
 
     exportPdf(id) {
