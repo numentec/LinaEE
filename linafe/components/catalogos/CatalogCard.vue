@@ -52,11 +52,27 @@
           </v-btn>
         </template>
         <v-list dense>
-          <v-list-item @click="$emit('exportPdf', item.id)">
+          <v-list-item
+            @click="
+              $emit('exportPdf', {
+                catalogId: item.id,
+                totalPages: pagesCount || 1,
+              })
+            "
+          >
             <v-list-item-title>Exportar PDF</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="$emit('archive', item.id)">
-            <v-list-item-title>Archivar</v-list-item-title>
+          <v-list-item
+            @click="
+              $emit(
+                item.status === 'archived' ? 'unarchive' : 'archive',
+                item.id
+              )
+            "
+          >
+            <v-list-item-title>{{
+              item.status === 'archived' ? 'Desarchivar' : 'Archivar'
+            }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>

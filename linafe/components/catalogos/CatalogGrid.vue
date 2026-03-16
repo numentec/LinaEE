@@ -9,6 +9,7 @@
           @share="$emit('share', $event)"
           @exportPdf="$emit('exportPdf', $event)"
           @archive="$emit('archive', $event)"
+          @unarchive="$emit('unarchive', $event)"
         />
       </v-col>
     </v-row>

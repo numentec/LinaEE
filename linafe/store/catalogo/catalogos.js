@@ -1549,4 +1549,19 @@ export const actions = {
 
     return normalized
   },
+
+  async unarchiveCatalog({ commit }, { id }) {
+    const raw = await this.$api.updateCatalog(id, {
+      status: 'draft',
+    })
+
+    const normalized = ensureTheme(ensureSettings(ensurePages(raw)))
+
+    commit('UPDATE_ITEM', {
+      id: normalized.id,
+      patch: normalized,
+    })
+
+    return normalized
+  },
 }

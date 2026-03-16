@@ -51,6 +51,7 @@
       @share="share"
       @exportPdf="exportPdf"
       @archive="archive"
+      @unarchive="unarchive"
     />
 
     <v-dialog v-model="showShareDialog" max-width="640">
@@ -98,10 +99,29 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-snackbar
+      color="info"
+      rounded="pill"
+      timeout="-1"
+      absolute
+      top
+      right
+      :value="pdfJobs.length > 0"
+    >
+      <div v-for="j in pdfJobs" :key="j.jobId" class="mt-2">
+        <div class="d-flex justify-space-between white--text">
+          <small> Generando PDF (estimado) </small>
+          <small>{{ j.progress }}%</small>
+        </div>
+        <v-progress-linear color="white" :value="j.progress" height="8" />
+      </div>
+    </v-snackbar>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import CatalogToolbar from '~/components/catalogos/CatalogToolbar.vue'
 import CatalogFilters from '~/components/catalogos/CatalogFilters.vue'
 import CatalogGrid from '~/components/catalogos/CatalogGrid.vue'
@@ -136,10 +156,25 @@ export default {
         message: '',
         color: 'success',
       },
+      snackbarPDF: {
+        show: false,
+        message: '',
+        color: 'success',
+      },
+      exportingPdfId: null,
     }
   },
 
   computed: {
+    ...mapState('catalogo/catalogos', ['toast']),
+
+    pdfShowProgress() {
+      return (
+        this.toast?.type === 'pdf-generating' &&
+        this.toast?.catalogId === this.exportingPdfId
+      )
+    },
+
     items() {
       return this.$store.getters['catalogo/catalogos/all']
     },
@@ -181,6 +216,12 @@ export default {
       if (!this.shareToken) return ''
       const origin = process.client ? window.location.origin : ''
       return `${origin}/portal/shared-catalog/${this.shareToken}`
+    },
+
+    pdfJobs() {
+      return this.$store.getters['catalogo/catalogos/pdfJobsActiveByCatalog'](
+        this.exportingPdfId
+      )
     },
   },
 
@@ -286,8 +327,12 @@ export default {
       this.shareToken = ''
     },
 
-    exportPdf(id) {
-      this.$toast?.info?.('Exportar PDF: pendiente (MVP botón listo)')
+    async exportPdf({ catalogId, totalPages }) {
+      this.exportingPdfId = catalogId
+      await this.$store.dispatch('catalogo/catalogos/exportPdfStart', {
+        catalogId,
+        totalPages,
+      })
     },
 
     async archive(id) {
@@ -322,6 +367,18 @@ export default {
           color: 'error',
         }
         // this.$toast?.error?.('No se pudo archivar el catálogo')
+      }
+    },
+
+    async unarchive(id) {
+      try {
+        await this.$store.dispatch('catalogo/catalogos/unarchiveCatalog', {
+          id,
+        })
+
+        this.$toast?.success?.('Catálogo desarchivado')
+      } catch (e) {
+        this.$toast?.error?.('No se pudo desarchivar el catálogo')
       }
     },
   },
