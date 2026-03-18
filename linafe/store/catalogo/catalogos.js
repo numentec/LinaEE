@@ -5,14 +5,49 @@ import { mockCatalogos } from '~/mock/catalogos'
 export const namespaced = true
 
 // ************ Actions and mutations helpers ************
+// function ensurePages(catalog) {
+//   if (Array.isArray(catalog.pages) && catalog.pages.length) return catalog
+
+//   const pages = [
+//     {
+//       id: 'page_1',
+//       name: 'Página 1',
+//       layout: 'grid_2x4',
+//       items: [],
+//     },
+//   ]
+
+//   return {
+//     ...catalog,
+//     pages,
+//     pages_count: catalog.pages_count || 1,
+//   }
+// }
+
 function ensurePages(catalog) {
-  if (Array.isArray(catalog.pages) && catalog.pages.length) return catalog
+  if (Array.isArray(catalog.pages) && catalog.pages.length) {
+    return {
+      ...catalog,
+      pages: catalog.pages.map((p, index) => {
+        if (!p) return p
+
+        const isCover = p.id === 'cover' || p.layout === 'cover'
+
+        return {
+          ...p,
+          name: p.name || (isCover ? 'Portada' : `Página ${index + 1}`),
+          layout: isCover ? 'cover' : normalizeLegacyLayout(p.layout),
+        }
+      }),
+      pages_count: catalog.pages.length,
+    }
+  }
 
   const pages = [
     {
       id: 'page_1',
       name: 'Página 1',
-      layout: 'grid_2x4',
+      layout: 'grid_2',
       items: [],
     },
   ]
@@ -20,8 +55,27 @@ function ensurePages(catalog) {
   return {
     ...catalog,
     pages,
-    pages_count: catalog.pages_count || 1,
+    pages_count: 1,
   }
+}
+
+function normalizeLegacyLayout(layout) {
+  const l = String(layout || '')
+
+  if (
+    l === 'grid_2x3' ||
+    l === 'grid_2x4' ||
+    l === 'grid_2x5' ||
+    l === 'grid_2x6'
+  ) {
+    return 'grid_2'
+  }
+
+  if (l === 'grid_3x3' || l === 'grid_3x4' || l === 'grid_3x5') {
+    return 'grid_3'
+  }
+
+  return l || 'grid_2'
 }
 
 function ensureSettings(catalog) {
@@ -93,17 +147,29 @@ function nextPageNumber(pages) {
   return max + 1
 }
 
+// function clonePage(page, newId, newName) {
+//   const items = Array.isArray(page.items) ? page.items : []
+
+//   return {
+//     id: newId,
+//     name: newName,
+//     layout: page.layout || 'grid_2x4',
+//     items: items.map((x) => ({ ...x })),
+//   }
+// }
 function clonePage(page, newId, newName) {
   const items = Array.isArray(page.items) ? page.items : []
+  const isCover = page && (page.id === 'cover' || page.layout === 'cover')
 
   return {
     id: newId,
     name: newName,
-    layout: page.layout || 'grid_2x4',
+    layout: isCover ? 'cover' : normalizeLegacyLayout(page.layout),
     items: items.map((x) => ({ ...x })),
+    locked: Boolean(page && page.locked),
+    hero: page && page.hero ? { ...page.hero } : null,
   }
 }
-
 // function generateToken() {
 //   return (
 //     Math.random().toString(36).slice(2, 10) +
@@ -122,6 +188,64 @@ function defaultSettings() {
   }
 }
 
+// function templatePresets() {
+//   return {
+//     minimal: {
+//       template: 'Minimal',
+//       settings: {
+//         show_images: true,
+//         show_brand: true,
+//         show_sku: true,
+//         show_description: true,
+//         show_price: true,
+//         show_min_max: true,
+//       },
+//       default_layout: 'grid_2x4',
+//       cover: {
+//         subtitle: 'Selección recomendada',
+//         logo_url: '',
+//         hero_url: '',
+//       },
+//     },
+
+//     fashion: {
+//       template: 'Fashion',
+//       settings: {
+//         show_images: true,
+//         show_brand: true,
+//         show_sku: false,
+//         show_description: false,
+//         show_price: true,
+//         show_min_max: false,
+//       },
+//       default_layout: 'grid_3x3',
+//       cover: {
+//         subtitle: 'Nueva colección',
+//         logo_url: '',
+//         hero_url: '',
+//       },
+//     },
+
+//     promo: {
+//       template: 'Promo',
+//       settings: {
+//         show_images: true,
+//         show_brand: true,
+//         show_sku: true,
+//         show_description: false,
+//         show_price: true,
+//         show_min_max: true,
+//       },
+//       default_layout: 'list_compact',
+//       cover: {
+//         subtitle: 'Ofertas por tiempo limitado',
+//         logo_url: '',
+//         hero_url: '',
+//       },
+//     },
+//   }
+// }
+
 function templatePresets() {
   return {
     minimal: {
@@ -134,7 +258,7 @@ function templatePresets() {
         show_price: true,
         show_min_max: true,
       },
-      default_layout: 'grid_2x4',
+      default_layout: 'grid_2',
       cover: {
         subtitle: 'Selección recomendada',
         logo_url: '',
@@ -152,7 +276,7 @@ function templatePresets() {
         show_price: true,
         show_min_max: false,
       },
-      default_layout: 'grid_3x3',
+      default_layout: 'grid_3',
       cover: {
         subtitle: 'Nueva colección',
         logo_url: '',
@@ -359,13 +483,16 @@ export const mutations = {
     const currentPage = pages[pIdx]
 
     // Si el layout es el mismo, no hacemos nada (retornar)
-    if (currentPage.layout === layout) return
+    const normalizedLayout =
+      layout === 'cover' ? 'cover' : normalizeLegacyLayout(layout)
+
+    if (currentPage.layout === normalizedLayout) return
 
     const now = new Date().toISOString()
 
     const nextPages = pages.map((p) => {
       if (p.id !== pageId) return p
-      return { ...p, layout }
+      return { ...p, layout: normalizedLayout }
     })
 
     const next = {
@@ -397,7 +524,7 @@ export const mutations = {
     const page = {
       id,
       name: `Página ${n}`,
-      layout: layout || 'grid_2x4',
+      layout: normalizeLegacyLayout(layout || 'grid_2'),
       items: [],
     }
 
@@ -473,8 +600,9 @@ export const mutations = {
         {
           id: 'page_1',
           name: 'Página 1',
-          layout: 'grid_2x4',
+          layout: 'grid_2',
           items: [],
+          locked: false,
         },
       ]
     }
@@ -877,12 +1005,16 @@ export const mutations = {
     const pages = Array.isArray(catalog.pages) ? catalog.pages : []
 
     const idSet = new Set((pageIds || []).map((x) => String(x)))
+
+    const normalizedLayout =
+      layout === 'cover' ? 'cover' : normalizeLegacyLayout(layout)
+
     const nextPages = pages.map((p) => {
       if (!p) return p
       if (skipCover && (p.id === 'cover' || p.layout === 'cover')) return p
       if (!idSet.has(String(p.id))) return p
-      if (p.layout === layout) return p
-      return { ...p, layout }
+      if (p.layout === normalizedLayout) return p
+      return { ...p, layout: normalizedLayout }
     })
 
     const changed = pages.some((p, i) =>
@@ -1040,7 +1172,7 @@ export const actions = {
         {
           id: 'page_1',
           name: 'Página 1',
-          layout: 'grid_2x4',
+          layout: 'grid_2',
           items: [],
           locked: false,
         },
@@ -1122,7 +1254,7 @@ export const actions = {
       nextPages.push({
         id: `page_${n}`,
         name: `Página ${n}`,
-        layout: layout || 'grid_2x4',
+        layout: normalizeLegacyLayout(layout || 'grid_2'),
         items: [],
         locked: false,
       })
@@ -1143,7 +1275,7 @@ export const actions = {
       const page = {
         id,
         name: `Página ${n}`,
-        layout: layout || 'grid_2x4',
+        layout: normalizeLegacyLayout(layout || 'grid_2'),
         items,
         locked: false,
       }
