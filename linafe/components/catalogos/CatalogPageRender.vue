@@ -126,7 +126,7 @@
             >
               <v-card
                 :outlined="effectiveTheme.card_style !== 'flat'"
-                class="pa-2 cat-card"
+                class="pa-1 cat-card"
                 :class="cardClass"
                 :style="cardInlineStyle"
               >
@@ -180,12 +180,12 @@
                       {{ p.description }}
                     </div>
 
-                    <div class="text-caption text--secondary mt-1 item-price">
+                    <div class="text-caption text--secondary item-price">
                       <span v-if="effectiveSettings.show_price">
                         Precio: {{ p.price }}
                       </span>
                     </div>
-                    <div class="text-caption text--secondary mt-1 item-minmax">
+                    <div class="text-caption text--secondary item-minmax">
                       <span v-if="effectiveSettings.show_min_max">
                         Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
                       </span>
@@ -205,6 +205,8 @@
 </template>
 
 <script>
+import { computeCatalogLayout } from '@/utils/catalogLayout'
+
 export default {
   name: 'CatalogPageRender',
 
@@ -269,15 +271,7 @@ export default {
     },
 
     capacity() {
-      if (this.layoutKey === 'hero_1') return 1
-      if (this.layoutKey === 'hero_2') return 2
-      if (this.layoutKey === 'list_compact') return 6
-
-      if (this.layoutKey === 'grid_2' || this.layoutKey === 'grid_3') {
-        return this.pageMetrics.capacity
-      }
-
-      return 8
+      return this.pageMetrics.capacity || 8
     },
 
     layout() {
@@ -303,60 +297,11 @@ export default {
     },
 
     pageMetrics() {
-      const isLandscape = this.orientation === 'landscape'
-
-      const pageWidth = 700
-      const pageHeight = Math.round(
-        pageWidth * (isLandscape ? 8.5 / 11 : 11 / 8.5)
-      )
-
-      const horizontalPadding = 48
-      const verticalPadding = 40
-      const columnGap = 8
-      const rowGap = 8
-
-      const contentWidth = pageWidth - horizontalPadding * 2
-      const contentHeight = pageHeight - verticalPadding * 2
-
-      const columns = this.layoutColumns
-
-      const cardWidth =
-        columns > 1
-          ? Math.floor((contentWidth - columnGap * (columns - 1)) / columns)
-          : contentWidth
-
-      const imageBlockHeight = this.effectiveSettings.show_images ? 88 : 0
-      const baseTextHeight = 24
-      const lineHeight = 18
-      const cardInnerPadding = 16
-
-      const textHeight = baseTextHeight + this.visibleInfoLines * lineHeight
-
-      const cardHeight =
-        Math.max(
-          this.effectiveSettings.show_images ? imageBlockHeight : 56,
-          textHeight
-        ) + cardInnerPadding
-
-      const rowsPerPage =
-        this.layoutKey === 'grid_2' || this.layoutKey === 'grid_3'
-          ? Math.max(
-              1,
-              Math.floor((contentHeight + rowGap) / (cardHeight + rowGap))
-            )
-          : 1
-
-      return {
-        pageWidth,
-        pageHeight,
-        contentWidth,
-        contentHeight,
-        columns,
-        cardWidth,
-        cardHeight,
-        rowsPerPage,
-        capacity: columns * rowsPerPage,
-      }
+      return computeCatalogLayout({
+        layout: this.layoutKey,
+        orientation: this.orientation,
+        settings: this.effectiveSettings,
+      })
     },
 
     items() {

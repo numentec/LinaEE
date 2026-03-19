@@ -983,6 +983,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import { computeCatalogLayout } from '@/utils/catalogLayout'
 import ProductPickerDialog from '~/components/catalogos/ProductPickerDialog.vue'
 import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
 
@@ -1028,8 +1029,8 @@ export default {
       layoutItems: [
         { text: 'Destacado 1 producto (HERO)', value: 'hero_1' },
         { text: 'Destacado 2 productos (HERO)', value: 'hero_2' },
-        { text: 'Cuadrícula 2 columnas (auto)', value: 'grid_2' },
-        { text: 'Cuadrícula 3 columnas (auto)', value: 'grid_3' },
+        { text: 'Cuadrícula a 2 columnas', value: 'grid_2' },
+        { text: 'Cuadrícula a 3 columnas', value: 'grid_3' },
         { text: 'Lista (6)', value: 'list_compact' },
       ],
 
@@ -1269,11 +1270,76 @@ export default {
       )
     },
 
+    productPages() {
+      const pages = Array.isArray(this.catalog?.pages) ? this.catalog.pages : []
+
+      return pages.filter((p) => p && p.layout !== 'cover')
+    },
+
+    currentAutoCapacity() {
+      return this.capacityForLayout(this.layoutKey)
+    },
+
+    totalPlacedItems() {
+      return this.productPages.reduce((acc, page) => {
+        const items = Array.isArray(page.items) ? page.items : []
+        return acc + items.length
+      }, 0)
+    },
+
+    needsRedistribute() {
+      const pages = this.productPages
+      if (!pages.length) return false
+
+      const expectedLayout = this.layoutKey
+      const expectedCapacity = this.currentAutoCapacity
+
+      if (!expectedCapacity || this.totalPlacedItems === 0) return false
+
+      // 1) Si alguna página no coincide con el layout actual, conviene redistribuir
+      const hasLayoutMismatch = pages.some(
+        (page) => page.layout !== expectedLayout
+      )
+      if (hasLayoutMismatch) return true
+
+      // 2) Si alguna página supera la capacidad actual, conviene redistribuir
+      const hasOverflow = pages.some((page) => {
+        const items = Array.isArray(page.items) ? page.items : []
+        return items.length > expectedCapacity
+      })
+      if (hasOverflow) return true
+
+      // 3) Si con la capacidad actual deberían existir menos páginas, conviene redistribuir
+      const idealPageCount = Math.max(
+        1,
+        Math.ceil(this.totalPlacedItems / expectedCapacity)
+      )
+
+      if (pages.length !== idealPageCount) return true
+
+      // 4) Si una página intermedia tiene huecos y páginas posteriores tienen items,
+      //    la distribución ya no es óptima con la capacidad actual
+      const hasGapBeforeLast = pages.some((page, index) => {
+        if (index >= pages.length - 1) return false
+
+        const items = Array.isArray(page.items) ? page.items : []
+        if (items.length >= expectedCapacity) return false
+
+        return pages.slice(index + 1).some((nextPage) => {
+          const nextItems = Array.isArray(nextPage.items) ? nextPage.items : []
+          return nextItems.length > 0
+        })
+      })
+
+      return hasGapBeforeLast
+    },
+
     canAutoDistribute() {
       if (this.isCoverPage) return false
       if (!this.page) return false
+      if (!this.totalPlacedItems) return false
 
-      return this.needsReflow || this.pageItems.length > this.layoutCapacity
+      return this.needsReflow || this.needsRedistribute
     },
 
     autoDistributeLabel() {
@@ -1491,61 +1557,36 @@ export default {
       this.showLayoutScopeDialog = true
     },
 
-    countVisibleInfoLines(settings) {
-      const s = settings || {}
-      let lines = 0
-
-      if (s.show_brand) lines += 1
-      if (s.show_sku) lines += 1
-      if (s.show_description) lines += 2
-      if (s.show_price) lines += 1
-      if (s.show_min_max) lines += 1
-
-      return lines
-    },
-
     capacityForLayout(layout) {
-      if (layout === 'hero_1') return 1
-      if (layout === 'hero_2') return 2
-      if (layout === 'list_compact') return 6
-
-      const orientation = this.catalog?.orientation || 'portrait'
-      const isLandscape = orientation === 'landscape'
-
-      const columns = layout === 'grid_3' ? 3 : 2
-
-      const pageWidth = 700
-      const pageHeight = Math.round(
-        pageWidth * (isLandscape ? 8.5 / 11 : 11 / 8.5)
-      )
-
-      // const horizontalPadding = 48
-      const verticalPadding = 40
-      const rowGap = 8
-
-      const contentHeight = pageHeight - verticalPadding * 2
-
-      const settings = this.catalogSettings || {}
-      const visibleInfoLines = this.countVisibleInfoLines(settings)
-
-      const imageBlockHeight = settings.show_images ? 88 : 0
-      const baseTextHeight = 24
-      const lineHeight = 18
-      const cardInnerPadding = 16
-
-      const textHeight = baseTextHeight + visibleInfoLines * lineHeight
-
-      const cardHeight =
-        Math.max(settings.show_images ? imageBlockHeight : 56, textHeight) +
-        cardInnerPadding
-
-      const rowsPerPage = Math.max(
-        1,
-        Math.floor((contentHeight + rowGap) / (cardHeight + rowGap))
-      )
-
-      return columns * rowsPerPage
+      return computeCatalogLayout({
+        layout,
+        orientation: this.catalog?.orientation || 'portrait',
+        settings: this.catalogSettings || {},
+      }).capacity
     },
+
+    currentAutoLayoutCapacity() {
+      return this.capacityForLayout(this.layoutKey)
+    },
+
+    // needsRedistribute() {
+    //   const pages = Array.isArray(this.catalog?.pages) ? this.catalog.pages : []
+    //   const productPages = pages.filter((p) => p && p.layout !== 'cover')
+
+    //   if (!productPages.length) return false
+
+    //   const expectedLayout = this.layoutKey
+    //   const expectedCapacity = this.currentAutoLayoutCapacity()
+
+    //   for (const page of productPages) {
+    //     const items = Array.isArray(page.items) ? page.items : []
+
+    //     if (page.layout !== expectedLayout) return true
+    //     if (items.length > expectedCapacity) return true
+    //   }
+
+    //   return false
+    // },
 
     openDistributeDialog() {
       this.distributeLayout = this.layoutKey
