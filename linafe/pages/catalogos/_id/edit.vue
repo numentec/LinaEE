@@ -734,7 +734,8 @@
                   />
 
                   <div class="text-caption text--secondary">
-                    El layout afecta cuántos productos entran por página.
+                    El layout define columnas. La app calcula automáticamente
+                    cuántos productos caben por página.
                   </div>
                 </div>
               </v-expansion-panel-content>
@@ -767,18 +768,14 @@
             @change="onDistributeLayoutChange"
           />
 
-          <v-select
-            v-model="distributeCapacity"
-            :items="capacityItems"
-            label="Productos por página"
-            outlined
-            dense
-            hide-details
-          />
+          <div class="text-body-2 text--secondary mb-2">
+            Capacidad estimada:
+            <strong>{{ distributeCapacity }}</strong> productos por página
+          </div>
 
           <v-alert dense text type="info" class="mt-4">
-            Tip: Para catálogos grandes, <strong>Grid 2 x 4</strong> suele ser
-            el mejor balance entre lectura y número de páginas.
+            Tip: Elige 2 o 3 columnas y la app calculará automáticamente cuántos
+            productos caben según orientación y contenido visible.
           </v-alert>
         </v-card-text>
 
@@ -1016,7 +1013,7 @@ export default {
       showDistributeDialog: false,
 
       showNewPageDialog: false,
-      newPageLayout: 'grid_2x4',
+      newPageLayout: 'grid_2',
       newPageAddProducts: true,
 
       showRenameDialog: false,
@@ -1025,20 +1022,14 @@ export default {
 
       pickerTargetIndex: null,
 
-      distributeLayout: 'grid_2x4',
+      distributeLayout: 'grid_2',
       distributeCapacity: 8,
-      capacityItems: [1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 15],
 
       layoutItems: [
         { text: 'Destacado 1 producto (HERO)', value: 'hero_1' },
         { text: 'Destacado 2 productos (HERO)', value: 'hero_2' },
-        { text: 'Cuadrícula 2×3 (6)', value: 'grid_2x3' },
-        { text: 'Cuadrícula 2×4 (8)', value: 'grid_2x4' },
-        { text: 'Cuadrícula 2×5 (10)', value: 'grid_2x5' },
-        { text: 'Cuadrícula 2×6 (12)', value: 'grid_2x6' },
-        { text: 'Cuadrícula 3×3 (9)', value: 'grid_3x3' },
-        { text: 'Cuadrícula 3×4 (12)', value: 'grid_3x4' },
-        { text: 'Cuadrícula 3×5 (15)', value: 'grid_3x5' },
+        { text: 'Cuadrícula 2 columnas (auto)', value: 'grid_2' },
+        { text: 'Cuadrícula 3 columnas (auto)', value: 'grid_3' },
         { text: 'Lista (6)', value: 'list_compact' },
       ],
 
@@ -1137,23 +1128,11 @@ export default {
     },
 
     layoutKey() {
-      return (this.page && this.page.layout) || 'grid_2x4'
+      return (this.page && this.page.layout) || 'grid_2'
     },
 
     layoutCapacity() {
-      const map = {
-        hero_1: 1,
-        hero_2: 2,
-        grid_2x3: 6,
-        grid_2x4: 8,
-        grid_2x5: 10,
-        grid_2x6: 12,
-        grid_3x3: 9,
-        grid_3x4: 12,
-        grid_3x5: 15,
-        list_compact: 6,
-      }
-      return map[this.layoutKey] || 8
+      return this.capacityForLayout(this.layoutKey)
     },
 
     pageItems() {
@@ -1512,20 +1491,60 @@ export default {
       this.showLayoutScopeDialog = true
     },
 
+    countVisibleInfoLines(settings) {
+      const s = settings || {}
+      let lines = 0
+
+      if (s.show_brand) lines += 1
+      if (s.show_sku) lines += 1
+      if (s.show_description) lines += 2
+      if (s.show_price) lines += 1
+      if (s.show_min_max) lines += 1
+
+      return lines
+    },
+
     capacityForLayout(layout) {
-      const map = {
-        hero_1: 1,
-        hero_2: 2,
-        grid_2x3: 6,
-        grid_2x4: 8,
-        grid_2x5: 10,
-        grid_2x6: 12,
-        grid_3x3: 9,
-        grid_3x4: 12,
-        grid_3x5: 15,
-        list_compact: 6,
-      }
-      return map[layout] || 8
+      if (layout === 'hero_1') return 1
+      if (layout === 'hero_2') return 2
+      if (layout === 'list_compact') return 6
+
+      const orientation = this.catalog?.orientation || 'portrait'
+      const isLandscape = orientation === 'landscape'
+
+      const columns = layout === 'grid_3' ? 3 : 2
+
+      const pageWidth = 700
+      const pageHeight = Math.round(
+        pageWidth * (isLandscape ? 8.5 / 11 : 11 / 8.5)
+      )
+
+      // const horizontalPadding = 48
+      const verticalPadding = 40
+      const rowGap = 8
+
+      const contentHeight = pageHeight - verticalPadding * 2
+
+      const settings = this.catalogSettings || {}
+      const visibleInfoLines = this.countVisibleInfoLines(settings)
+
+      const imageBlockHeight = settings.show_images ? 88 : 0
+      const baseTextHeight = 24
+      const lineHeight = 18
+      const cardInnerPadding = 16
+
+      const textHeight = baseTextHeight + visibleInfoLines * lineHeight
+
+      const cardHeight =
+        Math.max(settings.show_images ? imageBlockHeight : 56, textHeight) +
+        cardInnerPadding
+
+      const rowsPerPage = Math.max(
+        1,
+        Math.floor((contentHeight + rowGap) / (cardHeight + rowGap))
+      )
+
+      return columns * rowsPerPage
     },
 
     openDistributeDialog() {
@@ -1554,8 +1573,8 @@ export default {
 
     openNewPageDialog() {
       const map = {
-        Minimal: 'grid_2x4',
-        Fashion: 'grid_3x3',
+        Minimal: 'grid_2',
+        Fashion: 'grid_3',
         Promo: 'list_compact',
       }
 
