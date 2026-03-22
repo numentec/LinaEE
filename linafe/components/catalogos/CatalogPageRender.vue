@@ -182,7 +182,7 @@
 
                     <div class="text-caption text--secondary item-price">
                       <span v-if="effectiveSettings.show_price">
-                        Precio: {{ p.price }}
+                        {{ formatPrice(p.price) }}
                       </span>
                     </div>
                     <div class="text-caption text--secondary item-minmax">
@@ -237,12 +237,19 @@ export default {
     },
 
     paperStyle() {
+      // Verificar esta compensacion de 96px, que se agregó para evitar que el contenido se corte al imprimir en PDF.
+      // Revisar en diferentes navegadores y ajustar si es necesario.
+      const landscapeCompensation = this.orientation === 'landscape' ? 96 : 0
       return {
-        width: `${this.pageMetrics.pageWidth}px`,
+        width: `${this.pageMetrics.pageWidth + landscapeCompensation}px`,
         height: `${this.pageMetrics.pageHeight}px`,
         margin: '0 auto',
         background: 'white',
       }
+    },
+
+    isLandscape() {
+      return this.orientation === 'landscape'
     },
 
     coverData() {
@@ -446,6 +453,13 @@ export default {
         .map((x) => x && x.url)
         .filter(Boolean)
         .slice(0, 4)
+    },
+
+    formatPrice(value) {
+      if (value == null || value === '') return ''
+      const n = Number(value)
+      if (Number.isNaN(n)) return String(value)
+      return `$${n.toFixed(2)}`
     },
   },
 }

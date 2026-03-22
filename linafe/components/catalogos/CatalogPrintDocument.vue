@@ -39,45 +39,56 @@
 
       <!-- GRID -->
       <div
-        v-else-if="page.layout && page.layout.startsWith('grid')"
-        class="content"
+        v-else-if="isGridPage(page)"
+        class="content content-grid"
         :class="pageClass(page)"
+        :style="contentStyle(page)"
       >
-        <div
-          v-for="item in page.items"
-          :key="item.product_id || item.sku"
-          class="product-card"
-          :class="cardStyleClass"
-        >
+        <div class="content-grid-inner" :style="gridStyle(page)">
           <div
-            v-if="showImages"
-            ref="productImageWrap"
-            class="product-image-wrap"
+            v-for="item in page.items"
+            :key="item.product_id || item.sku"
+            class="product-card"
+            :class="cardStyleClass"
+            :style="productCardStyle(page)"
           >
-            <img class="product-image" :src="selectImage(item)" alt="" />
-          </div>
-
-          <div ref="productInfo" class="product-info">
-            <div v-if="showBrand && item.brand_name" class="brand">
-              {{ item.brand_name }}
+            <div
+              v-if="showImages"
+              ref="productImageWrap"
+              class="product-image-wrap"
+            >
+              <img class="product-image" :src="selectImage(item)" alt="" />
             </div>
 
-            <div v-if="showSku" class="sku">{{ item.sku }}</div>
+            <div ref="productInfo" class="product-info">
+              <div v-if="showBrand && item.brand_name" class="brand">
+                {{ item.brand_name }}
+              </div>
 
-            <div v-if="showDescription && item.description" class="description">
-              {{ item.description }}
-            </div>
+              <div v-if="showSku" class="sku">{{ item.sku }}</div>
 
-            <div v-if="showPrice" class="price">
-              {{ formatPrice(item.price) }}
-            </div>
+              <div
+                v-if="showDescription && item.description"
+                class="description"
+              >
+                {{ item.description }}
+              </div>
 
-            <div v-if="showMinMax" class="minmax">
-              <span v-if="item.min_qty !== null">Min: {{ item.min_qty }}</span>
-              <span v-if="item.min_qty !== null && item.max_qty !== null">
-                &emsp;·&emsp;
-              </span>
-              <span v-if="item.max_qty !== null">Max: {{ item.max_qty }}</span>
+              <div v-if="showPrice" class="price">
+                {{ formatPrice(item.price) }}
+              </div>
+
+              <div v-if="showMinMax" class="minmax">
+                <span v-if="item.min_qty !== null"
+                  >Min: {{ item.min_qty }}</span
+                >
+                <span v-if="item.min_qty !== null && item.max_qty !== null">
+                  &emsp;·&emsp;
+                </span>
+                <span v-if="item.max_qty !== null"
+                  >Max: {{ item.max_qty }}</span
+                >
+              </div>
             </div>
           </div>
         </div>
@@ -188,6 +199,8 @@
 </template>
 
 <script>
+import { computeCatalogLayout } from '@/utils/catalogLayout'
+
 export default {
   name: 'CatalogPrintDocument',
   props: {
@@ -233,46 +246,71 @@ export default {
     isLandscape() {
       return this.doc && this.doc.orientation === 'landscape'
     },
-
-    gridLayoutClass() {
-      if (!this.doc || !this.doc.pages) return ''
-      if (this.doc.pages.length < 2) return '' // si no hay página 2, no asumimos layout de grid
-      const page = this.doc.pages[1] // asumimos que la página 2 define el layout del grid
-      if (!page) return ''
-      switch (page.layout) {
-        case 'grid_2x3':
-          return 'layout-grid-2x3'
-        case 'grid_2x4':
-          return 'layout-grid-2x4'
-        case 'grid_2x5':
-          return 'layout-grid-2x5'
-        case 'grid_2x6':
-          return 'layout-grid-2x6'
-        case 'grid_3x3':
-          return 'layout-grid-3x3'
-        case 'grid_3x4':
-          return 'layout-grid-3x4'
-        case 'grid_3x5':
-          return 'layout-grid-3x5'
-        default:
-          return 'unknown'
-      }
-    },
   },
 
   methods: {
     pageClass(page) {
       return {
         cover: page.layout === 'cover',
-        'layout-grid-2x3': page.layout === 'grid_2x3',
-        'layout-grid-2x4': page.layout === 'grid_2x4',
-        'layout-grid-2x5': page.layout === 'grid_2x5',
-        'layout-grid-2x6': page.layout === 'grid_2x6',
-        'layout-grid-3x3': page.layout === 'grid_3x3',
-        'layout-grid-3x4': page.layout === 'grid_3x4',
-        'layout-grid-3x5': page.layout === 'grid_3x5',
+        'layout-grid-2': page.layout === 'grid_2',
+        'layout-grid-3': page.layout === 'grid_3',
         landscape: this.isLandscape,
         portrait: !this.isLandscape,
+      }
+    },
+
+    pageMetrics(page) {
+      return computeCatalogLayout({
+        layout: page && page.layout ? page.layout : 'grid_2',
+        orientation: this.isLandscape ? 'landscape' : 'portrait',
+        settings: this.doc && this.doc.settings ? this.doc.settings : {},
+      })
+    },
+
+    isGridPage(page) {
+      return !!(page && (page.layout === 'grid_2' || page.layout === 'grid_3'))
+    },
+
+    contentStyle(page) {
+      if (!this.isGridPage(page)) return {}
+
+      const metrics = this.pageMetrics(page)
+
+      return {
+        height: `${metrics.contentHeight}px`,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+      }
+    },
+
+    gridStyle(page) {
+      if (!this.isGridPage(page)) return {}
+
+      const metrics = this.pageMetrics(page)
+      const landscapeCompensation = this.isLandscape ? 200 : 0
+
+      return {
+        // maxWidth: `${metrics.contentWidth}px`, --- IGNORE. USADO ANTES DE ULTIMO AJUSTE---
+        maxWidth: `${metrics.pageWidth + landscapeCompensation}px`,
+        display: 'grid',
+        gridTemplateColumns: `repeat(${metrics.columns}, 1fr)`,
+        gridTemplateRows: `repeat(${metrics.rowsPerPage}, ${metrics.cardHeight}px)`,
+        columnGap: `${metrics.columnGap || 8}px`,
+        rowGap: `${metrics.rowGap || 8}px`,
+        alignContent: 'start',
+      }
+    },
+
+    productCardStyle(page) {
+      if (!this.isGridPage(page)) return {}
+
+      const metrics = this.pageMetrics(page)
+
+      return {
+        height: `${metrics.cardHeight}px`,
+        minHeight: `${metrics.cardHeight}px`,
+        maxHeight: `${metrics.cardHeight}px`,
       }
     },
 
@@ -469,11 +507,12 @@ body {
   }
 }
 
-/* Padding interno */
+/* Padding interno
 .print-page {
   padding: var(--margin-top) var(--margin-right) var(--margin-bottom)
     var(--margin-left);
 }
+*/
 
 /* Dimensiones en pantalla (y en PDF también ayudan) */
 .print-page.portrait {
@@ -568,80 +607,15 @@ body {
 }
 
 /* =======================
-   GRID 2x3
+   GRID a 2 o  3 columnas
    ======================= */
-.content.layout-grid-2x3 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: var(--gap);
+.content-grid {
+  width: 100%;
+  align-content: start;
 }
 
-/* =======================
-   GRID 2x4
-   ======================= */
-.content.layout-grid-2x4 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  gap: var(--gap);
-}
-
-/* =======================
-   GRID 2x5
-   ======================= */
-.content.layout-grid-2x5 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: var(--gap);
-}
-
-/* =======================
-   GRID 2x6
-   ======================= */
-.content.layout-grid-2x6 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  gap: var(--gap);
-}
-
-/* =======================
-   GRID 3x3
-   ======================= */
-.content.layout-grid-3x3 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: var(--gap);
-}
-
-/* =======================
-   GRID 3x4
-   ======================= */
-.content.layout-grid-3x4 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  gap: var(--gap);
-}
-
-/* =======================
-   GRID 3x5
-   ======================= */
-.content.layout-grid-3x5 {
-  height: calc(100% - 18mm);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: var(--gap);
+.content-grid-inner {
+  box-sizing: border-box;
 }
 
 /* Card styles */
@@ -650,7 +624,7 @@ body {
   padding: 3.5mm;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: stretch;
   gap: var(--gap);
   overflow: hidden;
@@ -665,7 +639,7 @@ body {
 }
 
 .product-image-wrap {
-  flex: 0 0 35%;
+  flex: 0 0 72px;
   height: 100%;
   margin-top: 0;
   display: flex;
@@ -684,9 +658,10 @@ body {
 .product-info {
   flex: 1;
   min-width: 0;
-  margin-top: 10px;
+  margin-top: 0;
   display: grid;
   gap: 1.2mm;
+  align-content: start;
 }
 
 .row-top {
@@ -698,35 +673,39 @@ body {
   margin-right: inherit;
 }
 
-.sku {
-  font-size: 10pt;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.price {
-  font-size: 8pt;
-  color: var(--muted);
+.brand,
+.sku,
+.price,
+.minmax {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 60%;
 }
 
 .brand {
   font-size: 8.5pt;
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.sku {
+  font-size: 10pt;
+  font-weight: 700;
+}
+
+.price {
+  font-size: 8pt;
+  color: var(--muted);
 }
 
 .description {
   font-size: 10pt;
   color: var(--muted);
   line-height: 1.15;
-  max-height: 22mm;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .minmax {

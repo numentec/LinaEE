@@ -1338,18 +1338,19 @@ export const actions = {
     commit('UPDATE_COVER', { catalogId, patch })
   },
 
-  async ensureShareToken({ getters, commit }, { id }) {
-    const catalog = getters.byId(id)
+  async ensureShareToken({ getters, commit }, { catalogId }) {
+    const catalog = getters.byId(catalogId)
+
     if (!catalog) return ''
 
     if (catalog.share_token) return catalog.share_token
 
-    const res = await this.$api.ensureShareToken(id)
+    const res = await this.$api.ensureShareToken(catalogId)
     const token = res && res.share_token ? res.share_token : ''
 
     if (token) {
       commit('UPDATE_ITEM', {
-        id,
+        id: catalogId,
         patch: {
           share_token: token,
           updated_at: new Date().toISOString(),
@@ -1514,7 +1515,6 @@ export const actions = {
 
     try {
       // 1) Descarga binaria con axios (mantiene Authorization header vía interceptor)
-      // console.log('Iniciando descarga de PDF desde', job.downloadUrl)
       const res = await this.$axios.request({
         url: job.downloadUrl,
         method: 'GET',

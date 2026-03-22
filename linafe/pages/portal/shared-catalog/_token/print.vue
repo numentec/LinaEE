@@ -10,12 +10,6 @@ export default {
   components: { CatalogPrintDocument },
 
   async asyncData({ app, params, query }) {
-    // const { token } = params
-
-    // Si tienes proxy en nuxt.config.js, esto puede ser relativo.
-    // Si no, usa URL absoluta:
-    // const url = `/catalog/api/public/catalogos/${token}/`
-
     const doc = await app.$api.getPublicCatalog(params.token)
     const pdfMode = query && (query.pdf === '1' || query.pdf === 'true')
 
@@ -28,7 +22,11 @@ export default {
 
   mounted() {
     const done = () => {
-      window.__PDF_READY__ = true
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.__PDF_READY__ = true
+        })
+      })
     }
 
     this.$nextTick(() => {

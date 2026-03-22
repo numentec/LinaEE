@@ -77,6 +77,7 @@ export function computeCatalogLayout({
 
   const pageHeight = Math.round(pageWidth * (isLandscape ? 8.5 / 11 : 11 / 8.5))
 
+  // const horizontalPadding = orientation === 'landscape' ? 56 : 48
   const horizontalPadding = 48
   const verticalPadding = 40
   const columnGap = 8
@@ -100,8 +101,8 @@ export function computeCatalogLayout({
 
   /* Ajuste visual para eliminar espacio muerto al final de la card.
      Valor calibrado empíricamente para mantener consistencia en grid. */
-  const cardBottomSlackCompensation = 14
-  // const cardBottomSlackCompensation = columns === 3 ? 14 : 12
+  // const cardBottomSlackCompensation = 14
+  const cardBottomSlackCompensation = columns === 3 ? 16 : 14
 
   const textHeight = baseTextHeight + visibleInfoLines * lineHeight
 
