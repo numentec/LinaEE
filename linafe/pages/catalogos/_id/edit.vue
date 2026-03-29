@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-card outlined class="pa-3 mb-3">
-      <div class="d-flex align-center">
+      <div ref="catalogHeader" class="d-flex align-center">
         <v-btn icon @click="$router.push('/catalogos')">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
@@ -17,51 +17,106 @@
           </div>
         </div>
         <v-spacer />
-        <v-btn
-          color="primary"
-          class="mr-2"
-          :disabled="isCoverPage"
-          @click="openPicker"
-        >
-          <v-icon left>mdi-package-variant-closed-plus</v-icon>
-          Agregar productos
-        </v-btn>
-        <v-btn
-          v-if="lastSaveError"
-          small
-          outlined
-          :disabled="saving"
-          @click="saveCatalog()"
-        >
-          Reintentar
-        </v-btn>
+        <div class="d-none d-lg-flex align-center">
+          <v-btn
+            color="primary"
+            class="mr-2"
+            :disabled="isCoverPage"
+            @click="openPicker"
+          >
+            <v-icon left>mdi-package-variant-closed-plus</v-icon>
+            Agregar productos
+          </v-btn>
+          <v-btn
+            v-if="lastSaveError"
+            small
+            outlined
+            :disabled="saving"
+            @click="saveCatalog()"
+          >
+            Reintentar
+          </v-btn>
 
-        <v-btn class="mx-2" color="primary" @click="goPreview">
-          <v-icon left>mdi-file-eye-outline</v-icon>
-          Vista previa
-        </v-btn>
-        <v-btn class="mx-2" color="primary" @click="goPrint">
-          <v-icon left>mdi-printer</v-icon>
-          Imprimir
-        </v-btn>
-        <v-btn class="mr-2" outlined @click="openShare">
-          <v-icon left>mdi-share-variant</v-icon>
-          Compartir
-        </v-btn>
-        <v-btn class="mr-2" outlined @click="exportPdf">
-          <v-icon left>mdi-file-pdf-box</v-icon>
-          Exportar PDF
-        </v-btn>
-        <v-btn
-          class="mr-2"
-          color="primary"
-          :loading="saving"
-          :disabled="!hasPendingChanges || saving"
-          @click="saveCatalog"
-        >
-          <v-icon left>mdi-content-save</v-icon>
-          Guardar
-        </v-btn>
+          <v-btn class="mx-2" color="primary" @click="goPreview">
+            <v-icon left>mdi-file-eye-outline</v-icon>
+            Vista previa
+          </v-btn>
+          <!-- <v-btn class="mx-2" color="primary" @click="goPrint">
+            <v-icon left>mdi-printer</v-icon>
+            Imprimir
+          </v-btn> -->
+          <v-btn class="mr-2" outlined @click="openShare">
+            <v-icon left>mdi-share-variant</v-icon>
+            Compartir
+          </v-btn>
+          <v-btn class="mr-2" outlined @click="exportPdf">
+            <v-icon left>mdi-file-pdf-box</v-icon>
+            Exportar PDF
+          </v-btn>
+          <v-btn
+            class="mr-2"
+            color="primary"
+            :loading="saving"
+            :disabled="!hasPendingChanges || saving"
+            @click="saveCatalog"
+          >
+            <v-icon left>mdi-content-save</v-icon>
+            Guardar
+          </v-btn>
+        </div>
+
+        <v-menu offset-y left class="d-lg-none">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" class="d-lg-none" v-on="on">
+              <v-icon>mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list dense>
+            <v-list-item :disabled="isCoverPage" @click="openPicker">
+              <v-list-item-icon>
+                <v-icon>mdi-package-variant-closed-plus</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Agregar productos</v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              v-if="lastSaveError"
+              :disabled="saving"
+              @click="saveCatalog()"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-reload</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Reintentar</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="goPreview">
+              <v-list-item-icon>
+                <v-icon>mdi-file-eye-outline</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Vista previa</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="openShare">
+              <v-list-item-icon>
+                <v-icon>mdi-share-variant</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Compartir</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="exportPdf">
+              <v-list-item-icon>
+                <v-icon>mdi-file-pdf-box</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Exportar PDF</v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              :disabled="!hasPendingChanges || saving"
+              @click="saveCatalog"
+            >
+              <v-list-item-icon>
+                <v-icon>mdi-content-save</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Guardar</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
       <div class="d-flex">
         <v-spacer />
@@ -407,7 +462,7 @@
       </v-col>
 
       <!-- Propiedades -->
-      <v-col cols="12" md="3">
+      <v-col cols="12" lg="3">
         <v-sheet outlined class="pa-3">
           <div class="text-subtitle-2 font-weight-medium mb-2">Propiedades</div>
           <v-divider />
