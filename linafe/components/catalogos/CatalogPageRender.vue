@@ -9,25 +9,18 @@
             :style="{ backgroundImage: `url('${coverHeroUrl}')` }"
           />
           <div class="cover-overlay" :class="coverOverlayClass">
-            <div class="d-flex align-center mb-4">
+            <div class="cover-content">
               <v-img
                 v-if="coverLogoUrl"
                 ref="img-cover"
+                class="cover-logo"
                 :src="coverLogoUrl"
-                :lazy-src="coverLogoUrl"
-                width="56"
-                height="56"
+                alt=""
                 contain
-                class="mr-3"
               />
-              <!-- <div class="title-overlay pa-3 rounded"> -->
-              <div class="pa-3 rounded">
-                <div class="text-h5 font-weight-bold cover-title">
-                  {{ coverTitle }}
-                </div>
-                <div class="text-body-2 text--secondary">
-                  {{ coverSubtitle }}
-                </div>
+              <div class="cover-title">{{ coverTitle }}</div>
+              <div v-if="coverSubtitle" class="cover-subtitle">
+                {{ coverSubtitle }}
               </div>
             </div>
           </div>
@@ -236,20 +229,17 @@ export default {
       return this.page && this.page.layout === 'cover'
     },
 
+    isLandscape() {
+      return this.orientation === 'landscape'
+    },
+
     paperStyle() {
-      // Verificar esta compensacion de 96px, que se agregó para evitar que el contenido se corte al imprimir en PDF.
-      // Revisar en diferentes navegadores y ajustar si es necesario.
-      const landscapeCompensation = this.orientation === 'landscape' ? 96 : 0
       return {
-        width: `${this.pageMetrics.pageWidth + landscapeCompensation}px`,
+        width: `${this.pageMetrics.effectivePageWidth}px`,
         height: `${this.pageMetrics.pageHeight}px`,
         margin: '0 auto',
         background: 'white',
       }
-    },
-
-    isLandscape() {
-      return this.orientation === 'landscape'
     },
 
     coverData() {
@@ -308,6 +298,7 @@ export default {
         layout: this.layoutKey,
         orientation: this.orientation,
         settings: this.effectiveSettings,
+        surface: 'canvas',
       })
     },
 
@@ -498,6 +489,8 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
+  display: grid;
+  place-items: center;
   border-radius: 6px;
   overflow: hidden;
   background: #f2f2f2;
@@ -513,6 +506,15 @@ export default {
 
 .cover-title {
   color: var(--cat-primary);
+  font-size: 30pt;
+  font-weight: 700;
+}
+
+.cover-subtitle {
+  color: var(--cat-primary);
+  margin-top: 6mm;
+  font-size: 14pt;
+  opacity: 0.95;
 }
 
 .cat-card-outlined:hover {
@@ -527,7 +529,8 @@ export default {
 .cover-overlay {
   position: absolute;
   inset: 0;
-  padding: 24px;
+  display: grid;
+  place-items: center;
   /* background: linear-gradient(
     rgba(255, 255, 255, 0.92),
     rgba(255, 255, 255, 0.78)
@@ -549,7 +552,8 @@ export default {
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
-.cover-overlay-dark .cover-title {
+.cover-overlay-dark .cover-title,
+.cover-overlay-dark .cover-subtitle {
   color: white;
 }
 
@@ -672,5 +676,20 @@ export default {
   transform: translateX(-50%);
   z-index: 2;
   pointer-events: none;
+}
+
+.cover-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 10mm;
+  max-width: 160mm;
+}
+
+.cover-logo {
+  margin-top: 10mm;
+  max-height: 22mm;
+  max-width: 80mm;
+  object-fit: contain;
 }
 </style>

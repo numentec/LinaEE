@@ -20,6 +20,7 @@ export function computeCatalogLayout({
   orientation = 'portrait',
   settings = {},
   pageWidth = 700,
+  surface = 'canvas', // 'canvas' o 'pdf'
 }) {
   if (layout === 'hero_1') {
     return {
@@ -77,6 +78,13 @@ export function computeCatalogLayout({
 
   const pageHeight = Math.round(pageWidth * (isLandscape ? 8.5 / 11 : 11 / 8.5))
 
+  // Ajustes calibrados visualmente para alinear canvas y PDF
+  const landscapeWidthCompensation = isLandscape
+    ? surface === 'pdf'
+      ? 200
+      : 96
+    : 0
+
   // const horizontalPadding = orientation === 'landscape' ? 56 : 48
   const horizontalPadding = 48
   const verticalPadding = 40
@@ -120,6 +128,7 @@ export function computeCatalogLayout({
   return {
     layout: normalizedLayout,
     pageWidth,
+    effectivePageWidth: pageWidth + landscapeWidthCompensation,
     pageHeight,
     contentWidth,
     contentHeight,
@@ -133,5 +142,6 @@ export function computeCatalogLayout({
     verticalPadding,
     columnGap,
     rowGap,
+    landscapeWidthCompensation,
   }
 }

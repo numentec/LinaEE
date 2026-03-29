@@ -20,20 +20,24 @@
         </div>
 
         <div class="cover-content">
-          <div class="cover-title">
-            {{ (page.cover && page.cover.title) || doc.name }}
-          </div>
-
-          <div v-if="page.cover && page.cover.subtitle" class="cover-subtitle">
-            {{ page.cover.subtitle }}
-          </div>
-
           <img
             v-if="page.cover && page.cover.logo_url"
             class="cover-logo"
             :src="page.cover.logo_url"
             alt=""
           />
+
+          <div class="cover-title" :style="{ color: titleColorClass }">
+            {{ (page.cover && page.cover.title) || doc.name }}
+          </div>
+
+          <div
+            v-if="page.cover && page.cover.subtitle"
+            class="cover-subtitle"
+            :style="{ color: titleColorClass }"
+          >
+            {{ page.cover.subtitle }}
+          </div>
         </div>
       </div>
 
@@ -235,7 +239,13 @@ export default {
 
     coverOverlayClass() {
       const v = this.doc && this.doc.theme ? this.doc.theme.cover_overlay : ''
-      return v === 'dark' ? 'overlay-dark' : 'overlay-light'
+      const vv = v !== '' ? `overlay-${v}` : ''
+      return vv
+    },
+
+    titleColorClass() {
+      const v = this.doc && this.doc.theme ? this.doc.theme.primary : '#FFFFFF'
+      return v
     },
 
     cardStyleClass() {
@@ -264,6 +274,7 @@ export default {
         layout: page && page.layout ? page.layout : 'grid_2',
         orientation: this.isLandscape ? 'landscape' : 'portrait',
         settings: this.doc && this.doc.settings ? this.doc.settings : {},
+        surface: 'pdf',
       })
     },
 
@@ -288,11 +299,10 @@ export default {
       if (!this.isGridPage(page)) return {}
 
       const metrics = this.pageMetrics(page)
-      const landscapeCompensation = this.isLandscape ? 200 : 0
 
       return {
-        // maxWidth: `${metrics.contentWidth}px`, --- IGNORE. USADO ANTES DE ULTIMO AJUSTE---
-        maxWidth: `${metrics.pageWidth + landscapeCompensation}px`,
+        width: `${metrics.effectivePageWidth}px`,
+        maxWidth: `${metrics.effectivePageWidth}px`,
         display: 'grid',
         gridTemplateColumns: `repeat(${metrics.columns}, 1fr)`,
         gridTemplateRows: `repeat(${metrics.rowsPerPage}, ${metrics.cardHeight}px)`,
@@ -589,13 +599,11 @@ body {
 .cover-title {
   font-size: 30pt;
   font-weight: 700;
-  color: #fff;
 }
 
 .cover-subtitle {
   margin-top: 6mm;
   font-size: 14pt;
-  color: #fff;
   opacity: 0.95;
 }
 
