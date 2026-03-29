@@ -734,7 +734,8 @@
                   />
 
                   <div class="text-caption text--secondary">
-                    El layout afecta cuántos productos entran por página.
+                    El layout define columnas. La app calcula automáticamente
+                    cuántos productos caben por página.
                   </div>
                 </div>
               </v-expansion-panel-content>
@@ -767,18 +768,14 @@
             @change="onDistributeLayoutChange"
           />
 
-          <v-select
-            v-model="distributeCapacity"
-            :items="capacityItems"
-            label="Productos por página"
-            outlined
-            dense
-            hide-details
-          />
+          <div class="text-body-2 text--secondary mb-2">
+            Capacidad estimada:
+            <strong>{{ distributeCapacity }}</strong> productos por página
+          </div>
 
           <v-alert dense text type="info" class="mt-4">
-            Tip: Para catálogos grandes, <strong>Grid 2 x 4</strong> suele ser
-            el mejor balance entre lectura y número de páginas.
+            Tip: Elige 2 o 3 columnas y la app calculará automáticamente cuántos
+            productos caben según orientación y contenido visible.
           </v-alert>
         </v-card-text>
 
@@ -986,6 +983,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import { computeCatalogLayout } from '@/utils/catalogLayout'
 import ProductPickerDialog from '~/components/catalogos/ProductPickerDialog.vue'
 import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
 
@@ -1016,7 +1014,7 @@ export default {
       showDistributeDialog: false,
 
       showNewPageDialog: false,
-      newPageLayout: 'grid_2x4',
+      newPageLayout: 'grid_2',
       newPageAddProducts: true,
 
       showRenameDialog: false,
@@ -1025,20 +1023,14 @@ export default {
 
       pickerTargetIndex: null,
 
-      distributeLayout: 'grid_2x4',
+      distributeLayout: 'grid_2',
       distributeCapacity: 8,
-      capacityItems: [1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 15],
 
       layoutItems: [
         { text: 'Destacado 1 producto (HERO)', value: 'hero_1' },
         { text: 'Destacado 2 productos (HERO)', value: 'hero_2' },
-        { text: 'Cuadrícula 2×3 (6)', value: 'grid_2x3' },
-        { text: 'Cuadrícula 2×4 (8)', value: 'grid_2x4' },
-        { text: 'Cuadrícula 2×5 (10)', value: 'grid_2x5' },
-        { text: 'Cuadrícula 2×6 (12)', value: 'grid_2x6' },
-        { text: 'Cuadrícula 3×3 (9)', value: 'grid_3x3' },
-        { text: 'Cuadrícula 3×4 (12)', value: 'grid_3x4' },
-        { text: 'Cuadrícula 3×5 (15)', value: 'grid_3x5' },
+        { text: 'Cuadrícula a 2 columnas', value: 'grid_2' },
+        { text: 'Cuadrícula a 3 columnas', value: 'grid_3' },
         { text: 'Lista (6)', value: 'list_compact' },
       ],
 
@@ -1137,23 +1129,11 @@ export default {
     },
 
     layoutKey() {
-      return (this.page && this.page.layout) || 'grid_2x4'
+      return (this.page && this.page.layout) || 'grid_2'
     },
 
     layoutCapacity() {
-      const map = {
-        hero_1: 1,
-        hero_2: 2,
-        grid_2x3: 6,
-        grid_2x4: 8,
-        grid_2x5: 10,
-        grid_2x6: 12,
-        grid_3x3: 9,
-        grid_3x4: 12,
-        grid_3x5: 15,
-        list_compact: 6,
-      }
-      return map[this.layoutKey] || 8
+      return this.capacityForLayout(this.layoutKey)
     },
 
     pageItems() {
@@ -1290,11 +1270,76 @@ export default {
       )
     },
 
+    productPages() {
+      const pages = Array.isArray(this.catalog?.pages) ? this.catalog.pages : []
+
+      return pages.filter((p) => p && p.layout !== 'cover')
+    },
+
+    currentAutoCapacity() {
+      return this.capacityForLayout(this.layoutKey)
+    },
+
+    totalPlacedItems() {
+      return this.productPages.reduce((acc, page) => {
+        const items = Array.isArray(page.items) ? page.items : []
+        return acc + items.length
+      }, 0)
+    },
+
+    needsRedistribute() {
+      const pages = this.productPages
+      if (!pages.length) return false
+
+      const expectedLayout = this.layoutKey
+      const expectedCapacity = this.currentAutoCapacity
+
+      if (!expectedCapacity || this.totalPlacedItems === 0) return false
+
+      // 1) Si alguna página no coincide con el layout actual, conviene redistribuir
+      const hasLayoutMismatch = pages.some(
+        (page) => page.layout !== expectedLayout
+      )
+      if (hasLayoutMismatch) return true
+
+      // 2) Si alguna página supera la capacidad actual, conviene redistribuir
+      const hasOverflow = pages.some((page) => {
+        const items = Array.isArray(page.items) ? page.items : []
+        return items.length > expectedCapacity
+      })
+      if (hasOverflow) return true
+
+      // 3) Si con la capacidad actual deberían existir menos páginas, conviene redistribuir
+      const idealPageCount = Math.max(
+        1,
+        Math.ceil(this.totalPlacedItems / expectedCapacity)
+      )
+
+      if (pages.length !== idealPageCount) return true
+
+      // 4) Si una página intermedia tiene huecos y páginas posteriores tienen items,
+      //    la distribución ya no es óptima con la capacidad actual
+      const hasGapBeforeLast = pages.some((page, index) => {
+        if (index >= pages.length - 1) return false
+
+        const items = Array.isArray(page.items) ? page.items : []
+        if (items.length >= expectedCapacity) return false
+
+        return pages.slice(index + 1).some((nextPage) => {
+          const nextItems = Array.isArray(nextPage.items) ? nextPage.items : []
+          return nextItems.length > 0
+        })
+      })
+
+      return hasGapBeforeLast
+    },
+
     canAutoDistribute() {
       if (this.isCoverPage) return false
       if (!this.page) return false
+      if (!this.totalPlacedItems) return false
 
-      return this.needsReflow || this.pageItems.length > this.layoutCapacity
+      return this.needsReflow || this.needsRedistribute
     },
 
     autoDistributeLabel() {
@@ -1513,20 +1558,35 @@ export default {
     },
 
     capacityForLayout(layout) {
-      const map = {
-        hero_1: 1,
-        hero_2: 2,
-        grid_2x3: 6,
-        grid_2x4: 8,
-        grid_2x5: 10,
-        grid_2x6: 12,
-        grid_3x3: 9,
-        grid_3x4: 12,
-        grid_3x5: 15,
-        list_compact: 6,
-      }
-      return map[layout] || 8
+      return computeCatalogLayout({
+        layout,
+        orientation: this.catalog?.orientation || 'portrait',
+        settings: this.catalogSettings || {},
+      }).capacity
     },
+
+    currentAutoLayoutCapacity() {
+      return this.capacityForLayout(this.layoutKey)
+    },
+
+    // needsRedistribute() {
+    //   const pages = Array.isArray(this.catalog?.pages) ? this.catalog.pages : []
+    //   const productPages = pages.filter((p) => p && p.layout !== 'cover')
+
+    //   if (!productPages.length) return false
+
+    //   const expectedLayout = this.layoutKey
+    //   const expectedCapacity = this.currentAutoLayoutCapacity()
+
+    //   for (const page of productPages) {
+    //     const items = Array.isArray(page.items) ? page.items : []
+
+    //     if (page.layout !== expectedLayout) return true
+    //     if (items.length > expectedCapacity) return true
+    //   }
+
+    //   return false
+    // },
 
     openDistributeDialog() {
       this.distributeLayout = this.layoutKey
@@ -1554,8 +1614,8 @@ export default {
 
     openNewPageDialog() {
       const map = {
-        Minimal: 'grid_2x4',
-        Fashion: 'grid_3x3',
+        Minimal: 'grid_2',
+        Fashion: 'grid_3',
         Promo: 'list_compact',
       }
 

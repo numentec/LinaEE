@@ -9,25 +9,18 @@
             :style="{ backgroundImage: `url('${coverHeroUrl}')` }"
           />
           <div class="cover-overlay" :class="coverOverlayClass">
-            <div class="d-flex align-center mb-4">
+            <div class="cover-content">
               <v-img
                 v-if="coverLogoUrl"
                 ref="img-cover"
+                class="cover-logo"
                 :src="coverLogoUrl"
-                :lazy-src="coverLogoUrl"
-                width="56"
-                height="56"
+                alt=""
                 contain
-                class="mr-3"
               />
-              <!-- <div class="title-overlay pa-3 rounded"> -->
-              <div class="pa-3 rounded">
-                <div class="text-h5 font-weight-bold cover-title">
-                  {{ coverTitle }}
-                </div>
-                <div class="text-body-2 text--secondary">
-                  {{ coverSubtitle }}
-                </div>
+              <div class="cover-title">{{ coverTitle }}</div>
+              <div v-if="coverSubtitle" class="cover-subtitle">
+                {{ coverSubtitle }}
               </div>
             </div>
           </div>
@@ -126,8 +119,9 @@
             >
               <v-card
                 :outlined="effectiveTheme.card_style !== 'flat'"
-                class="pa-2 cat-card"
+                class="pa-1 cat-card"
                 :class="cardClass"
+                :style="cardInlineStyle"
               >
                 <div class="d-flex">
                   <div>
@@ -160,14 +154,14 @@
                   <div class="flex-grow-1">
                     <div
                       v-if="effectiveSettings.show_brand"
-                      class="text-caption text--secondary"
+                      class="text-caption text--secondary item-brand"
                     >
                       {{ p.brand_name }}
                     </div>
 
                     <div
                       v-if="effectiveSettings.show_sku"
-                      class="text-subtitle-2 font-weight-medium"
+                      class="text-subtitle-2 font-weight-medium item-sku"
                     >
                       {{ p.sku }}
                     </div>
@@ -179,12 +173,12 @@
                       {{ p.description }}
                     </div>
 
-                    <div class="text-caption text--secondary mt-1">
+                    <div class="text-caption text--secondary item-price">
                       <span v-if="effectiveSettings.show_price">
-                        Precio: {{ p.price }}
+                        {{ formatPrice(p.price) }}
                       </span>
                     </div>
-                    <div class="text-caption text--secondary mt-1">
+                    <div class="text-caption text--secondary item-minmax">
                       <span v-if="effectiveSettings.show_min_max">
                         Min: {{ p.min_qty }} · Max: {{ p.max_qty }}
                       </span>
@@ -204,6 +198,8 @@
 </template>
 
 <script>
+import { computeCatalogLayout } from '@/utils/catalogLayout'
+
 export default {
   name: 'CatalogPageRender',
 
@@ -233,29 +229,14 @@ export default {
       return this.page && this.page.layout === 'cover'
     },
 
+    isLandscape() {
+      return this.orientation === 'landscape'
+    },
+
     paperStyle() {
-      const portraitRatio = 11 / 8.5
-      const landscapeRatio = 8.5 / 11
-
-      const isLand = this.orientation === 'landscape'
-      const ratio = isLand ? landscapeRatio : portraitRatio
-
-      // if (this.isPrint) {
-      //   return {
-      //     width: '100%',
-      //     height: 'auto',
-      //     aspectRatio: `${isLand ? '11 / 8.5' : '8.5 / 11'}`,
-      //     margin: '0 auto',
-      //     background: 'white',
-      //   }
-      // }
-
-      const width = 700
-      const height = Math.round(width * ratio)
-
       return {
-        width: `${width}px`,
-        height: `${height}px`,
+        width: `${this.pageMetrics.effectivePageWidth}px`,
+        height: `${this.pageMetrics.pageHeight}px`,
         margin: '0 auto',
         background: 'white',
       }
@@ -283,27 +264,42 @@ export default {
     },
 
     layoutKey() {
-      return (this.page && this.page.layout) || 'grid_2x4'
+      return (this.page && this.page.layout) || 'grid_2'
     },
 
     capacity() {
-      const map = {
-        hero_1: 1,
-        hero_2: 2,
-        grid_2x3: 6,
-        grid_2x4: 8,
-        grid_2x5: 10,
-        grid_2x6: 12,
-        grid_3x3: 9,
-        grid_3x4: 12,
-        grid_3x5: 15,
-        list_compact: 6,
-      }
-      return map[this.layoutKey] || 8
+      return this.pageMetrics.capacity || 8
     },
 
     layout() {
-      return (this.page && this.page.layout) || 'grid_2x4'
+      return (this.page && this.page.layout) || 'grid_2'
+    },
+
+    layoutColumns() {
+      if (this.layoutKey === 'grid_3') return 3
+      if (this.layoutKey === 'grid_2') return 2
+      return 1
+    },
+
+    visibleInfoLines() {
+      let lines = 0
+
+      if (this.effectiveSettings.show_brand) lines += 1
+      if (this.effectiveSettings.show_sku) lines += 1
+      if (this.effectiveSettings.show_description) lines += 2
+      if (this.effectiveSettings.show_price) lines += 1
+      if (this.effectiveSettings.show_min_max) lines += 1
+
+      return lines
+    },
+
+    pageMetrics() {
+      return computeCatalogLayout({
+        layout: this.layoutKey,
+        orientation: this.orientation,
+        settings: this.effectiveSettings,
+        surface: 'canvas',
+      })
     },
 
     items() {
@@ -371,13 +367,8 @@ export default {
       if (this.layoutKey === 'list_compact') return { md: 12 }
       if (this.layoutKey === 'hero_1') return { md: 12 }
       if (this.layoutKey === 'hero_2') return { md: 12 }
-      if (this.layoutKey === 'grid_3x3') return { md: 4 }
-      if (this.layoutKey === 'grid_2x3') return { md: 6 }
-      if (this.layoutKey === 'grid_2x4') return { md: 6 }
-      if (this.layoutKey === 'grid_2x5') return { md: 6 }
-      if (this.layoutKey === 'grid_2x6') return { md: 6 }
-      if (this.layoutKey === 'grid_3x4') return { md: 4 }
-      if (this.layoutKey === 'grid_3x5') return { md: 4 }
+      if (this.layoutKey === 'grid_3') return { md: 4 }
+      if (this.layoutKey === 'grid_2') return { md: 6 }
       return { md: 6 }
     },
 
@@ -401,6 +392,15 @@ export default {
       const style = this.effectiveTheme.card_style
       if (style === 'flat') return 'cat-card-flat'
       return 'cat-card-outlined'
+    },
+
+    cardInlineStyle() {
+      if (this.layoutKey !== 'grid_2' && this.layoutKey !== 'grid_3') return {}
+
+      return {
+        height: `${this.pageMetrics.cardHeight}px`,
+        overflow: 'hidden',
+      }
     },
 
     coverOverlayClass() {
@@ -445,11 +445,27 @@ export default {
         .filter(Boolean)
         .slice(0, 4)
     },
+
+    formatPrice(value) {
+      if (value == null || value === '') return ''
+      const n = Number(value)
+      if (Number.isNaN(n)) return String(value)
+      return `$${n.toFixed(2)}`
+    },
   },
 }
 </script>
 
 <style scoped>
+.item-brand,
+.item-sku,
+.item-price,
+.item-minmax {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .item-desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -458,10 +474,23 @@ export default {
   overflow: hidden;
 }
 
+.cat-card {
+  border-color: rgba(0, 0, 0, 0.12);
+  height: 100%;
+}
+
+.img-item-wrap {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 72px;
+}
+
 .cover {
   width: 100%;
   height: 100%;
   position: relative;
+  display: grid;
+  place-items: center;
   border-radius: 6px;
   overflow: hidden;
   background: #f2f2f2;
@@ -477,10 +506,15 @@ export default {
 
 .cover-title {
   color: var(--cat-primary);
+  font-size: 30pt;
+  font-weight: 700;
 }
 
-.cat-card {
-  border-color: rgba(0, 0, 0, 0.12);
+.cover-subtitle {
+  color: var(--cat-primary);
+  margin-top: 6mm;
+  font-size: 14pt;
+  opacity: 0.95;
 }
 
 .cat-card-outlined:hover {
@@ -495,7 +529,8 @@ export default {
 .cover-overlay {
   position: absolute;
   inset: 0;
-  padding: 24px;
+  display: grid;
+  place-items: center;
   /* background: linear-gradient(
     rgba(255, 255, 255, 0.92),
     rgba(255, 255, 255, 0.78)
@@ -517,7 +552,8 @@ export default {
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
-.cover-overlay-dark .cover-title {
+.cover-overlay-dark .cover-title,
+.cover-overlay-dark .cover-subtitle {
   color: white;
 }
 
@@ -633,11 +669,6 @@ export default {
   opacity: 0.8;
 }
 
-.img-item-wrap {
-  position: relative;
-  overflow: hidden;
-}
-
 .thumb-more {
   position: absolute;
   left: 50%;
@@ -645,5 +676,20 @@ export default {
   transform: translateX(-50%);
   z-index: 2;
   pointer-events: none;
+}
+
+.cover-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 10mm;
+  max-width: 160mm;
+}
+
+.cover-logo {
+  margin-top: 10mm;
+  max-height: 22mm;
+  max-width: 80mm;
+  object-fit: contain;
 }
 </style>
