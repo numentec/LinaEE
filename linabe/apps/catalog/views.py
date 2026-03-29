@@ -1,7 +1,11 @@
+import os
+
 from django.conf import settings
 from django.utils import timezone
+from django.utils.text import get_valid_filename
 from django.http import HttpResponse, FileResponse, Http404
 from django.contrib.auth import get_user_model
+from rest_framework import parsers
 
 from copy import deepcopy
 
@@ -70,6 +74,45 @@ def is_ulid(valor):
         return True
     except (ValueError, TypeError):
         return False
+
+
+CATALOG_IMAGE_LIBRARY = {
+    'logos': os.path.join('images', 'catalogs', 'logos'),
+    'covers': os.path.join('images', 'catalogs', 'covers'),
+}
+
+CATALOG_IMAGE_ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.svg'}
+CATALOG_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024
+
+
+def get_catalog_image_directory(asset_type):
+    relative_dir = CATALOG_IMAGE_LIBRARY.get(asset_type)
+
+    print(f"Asset type: {asset_type}, Relative dir: {relative_dir}")  # Debug log
+
+    if not relative_dir:
+        raise NotFound('Tipo de imagen no soportado.')
+
+    absolute_dir = os.path.join(settings.MEDIA_ROOT, relative_dir)
+    os.makedirs(absolute_dir, exist_ok=True)
+
+    return relative_dir, absolute_dir
+
+
+def build_catalog_image_payload(request, relative_dir, filename, absolute_path):
+    relative_path = os.path.join(relative_dir, filename).replace('\\', '/')
+    media_path = urljoin(settings.MEDIA_URL, relative_path)
+
+    return {
+        'name': filename,
+        'url': request.build_absolute_uri(media_path),
+        'relative_url': media_path,
+        'size': os.path.getsize(absolute_path),
+        'modified_at': timezone.datetime.fromtimestamp(
+            os.path.getmtime(absolute_path),
+            tz=timezone.utc,
+        ).isoformat(),
+    }
 
 
 class CategoryViewSet(CommonViewSet):
@@ -203,6 +246,82 @@ class CatalogViewSet(CommonViewSet):
             {'share_token': catalog.share_token},
             status=status.HTTP_200_OK,
         )
+
+
+class CatalogImageLibraryAPIView(APIView):
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+
+    def get(self, request, asset_type):
+        relative_dir, absolute_dir = get_catalog_image_directory(asset_type)
+
+        items = []
+        for entry in os.scandir(absolute_dir):
+            if not entry.is_file():
+                continue
+
+            _, ext = os.path.splitext(entry.name)
+            if ext.lower() not in CATALOG_IMAGE_ALLOWED_EXTENSIONS:
+                continue
+
+            items.append(
+                build_catalog_image_payload(
+                    request,
+                    relative_dir,
+                    entry.name,
+                    entry.path,
+                )
+            )
+
+        items.sort(key=lambda item: item['modified_at'], reverse=True)
+        return Response({'results': items}, status=status.HTTP_200_OK)
+
+    def post(self, request, asset_type):
+        relative_dir, absolute_dir = get_catalog_image_directory(asset_type)
+        upload = request.FILES.get('file')
+
+        if not upload:
+            return Response(
+                {'detail': 'Debe adjuntar un archivo en el campo "file".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        _, ext = os.path.splitext(upload.name or '')
+        ext = ext.lower()
+
+        if ext not in CATALOG_IMAGE_ALLOWED_EXTENSIONS:
+            return Response(
+                {
+                    'detail': (
+                        'Formato no permitido. Use PNG, JPG, JPEG, WEBP o SVG.'
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if upload.size > CATALOG_IMAGE_MAX_SIZE_BYTES:
+            return Response(
+                {'detail': 'La imagen no puede exceder 5 MB.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        base_name = get_valid_filename(os.path.splitext(upload.name)[0]) or 'imagen'
+        filename = f'{base_name}-{uuid.uuid4().hex[:8]}{ext}'
+        absolute_path = os.path.join(absolute_dir, filename)
+
+        with open(absolute_path, 'wb+') as destination:
+            for chunk in upload.chunks():
+                destination.write(chunk)
+
+        payload = build_catalog_image_payload(
+            request,
+            relative_dir,
+            filename,
+            absolute_path,
+        )
+
+        return Response(payload, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='regenerate-share-token')
     def regenerate_share_token(self, request, pk=None):

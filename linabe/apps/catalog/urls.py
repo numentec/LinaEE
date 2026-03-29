@@ -15,6 +15,7 @@ from .views import (
     CatalogDetailView,
     PublicCatalogByTokenView,
     MockProductsAPIView,
+    CatalogImageLibraryAPIView,
 )
 from .api_pdf_jobs import pdf_job_status, pdf_job_download
 app_name = "catalog"
@@ -52,6 +53,7 @@ urlpatterns = [
     
     # Endpoint para mock de productos (solo para pruebas, no debe usarse en producción)
     path('mock/productos/', MockProductsAPIView.as_view(), name='mock-productos'),
+    path('api/assets/<str:asset_type>/', CatalogImageLibraryAPIView.as_view(), name='catalog-image-library'),
     
     path('', include(router.urls)),
 ]
