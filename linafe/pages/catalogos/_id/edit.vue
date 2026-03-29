@@ -567,24 +567,61 @@
                     @input="onCoverChange({ subtitle: $event })"
                   />
 
-                  <v-text-field
-                    :value="coverLogoUrl"
-                    label="Logo URL"
-                    outlined
-                    dense
-                    hide-details
-                    class="mb-3"
-                    @input="onCoverChange({ logo_url: $event })"
-                  />
+                  <div class="d-flex align-center mb-3">
+                    <v-text-field
+                      ref="coverLogoInput"
+                      :value="coverLogoUrl"
+                      label="Logo URL"
+                      outlined
+                      dense
+                      hide-details
+                      class="flex-grow-1"
+                      @input="onCoverChange({ logo_url: $event })"
+                    />
+                    <v-tooltip bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          class="ml-2"
+                          color="primary"
+                          v-bind="attrs"
+                          v-on="on"
+                          @click="showLogoPicker = true"
+                        >
+                          <v-icon>mdi-folder-image</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Seleccionar logo desde biblioteca</span>
+                    </v-tooltip>
+                  </div>
 
-                  <v-text-field
-                    :value="coverHeroUrl"
-                    label="Imagen de portada URL"
-                    outlined
-                    dense
-                    hide-details
-                    @input="onCoverChange({ hero_url: $event })"
-                  />
+                  <div class="d-flex align-center">
+                    <v-text-field
+                      ref="coverHeroInput"
+                      :value="coverHeroUrl"
+                      label="Imagen de portada URL"
+                      outlined
+                      dense
+                      hide-details
+                      class="flex-grow-1"
+                      @input="onCoverChange({ hero_url: $event })"
+                    />
+                    <v-tooltip bottom>
+                      <template #activator="{ on, attrs }">
+                        <v-btn
+                          icon
+                          class="ml-2"
+                          color="primary"
+                          v-bind="attrs"
+                          v-on="on"
+                          @click="showCoverPicker = true"
+                        >
+                          <v-icon>mdi-panorama</v-icon>
+                        </v-btn>
+                      </template>
+                      <span>Seleccionar fondo desde biblioteca</span>
+                    </v-tooltip>
+                  </div>
                 </div>
                 <div v-if="isHeroPage" class="mb-4">
                   <div class="text-subtitle-2 font-weight-medium mb-2">
@@ -977,6 +1014,18 @@
       </v-card>
     </v-dialog>
 
+    <ImagePickerDialog
+      v-model="showLogoPicker"
+      asset-type="logos"
+      @select="onAssetSelected('logo_url', $event)"
+    />
+
+    <ImagePickerDialog
+      v-model="showCoverPicker"
+      asset-type="covers"
+      @select="onAssetSelected('hero_url', $event)"
+    />
+
     <ProductPickerDialog v-model="showPicker" @add="onAddProducts" />
   </v-container>
 </template>
@@ -984,6 +1033,7 @@
 <script>
 import { mapState } from 'vuex'
 import { computeCatalogLayout } from '@/utils/catalogLayout'
+import ImagePickerDialog from '~/components/catalogos/ImagePickerDialog.vue'
 import ProductPickerDialog from '~/components/catalogos/ProductPickerDialog.vue'
 import CatalogPageRender from '~/components/catalogos/CatalogPageRender.vue'
 
@@ -991,6 +1041,7 @@ export default {
   name: 'CatalogosEditPage',
 
   components: {
+    ImagePickerDialog,
     ProductPickerDialog,
     CatalogPageRender,
   },
@@ -1010,6 +1061,8 @@ export default {
   data() {
     return {
       showPicker: false,
+      showLogoPicker: false,
+      showCoverPicker: false,
       showColorPicker: false,
       showDistributeDialog: false,
 
@@ -1755,6 +1808,11 @@ export default {
         catalogId,
         patch,
       })
+    },
+
+    onAssetSelected(field, url) {
+      if (!url) return
+      this.onCoverChange({ [field]: url })
     },
 
     async openShare() {
