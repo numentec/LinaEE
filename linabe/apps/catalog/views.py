@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework import authentication, permissions, generics, status
+from django.db import connections
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.viewsets import ModelViewSet
@@ -46,6 +47,7 @@ from .serializers import (
     CatalogDetailSerializer,
     CatalogDetailImageSerializer,
     MockProductSerializer,
+    CatalogProductSerializer,
 )
 from ..core.models import Customer, Cia
 
@@ -611,6 +613,220 @@ class MockProductsAPIView(APIView):
 
         serializer = MockProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ProductsAPIView(APIView):
+    """
+    Devuelve productos reales desde Oracle con paginación, filtros e imágenes locales.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
+    MAIN_IMAGE_EXTENSIONS_ORDER = ['.jpg', '.jpeg', '.png']
+    DEFAULT_PRODUCT_IMAGE_RELATIVE_PATH = os.path.join('images', 'no_image.png')
+    ORACLE_PROC_NAME = os.environ.get(
+        'ORACLE_PRODUCTS_CATALOG_PROC',
+        'DMC.LINAEE_PROD_STYLE_CATALOG_SP',
+    )
+
+    def _build_default_image_url(self, request):
+        relative_path = self.DEFAULT_PRODUCT_IMAGE_RELATIVE_PATH.replace('\\', '/')
+        media_url = urljoin(settings.MEDIA_URL, relative_path)
+        return request.build_absolute_uri(media_url)
+
+    def _normalize_filter_value(self, raw_value):
+        value = (raw_value or '').strip()
+        return value or None
+
+    def _parse_limit_offset(self, request):
+        limit_raw = request.query_params.get('limit', '24')
+        offset_raw = request.query_params.get('offset', '0')
+
+        try:
+            limit = int(limit_raw)
+            offset = int(offset_raw)
+        except (TypeError, ValueError):
+            raise ValueError("Parámetros 'limit' y 'offset' deben ser enteros.")
+
+        if limit < 1 or limit > 200:
+            raise ValueError("Parámetro 'limit' fuera de rango. Use un valor entre 1 y 200.")
+        if offset < 0:
+            raise ValueError("Parámetro 'offset' inválido. Debe ser mayor o igual a 0.")
+
+        return limit, offset
+
+    def _to_float(self, value, default=0.0):
+        if value is None:
+            return default
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _to_int(self, value, default=0):
+        if value is None:
+            return default
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _build_page_link(self, request, offset, limit):
+        query_params = request.query_params.copy()
+        query_params['offset'] = str(offset)
+        query_params['limit'] = str(limit)
+        return f"{request.build_absolute_uri(request.path)}?{query_params.urlencode()}"
+
+    def _resolve_product_images(self, request, sku):
+        sku_value = (sku or '').strip()
+        if not sku_value:
+            return []
+
+        fotos_root = os.path.join(settings.MEDIA_ROOT, 'fotos')
+        if not os.path.isdir(fotos_root):
+            return []
+
+        images = []
+        primary_url = None
+
+        for ext in self.MAIN_IMAGE_EXTENSIONS_ORDER:
+            candidate_name = f'{sku_value}{ext}'
+            candidate_path = os.path.join(fotos_root, candidate_name)
+            if os.path.isfile(candidate_path):
+                relative_path = os.path.join('fotos', candidate_name).replace('\\\\', '/')
+                media_url = urljoin(settings.MEDIA_URL, relative_path)
+                primary_url = request.build_absolute_uri(media_url)
+                images.append({'url': primary_url, 'is_primary': True})
+                break
+
+        gallery_path = os.path.join(fotos_root, sku_value)
+        if os.path.isdir(gallery_path):
+            for entry in sorted(os.scandir(gallery_path), key=lambda item: item.name.lower()):
+                if not entry.is_file():
+                    continue
+
+                _, ext = os.path.splitext(entry.name)
+                if ext.lower() not in self.IMAGE_EXTENSIONS:
+                    continue
+
+                relative_path = os.path.join('fotos', sku_value, entry.name).replace('\\\\', '/')
+                media_url = urljoin(settings.MEDIA_URL, relative_path)
+                image_url = request.build_absolute_uri(media_url)
+
+                if image_url == primary_url:
+                    continue
+
+                images.append({'url': image_url, 'is_primary': False})
+
+        if not images:
+            images.append(
+                {
+                    'url': self._build_default_image_url(request),
+                    'is_primary': True,
+                }
+            )
+
+        return images
+
+    def _fetch_products_from_oracle(self, filters, limit, offset):
+        with connections['extdb1'].cursor() as cursor:
+            ref_cursor = cursor.connection.cursor()
+            params = [
+                filters.get('cia'),
+                filters.get('search'),
+                filters.get('brand'),
+                filters.get('departamento'),
+                filters.get('categoria'),
+                filters.get('subcategoria'),
+                offset,
+                limit,
+                ref_cursor,
+            ]
+
+            cursor.callproc(self.ORACLE_PROC_NAME, params)
+            columns = [column[0] for column in (ref_cursor.description or [])]
+            rows = ref_cursor.fetchall()
+
+        return [dict(zip(columns, row)) for row in rows]
+
+    def get(self, request):
+        try:
+            limit, offset = self._parse_limit_offset(request)
+        except ValueError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        filters = {
+            'cia': self._normalize_filter_value(request.query_params.get('cia')),
+            'search': self._normalize_filter_value(request.query_params.get('search')),
+            'brand': self._normalize_filter_value(request.query_params.get('brand')),
+            'departamento': self._normalize_filter_value(request.query_params.get('departamento')),
+            'categoria': self._normalize_filter_value(request.query_params.get('categoria')),
+            'subcategoria': self._normalize_filter_value(request.query_params.get('subcategoria')),
+        }
+
+        try:
+            rows = self._fetch_products_from_oracle(filters, limit, offset)
+        except Exception as exc:
+            return Response(
+                {'detail': 'No fue posible consultar productos en la base de datos.', 'error': str(exc)},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        products = []
+        total_count = 0
+
+        for row in rows:
+            images = self._resolve_product_images(request, row.get('SKU'))
+            selected_image_url = None
+            if images:
+                selected_image_url = next(
+                    (image['url'] for image in images if image.get('is_primary')),
+                    images[0]['url'],
+                )
+
+            row_total = row.get('TOTAL_COUNT')
+            if row_total is not None:
+                total_count = self._to_int(row_total, default=total_count)
+
+            products.append(
+                {
+                    'product_id': str(row.get('ID', '') or ''),
+                    'sku': str(row.get('SKU', '') or ''),
+                    'description': str(row.get('DESCRIP', '') or ''),
+                    'brand_name': str(row.get('MARCA', '') or ''),
+                    'price': self._to_float(row.get('PRECIO'), default=0.0),
+                    'min_qty': self._to_int(row.get('MIN_QTY'), default=1),
+                    'max_qty': self._to_int(row.get('MAX_QTY'), default=1),
+                    'departamento': str(row.get('DEPARTAMENTO', '') or ''),
+                    'categoria': str(row.get('CATEGORIA', '') or ''),
+                    'subcategoria': str(row.get('SUBCATEGORIA', '') or ''),
+                    'images': images,
+                    'selected_image_url': selected_image_url,
+                }
+            )
+
+        if not rows:
+            total_count = 0
+        elif total_count <= 0:
+            total_count = offset + len(products)
+
+        next_offset = offset + limit
+        has_next = next_offset < total_count
+        previous_offset = max(offset - limit, 0) if offset > 0 else None
+
+        serializer = CatalogProductSerializer(products, many=True)
+        return Response(
+            {
+                'count': total_count,
+                'limit': limit,
+                'offset': offset,
+                'next': self._build_page_link(request, next_offset, limit) if has_next else None,
+                'previous': self._build_page_link(request, previous_offset, limit) if previous_offset is not None else None,
+                'results': serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class CatalogDetailView(generics.RetrieveAPIView):
     serializer_class = CatalogSerializer

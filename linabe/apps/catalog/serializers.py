@@ -232,3 +232,21 @@ class MockProductSerializer(serializers.Serializer):
     max_qty = serializers.IntegerField()
     images = MockProductImageSerializer(many=True)
     selected_image_url = serializers.URLField()
+
+class ProductImageSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    is_primary = serializers.BooleanField()
+
+class CatalogProductSerializer(serializers.Serializer):
+    product_id = serializers.CharField()
+    sku = serializers.CharField()
+    description = serializers.CharField()
+    brand_name = serializers.CharField()
+    price = serializers.FloatField()
+    min_qty = serializers.IntegerField()
+    max_qty = serializers.IntegerField()
+    departamento = serializers.CharField()
+    categoria = serializers.CharField()
+    subcategoria = serializers.CharField()
+    images = ProductImageSerializer(many=True)
+    selected_image_url = serializers.URLField(allow_null=True, required=False)
