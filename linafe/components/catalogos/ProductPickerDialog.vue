@@ -241,8 +241,27 @@
               :disabled="!productos.length || allLoadedSelected"
               @click="selectAllLoaded"
             >
-              Seleccionar todo
+              Seleccionar cargados
             </v-btn>
+
+            <v-btn
+              small
+              text
+              class="mr-2"
+              :loading="selectingAllResults"
+              :disabled="!totalCount || selectingAllResults"
+              @click="selectAllResults"
+            >
+              Seleccionar todos resultados
+            </v-btn>
+
+            <div
+              v-if="selectingAllResults"
+              class="text-caption text--secondary mr-2"
+            >
+              Seleccionando {{ selectAllProgress.loaded }} /
+              {{ selectAllProgress.total || totalCount }}
+            </div>
 
             <div class="text-caption text--secondary">
               {{
@@ -283,6 +302,28 @@
             </v-chip>
           </div>
         </v-sheet>
+
+        <v-dialog v-model="showSelectAllConfirm" max-width="520">
+          <v-card>
+            <v-card-title class="text-h6">
+              Confirmar selección masiva
+            </v-card-title>
+            <v-card-text>
+              El filtro actual devolverá
+              <strong>{{ pendingSelectAllTotal || totalCount }}</strong>
+              productos. Esta acción puede tardar algunos segundos.
+              <br />
+              ¿Deseas continuar?
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn text @click="cancelSelectAllConfirm">Cancelar</v-btn>
+              <v-btn color="primary" @click="confirmSelectAllResults">
+                Continuar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -307,6 +348,9 @@ export default {
       categoria: null,
       subcategoria: null,
       pageSize: 24,
+      largeSelectionThreshold: 1500,
+      showSelectAllConfirm: false,
+      pendingSelectAllTotal: 0,
       offset: 0,
       totalCount: 0,
       nextUrl: null,
@@ -315,6 +359,11 @@ export default {
       productos: [],
       loadingProductos: false,
       loadingFilters: false,
+      selectingAllResults: false,
+      selectAllProgress: {
+        loaded: 0,
+        total: 0,
+      },
       errorMessage: '',
       brandItems: [],
       departamentoItems: [],
@@ -386,6 +435,19 @@ export default {
   },
 
   methods: {
+    buildProductsParams({ limit, offset }) {
+      return {
+        limit,
+        offset,
+        cia: this.resolvedCompanyId,
+        search: this.search || undefined,
+        brand: this.brand || undefined,
+        departamento: this.departamento || undefined,
+        categoria: this.categoria || undefined,
+        subcategoria: this.subcategoria || undefined,
+      }
+    },
+
     normalizeListItems(data) {
       const rows = Array.isArray(data) ? data : []
       const out = []
@@ -475,16 +537,10 @@ export default {
       this.loadingProductos = true
       try {
         const data = await this.$axios.$get('/catalog/api/productos/', {
-          params: {
+          params: this.buildProductsParams({
             limit: this.pageSize,
             offset: requestOffset,
-            cia: this.resolvedCompanyId,
-            search: this.search || undefined,
-            brand: this.brand || undefined,
-            departamento: this.departamento || undefined,
-            categoria: this.categoria || undefined,
-            subcategoria: this.subcategoria || undefined,
-          },
+          }),
         })
 
         const rows = Array.isArray(data) ? data : data.results || []
@@ -566,6 +622,88 @@ export default {
         next[id] = item
       })
       this.selected = next
+    },
+
+    async selectAllResults({ skipConfirm = false } = {}) {
+      if (this.selectingAllResults || !this.totalCount) return
+
+      const total = Number(this.totalCount || 0)
+      if (!skipConfirm && total >= this.largeSelectionThreshold) {
+        this.pendingSelectAllTotal = total
+        this.showSelectAllConfirm = true
+        return
+      }
+
+      this.selectingAllResults = true
+      this.errorMessage = ''
+      this.selectAllProgress = {
+        loaded: 0,
+        total,
+      }
+
+      try {
+        const batchSize = 200
+        let offset = 0
+        let nextUrl = null
+        let safety = 0
+        const MAX_LOOPS = 1000
+        const allRows = []
+
+        do {
+          const data = await this.$axios.$get('/catalog/api/productos/', {
+            params: this.buildProductsParams({
+              limit: batchSize,
+              offset,
+            }),
+          })
+
+          const rows = Array.isArray(data) ? data : data.results || []
+          allRows.push(...rows)
+
+          const count = Number(data.count || this.totalCount || 0)
+          this.selectAllProgress = {
+            loaded: allRows.length,
+            total: count,
+          }
+
+          nextUrl = data.next || null
+          if (!nextUrl) break
+
+          offset = this.getOffsetFromUrl(nextUrl, offset + batchSize)
+          safety += 1
+        } while (safety < MAX_LOOPS)
+
+        if (safety >= MAX_LOOPS) {
+          throw new Error(
+            'Se alcanzó el límite de iteraciones para seleccionar todos los resultados.'
+          )
+        }
+
+        const nextSelected = { ...this.selected }
+        allRows.forEach((item) => {
+          const id = item && item.product_id
+          if (!id) return
+          nextSelected[id] = item
+        })
+
+        this.selected = nextSelected
+      } catch (error) {
+        this.errorMessage =
+          'No fue posible seleccionar todos los resultados del filtro actual.'
+      } finally {
+        this.selectingAllResults = false
+      }
+    },
+
+    cancelSelectAllConfirm() {
+      this.showSelectAllConfirm = false
+      this.pendingSelectAllTotal = 0
+    },
+
+    async confirmSelectAllResults() {
+      this.showSelectAllConfirm = false
+      await this.selectAllResults({ skipConfirm: true })
+      this.pendingSelectAllTotal = 0
     },
 
     removeSelected(item) {
