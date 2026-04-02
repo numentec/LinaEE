@@ -25,6 +25,7 @@ import random
 import ulid
 import uuid
 
+from ..core.models import SQLQuery
 from ..core.views import CommonViewSet
 from .models import (
     Category,
@@ -849,3 +850,35 @@ class PublicCatalogByTokenView(generics.GenericAPIView):
 
         data = self.get_serializer(catalog).data
         return Response(data)
+
+
+class CommonListsAPIView(APIView):
+    """Listas de parámetros comunes (clientes, vendedores, categorías, etc."""
+    # Vista 39
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, company_id='01', list_type='X'):
+        # list_type - Tipo de lista (CLI, PROV, VEN, MAR, DEP, CLA, SCLA)
+
+        if list_type == 'X':
+            return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
+
+        result = []
+
+        # query = SQLQuery.objects.get(vista = 39, ordinal = 1)
+
+        with connections['extdb1'].cursor() as cursor:
+
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc('DMC.LINAEE_LISTCATS', [list_type, company_id, refCursor])
+            # cursor.callproc(query.content, [list_type, company_id, refCursor])
+
+            descrip = refCursor.description
+
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)

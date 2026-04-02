@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    CommonListsAPIView,
     CategoryViewSet,
     TagViewSet,
     CatalogMasterViewSet,
@@ -56,6 +57,8 @@ urlpatterns = [
     path('mock/productos/', MockProductsAPIView.as_view(), name='mock-productos'),
     path('api/productos/', ProductsAPIView.as_view(), name='catalog-productos'),
     path('api/assets/<str:asset_type>/', CatalogImageLibraryAPIView.as_view(), name='catalog-image-library'),
+
+    path('api/list/<str:company_id>/<str:list_type>/', CommonListsAPIView.as_view(), name='catalog-common-list'),
     
     path('', include(router.urls)),
 ]
