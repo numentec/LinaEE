@@ -620,6 +620,7 @@ class ProductsAPIView(APIView):
     """
     Devuelve productos reales desde Oracle con paginación, filtros e imágenes locales.
     """
+    # Vista 39 de Oracle: DMC.LINAEE_PROD_STYLE_CATALOG_SP
     authentication_classes = []
     permission_classes = []
 
@@ -854,7 +855,7 @@ class PublicCatalogByTokenView(generics.GenericAPIView):
 
 class CommonListsAPIView(APIView):
     """Listas de parámetros comunes (clientes, vendedores, categorías, etc."""
-    # Vista 39
+    # Vista 40 de Oracle: DMC.LINAEE_LISTCATS
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
