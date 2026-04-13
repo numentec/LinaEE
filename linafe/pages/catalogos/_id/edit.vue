@@ -750,7 +750,7 @@
                             principal: slot.main_url === u,
                             disabled:
                               !slot.gallery_urls.includes(u) &&
-                              slot.gallery_urls.length >= 4 &&
+                              slot.gallery_urls.length >= heroGalleryLimit &&
                               slot.main_url !== u,
                           }"
                           @click="
@@ -804,7 +804,10 @@
                       </div>
 
                       <div class="text-caption text--secondary mt-1">
-                        Galería: {{ slot.gallery_urls.length }}/4
+                        Galería:
+                        <span>{{ slot.gallery_urls.length }}</span>
+                        /
+                        <span>{{ heroGalleryLimit }}</span>
                       </div>
                     </div>
 
@@ -1137,6 +1140,8 @@ export default {
       layoutItems: [
         { text: 'Destacado 1 producto (HERO)', value: 'hero_1' },
         { text: 'Destacado 2 productos (HERO)', value: 'hero_2' },
+        { text: 'Hero 3 vertical', value: 'hero_3' },
+        { text: 'Hero 4 horizontal', value: 'hero_4' },
         { text: 'Cuadrícula a 2 columnas', value: 'grid_2' },
         { text: 'Cuadrícula a 3 columnas', value: 'grid_3' },
         { text: 'Lista (6)', value: 'list_compact' },
@@ -1519,13 +1524,23 @@ export default {
     isHeroPage() {
       return (
         this.page &&
-        (this.page.layout === 'hero_1' || this.page.layout === 'hero_2')
+        (this.page.layout === 'hero_1' ||
+          this.page.layout === 'hero_2' ||
+          this.page.layout === 'hero_3' ||
+          this.page.layout === 'hero_4')
       )
     },
 
     heroSlotsCount() {
       if (!this.page) return 1
       return this.page.layout === 'hero_2' ? 2 : 1
+    },
+
+    heroGalleryLimit() {
+      if (!this.page) return 4
+      if (this.page.layout === 'hero_3') return 3
+      if (this.page.layout === 'hero_4') return 2
+      return 4
     },
 
     heroProductOptions() {
@@ -2173,7 +2188,10 @@ export default {
         ? slots[idx].gallery_urls
         : []
 
-      slots[idx].gallery_urls = Array.from(new Set(g)).slice(0, 4)
+      slots[idx].gallery_urls = Array.from(new Set(g)).slice(
+        0,
+        this.heroGalleryLimit
+      )
 
       this.saveHeroSlots(slots)
     },
@@ -2187,8 +2205,8 @@ export default {
 
       const current = Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
 
-      // Si ya hay 4 y quiere agregar otra, no hacemos nada
-      if (!isSelected && current.length >= 4) return
+      // Respeta límite de galería según layout HERO activo.
+      if (!isSelected && current.length >= this.heroGalleryLimit) return
 
       const next = isSelected
         ? current.filter((x) => x !== url)
@@ -2239,7 +2257,10 @@ export default {
         nextGallery = [currentMain, ...nextGallery]
       }
 
-      nextGallery = Array.from(new Set(nextGallery)).slice(0, 4)
+      nextGallery = Array.from(new Set(nextGallery)).slice(
+        0,
+        this.heroGalleryLimit
+      )
 
       this.updateHeroSlot(slotIndex, {
         main_url: url,
@@ -2289,12 +2310,15 @@ export default {
           const main = slots[i].main_url || imgs[0]
           const gallery = Array.from(
             new Set(imgs.filter((u) => u !== main))
-          ).slice(0, 4)
+          ).slice(0, this.heroGalleryLimit)
           slots[i].gallery_urls = gallery
         } else {
           // full
           slots[i].main_url = imgs[0]
-          slots[i].gallery_urls = Array.from(new Set(imgs.slice(1))).slice(0, 4)
+          slots[i].gallery_urls = Array.from(new Set(imgs.slice(1))).slice(
+            0,
+            this.heroGalleryLimit
+          )
         }
       }
 
@@ -2302,7 +2326,7 @@ export default {
     },
 
     // Botón: aplicar auto-fill en lote (todas / seleccionadas / actual)
-    // - solo afecta páginas hero_1 / hero_2
+    // - solo afecta páginas HERO
     // - respeta locked (no toca páginas bloqueadas)
     async heroAutoFillScope({ fillMode = 'full' } = {}) {
       const catalogId = this.catalogId
@@ -2334,9 +2358,19 @@ export default {
         if (!p || p.id === 'cover') continue
         if (p.locked) continue
 
-        if (!(p.layout === 'hero_1' || p.layout === 'hero_2')) continue
+        if (
+          !(
+            p.layout === 'hero_1' ||
+            p.layout === 'hero_2' ||
+            p.layout === 'hero_3' ||
+            p.layout === 'hero_4'
+          )
+        )
+          continue
 
         const slotsCount = p.layout === 'hero_2' ? 2 : 1
+        const galleryLimit =
+          p.layout === 'hero_3' ? 3 : p.layout === 'hero_4' ? 2 : 4
         const items = Array.isArray(p.items) ? p.items : []
         if (!items.length) continue
 
@@ -2366,11 +2400,17 @@ export default {
               slot.main_url = imgs[0]
             } else if (fillMode === 'gallery') {
               slot.main_url = imgs[0]
-              slot.gallery_urls = Array.from(new Set(imgs.slice(1))).slice(0, 4)
+              slot.gallery_urls = Array.from(new Set(imgs.slice(1))).slice(
+                0,
+                galleryLimit
+              )
             } else {
               // full
               slot.main_url = imgs[0]
-              slot.gallery_urls = Array.from(new Set(imgs.slice(1))).slice(0, 4)
+              slot.gallery_urls = Array.from(new Set(imgs.slice(1))).slice(
+                0,
+                galleryLimit
+              )
             }
           }
 

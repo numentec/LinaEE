@@ -116,21 +116,109 @@
           :key="slot.product_key || idx"
           class="hero-item"
         >
-          <div
-            class="hero-item-top"
-            :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
-          >
-            <div class="hero-media">
+          <template v-if="page.layout === 'hero_1' || page.layout === 'hero_2'">
+            <div
+              class="hero-item-top"
+              :class="page.layout === 'hero_2' ? 'hero-2' : 'hero-1'"
+            >
+              <div class="hero-media">
+                <img
+                  v-if="slot.main_url"
+                  class="hero-img"
+                  :src="slot.main_url"
+                  alt=""
+                />
+                <div v-else class="hero-img hero-img-empty">Sin imagen</div>
+              </div>
+
+              <div class="hero-body">
+                <div v-if="slot.product" class="hero-brand">
+                  {{ showBrand ? slot.product.brand_name : '' }}
+                </div>
+
+                <div v-if="slot.product" class="hero-sku">
+                  {{ showSku ? slot.product.sku : '' }}
+                </div>
+
+                <div v-if="slot.product" class="hero-title">
+                  {{
+                    slot.product.name ||
+                    slot.product.product_name ||
+                    slot.product.description ||
+                    ''
+                  }}
+                </div>
+
+                <div v-if="slot.product && showDescription" class="hero-desc">
+                  {{ slot.product.description }}
+                </div>
+
+                <div v-if="slot.product && showPrice" class="hero-meta">
+                  Precio: {{ formatPrice(slot.product.price) }}
+                </div>
+
+                <div v-if="slot.product && showMinMax" class="hero-meta">
+                  Min: {{ slot.product.min_qty }} · Max:
+                  {{ slot.product.max_qty }}
+                </div>
+
+                <div v-if="!slot.product" class="hero-empty">
+                  Configura HERO en Propiedades
+                </div>
+              </div>
+            </div>
+            <div
+              v-if="slot.gallery_urls && slot.gallery_urls.length"
+              class="hero-thumbs"
+            >
               <img
-                v-if="slot.main_url"
-                class="hero-img"
-                :src="slot.main_url"
+                v-for="u in slot.gallery_urls"
+                :key="u"
+                class="hero-thumb"
+                :src="u"
                 alt=""
               />
-              <div v-else class="hero-img hero-img-empty">Sin imagen</div>
+            </div>
+          </template>
+
+          <template v-else-if="page.layout === 'hero_3'">
+            <div class="hero3-header">
+              <img
+                v-if="resolveHeroLogoUrl(page)"
+                class="hero3-logo"
+                :src="resolveHeroLogoUrl(page)"
+                alt=""
+              />
             </div>
 
-            <div class="hero-body">
+            <div class="hero3-middle">
+              <div class="hero3-media">
+                <img
+                  v-if="slot.main_url"
+                  class="hero3-main-img"
+                  :src="slot.main_url"
+                  alt=""
+                />
+                <div v-else class="hero3-main-img hero-img-empty">
+                  Sin imagen
+                </div>
+              </div>
+
+              <div
+                v-if="slot.gallery_urls && slot.gallery_urls.length"
+                class="hero3-thumbs"
+              >
+                <img
+                  v-for="(u, ti) in slot.gallery_urls.slice(0, 3)"
+                  :key="ti"
+                  class="hero3-thumb"
+                  :src="u"
+                  alt=""
+                />
+              </div>
+            </div>
+
+            <div class="hero3-footer">
               <div v-if="slot.product" class="hero-brand">
                 {{ showBrand ? slot.product.brand_name : '' }}
               </div>
@@ -165,19 +253,66 @@
                 Configura HERO en Propiedades
               </div>
             </div>
-          </div>
-          <div
-            v-if="slot.gallery_urls && slot.gallery_urls.length"
-            class="hero-thumbs"
-          >
-            <img
-              v-for="u in slot.gallery_urls"
-              :key="u"
-              class="hero-thumb"
-              :src="u"
-              alt=""
-            />
-          </div>
+          </template>
+
+          <template v-else-if="page.layout === 'hero_4'">
+            <div class="hero4-header">
+              <div class="hero4-logo-section">
+                <img
+                  v-if="resolveHeroLogoUrl(page)"
+                  class="hero4-logo"
+                  :src="resolveHeroLogoUrl(page)"
+                  alt=""
+                />
+              </div>
+
+              <div class="hero4-info-section">
+                <div v-if="slot.product" class="hero-brand">
+                  {{ showBrand ? slot.product.brand_name : '' }}
+                </div>
+
+                <div v-if="slot.product" class="hero-sku">
+                  {{ showSku ? slot.product.sku : '' }}
+                </div>
+
+                <div v-if="slot.product" class="hero-title">
+                  {{
+                    slot.product.name ||
+                    slot.product.product_name ||
+                    slot.product.description ||
+                    ''
+                  }}
+                </div>
+
+                <div v-if="slot.product && showDescription" class="hero-desc">
+                  {{ slot.product.description }}
+                </div>
+
+                <div v-if="slot.product && showPrice" class="hero-meta">
+                  Precio: {{ formatPrice(slot.product.price) }}
+                </div>
+
+                <div v-if="slot.product && showMinMax" class="hero-meta">
+                  Min: {{ slot.product.min_qty }} · Max:
+                  {{ slot.product.max_qty }}
+                </div>
+
+                <div v-if="!slot.product" class="hero-empty">
+                  Configura HERO en Propiedades
+                </div>
+              </div>
+            </div>
+
+            <div v-if="hero4DisplayUrls(slot).length" class="hero4-images">
+              <img
+                v-for="(u, ti) in hero4DisplayUrls(slot)"
+                :key="ti"
+                class="hero4-img"
+                :src="u"
+                alt=""
+              />
+            </div>
+          </template>
         </div>
       </div>
 
@@ -372,6 +507,47 @@ export default {
       return (productIndex && productIndex[k]) || null
     },
 
+    resolveMainUrl(product, slot) {
+      if (slot && slot.main_url) return slot.main_url
+      if (product && product.selected_image_url)
+        return product.selected_image_url
+
+      const imgs =
+        product && Array.isArray(product.images) ? product.images : []
+      return imgs[0] && imgs[0].url ? imgs[0].url : ''
+    },
+
+    heroGalleryLimit(layout) {
+      if (layout === 'hero_3') return 3
+      if (layout === 'hero_4') return 2
+      return 4
+    },
+
+    resolveGalleryUrls(slot, layout) {
+      const urls =
+        slot && Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+      const limit = this.heroGalleryLimit(layout)
+      return urls.filter(Boolean).slice(0, limit)
+    },
+
+    resolveHeroLogoUrl(page) {
+      if (page && page.cover && page.cover.logo_url) return page.cover.logo_url
+
+      const pages =
+        this.doc && Array.isArray(this.doc.pages) ? this.doc.pages : []
+      const coverPage = pages.find((p) => p && p.layout === 'cover')
+      return coverPage && coverPage.cover && coverPage.cover.logo_url
+        ? coverPage.cover.logo_url
+        : ''
+    },
+
+    hero4DisplayUrls(slot) {
+      const main = slot && slot.main_url ? slot.main_url : ''
+      const gallery =
+        slot && Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
+      return Array.from(new Set([main, ...gallery].filter(Boolean))).slice(0, 2)
+    },
+
     resolvedHeroSlots(page) {
       const hero = page && page.hero ? page.hero : null
       const slots = hero && Array.isArray(hero.slots) ? hero.slots : []
@@ -384,9 +560,18 @@ export default {
           slot && slot.product_key,
           productIndex
         )
+
+        const mainUrl = this.resolveMainUrl(product, slot)
+        const galleryUrls = this.resolveGalleryUrls(
+          slot,
+          page && page.layout ? page.layout : ''
+        )
+
         return {
           ...slot,
           product,
+          main_url: mainUrl,
+          gallery_urls: galleryUrls,
         }
       })
     },
@@ -816,6 +1001,106 @@ body {
 .hero-empty {
   font-size: 12px;
   opacity: 0.75;
+}
+
+.hero3-header {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.hero3-logo {
+  max-height: 24px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.hero3-middle {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.hero3-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero3-main-img {
+  width: 100%;
+  height: 280px;
+  object-fit: contain;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.hero3-thumbs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.hero3-thumb {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.hero3-footer {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 8px;
+}
+
+.hero4-header {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  align-items: start;
+}
+
+.hero4-logo-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.hero4-logo {
+  max-height: 28px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.hero4-info-section {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.hero4-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.hero4-img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 @media print {

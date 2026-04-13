@@ -29,6 +29,7 @@ export function computeCatalogLayout({
       rowsPerPage: 1,
       capacity: 1,
       pageWidth,
+      effectivePageWidth: pageWidth,
       pageHeight: Math.round(
         pageWidth * (orientation === 'landscape' ? 8.5 / 11 : 11 / 8.5)
       ),
@@ -46,6 +47,43 @@ export function computeCatalogLayout({
       rowsPerPage: 2,
       capacity: 2,
       pageWidth,
+      effectivePageWidth: pageWidth,
+      pageHeight: Math.round(
+        pageWidth * (orientation === 'landscape' ? 8.5 / 11 : 11 / 8.5)
+      ),
+      contentWidth: 0,
+      contentHeight: 0,
+      cardWidth: 0,
+      cardHeight: 0,
+    }
+  }
+
+  if (layout === 'hero_3') {
+    return {
+      layout,
+      columns: 1,
+      rowsPerPage: 1,
+      capacity: 1,
+      pageWidth,
+      effectivePageWidth: pageWidth,
+      pageHeight: Math.round(
+        pageWidth * (orientation === 'landscape' ? 8.5 / 11 : 11 / 8.5)
+      ),
+      contentWidth: 0,
+      contentHeight: 0,
+      cardWidth: 0,
+      cardHeight: 0,
+    }
+  }
+
+  if (layout === 'hero_4') {
+    return {
+      layout,
+      columns: 1,
+      rowsPerPage: 1,
+      capacity: 1,
+      pageWidth,
+      effectivePageWidth: pageWidth,
       pageHeight: Math.round(
         pageWidth * (orientation === 'landscape' ? 8.5 / 11 : 11 / 8.5)
       ),
@@ -63,6 +101,7 @@ export function computeCatalogLayout({
       rowsPerPage: 6,
       capacity: 6,
       pageWidth,
+      effectivePageWidth: pageWidth,
       pageHeight: Math.round(
         pageWidth * (orientation === 'landscape' ? 8.5 / 11 : 11 / 8.5)
       ),
