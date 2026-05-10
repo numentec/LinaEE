@@ -131,8 +131,20 @@
         </v-chip>
         <div v-for="j in pdfJobs" :key="j.jobId" class="mt-2">
           <div class="d-flex justify-space-between">
-            <small>Generando PDF (estimado)</small>
-            <small>{{ j.progress }}%</small>
+            <small>{{ pdfJobStateText(j) }}</small>
+            <div class="d-flex align-center">
+              <small>{{ j.progress }}%</small>
+              <v-btn
+                v-if="canCancelPdfJob(j)"
+                x-small
+                text
+                color="error"
+                class="ml-2"
+                @click="cancelPdfJob(j.jobId)"
+              >
+                Cancelar
+              </v-btn>
+            </div>
           </div>
           <v-progress-linear :value="j.progress" height="8" />
         </div>
@@ -2063,9 +2075,34 @@ export default {
     async exportPdf() {
       // totalPages lo puedes tomar de tu estado actual del catálogo:
       const totalPages = (this.catalog?.pages || []).length
-      await this.$store.dispatch('catalogo/catalogos/exportPdfStart', {
-        catalogId: this.catalogId,
-        totalPages,
+      try {
+        await this.$store.dispatch('catalogo/catalogos/exportPdfStart', {
+          catalogId: this.catalogId,
+          totalPages,
+        })
+      } catch (e) {
+        this.$toast?.error?.('No se pudo iniciar la exportación de PDF')
+      }
+    },
+
+    canCancelPdfJob(job) {
+      if (!job) return false
+      return job.status === 'queued' || job.status === 'running'
+    },
+
+    pdfJobStateText(job) {
+      if (!job) return 'Generando PDF'
+      if (job.status === 'queued') return 'PDF en cola'
+      if (job.status === 'running') return 'Generando PDF (estimado)'
+      if (job.status === 'cancelled') return 'PDF cancelado'
+      if (job.status === 'failed') return 'PDF con error'
+      return 'Generando PDF'
+    },
+
+    async cancelPdfJob(jobId) {
+      if (!jobId) return
+      await this.$store.dispatch('catalogo/catalogos/exportPdfCancel', {
+        jobId,
       })
     },
 

@@ -20,6 +20,17 @@
             <div style="font-size: 12px; color: #666; margin-top: 4px">
               {{ j.isEstimated ? 'Progreso estimado' : 'Progreso real' }}
             </div>
+            <div style="margin-top: 8px">
+              <v-btn
+                v-if="j.status === 'queued' || j.status === 'running'"
+                x-small
+                text
+                color="error"
+                @click="cancelJob(j.jobId)"
+              >
+                Cancelar
+              </v-btn>
+            </div>
           </div>
         </v-card-text>
 
@@ -37,9 +48,15 @@ export default {
   data: () => ({ open: false }),
   computed: {
     jobs() {
-      return this.$store.getters['pdfJobs/all'].filter(
-        (j) => j.status === 'queued' || j.status === 'running'
-      )
+      return this.$store.getters['catalogo/catalogos/pdfJobsActive']
+    },
+  },
+  methods: {
+    async cancelJob(jobId) {
+      if (!jobId) return
+      await this.$store.dispatch('catalogo/catalogos/exportPdfCancel', {
+        jobId,
+      })
     },
   },
 }

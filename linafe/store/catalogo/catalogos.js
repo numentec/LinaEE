@@ -1411,6 +1411,7 @@ export const actions = {
       startedAt: Date.now(),
       finishedAt: null,
       isEstimated: true,
+      statusErrorCount: 0,
       _polling: false,
       _timer: null,
     })
@@ -1422,7 +1423,12 @@ export const actions = {
   exportPdfEstimateProgress({ state, commit }, { jobId }) {
     const job = state.pdfJobs.items[jobId]
     if (!job) return
-    if (job.status === 'success' || job.status === 'failed') return
+    if (
+      job.status === 'success' ||
+      job.status === 'failed' ||
+      job.status === 'cancelled'
+    )
+      return
 
     const elapsedSec = (Date.now() - (job.startedAt || Date.now())) / 1000
 
@@ -1435,6 +1441,7 @@ export const actions = {
   },
 
   async exportPdfPoll({ state, commit, dispatch }, { jobId }) {
+    const maxStatusErrors = 5
     const job = state.pdfJobs.items[jobId]
     if (!job) return
     if (job._polling) return
@@ -1452,6 +1459,7 @@ export const actions = {
           status: data.status,
           downloadUrl: data.download_url || null,
           error: data.error || '',
+          statusErrorCount: 0,
         })
 
         dispatch('exportPdfEstimateProgress', { jobId })
@@ -1483,10 +1491,45 @@ export const actions = {
             }`,
           })
         }
+
+        if (data.status === 'cancelled') {
+          commit('STOP_PDF_JOB_POLLING', jobId)
+          commit('UPSERT_PDF_JOB', {
+            jobId,
+            finishedAt: Date.now(),
+          })
+          dispatch('uiToast', {
+            type: 'info',
+            text: 'Se canceló la generación del PDF.',
+          })
+        }
       } catch (e) {
-        // No rompemos el polling por fallos transitorios
+        const current = state.pdfJobs.items[jobId]
+        if (!current) return
+
+        const nextErrors = Number(current.statusErrorCount || 0) + 1
+
+        commit('UPSERT_PDF_JOB', {
+          jobId,
+          statusErrorCount: nextErrors,
+          error: 'No se pudo consultar el estado del PDF.',
+        })
+
         dispatch('exportPdfEstimateProgress', { jobId })
-        // commit('SET_ERROR', e.response?.data?.message || 'Error desconocido')
+
+        if (nextErrors >= maxStatusErrors) {
+          commit('STOP_PDF_JOB_POLLING', jobId)
+          commit('UPSERT_PDF_JOB', {
+            jobId,
+            status: 'failed',
+            finishedAt: Date.now(),
+            error: 'No se pudo verificar el estado del PDF. Intenta luego.',
+          })
+          dispatch('uiToast', {
+            type: 'error',
+            text: 'Error de conexión al verificar el PDF. Vuelve a exportar.',
+          })
+        }
       }
     }
 
@@ -1498,6 +1541,49 @@ export const actions = {
 
   exportPdfStopPolling({ commit }, { jobId }) {
     commit('STOP_PDF_JOB_POLLING', jobId)
+  },
+
+  async exportPdfCancel({ state, commit, dispatch }, { jobId }) {
+    const job = state.pdfJobs.items[jobId]
+    if (!job) return
+    if (job.status !== 'queued' && job.status !== 'running') return
+
+    commit('STOP_PDF_JOB_POLLING', jobId)
+    commit('UPSERT_PDF_JOB', {
+      jobId,
+      status: 'cancelled',
+      cancelRequested: true,
+      finishedAt: Date.now(),
+    })
+
+    try {
+      const { data } = await this.$axios.post(
+        `catalog/api/pdf-jobs/${jobId}/cancel/`
+      )
+
+      commit('UPSERT_PDF_JOB', {
+        jobId,
+        status: data.status || 'cancelled',
+        cancelRequested: true,
+        error: '',
+      })
+
+      dispatch('uiToast', {
+        type: 'info',
+        text: 'Cancelación solicitada para el PDF.',
+      })
+    } catch (e) {
+      commit('UPSERT_PDF_JOB', {
+        jobId,
+        status: 'failed',
+        error: 'No se pudo cancelar el PDF en el servidor.',
+      })
+
+      dispatch('uiToast', {
+        type: 'error',
+        text: 'No se pudo cancelar el PDF. Intenta exportar nuevamente.',
+      })
+    }
   },
 
   exportPdfDownload_AuthCookie({ state }, { jobId }) {
