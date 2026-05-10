@@ -29,6 +29,7 @@ export default {
     '~/plugins/cartState.js',
     '~/plugins/api.js',
     { src: '~/plugins/pdfJobsPersist.client.js', mode: 'client' },
+    { src: '~/plugins/catalogUndoPersist.client.js', mode: 'client' },
   ],
 
   // Auto import components (https://go.nuxtjs.dev/config-components)

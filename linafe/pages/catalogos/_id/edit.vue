@@ -18,6 +18,28 @@
         </div>
         <v-spacer />
         <div class="d-none d-lg-flex align-center">
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <span v-bind="attrs" v-on="on">
+                <v-btn icon class="mr-1" :disabled="!canUndo" @click="undoEdit">
+                  <v-icon>mdi-undo</v-icon>
+                </v-btn>
+              </span>
+            </template>
+            <span>Deshacer (Ctrl+Z)</span>
+          </v-tooltip>
+
+          <v-tooltip bottom>
+            <template #activator="{ on, attrs }">
+              <span v-bind="attrs" v-on="on">
+                <v-btn icon class="mr-2" :disabled="!canRedo" @click="redoEdit">
+                  <v-icon>mdi-redo</v-icon>
+                </v-btn>
+              </span>
+            </template>
+            <span>Rehacer (Ctrl+Y)</span>
+          </v-tooltip>
+
           <v-btn
             color="primary"
             class="mr-2"
@@ -72,6 +94,20 @@
             </v-btn>
           </template>
           <v-list dense>
+            <v-list-item :disabled="!canUndo" @click="undoEdit">
+              <v-list-item-icon>
+                <v-icon>mdi-undo</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Deshacer</v-list-item-title>
+            </v-list-item>
+
+            <v-list-item :disabled="!canRedo" @click="redoEdit">
+              <v-list-item-icon>
+                <v-icon>mdi-redo</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Rehacer</v-list-item-title>
+            </v-list-item>
+
             <v-list-item :disabled="isCoverPage" @click="openPicker">
               <v-list-item-icon>
                 <v-icon>mdi-package-variant-closed-plus</v-icon>
@@ -1395,6 +1431,14 @@ export default {
       )
     },
 
+    canUndo() {
+      return this.$store.getters['catalogo/catalogos/canUndo'](this.catalogId)
+    },
+
+    canRedo() {
+      return this.$store.getters['catalogo/catalogos/canRedo'](this.catalogId)
+    },
+
     productPages() {
       const pages = Array.isArray(this.catalog?.pages) ? this.catalog.pages : []
 
@@ -1618,6 +1662,7 @@ export default {
     }
 
     window.addEventListener('beforeunload', this.onBeforeUnload)
+    window.addEventListener('keydown', this.onEditorKeydown)
   },
 
   beforeRouteLeave(to, from, next) {
@@ -1635,9 +1680,72 @@ export default {
     if (this.autosaveTimer) clearTimeout(this.autosaveTimer)
 
     window.removeEventListener('beforeunload', this.onBeforeUnload)
+    window.removeEventListener('keydown', this.onEditorKeydown)
   },
 
   methods: {
+    isEditableTarget(target) {
+      if (!target) return false
+
+      const tag = String(target.tagName || '').toLowerCase()
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+        return true
+      }
+
+      return Boolean(target.isContentEditable)
+    },
+
+    onEditorKeydown(e) {
+      if (!e) return
+      if (!e.ctrlKey) return
+      if (e.altKey) return
+
+      if (this.isEditableTarget(e.target)) return
+
+      const key = String(e.key || '').toLowerCase()
+
+      if (key === 'z') {
+        e.preventDefault()
+        this.undoEdit()
+        return
+      }
+
+      if (key === 'y') {
+        e.preventDefault()
+        this.redoEdit()
+      }
+    },
+
+    async undoEdit() {
+      if (!this.canUndo) return
+
+      const ok = await this.$store.dispatch(
+        'catalogo/catalogos/undoCatalogEdit',
+        {
+          catalogId: this.catalogId,
+        }
+      )
+
+      if (!ok) return
+
+      this.lastSaveError = ''
+    },
+
+    async redoEdit() {
+      if (!this.canRedo) return
+
+      const ok = await this.$store.dispatch(
+        'catalogo/catalogos/redoCatalogEdit',
+        {
+          catalogId: this.catalogId,
+        }
+      )
+
+      if (!ok) return
+
+      this.lastSaveError = ''
+    },
+
     goPreview() {
       this.$router.push(`/catalogos/${this.catalogId}/preview`)
     },

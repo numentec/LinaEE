@@ -4,6 +4,8 @@ import { mockCatalogos } from '~/mock/catalogos'
 
 export const namespaced = true
 
+const CATALOG_UNDO_HISTORY_LIMIT = 5
+
 // ************ Actions and mutations helpers ************
 // function ensurePages(catalog) {
 //   if (Array.isArray(catalog.pages) && catalog.pages.length) return catalog
@@ -332,6 +334,61 @@ function themePresets() {
   }
 }
 
+function deepClone(value) {
+  try {
+    return JSON.parse(JSON.stringify(value))
+  } catch (e) {
+    return value
+  }
+}
+
+function catalogUndoSnapshot(catalog) {
+  if (!catalog) return null
+
+  return deepClone({
+    name: catalog.name,
+    template: catalog.template,
+    orientation: catalog.orientation,
+    settings: catalog.settings,
+    theme: catalog.theme,
+    pages: catalog.pages,
+  })
+}
+
+function snapshotHash(snapshot) {
+  try {
+    return JSON.stringify(snapshot || {})
+  } catch (e) {
+    return ''
+  }
+}
+
+function sameSnapshot(a, b) {
+  return snapshotHash(a) === snapshotHash(b)
+}
+
+function normalizeUndoStack(entries) {
+  const arr = Array.isArray(entries) ? entries : []
+  return arr.map((x) => deepClone(x)).filter(Boolean)
+}
+
+function nextCatalogFromSnapshot(catalog, snapshot) {
+  const now = new Date().toISOString()
+
+  const base = {
+    ...catalog,
+    ...deepClone(snapshot || {}),
+    updated_at: now,
+  }
+
+  const normalized = ensureTheme(ensureSettings(ensurePages(base)))
+
+  return {
+    ...normalized,
+    pages_count: Array.isArray(normalized.pages) ? normalized.pages.length : 0,
+  }
+}
+
 // function ensurePageFlags(p) {
 //   if (!p) return p
 //   if (Object.prototype.hasOwnProperty.call(p, 'locked')) return p
@@ -350,6 +407,7 @@ export const state = () => ({
   currentId: null,
   activePageByCatalogId: {},
   needsReflowByCatalogId: {},
+  undoHistoryByCatalogId: {},
   pdfJobs: {
     items: {}, // jobId -> job
   },
@@ -392,6 +450,16 @@ export const getters = {
   toast: (state) => state.toast,
   needsReflow: (state) => (catalogId) => {
     return Boolean(state.needsReflowByCatalogId[String(catalogId)])
+  },
+  canUndo: (state) => (catalogId) => {
+    const key = String(catalogId)
+    const h = state.undoHistoryByCatalogId[key]
+    return Boolean(h && Array.isArray(h.past) && h.past.length)
+  },
+  canRedo: (state) => (catalogId) => {
+    const key = String(catalogId)
+    const h = state.undoHistoryByCatalogId[key]
+    return Boolean(h && Array.isArray(h.future) && h.future.length)
   },
 }
 
@@ -963,6 +1031,56 @@ export const mutations = {
     }
   },
 
+  SET_CATALOG_UNDO_HISTORY(state, { catalogId, past, future }) {
+    const key = String(catalogId)
+
+    const normalizedPast = normalizeUndoStack(past).slice(
+      -CATALOG_UNDO_HISTORY_LIMIT
+    )
+    const normalizedFuture = normalizeUndoStack(future).slice(
+      0,
+      CATALOG_UNDO_HISTORY_LIMIT
+    )
+
+    state.undoHistoryByCatalogId = {
+      ...state.undoHistoryByCatalogId,
+      [key]: {
+        past: normalizedPast,
+        future: normalizedFuture,
+      },
+    }
+  },
+
+  LOAD_CATALOG_UNDO_HISTORY_FROM_STORAGE(state, payload) {
+    const src = payload && typeof payload === 'object' ? payload : {}
+    const next = {}
+
+    Object.entries(src).forEach(([catalogId, value]) => {
+      const item = value && typeof value === 'object' ? value : {}
+      const past = normalizeUndoStack(item.past).slice(
+        -CATALOG_UNDO_HISTORY_LIMIT
+      )
+      const future = normalizeUndoStack(item.future).slice(
+        0,
+        CATALOG_UNDO_HISTORY_LIMIT
+      )
+
+      if (!past.length && !future.length) return
+      next[String(catalogId)] = { past, future }
+    })
+
+    state.undoHistoryByCatalogId = next
+  },
+
+  SET_CATALOG_FROM_SNAPSHOT(state, { catalogId, snapshot }) {
+    const cid = Number(catalogId)
+    const cIdx = state.items.findIndex((c) => Number(c.id) === cid)
+    if (cIdx === -1) return
+
+    const catalog = state.items[cIdx]
+    state.items.splice(cIdx, 1, nextCatalogFromSnapshot(catalog, snapshot))
+  },
+
   UPDATE_CATALOG_META(state, { catalogId, patch }) {
     const cid = Number(catalogId)
 
@@ -1203,13 +1321,73 @@ export const actions = {
     commit('SET_CURRENT_ID', id)
   },
 
-  addProductsToPage({ commit }, { catalogId, pageId, products }) {
-    commit('ADD_PRODUCTS_TO_PAGE', { catalogId, pageId, products })
+  finalizeCatalogEdit(
+    { state, commit, getters },
+    { catalogId, beforeSnapshot }
+  ) {
+    const key = String(catalogId)
+    const afterCatalog = getters.byId(catalogId)
+    if (!afterCatalog) return false
+
+    const afterSnapshot = catalogUndoSnapshot(afterCatalog)
+    if (sameSnapshot(beforeSnapshot, afterSnapshot)) return false
+
+    const history = state.undoHistoryByCatalogId[key] || {
+      past: [],
+      future: [],
+    }
+
+    const lastPast = history.past[history.past.length - 1]
+
+    let past = history.past
+    if (!sameSnapshot(lastPast, beforeSnapshot)) {
+      past = [...history.past, deepClone(beforeSnapshot)]
+    }
+
+    past = past.slice(-CATALOG_UNDO_HISTORY_LIMIT)
+
+    commit('SET_CATALOG_UNDO_HISTORY', {
+      catalogId,
+      past,
+      future: [],
+    })
+
+    return true
   },
 
-  autoDistribute({ getters, commit }, { catalogId, layout, capacity }) {
+  commitCatalogEdit(
+    { dispatch, getters, commit },
+    { catalogId, mutation, payload }
+  ) {
+    const beforeCatalog = getters.byId(catalogId)
+    if (!beforeCatalog) return false
+
+    const beforeSnapshot = catalogUndoSnapshot(beforeCatalog)
+
+    commit(mutation, payload)
+
+    return dispatch('finalizeCatalogEdit', {
+      catalogId,
+      beforeSnapshot,
+    })
+  },
+
+  addProductsToPage({ dispatch }, { catalogId, pageId, products }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'ADD_PRODUCTS_TO_PAGE',
+      payload: { catalogId, pageId, products },
+    })
+  },
+
+  autoDistribute(
+    { getters, commit, dispatch },
+    { catalogId, layout, capacity }
+  ) {
     const catalog = getters.byId(catalogId)
     if (!catalog) return
+
+    const beforeSnapshot = catalogUndoSnapshot(catalog)
 
     const pages = Array.isArray(catalog.pages) ? catalog.pages : []
 
@@ -1261,7 +1439,10 @@ export const actions = {
 
       commit('SET_PAGES', { catalogId, pages: nextPages })
       commit('SET_NEEDS_REFLOW', { catalogId, value: false })
-      return
+      return dispatch('finalizeCatalogEdit', {
+        catalogId,
+        beforeSnapshot,
+      })
     }
 
     const chunks = chunkArray(all, capacity)
@@ -1291,51 +1472,91 @@ export const actions = {
 
     commit('SET_PAGES', { catalogId, pages: nextPages })
     commit('SET_NEEDS_REFLOW', { catalogId, value: false })
+
+    return dispatch('finalizeCatalogEdit', {
+      catalogId,
+      beforeSnapshot,
+    })
   },
 
   setActivePage({ commit }, { catalogId, pageIndex }) {
     commit('SET_ACTIVE_PAGE_INDEX', { catalogId, pageIndex })
   },
 
-  setPageLayout({ commit }, { catalogId, pageId, layout }) {
-    commit('SET_PAGE_LAYOUT', { catalogId, pageId, layout })
+  setPageLayout({ dispatch }, { catalogId, pageId, layout }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'SET_PAGE_LAYOUT',
+      payload: { catalogId, pageId, layout },
+    })
     // commit('SET_NEEDS_REFLOW', { catalogId, value: true })
   },
 
-  addEmptyPage({ getters, commit }, { catalogId, layout }) {
+  addEmptyPage({ getters, commit, dispatch }, { catalogId, layout }) {
     const catalog = getters.byId(catalogId)
     if (!catalog) return 0
+
+    const beforeSnapshot = catalogUndoSnapshot(catalog)
 
     const pages = Array.isArray(catalog.pages) ? catalog.pages : []
     const nextIndex = pages.length
 
     commit('ADD_EMPTY_PAGE', { catalogId, layout })
 
+    dispatch('finalizeCatalogEdit', {
+      catalogId,
+      beforeSnapshot,
+    })
+
     return nextIndex
   },
 
-  duplicatePage({ commit }, { catalogId, pageIndex }) {
-    commit('DUPLICATE_PAGE', { catalogId, pageIndex })
+  duplicatePage({ dispatch }, { catalogId, pageIndex }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'DUPLICATE_PAGE',
+      payload: { catalogId, pageIndex },
+    })
   },
 
-  deletePage({ commit }, { catalogId, pageIndex }) {
-    commit('DELETE_PAGE', { catalogId, pageIndex })
+  deletePage({ dispatch }, { catalogId, pageIndex }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'DELETE_PAGE',
+      payload: { catalogId, pageIndex },
+    })
   },
 
-  movePage({ commit }, { catalogId, fromIndex, toIndex }) {
-    commit('MOVE_PAGE', { catalogId, fromIndex, toIndex })
+  movePage({ dispatch }, { catalogId, fromIndex, toIndex }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'MOVE_PAGE',
+      payload: { catalogId, fromIndex, toIndex },
+    })
   },
 
-  renamePage({ commit }, { catalogId, pageId, name }) {
-    commit('RENAME_PAGE', { catalogId, pageId, name })
+  renamePage({ dispatch }, { catalogId, pageId, name }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'RENAME_PAGE',
+      payload: { catalogId, pageId, name },
+    })
   },
 
-  ensureCoverPage({ commit }, { catalogId }) {
-    commit('ENSURE_COVER_PAGE', { catalogId })
+  ensureCoverPage({ dispatch }, { catalogId }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'ENSURE_COVER_PAGE',
+      payload: { catalogId },
+    })
   },
 
-  updateCover({ commit }, { catalogId, patch }) {
-    commit('UPDATE_COVER', { catalogId, patch })
+  updateCover({ dispatch }, { catalogId, patch }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'UPDATE_COVER',
+      payload: { catalogId, patch },
+    })
   },
 
   async ensureShareToken({ getters, commit }, { catalogId }) {
@@ -1378,16 +1599,28 @@ export const actions = {
     return token
   },
 
-  updateSettings({ commit }, { catalogId, patch }) {
-    commit('UPDATE_SETTINGS', { catalogId, patch })
+  updateSettings({ dispatch }, { catalogId, patch }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'UPDATE_SETTINGS',
+      payload: { catalogId, patch },
+    })
   },
 
-  applyTemplate({ commit }, { catalogId, key, applyToPages }) {
-    commit('APPLY_TEMPLATE', { catalogId, key, applyToPages })
+  applyTemplate({ dispatch }, { catalogId, key, applyToPages }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'APPLY_TEMPLATE',
+      payload: { catalogId, key, applyToPages },
+    })
   },
 
-  updateTheme({ commit }, { catalogId, patch }) {
-    commit('UPDATE_THEME', { catalogId, patch })
+  updateTheme({ dispatch }, { catalogId, patch }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'UPDATE_THEME',
+      payload: { catalogId, patch },
+    })
   },
 
   async exportPdfStart({ commit, dispatch }, { catalogId, totalPages }) {
@@ -1663,32 +1896,149 @@ export const actions = {
     setTimeout(() => commit('HIDE_TOAST'), ms)
   },
 
-  updateCatalogMeta({ commit }, { catalogId, patch }) {
-    commit('UPDATE_CATALOG_META', { catalogId, patch })
-  },
-
-  applyLayoutToPages({ commit }, { catalogId, pageIds, layout, skipCover }) {
-    commit('APPLY_LAYOUT_TO_PAGES', {
+  updateCatalogMeta({ dispatch }, { catalogId, patch }) {
+    return dispatch('commitCatalogEdit', {
       catalogId,
-      pageIds,
-      layout,
-      skipCover: skipCover !== false,
+      mutation: 'UPDATE_CATALOG_META',
+      payload: { catalogId, patch },
     })
   },
 
-  setPageLocked({ commit }, { catalogId, pageId, locked }) {
-    commit('SET_PAGE_LOCKED', { catalogId, pageId, locked })
-  },
-
-  unlockAllPages({ commit }, { catalogId, skipCover }) {
-    commit('UNLOCK_ALL_PAGES', {
+  applyLayoutToPages({ dispatch }, { catalogId, pageIds, layout, skipCover }) {
+    return dispatch('commitCatalogEdit', {
       catalogId,
-      skipCover: skipCover !== false,
+      mutation: 'APPLY_LAYOUT_TO_PAGES',
+      payload: {
+        catalogId,
+        pageIds,
+        layout,
+        skipCover: skipCover !== false,
+      },
     })
   },
 
-  updatePageHero({ commit }, { catalogId, pageId, hero }) {
-    commit('UPDATE_PAGE_HERO', { catalogId, pageId, hero })
+  setPageLocked({ dispatch }, { catalogId, pageId, locked }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'SET_PAGE_LOCKED',
+      payload: { catalogId, pageId, locked },
+    })
+  },
+
+  unlockAllPages({ dispatch }, { catalogId, skipCover }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'UNLOCK_ALL_PAGES',
+      payload: {
+        catalogId,
+        skipCover: skipCover !== false,
+      },
+    })
+  },
+
+  updatePageHero({ dispatch }, { catalogId, pageId, hero }) {
+    return dispatch('commitCatalogEdit', {
+      catalogId,
+      mutation: 'UPDATE_PAGE_HERO',
+      payload: { catalogId, pageId, hero },
+    })
+  },
+
+  undoCatalogEdit({ state, getters, commit }, { catalogId }) {
+    const key = String(catalogId)
+    const history = state.undoHistoryByCatalogId[key] || {
+      past: [],
+      future: [],
+    }
+
+    if (!history.past.length) return false
+
+    const currentCatalog = getters.byId(catalogId)
+    if (!currentCatalog) return false
+
+    const currentSnapshot = catalogUndoSnapshot(currentCatalog)
+    const undoSnapshot = history.past[history.past.length - 1]
+
+    const nextPast = history.past.slice(0, history.past.length - 1)
+    const nextFuture = [deepClone(currentSnapshot), ...history.future].slice(
+      0,
+      CATALOG_UNDO_HISTORY_LIMIT
+    )
+
+    commit('SET_CATALOG_FROM_SNAPSHOT', {
+      catalogId,
+      snapshot: undoSnapshot,
+    })
+
+    const restored = getters.byId(catalogId)
+    const restoredPages =
+      restored && Array.isArray(restored.pages) ? restored.pages : []
+
+    const active = getters.activePageIndex(catalogId)
+    const max = Math.max(0, restoredPages.length - 1)
+
+    commit('SET_ACTIVE_PAGE_INDEX', {
+      catalogId,
+      pageIndex: Math.min(active, max),
+    })
+
+    commit('SET_NEEDS_REFLOW', { catalogId, value: false })
+
+    commit('SET_CATALOG_UNDO_HISTORY', {
+      catalogId,
+      past: nextPast,
+      future: nextFuture,
+    })
+
+    return true
+  },
+
+  redoCatalogEdit({ state, getters, commit }, { catalogId }) {
+    const key = String(catalogId)
+    const history = state.undoHistoryByCatalogId[key] || {
+      past: [],
+      future: [],
+    }
+
+    if (!history.future.length) return false
+
+    const currentCatalog = getters.byId(catalogId)
+    if (!currentCatalog) return false
+
+    const currentSnapshot = catalogUndoSnapshot(currentCatalog)
+    const redoSnapshot = history.future[0]
+
+    const nextFuture = history.future.slice(1)
+    const nextPast = [...history.past, deepClone(currentSnapshot)].slice(
+      -CATALOG_UNDO_HISTORY_LIMIT
+    )
+
+    commit('SET_CATALOG_FROM_SNAPSHOT', {
+      catalogId,
+      snapshot: redoSnapshot,
+    })
+
+    const restored = getters.byId(catalogId)
+    const restoredPages =
+      restored && Array.isArray(restored.pages) ? restored.pages : []
+
+    const active = getters.activePageIndex(catalogId)
+    const max = Math.max(0, restoredPages.length - 1)
+
+    commit('SET_ACTIVE_PAGE_INDEX', {
+      catalogId,
+      pageIndex: Math.min(active, max),
+    })
+
+    commit('SET_NEEDS_REFLOW', { catalogId, value: false })
+
+    commit('SET_CATALOG_UNDO_HISTORY', {
+      catalogId,
+      past: nextPast,
+      future: nextFuture,
+    })
+
+    return true
   },
 
   async fetchCatalog({ getters, commit }, { id, force } = {}) {
