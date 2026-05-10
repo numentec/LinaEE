@@ -185,9 +185,15 @@ class CatalogViewSet(CommonViewSet):
             owner=request.user,
             catalog=catalog,
             status="queued",
+            cancel_requested=False,
+            cancelled_at=None,
+            celery_task_id="",
         )
 
-        generate_catalog_pdf.delay(str(job.id))
+        async_result = generate_catalog_pdf.delay(str(job.id))
+        if async_result and async_result.id:
+            job.celery_task_id = str(async_result.id)
+            job.save(update_fields=["celery_task_id", "updated_at"])
 
         return Response(
             {"job_id": str(job.id), "status": job.status},

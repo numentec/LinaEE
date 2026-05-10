@@ -19,7 +19,7 @@ from .views import (
     ProductsAPIView,
     CatalogImageLibraryAPIView,
 )
-from .api_pdf_jobs import pdf_job_status, pdf_job_download
+from .api_pdf_jobs import pdf_job_status, pdf_job_download, pdf_job_cancel
 app_name = "catalog"
 
 router = DefaultRouter()
@@ -42,6 +42,7 @@ urlpatterns = [
     path("api/public/catalogs/<str:token>/", PublicCatalogByTokenView.as_view()),
     path("api/pdf-jobs/<str:job_id>/", pdf_job_status),
     path("api/pdf-jobs/<str:job_id>/download/", pdf_job_download),
+    path("api/pdf-jobs/<str:job_id>/cancel/", pdf_job_cancel),
 
     # Endpoints para consultas de categorías
     # 1. Listado general de todas las categorías con compañías disponibles

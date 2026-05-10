@@ -231,9 +231,18 @@ class PdfJob(models.Model):
 
     status = models.CharField(
         max_length=16,
-        choices=(("queued","queued"),("running","running"),("success","success"),("failed","failed")),
+        choices=(
+            ("queued", "queued"),
+            ("running", "running"),
+            ("success", "success"),
+            ("failed", "failed"),
+            ("cancelled", "cancelled"),
+        ),
         default="queued",
     )
+    cancel_requested = models.BooleanField(default=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    celery_task_id = models.CharField(max_length=64, blank=True, default="")
     file_path = models.TextField(blank=True, default="")
     error = models.TextField(blank=True, default="")
 
