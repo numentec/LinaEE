@@ -1186,10 +1186,10 @@ export default {
       distributeCapacity: 8,
 
       layoutItems: [
-        { text: 'Destacado 1 producto (HERO)', value: 'hero_1' },
-        { text: 'Destacado 2 productos (HERO)', value: 'hero_2' },
-        { text: 'Hero 3 vertical', value: 'hero_3' },
-        { text: 'Hero 4 horizontal', value: 'hero_4' },
+        { text: 'Estilo_1 1 producto', value: 'hero_1' },
+        { text: 'Estilo_2 2 productos', value: 'hero_2' },
+        { text: 'Estilo_3 vertical', value: 'hero_3' },
+        { text: 'Estilo_4 horizontal', value: 'hero_4' },
         { text: 'Cuadrícula a 2 columnas', value: 'grid_2' },
         { text: 'Cuadrícula a 3 columnas', value: 'grid_3' },
         { text: 'Lista (6)', value: 'list_compact' },
