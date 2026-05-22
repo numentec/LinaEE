@@ -3,10 +3,7 @@ version: '3'
 services:
   # MariaDB service for LinaEE
   linadb:
-    # Descomentar la siguiente línea para nuevos despliegues
-    # image: linuxserver/mariadb:10.5.17
-    # Comentar la siguiente línea para nuevos despliegues
-    image: ghcr.io/linuxserver/mariadb
+    image: linuxserver/mariadb:10.5.17
     container_name: linadb
     environment:
       - PUID=1000
@@ -17,7 +14,7 @@ services:
       - MYSQL_PASSWORD=${DB_USER_PW}
       - TZ=${LOC_TZ}
     volumes:
-      - /home/numen/linadbsql/linaee.sql:/docker-entrypoint-initdb.d/1.sql
+      - dbdata:/var/lib/mysql/data
       - /home/numen/linadb:/config
     networks:
       net:
@@ -26,12 +23,10 @@ services:
         - 3305:3306
     restart: unless-stopped
 
+
   # Django backend service
   be:
-    # build:
-    #  context: ./linabe
-    #  dockerfile: Dockerfile
-    image: galvanino/linabe:0.0.1
+    image: galvanino/linabe:0.0.2
     container_name: linabe
     env_file:
       - ./.env
@@ -50,10 +45,7 @@ services:
 
   # Nuxt frontend service
   fe:
-    # build:
-    #  context: ./linafe
-    #  dockerfile: Dockerfile
-    image: galvanino/linafe:0.0.1
+    image: galvanino/linafe:0.0.2
     container_name: linafe
     environment:
       HOST: 0.0.0.0
@@ -63,6 +55,7 @@ services:
       NODE_ENV: production
     volumes:
       - ./linafe:/linafe
+      - linafe_node_modules:/linafe/node_modules
     networks:
       net:
         ipv4_address: 192.168.15.3
@@ -78,19 +71,16 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: always
-    networks: 
+    networks:
       net:
         ipv4_address: 192.168.15.6
 
 
   celery_worker:
-    build:
-      context: ./linabe
-      dockerfile: Dockerfile
-    image: linabe_celery_worker
+    image: galvanino/linabe:0.0.2
     container_name: celeryworker
     command: /start-celeryworker
-    networks: 
+    networks:
       net:
         ipv4_address: 192.168.15.7
     volumes:
@@ -101,12 +91,8 @@ services:
       - redis
       - linadb
 
-
   flower:
-    build:
-      context: ./linabe
-      dockerfile: Dockerfile
-    image: linabe_celery_flower
+    image: galvanino/linabe:0.0.2
     container_name: celeryflower
     command: /start-flower
     volumes:
@@ -119,43 +105,43 @@ services:
       - redis
       - linadb
     networks:
-      net: 
+      net:
         ipv4_address: 192.168.15.8
 
 
-  # Proxies requests to internal services Nginx Reverse Proxy
-  swag:
-    image: ghcr.io/linuxserver/swag
-    container_name: swag
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=${LOC_TZ}
-      - URL=${DOMAIN_URL}
-      - SUBDOMAINS=${SUBDOMAINS}
-      - VALIDATION=dns
-      - DNSPLUGIN=hetzner
-    volumes:
-      - /home/numen/swag:/config
-      - /home/numen/www/html:/var/www/html
-      - ./linabe/static:/static
-      - ./linabe/media:/media
-    networks:
-      net:
-        ipv4_address: 192.168.15.11
-    ports:
-      - 443:443
-      - 80:80
-    depends_on:
-        - be
-        - fe
-    restart: unless-stopped
+  # # Proxies requests to internal services Nginx Reverse Proxy
+  # swag:
+  #   image: ghcr.io/linuxserver/swag
+  #   container_name: swag
+  #   cap_add:
+  #     - NET_ADMIN
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=${LOC_TZ}
+  #     - URL=${DOMAIN_URL}
+  #     - SUBDOMAINS=${SUBDOMAINS}
+  #     - VALIDATION=dns
+  #     - DNSPLUGIN=hetzner
+  #   volumes:
+  #     - /home/numen/swag:/config
+  #     - /home/numen/www/html:/var/www/html
+  #     - ./linabe/static:/static
+  #     - ./linabe/media:/media
+  #   networks:
+  #     net:
+  #       ipv4_address: 192.168.15.11
+  #   ports:
+  #     - 443:443
+  #     - 80:80
+  #   depends_on:
+  #       - be
+  #       - fe
+  #   restart: unless-stopped
 
-# volumes:
-#   odoo-db-data:
-#   odoo-web-data:
+volumes:
+  dbdata:
+  linafe_node_modules:
 
 networks:
   net:
