@@ -167,10 +167,7 @@
                 </div>
               </div>
             </div>
-            <div
-              v-if="slot.gallery_urls && slot.gallery_urls.length"
-              class="hero-thumbs"
-            >
+            <div class="hero-thumbs">
               <img
                 v-for="u in slot.gallery_urls"
                 :key="u"
@@ -958,6 +955,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
+  min-height: 124px;
 }
 
 .hero-thumb {

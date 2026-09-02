@@ -95,10 +95,7 @@
                   </div>
                 </div>
               </div>
-              <div
-                v-if="s.gallery_urls && s.gallery_urls.length"
-                class="hero-thumbs"
-              >
+              <div class="hero-thumbs">
                 <img
                   v-for="u in s.gallery_urls"
                   :key="u"
@@ -807,6 +804,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
+  min-height: 124px;
 }
 
 .hero-thumb {
