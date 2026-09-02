@@ -1186,13 +1186,13 @@ export default {
       distributeCapacity: 8,
 
       layoutItems: [
-        { text: 'Estilo_1 1 producto', value: 'hero_1' },
-        { text: 'Estilo_2 2 productos', value: 'hero_2' },
-        { text: 'Estilo_3 vertical', value: 'hero_3' },
-        { text: 'Estilo_4 horizontal', value: 'hero_4' },
-        { text: 'Cuadrícula a 2 columnas', value: 'grid_2' },
-        { text: 'Cuadrícula a 3 columnas', value: 'grid_3' },
-        { text: 'Lista (6)', value: 'list_compact' },
+        { text: 'Hero1 · 1 item', value: 'hero_1' },
+        { text: 'Hero2 · 2 items', value: 'hero_2' },
+        { text: 'Hero3 · portrait', value: 'hero_3' },
+        { text: 'Hero4 · landscape', value: 'hero_4' },
+        { text: '2 columns grid', value: 'grid_2' },
+        { text: '3 columns grid', value: 'grid_3' },
+        { text: 'List (6)', value: 'list_compact' },
       ],
 
       selectedPageIds: [],
