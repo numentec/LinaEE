@@ -770,6 +770,7 @@
 
                     <div v-if="slot.product_key">
                       <v-select
+                        v-show="false"
                         :value="slot.main_url"
                         :items="
                           imagesForProductKey(slot.product_key).map((u) => ({
@@ -1851,6 +1852,8 @@ export default {
         capacity: this.distributeCapacity,
       })
 
+      await this.heroAutoFillScope({ fillMode: 'full', scope: 'all' })
+
       this.setActivePage(0)
       this.showDistributeDialog = false
     },
@@ -2343,10 +2346,10 @@ export default {
 
     onToggleHeroGalleryImage(slotIndex, url, isSelected) {
       const slot = this.heroSlotModels[slotIndex] || {}
-      const mainUrl = slot.main_url || ''
+      // const mainUrl = slot.main_url || ''
 
       // La imagen principal no se agrega ni se quita de galería con click normal
-      if (url === mainUrl) return
+      // if (url === mainUrl) return
 
       const current = Array.isArray(slot.gallery_urls) ? slot.gallery_urls : []
 
@@ -2473,17 +2476,21 @@ export default {
     // Botón: aplicar auto-fill en lote (todas / seleccionadas / actual)
     // - solo afecta páginas HERO
     // - respeta locked (no toca páginas bloqueadas)
-    async heroAutoFillScope({ fillMode = 'full' } = {}) {
+    async heroAutoFillScope({ fillMode = 'full', scope = null } = {}) {
       const catalogId = this.catalogId
       const pages = Array.isArray(this.pages) ? this.pages : []
 
       // decide scope (si no te pasan scope, usa la misma lógica de layoutScope)
-      let effectiveScope = 'current'
+      let effectiveScope = scope
 
-      if (this.allSelected) {
-        effectiveScope = 'all'
-      } else if (this.selectedPageIds.length) {
-        effectiveScope = 'selected'
+      if (!effectiveScope) {
+        effectiveScope = 'current'
+
+        if (this.allSelected) {
+          effectiveScope = 'all'
+        } else if (this.selectedPageIds.length) {
+          effectiveScope = 'selected'
+        }
       }
 
       let targetIds = []
@@ -2709,7 +2716,7 @@ export default {
 }
 
 .hero-grid-item.principal:hover {
-  cursor: not-allowed;
+  cursor: cell;
 }
 
 .hero-grid-item.disabled {
