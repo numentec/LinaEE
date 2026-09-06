@@ -899,7 +899,8 @@ export default {
 
 .hero3-middle {
   display: grid;
-  grid-template-columns: 1fr 140px;
+  grid-template-columns: minmax(0, 500px) 140px;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -912,7 +913,7 @@ export default {
 
 .hero3-main-img {
   width: 100%;
-  height: 280px;
+  height: 480px;
   object-fit: contain;
   background: #fafafa;
   border-radius: 6px;
