@@ -133,9 +133,9 @@ export const modulos = [
     ],
   },
   {
-    name: 'shoppingcart',
+    name: 'saleapp',
     icon: 'mdi-cart-variant',
-    title: 'Shopping',
+    title: 'SaleApp',
     perm: 'core.acc_crm',
     items: [
       {
