@@ -109,35 +109,35 @@ services:
         ipv4_address: 192.168.15.8
 
 
-  # # Proxies requests to internal services Nginx Reverse Proxy
-  # swag:
-  #   image: ghcr.io/linuxserver/swag
-  #   container_name: swag
-  #   cap_add:
-  #     - NET_ADMIN
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=${LOC_TZ}
-  #     - URL=${DOMAIN_URL}
-  #     - SUBDOMAINS=${SUBDOMAINS}
-  #     - VALIDATION=dns
-  #     - DNSPLUGIN=hetzner
-  #   volumes:
-  #     - /home/numen/swag:/config
-  #     - /home/numen/www/html:/var/www/html
-  #     - ./linabe/static:/static
-  #     - ./linabe/media:/media
-  #   networks:
-  #     net:
-  #       ipv4_address: 192.168.15.11
-  #   ports:
-  #     - 443:443
-  #     - 80:80
-  #   depends_on:
-  #       - be
-  #       - fe
-  #   restart: unless-stopped
+  # Proxies requests to internal services Nginx Reverse Proxy
+  swag:
+    image: ghcr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${LOC_TZ}
+      - URL=${DOMAIN_URL}
+      - SUBDOMAINS=${SUBDOMAINS}
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
+    volumes:
+      - /home/numen/swag:/config
+      - /home/numen/www/html:/var/www/html
+      - ./linabe/static:/static
+      - ./linabe/media:/media
+    networks:
+      net:
+        ipv4_address: 192.168.15.11
+    ports:
+      - 443:443
+      - 80:80
+    depends_on:
+        - be
+        - fe
+    restart: unless-stopped
 
 volumes:
   dbdata:
