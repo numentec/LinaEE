@@ -1,8 +1,48 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from .models import CatalogMaster
-from .serializers import CatalogSerializer
+from .models import CatalogMaster, Category
+from .serializers import CatalogSerializer, CategoryHierarchySerializer
+
+
+class CategoryOrderingTests(TestCase):
+	def test_all_zero_ordinals_are_ordered_by_name(self):
+		Category.objects.create(name="Zulu")
+		Category.objects.create(name="Alpha")
+
+		categories = Category.objects.all().ordered_for_display()
+
+		self.assertEqual(list(categories.values_list("name", flat=True)), ["Alpha", "Zulu"])
+
+	def test_nonzero_ordinal_switches_to_ordinal_order_with_name_tiebreaker(self):
+		Category.objects.create(name="Zulu", ordinal=1)
+		Category.objects.create(name="Alpha", ordinal=1)
+		Category.objects.create(name="Middle", ordinal=2)
+
+		categories = Category.objects.all().ordered_for_display()
+
+		self.assertEqual(list(categories.values_list("name", flat=True)), ["Alpha", "Zulu", "Middle"])
+
+	def test_ordinal_check_uses_the_filtered_queryset(self):
+		Category.objects.create(name="Zulu", ordinal=4)
+		Category.objects.create(name="Alpha", ordinal=0)
+		Category.objects.create(name="Beta", ordinal=0)
+
+		categories = Category.objects.filter(ordinal=0).ordered_for_display()
+
+		self.assertEqual(list(categories.values_list("name", flat=True)), ["Alpha", "Beta"])
+
+	def test_nested_children_use_conditional_order(self):
+		parent = Category.objects.create(name="Parent")
+		Category.objects.create(name="Zulu", parent=parent, ordinal=2)
+		Category.objects.create(name="Alpha", parent=parent, ordinal=1)
+
+		serializer = CategoryHierarchySerializer(parent, context={"include_children": True})
+
+		self.assertEqual(
+			[item["name"] for item in serializer.data["children"]],
+			["Alpha", "Zulu"],
+		)
 
 
 class CatalogMasterRegressionTests(TestCase):

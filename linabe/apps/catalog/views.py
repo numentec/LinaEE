@@ -122,8 +122,13 @@ class CategoryViewSet(CommonViewSet):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_queryset(self):
+        queryset = Category.objects.all()
+        if self.action == 'list':
+            return queryset.ordered_for_display()
+        return queryset
 
 class TagViewSet(CommonViewSet):
     authentication_classes = [authentication.TokenAuthentication]
@@ -451,7 +456,7 @@ class CategoriesListAPIView(APIView):
 
     def get(self, request):
         """Retorna todas las categorías con información de compañías disponibles"""
-        categories = Category.objects.filter(is_active=True).prefetch_related('available_for_companies')
+        categories = Category.objects.filter(is_active=True).ordered_for_display().prefetch_related('available_for_companies')
         serializer = CategoryWithCompaniesSerializer(categories, many=True)
         
         return Response({
@@ -485,7 +490,7 @@ class TopCategoriesByCompanyAPIView(APIView):
         ).filter(
             Q(available_for_companies=company) |  # Disponible para esta compañía
             Q(available_for_companies__isnull=True)  # Sin restricciones
-        ).distinct().prefetch_related('available_for_companies', 'children')
+        ).distinct().ordered_for_display().prefetch_related('available_for_companies', 'children')
 
         serializer = CategoryHierarchySerializer(
             top_categories, 
@@ -537,7 +542,7 @@ class CategoriesByParentAndCompanyAPIView(APIView):
         ).filter(
             Q(available_for_companies=company) |  # Disponible para esta compañía
             Q(available_for_companies__isnull=True)  # Sin restricciones
-        ).distinct().prefetch_related('available_for_companies', 'children')
+        ).distinct().ordered_for_display().prefetch_related('available_for_companies', 'children')
 
         serializer = CategoryHierarchySerializer(
             subcategories, 

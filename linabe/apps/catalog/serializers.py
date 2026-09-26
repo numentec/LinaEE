@@ -25,7 +25,7 @@ class CategoryWithCompaniesSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Category
-        fields = ('id', 'name', 'parent', 'parent_name', 'description', 'ext_related_id', 
+        fields = ('id', 'name', 'ordinal', 'parent', 'parent_name', 'description', 'ext_related_id', 
                  'image', 'available_companies', 'available_companies_count', 'children_count',
                  'created_at', 'modified_at', 'is_active')
     
@@ -46,7 +46,7 @@ class CategoryHierarchySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Category
-        fields = ('id', 'name', 'description', 'ext_related_id', 'image', 
+        fields = ('id', 'name', 'ordinal', 'description', 'ext_related_id', 'image', 
                  'available_for_company', 'children', 'brands', 'created_at', 'is_active')
     
     def get_available_for_company(self, obj):
@@ -64,7 +64,7 @@ class CategoryHierarchySerializer(serializers.ModelSerializer):
         """Retorna las subcategorías si es necesario"""
         include_children = self.context.get('include_children', False)
         if include_children:
-            children = obj.children.filter(is_active=True)
+            children = obj.children.filter(is_active=True).ordered_for_display()
             return CategoryHierarchySerializer(children, many=True, context=self.context).data
         return []
     

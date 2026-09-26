@@ -34,6 +34,13 @@ def catalog_path(instance, filename):
     return os.path.join('images/catalogs/', cpath, filename)
 
 
+class CategoryQuerySet(models.QuerySet):
+    def ordered_for_display(self):
+        if self.exclude(ordinal=0).exists():
+            return self.order_by('ordinal', 'name')
+        return self.order_by('name')
+
+
 class Category(Common):
     """Modelo para categorías de catálogo
     Este modelo permite crear una jerarquía de categorías para organizar los detalles del catálogo.
@@ -60,6 +67,7 @@ class Category(Common):
         blank=True,
         help_text="Selecciona las compañías para las cuales esta categoría está disponible"
     )
+    objects = CategoryQuerySet.as_manager()
 
     def __str__(self):
         return self.name
