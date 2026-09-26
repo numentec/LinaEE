@@ -40,6 +40,7 @@ class Category(Common):
     Cada categoría puede tener un padre, lo que permite crear subcategorías.
     """
     name = models.CharField(max_length=100)
+    ordinal = models.IntegerField(default=0)
     parent = models.ForeignKey(
         'self',
         null=True,
