@@ -14,6 +14,7 @@
                 img_full_path: item.image,
               }"
               @card-clicked="setSelectProductsByElement"
+              @category-updated="onCategoryUpdated"
             />
           </v-list>
         </div>
@@ -28,6 +29,7 @@
               img_full_path: item.image,
             }"
             @card-clicked="setSelectProductsByElement"
+            @category-updated="onCategoryUpdated"
           />
         </div>
       </v-col>
@@ -131,6 +133,13 @@ export default {
     ]),
     setLink() {
       return this.getViewConfElement('link', 'configval2') ?? this.link
+    },
+    onCategoryUpdated() {
+      this.$store.dispatch('shoppingcart/categories/fetchCategories', {
+        name: 'Category',
+        company_id: '1',
+        parent_id: this.$route.query?.parent_id || null,
+      })
     },
   },
 }

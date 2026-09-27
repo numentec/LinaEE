@@ -308,6 +308,23 @@ export const actions = {
       })
   },
 
+  async updateCategory({ commit }, { categoryId, formData }) {
+    try {
+      return await this.$axios.$patch(
+        `catalog/categories/${categoryId}/`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
+    } catch (error) {
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.image?.[0] ||
+        error.response?.data?.ordinal?.[0] ||
+        'No fue posible actualizar la categoría.'
+      throw new Error(message)
+    }
+  },
+
   // Función temporal para generar datos de prueba para los productos
   async fetchData({ commit, dispatch }, payload) {
     // commit('SET_LOADING_STATUS')

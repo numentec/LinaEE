@@ -1,57 +1,84 @@
 <template>
-  <v-hover>
-    <template v-slot:default="{ hover }">
-      <v-card
-        :elevation="hover ? 5 : 0"
-        :outlined="!hover"
-        :class="['mx-4 my-4']"
-        :max-width="cardWidth"
-        :loading="loadingView"
-        @click="goToView"
-      >
-        <v-img
-          :src="imgSrc"
-          :height="imgHeight"
-          cover
-          :lazy-src="lazySrc"
-          @error="onImgError"
+  <div>
+    <v-hover>
+      <template v-slot:default="{ hover }">
+        <v-card
+          :elevation="hover ? 5 : 0"
+          :outlined="!hover"
+          :class="['mx-4 my-4']"
+          :max-width="cardWidth"
+          :loading="loadingView"
+          @click="goToView"
         >
-          <template v-slot:placeholder>
-            <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-progress-circular
-                indeterminate
-                color="grey lighten-5"
-              ></v-progress-circular>
-            </v-row>
-          </template>
-          <v-toolbar
-            flat
-            color="rgba(0, 0, 0, 0.65)"
-            bottom
-            absolute
-            style="width: 100%"
+          <v-img
+            :src="imgSrc"
+            :height="imgHeight"
+            cover
+            :lazy-src="lazySrc"
+            @error="onImgError"
           >
-            <v-toolbar-title
-              :class="[
-                'white--text',
-                isMobile ? 'toolbar-title--small' : 'toolbar-title',
-              ]"
+            <template v-slot:placeholder>
+              <v-row class="fill-height ma-0" align="center" justify="center">
+                <v-progress-circular
+                  indeterminate
+                  color="grey lighten-5"
+                ></v-progress-circular>
+              </v-row>
+            </template>
+            <v-btn
+              v-if="canEdit"
+              icon
+              absolute
+              top
+              right
+              color="white"
+              style="background-color: rgba(0, 0, 0, 0.45)"
+              @click.stop="showEditDialog = true"
             >
-              {{ category.name }}
-            </v-toolbar-title>
-          </v-toolbar>
-        </v-img>
-        <v-overlay absolute :value="overlay">
-          <v-progress-circular indeterminate size="32"></v-progress-circular>
-        </v-overlay>
-      </v-card>
-    </template>
-  </v-hover>
+              <v-icon>mdi-pencil</v-icon>
+            </v-btn>
+            <v-toolbar
+              flat
+              color="rgba(0, 0, 0, 0.65)"
+              bottom
+              absolute
+              style="width: 100%"
+            >
+              <v-toolbar-title
+                :class="[
+                  'white--text',
+                  isMobile ? 'toolbar-title--small' : 'toolbar-title',
+                ]"
+              >
+                {{ category.name }}
+              </v-toolbar-title>
+            </v-toolbar>
+          </v-img>
+          <v-overlay absolute :value="overlay">
+            <v-progress-circular indeterminate size="32"></v-progress-circular>
+          </v-overlay>
+        </v-card>
+      </template>
+    </v-hover>
+    <CategoryEditDialog
+      v-if="canEdit"
+      v-model="showEditDialog"
+      :category="category"
+      @updated="$emit('category-updated', $event)"
+    />
+  </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import CategoryEditDialog from '~/components/shoppingcart/CategoryEditDialog.vue'
+import { joinUrl } from '~/utils/urls'
+
 export default {
   name: 'CategoryCard',
+  components: {
+    CategoryEditDialog,
+  },
   props: {
     category: {
       type: Object,
@@ -62,17 +89,22 @@ export default {
     return {
       loadingView: false,
       overlay: false,
+      showEditDialog: false,
       imgSrc: this.category.img_full_path
-        ? this.$config.publicURL + this.category.img_full_path
-        : this.$config.fotosURL + this.category.image,
+        ? joinUrl(this.$config.publicURL, this.category.img_full_path)
+        : joinUrl(this.$config.fotosURL, this.category.image),
       // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
 
   computed: {
+    ...mapGetters(['loggedInUser']),
     isMobile() {
       return this.$vuetify.breakpoint.mobile
+    },
+    canEdit() {
+      return !this.isMobile && !!this.loggedInUser?.is_superuser
     },
     cardWidth() {
       return this.isMobile ? 125 : 300

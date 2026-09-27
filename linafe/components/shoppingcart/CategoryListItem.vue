@@ -27,16 +27,34 @@
           {{ category.name }}
         </v-list-item-title>
       </v-list-item-content>
+      <v-list-item-action v-if="canEdit">
+        <v-btn icon @click.stop="showEditDialog = true">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+      </v-list-item-action>
     </v-list-item>
     <v-overlay :value="overlay">
       <v-progress-circular indeterminate size="32"></v-progress-circular>
     </v-overlay>
+    <CategoryEditDialog
+      v-if="canEdit"
+      v-model="showEditDialog"
+      :category="category"
+      @updated="$emit('category-updated', $event)"
+    />
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import CategoryEditDialog from '~/components/shoppingcart/CategoryEditDialog.vue'
+import { joinUrl } from '~/utils/urls'
+
 export default {
   name: 'CategoryListItem',
+  components: {
+    CategoryEditDialog,
+  },
   props: {
     category: {
       type: Object,
@@ -48,17 +66,22 @@ export default {
     return {
       loadingView: false,
       overlay: false,
+      showEditDialog: false,
       imgSrc: this.category.img_full_path
-        ? this.$config.publicURL + this.category.img_full_path
-        : this.$config.fotosURL + this.category.image,
+        ? joinUrl(this.$config.publicURL, this.category.img_full_path)
+        : joinUrl(this.$config.fotosURL, this.category.image),
       // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
     }
   },
 
   computed: {
+    ...mapGetters(['loggedInUser']),
     isMobile() {
       return this.$vuetify.breakpoint.mobile
+    },
+    canEdit() {
+      return !this.isMobile && !!this.loggedInUser?.is_superuser
     },
     sz() {
       // screen size

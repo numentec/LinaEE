@@ -27,6 +27,7 @@ import uuid
 
 from ..core.models import SQLQuery
 from ..core.views import CommonViewSet
+from linapi.permissions import IsSuperUserOrReadOnly
 from .models import (
     Category,
     Tag,
@@ -120,7 +121,7 @@ def build_catalog_image_payload(request, relative_dir, filename, absolute_path):
 
 class CategoryViewSet(CommonViewSet):
     authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsSuperUserOrReadOnly]
 
     serializer_class = CategorySerializer
 
