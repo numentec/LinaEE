@@ -134,7 +134,7 @@ export const modulos = [
   },
   {
     name: 'saleapp',
-    icon: 'mdi-cart-variant',
+    icon: 'mdi-sale-outline',
     title: 'SaleApp',
     perm: 'core.acc_crm',
     items: [
