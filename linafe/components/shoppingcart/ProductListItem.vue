@@ -31,10 +31,20 @@
         <v-list-item-title>{{ product.id }}</v-list-item-title>
         <v-list-item-subtitle>{{ product.name }}</v-list-item-subtitle>
         <v-list-item-subtitle>
-          <v-row justify="space-between" class="mx-1">
+          <v-row justify="space-between" align="center" class="mx-1">
             <div class="green--text">{{ formatedPrice }}</div>
-            <div class="light-blue--text lighten-2">
+            <div v-if="!showAllQuantities" class="light-blue--text lighten-2">
               {{ inStock }}
+            </div>
+            <div v-else class="stock-breakdown">
+              <div
+                v-for="stock in stockQuantities"
+                :key="stock.label"
+                class="stock-quantity"
+              >
+                <span>{{ stock.label }}</span>
+                <strong>{{ stock.value }}</strong>
+              </div>
             </div>
           </v-row>
         </v-list-item-subtitle>
@@ -140,6 +150,10 @@ export default {
       type: Number,
       default: 999,
     },
+    showAllQuantities: {
+      type: Boolean,
+      default: true,
+    },
   },
 
   data() {
@@ -218,6 +232,13 @@ export default {
         ? `Stk: ${this.product.instock}`
         : `In Stock: ${this.product.instock}`
     },
+    stockQuantities() {
+      return [
+        { label: 'Now', value: this.product.instock || 0 },
+        { label: 'Tran', value: this.product.intransit || 0 },
+        { label: 'Fut', value: this.product.infuture || 0 },
+      ]
+    },
   },
 
   watch: {
@@ -286,6 +307,26 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.stock-breakdown {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 0;
+  text-align: center;
+}
+.stock-quantity {
+  color: #039be5;
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  line-height: 1.2;
+}
+.stock-quantity strong {
+  font-weight: 500;
+}
+</style>
 
 <style scoped>
 .mx-2 {

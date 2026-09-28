@@ -56,6 +56,7 @@
           </v-card-text>
           <v-card-actions class="mt-2">
             <v-chip
+              v-if="!showAllQuantities"
               outlined
               color="light-blue lighten-2"
               class="mt-0"
@@ -64,7 +65,17 @@
             >
               {{ inStock }}
             </v-chip>
-            <v-spacer></v-spacer>
+            <div v-else class="stock-breakdown">
+              <div
+                v-for="stock in stockQuantities"
+                :key="stock.label"
+                class="stock-quantity"
+              >
+                <span>{{ stock.label }}</span>
+                <strong>{{ stock.value }}</strong>
+              </div>
+            </div>
+            <v-spacer v-if="!showAllQuantities"></v-spacer>
             <v-dialog v-model="dialog" max-width="500px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -167,6 +178,10 @@ export default {
       type: Number,
       default: 999,
     },
+    showAllQuantities: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -229,6 +244,13 @@ export default {
       return this.isMobile
         ? `Stk: ${this.product.instock}`
         : `In Stock: ${this.product.instock}`
+    },
+    stockQuantities() {
+      return [
+        { label: 'Now', value: this.product.instock || 0 },
+        { label: 'Tran', value: this.product.intransit || 0 },
+        { label: 'Fut', value: this.product.infuture || 0 },
+      ]
     },
     imgID() {
       console.log('***** imgID1 *****', this.product.id)
@@ -318,5 +340,22 @@ export default {
 }
 .centered-input >>> input {
   text-align: center;
+}
+.stock-breakdown {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 88px;
+  text-align: center;
+}
+.stock-quantity {
+  color: #039be5;
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  line-height: 1.2;
+}
+.stock-quantity strong {
+  font-weight: 500;
 }
 </style>
