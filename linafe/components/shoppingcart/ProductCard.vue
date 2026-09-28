@@ -51,7 +51,9 @@
               </v-chip>
             </v-row>
             <v-row dense>
-              <p class="mt-0 ml-2">{{ product.name }}</p>
+              <p class="mt-0 ml-2 product-name" :title="product.name">
+                {{ product.name }}
+              </p>
             </v-row>
           </v-card-text>
           <v-card-actions class="mt-2">
@@ -340,6 +342,11 @@ export default {
 }
 .centered-input >>> input {
   text-align: center;
+}
+.product-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .stock-breakdown {
   display: grid;
