@@ -3,7 +3,7 @@
     <div class="stock-filter-toolbar">
       <v-btn outlined color="primary" @click="openStockFilters">
         <v-icon left>mdi-tune-variant</v-icon>
-        Filtrar existencias
+        Filter stock
         <v-chip v-if="activeStockFilterCount" x-small class="ml-2">
           {{ activeStockFilterCount }}
         </v-chip>
@@ -51,10 +51,10 @@
     <v-bottom-sheet v-model="stockFiltersOpen" inset>
       <v-sheet class="stock-filter-sheet mx-auto">
         <div class="stock-filter-heading">
-          <h2>Filtrar existencias</h2>
+          <h2>Filter by stock</h2>
           <v-btn
             icon
-            aria-label="Cerrar filtros"
+            aria-label="Close filters"
             @click="stockFiltersOpen = false"
           >
             <v-icon>mdi-close</v-icon>
@@ -77,13 +77,30 @@
             <v-select
               v-model="stockFilterDraft[metric.field].operator"
               :items="stockFilterOperators"
-              item-text="text"
+              item-text="symbol"
               item-value="value"
-              label="Condición"
+              label="Condition"
               clearable
               dense
               hide-details
-            />
+            >
+              <template v-slot:item="{ item, attrs, on }">
+                <v-list-item v-bind="attrs" v-on="on">
+                  <v-list-item-content>
+                    <v-icon v-text="item.icon"></v-icon>
+                  </v-list-item-content>
+                </v-list-item>
+              </template>
+              <template v-slot:selection="{ item }">
+                <span
+                  class="operator-symbol"
+                  :aria-label="item.label"
+                  :title="item.label"
+                >
+                  {{ item.symbol }}
+                </span>
+              </template>
+            </v-select>
           </v-col>
           <v-col
             v-if="stockFilterDraft[metric.field].operator"
@@ -96,8 +113,8 @@
               v-model.number="stockFilterDraft[metric.field].value"
               :label="
                 stockFilterDraft[metric.field].operator === 'between'
-                  ? 'Desde'
-                  : 'Cantidad'
+                  ? 'From'
+                  : 'Quantity'
               "
               type="number"
               step="1"
@@ -113,7 +130,7 @@
           >
             <v-text-field
               v-model.number="stockFilterDraft[metric.field].valueTo"
-              label="Hasta"
+              label="To"
               type="number"
               step="1"
               inputmode="numeric"
@@ -125,7 +142,7 @@
         <v-divider class="my-3" />
         <div class="stock-filter-actions">
           <v-btn text :disabled="isLoading" @click="clearStockFilters">
-            Limpiar
+            Clear
           </v-btn>
           <v-spacer />
           <v-btn
@@ -133,7 +150,7 @@
             :loading="isLoading"
             @click="applyStockFilters"
           >
-            Aplicar
+            Apply
           </v-btn>
         </div>
       </v-sheet>
@@ -159,13 +176,33 @@ const STOCK_FILTER_METRICS = [
 ]
 
 const STOCK_FILTER_OPERATORS = [
-  { text: 'Igual a', value: 'eq' },
-  { text: 'Distinto de', value: 'ne' },
-  { text: 'Mayor que', value: 'gt' },
-  { text: 'Mayor o igual', value: 'gte' },
-  { text: 'Menor que', value: 'lt' },
-  { text: 'Menor o igual', value: 'lte' },
-  { text: 'Entre', value: 'between' },
+  { symbol: '=', label: 'Igual a', value: 'eq', icon: 'mdi-equal' },
+  {
+    symbol: '≠',
+    label: 'Distinto de',
+    value: 'ne',
+    icon: 'mdi-not-equal-variant',
+  },
+  { symbol: '>', label: 'Mayor que', value: 'gt', icon: 'mdi-greater-than' },
+  {
+    symbol: '≥',
+    label: 'Mayor o igual',
+    value: 'gte',
+    icon: 'mdi-greater-than-or-equal',
+  },
+  { symbol: '<', label: 'Menor que', value: 'lt', icon: 'mdi-less-than' },
+  {
+    symbol: '≤',
+    label: 'Menor o igual',
+    value: 'lte',
+    icon: 'mdi-less-than-or-equal',
+  },
+  {
+    symbol: '↔',
+    label: 'Entre (rango)',
+    value: 'between',
+    icon: 'mdi-arrow-left-right',
+  },
 ]
 
 function emptyStockFilters() {
@@ -491,6 +528,14 @@ export default {
 .stock-filter-row {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   min-height: 64px;
+}
+
+.operator-symbol {
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 600;
+  min-width: 2rem;
+  text-align: center;
 }
 
 @media (max-width: 600px) {
