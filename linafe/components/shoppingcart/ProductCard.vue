@@ -255,8 +255,6 @@ export default {
       ]
     },
     imgID() {
-      console.log('***** imgID1 *****', this.product.id)
-      console.log('***** imgID2 *****', this.product.image)
       const imgx = this.getImage(this.product.id) || this.product.image
 
       const imgName = imgx.substring(

@@ -1,5 +1,14 @@
 <template>
   <div>
+    <div class="stock-filter-toolbar">
+      <v-btn outlined color="primary" @click="openStockFilters">
+        <v-icon left>mdi-tune-variant</v-icon>
+        Filtrar existencias
+        <v-chip v-if="activeStockFilterCount" x-small class="ml-2">
+          {{ activeStockFilterCount }}
+        </v-chip>
+      </v-btn>
+    </div>
     <v-row>
       <v-col cols="12">
         <div v-if="isListView">
@@ -39,6 +48,96 @@
         </div>
       </v-col>
     </v-row>
+    <v-bottom-sheet v-model="stockFiltersOpen" inset>
+      <v-sheet class="stock-filter-sheet mx-auto">
+        <div class="stock-filter-heading">
+          <h2>Filtrar existencias</h2>
+          <v-btn
+            icon
+            aria-label="Cerrar filtros"
+            @click="stockFiltersOpen = false"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+        <v-alert v-if="stockFilterError" dense type="error">
+          {{ stockFilterError }}
+        </v-alert>
+        <v-row
+          v-for="metric in stockFilterMetrics"
+          :key="metric.field"
+          dense
+          align="center"
+          class="stock-filter-row"
+        >
+          <v-col cols="4" sm="2">
+            <strong>{{ metric.label }}</strong>
+          </v-col>
+          <v-col cols="8" sm="3">
+            <v-select
+              v-model="stockFilterDraft[metric.field].operator"
+              :items="stockFilterOperators"
+              item-text="text"
+              item-value="value"
+              label="Condición"
+              clearable
+              dense
+              hide-details
+            />
+          </v-col>
+          <v-col
+            v-if="stockFilterDraft[metric.field].operator"
+            :cols="
+              stockFilterDraft[metric.field].operator === 'between' ? 6 : 12
+            "
+            :sm="stockFilterDraft[metric.field].operator === 'between' ? 3 : 7"
+          >
+            <v-text-field
+              v-model.number="stockFilterDraft[metric.field].value"
+              :label="
+                stockFilterDraft[metric.field].operator === 'between'
+                  ? 'Desde'
+                  : 'Cantidad'
+              "
+              type="number"
+              step="1"
+              inputmode="numeric"
+              dense
+              hide-details
+            />
+          </v-col>
+          <v-col
+            v-if="stockFilterDraft[metric.field].operator === 'between'"
+            cols="6"
+            sm="4"
+          >
+            <v-text-field
+              v-model.number="stockFilterDraft[metric.field].valueTo"
+              label="Hasta"
+              type="number"
+              step="1"
+              inputmode="numeric"
+              dense
+              hide-details
+            />
+          </v-col>
+        </v-row>
+        <v-divider class="my-3" />
+        <div class="stock-filter-actions">
+          <v-btn text :disabled="isLoading" @click="clearStockFilters">
+            Limpiar
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            color="primary"
+            :loading="isLoading"
+            @click="applyStockFilters"
+          >
+            Aplicar
+          </v-btn>
+        </div>
+      </v-sheet>
+    </v-bottom-sheet>
     <Slideshow
       :data-source="getItemImages"
       :show-slideshow="slideshow"
@@ -52,6 +151,47 @@ import { mapActions, mapGetters } from 'vuex'
 import ProductCard from '~/components/shoppingcart/ProductCard.vue'
 import ProductListItem from '~/components/shoppingcart/ProductListItem.vue'
 import Slideshow from '~/components/shoppingcart/Slideshow'
+
+const STOCK_FILTER_METRICS = [
+  { field: 'instock', label: 'Now' },
+  { field: 'intransit', label: 'Tran' },
+  { field: 'infuture', label: 'Fut' },
+]
+
+const STOCK_FILTER_OPERATORS = [
+  { text: 'Igual a', value: 'eq' },
+  { text: 'Distinto de', value: 'ne' },
+  { text: 'Mayor que', value: 'gt' },
+  { text: 'Mayor o igual', value: 'gte' },
+  { text: 'Menor que', value: 'lt' },
+  { text: 'Menor o igual', value: 'lte' },
+  { text: 'Entre', value: 'between' },
+]
+
+function emptyStockFilters() {
+  return STOCK_FILTER_METRICS.reduce((filters, metric) => {
+    filters[metric.field] = { operator: '', value: '', valueTo: '' }
+    return filters
+  }, {})
+}
+
+function cloneStockFilters(filters) {
+  return STOCK_FILTER_METRICS.reduce((copy, metric) => {
+    const criterion = (filters && filters[metric.field]) || {}
+    copy[metric.field] = {
+      operator: criterion.operator || '',
+      value:
+        criterion.value === undefined || criterion.value === null
+          ? ''
+          : criterion.value,
+      valueTo:
+        criterion.valueTo === undefined || criterion.valueTo === null
+          ? ''
+          : criterion.valueTo,
+    }
+    return copy
+  }, {})
+}
 
 export default {
   components: {
@@ -92,6 +232,11 @@ export default {
       slideshow: false,
       noImgList: [],
       scrollTimeout: null,
+      stockFiltersOpen: false,
+      stockFilterDraft: emptyStockFilters(),
+      stockFilterError: '',
+      stockFilterMetrics: STOCK_FILTER_METRICS,
+      stockFilterOperators: STOCK_FILTER_OPERATORS,
     }
   },
 
@@ -108,6 +253,8 @@ export default {
       'getIsLoadingMore',
       'getAllDataLoaded',
       'getHasNextPage',
+      'getStockFilters',
+      'getIsLoading',
     ]),
 
     isLoadingMore() {
@@ -116,6 +263,14 @@ export default {
 
     allDataLoaded() {
       return this.getAllDataLoaded
+    },
+    isLoading() {
+      return this.getIsLoading
+    },
+    activeStockFilterCount() {
+      return STOCK_FILTER_METRICS.filter(
+        (metric) => this.getStockFilters[metric.field].operator
+      ).length
     },
 
     filteredItems() {
@@ -172,7 +327,70 @@ export default {
     ...mapActions('shoppingcart/products', [
       'setCountFilteredProducts',
       'loadMoreProducts',
+      'fetchProducts',
     ]),
+
+    openStockFilters() {
+      this.stockFilterDraft = cloneStockFilters(this.getStockFilters)
+      this.stockFilterError = ''
+      this.stockFiltersOpen = true
+    },
+
+    async applyStockFilters() {
+      const filters = {}
+
+      for (const metric of STOCK_FILTER_METRICS) {
+        const criterion = this.stockFilterDraft[metric.field]
+        if (!criterion.operator) continue
+
+        if (
+          criterion.value === '' ||
+          !Number.isSafeInteger(Number(criterion.value))
+        ) {
+          this.stockFilterError = `${metric.label}: ingresa una cantidad entera.`
+          return
+        }
+
+        const value = Number(criterion.value)
+        let valueTo
+        if (criterion.operator === 'between') {
+          if (
+            criterion.valueTo === '' ||
+            !Number.isSafeInteger(Number(criterion.valueTo))
+          ) {
+            this.stockFilterError = `${metric.label}: completa ambos límites con enteros.`
+            return
+          }
+          valueTo = Number(criterion.valueTo)
+          if (value > valueTo) {
+            this.stockFilterError = `${metric.label}: el límite inicial debe ser menor o igual al final.`
+            return
+          }
+        }
+
+        filters[metric.field] = {
+          operator: criterion.operator,
+          value,
+          valueTo,
+        }
+      }
+
+      this.stockFilterError = ''
+      try {
+        await this.fetchProducts({ page: 1, resetData: true, filters })
+        this.stockFiltersOpen = false
+        window.scrollTo(0, 0)
+        this.$nextTick(() => this.checkScrollPosition())
+      } catch (error) {
+        this.stockFilterError = 'No se pudieron cargar los productos filtrados.'
+      }
+    },
+
+    clearStockFilters() {
+      this.stockFilterDraft = emptyStockFilters()
+      this.stockFilterError = ''
+      return this.applyStockFilters()
+    },
 
     async loadSlideshow(src) {
       await this.$store.dispatch('shoppingcart/products/fetchItemImages', src)
@@ -240,6 +458,50 @@ export default {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.stock-filter-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 0;
+}
+
+.stock-filter-sheet {
+  max-height: 85vh;
+  max-width: 680px;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.stock-filter-heading,
+.stock-filter-actions {
+  align-items: center;
+  display: flex;
+}
+
+.stock-filter-heading {
+  justify-content: space-between;
+}
+
+.stock-filter-heading h2 {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.stock-filter-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  min-height: 64px;
+}
+
+@media (max-width: 600px) {
+  .stock-filter-toolbar {
+    padding: 4px 8px 0;
+  }
+
+  .stock-filter-sheet {
+    max-height: 90vh;
+    padding: 12px;
+  }
 }
 
 .loading-more {

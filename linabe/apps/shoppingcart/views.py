@@ -28,6 +28,54 @@ from .pagination_utils import paginate_stored_procedure_results
 from .pagination_utils import paginate_stored_procedure_results
 
 
+STOCK_FILTER_FIELDS = ('instock', 'intransit', 'infuture')
+STOCK_FILTER_OPERATORS = {
+    'eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between'
+}
+
+
+def parse_stock_filters(query_params):
+    filters = {}
+
+    for field in STOCK_FILTER_FIELDS:
+        operator = str(
+            query_params.get(f'{field}_operator', '')
+        ).strip().lower()
+        raw_value = query_params.get(f'{field}_value', '')
+        raw_value_to = query_params.get(f'{field}_value_to', '')
+
+        if not operator:
+            if str(raw_value).strip() or str(raw_value_to).strip():
+                raise ValueError(f'{field}: operator is required')
+            filters[field] = (None, None, None)
+            continue
+
+        if operator not in STOCK_FILTER_OPERATORS:
+            raise ValueError(f'{field}: unsupported operator')
+
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            raise ValueError(f'{field}: a whole-number value is required')
+
+        value_to = None
+        if operator == 'between':
+            try:
+                value_to = int(raw_value_to)
+            except (TypeError, ValueError):
+                raise ValueError(
+                    f'{field}: both range bounds must be whole numbers'
+                )
+            if value > value_to:
+                raise ValueError(f'{field}: range start must not exceed range end')
+        elif str(raw_value_to).strip():
+            raise ValueError(f'{field}: second value is only valid for between')
+
+        filters[field] = (operator, value, value_to)
+
+    return filters
+
+
 class CategoryBrandListAPIView(APIView):
     """ This view returns the list of Departments (DEPTO), Categories (CAT), or Subcategories (SUBCAT)
         along with the brands associated with each of them.
@@ -87,7 +135,7 @@ class CategoryBrandListAPIView(APIView):
 
 class ProductsAPIView(APIView):
     """ Returns the list of products according to the filters passed as parameters.
-        Parameters: depto, cat, scat, brands, cia, page, page_size
+        Parameters: depto, cat, scat, brands, cia, stock filters, page, page_size
         depto - Department
         cat - Category
         scat - Subcategory
@@ -125,12 +173,20 @@ class ProductsAPIView(APIView):
         else:
             p04 = ""  # If there are no brands, leave the parameter empty
 
-        pvals = p01 + p02 + p03 + p04 + p05
+        try:
+            stock_filters = parse_stock_filters(request.query_params)
+        except ValueError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if pvals == '00001':
+        pvals = p01 + p02 + p03 + p04 + p05
+        has_stock_filters = any(operator for operator, _, _ in stock_filters.values())
+
+        if pvals == '00001' and not has_stock_filters:
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         params = [p01, p02, p03, p04, p05]
+        for field in STOCK_FILTER_FIELDS:
+            params.extend(stock_filters[field])
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 

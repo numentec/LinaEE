@@ -10,6 +10,52 @@ const IMAGES = [
   '/shoppingcart/HBS01401N-B.jpg',
   '/shoppingcart/VLCSMLORG.jpg',
 ]
+const STOCK_FILTER_FIELDS = ['instock', 'intransit', 'infuture']
+
+function emptyStockFilters() {
+  return STOCK_FILTER_FIELDS.reduce((filters, field) => {
+    filters[field] = { operator: '', value: '', valueTo: '' }
+    return filters
+  }, {})
+}
+
+function normalizeStockFilters(filters) {
+  const normalized = emptyStockFilters()
+
+  STOCK_FILTER_FIELDS.forEach((field) => {
+    const criterion = (filters && filters[field]) || {}
+    normalized[field] = {
+      operator: criterion.operator || '',
+      value:
+        criterion.value === undefined || criterion.value === null
+          ? ''
+          : criterion.value,
+      valueTo:
+        criterion.valueTo === undefined || criterion.valueTo === null
+          ? ''
+          : criterion.valueTo,
+    }
+  })
+
+  return normalized
+}
+
+function stockFilterParams(filters) {
+  const params = {}
+
+  STOCK_FILTER_FIELDS.forEach((field) => {
+    const criterion = filters[field]
+    if (!criterion.operator) return
+
+    params[`${field}_operator`] = criterion.operator
+    params[`${field}_value`] = criterion.value
+    if (criterion.operator === 'between') {
+      params[`${field}_value_to`] = criterion.valueTo
+    }
+  })
+
+  return params
+}
 
 function getRandomBrand() {
   const randomIndex = Math.floor(Math.random() * BRANDSDATA.length)
@@ -54,11 +100,24 @@ export const state = () => ({
   totalPages: 0,
   isLoadingMore: false,
   allDataLoaded: false,
+  stockFilters: emptyStockFilters(),
+  productRequestId: 0,
 })
 
 export const mutations = {
   SET_PRODUCTS(state, products) {
     state.products = products
+  },
+  BEGIN_PRODUCTS_REQUEST(state, filters) {
+    state.productRequestId += 1
+    state.stockFilters = normalizeStockFilters(filters)
+    state.products = []
+    state.currentPage = 1
+    state.hasNextPage = false
+    state.totalPages = 0
+    state.allDataLoaded = false
+    state.isLoading = true
+    state.isLoadingMore = false
   },
   ADD_PRODUCTS(state, products) {
     // Para infinite scrolling - agregar productos a la lista existente
@@ -86,6 +145,9 @@ export const mutations = {
   },
   SET_LOADING_STATUS(state) {
     state.isLoading = !state.isLoading
+  },
+  SET_IS_LOADING(state, status) {
+    state.isLoading = status
   },
   SET_ITEM_IMAGES(state, itemImages) {
     state.itemImages = itemImages
@@ -124,14 +186,17 @@ export const actions = {
 
   async fetchProducts(
     { commit, rootGetters, state },
-    { page = 1, resetData = true } = {}
+    { page = 1, resetData = true, filters } = {}
   ) {
     if (resetData) {
-      commit('SET_LOADING_STATUS')
-      commit('RESET_PRODUCTS')
+      commit(
+        'BEGIN_PRODUCTS_REQUEST',
+        filters === undefined ? state.stockFilters : filters
+      )
     } else {
       commit('SET_LOADING_MORE', true)
     }
+    const requestId = state.productRequestId
 
     const selectedBrands =
       rootGetters['shoppingcart/categories/getSelectedBrands']
@@ -146,6 +211,7 @@ export const actions = {
       cia: '01',
       page,
       page_size: state.pageSize,
+      ...stockFilterParams(state.stockFilters),
     }
 
     try {
@@ -154,6 +220,7 @@ export const actions = {
       })
 
       const { results, count, page_info: pageInfo } = response.data
+      if (requestId !== state.productRequestId) return response.data
 
       if (resetData) {
         commit('SET_PRODUCTS', results)
@@ -170,17 +237,19 @@ export const actions = {
       })
 
       if (resetData) {
-        commit('SET_LOADING_STATUS')
+        commit('SET_IS_LOADING', false)
       } else {
         commit('SET_LOADING_MORE', false)
       }
 
       return response.data
     } catch (error) {
-      if (resetData) {
-        commit('SET_LOADING_STATUS')
-      } else {
-        commit('SET_LOADING_MORE', false)
+      if (requestId === state.productRequestId) {
+        if (resetData) {
+          commit('SET_IS_LOADING', false)
+        } else {
+          commit('SET_LOADING_MORE', false)
+        }
       }
       throw error
     }
@@ -188,7 +257,7 @@ export const actions = {
 
   async loadMoreProducts({ commit, dispatch, state, rootGetters }) {
     // Evitar múltiples cargas simultáneas
-    if (state.isLoadingMore || state.allDataLoaded) {
+    if (state.isLoading || state.isLoadingMore || state.allDataLoaded) {
       return
     }
 
@@ -280,4 +349,5 @@ export const getters = {
   getIsLoadingMore: (state) => state.isLoadingMore,
   getAllDataLoaded: (state) => state.allDataLoaded,
   getPageSize: (state) => state.pageSize,
+  getStockFilters: (state) => state.stockFilters,
 }
