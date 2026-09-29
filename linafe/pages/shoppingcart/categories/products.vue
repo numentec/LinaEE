@@ -155,6 +155,23 @@
         </div>
       </v-sheet>
     </v-bottom-sheet>
+    <v-fab-transition>
+      <v-btn
+        v-if="showBackToTop"
+        class="back-to-top"
+        color="primary"
+        fab
+        fixed
+        bottom
+        right
+        dark
+        aria-label="Back to top"
+        title="Back to top"
+        @click="scrollToTop"
+      >
+        <v-icon>mdi-arrow-up</v-icon>
+      </v-btn>
+    </v-fab-transition>
     <Slideshow
       :data-source="getItemImages"
       :show-slideshow="slideshow"
@@ -204,6 +221,7 @@ const STOCK_FILTER_OPERATORS = [
     icon: 'mdi-arrow-left-right',
   },
 ]
+const BACK_TO_TOP_THRESHOLD = 400
 
 function emptyStockFilters() {
   return STOCK_FILTER_METRICS.reduce((filters, metric) => {
@@ -274,6 +292,7 @@ export default {
       stockFilterError: '',
       stockFilterMetrics: STOCK_FILTER_METRICS,
       stockFilterOperators: STOCK_FILTER_OPERATORS,
+      showBackToTop: false,
     }
   },
 
@@ -448,6 +467,7 @@ export default {
       const scrollHeight = document.documentElement.scrollHeight
       const scrollTop = document.documentElement.scrollTop
       const clientHeight = document.documentElement.clientHeight
+      this.showBackToTop = scrollTop > BACK_TO_TOP_THRESHOLD
 
       // Detectar si estamos cerca del final (200px antes del final)
       const threshold = 200
@@ -456,6 +476,10 @@ export default {
       if (nearBottom && this.shouldLoadMore()) {
         this.loadMore()
       }
+    },
+
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     },
 
     shouldLoadMore() {
@@ -536,6 +560,11 @@ export default {
   font-weight: 600;
   min-width: 2rem;
   text-align: center;
+}
+
+.back-to-top {
+  bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  right: calc(16px + env(safe-area-inset-right)) !important;
 }
 
 @media (max-width: 600px) {
