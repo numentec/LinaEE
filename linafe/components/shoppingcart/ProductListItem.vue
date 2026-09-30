@@ -30,7 +30,7 @@
       <v-list-item-content>
         <v-list-item-title>{{ product.id }}</v-list-item-title>
         <v-list-item-subtitle>{{ product.name }}</v-list-item-subtitle>
-        <v-list-item-subtitle>
+        <div class="price-stock-row">
           <v-row justify="space-between" align="center" class="mx-1">
             <div class="green--text">{{ formatedPrice }}</div>
             <div v-if="!showAllQuantities" class="light-blue--text lighten-2">
@@ -47,7 +47,7 @@
               </div>
             </div>
           </v-row>
-        </v-list-item-subtitle>
+        </div>
       </v-list-item-content>
       <v-list-item-icon>
         <v-dialog v-model="dialog" max-width="500px">
@@ -309,6 +309,16 @@ export default {
 </script>
 
 <style scoped>
+/* not a v-list-item-subtitle: avoids Vuetify's single-line clip/ellipsis rules that hide the second row on iOS Safari */
+.price-stock-row {
+  height: auto;
+  overflow: visible;
+  white-space: normal;
+}
+/* Vuetify sets overflow: hidden on the content wrapper, which can clip the two-line stock breakdown on iOS Safari */
+.v-list-item :deep(.v-list-item__content) {
+  overflow: visible;
+}
 .stock-breakdown {
   display: grid;
   flex: 1;
@@ -322,6 +332,7 @@ export default {
   flex-direction: column;
   font-size: 10px;
   line-height: 1.2;
+  min-height: 2.4em;
 }
 .stock-quantity strong {
   font-weight: 500;
