@@ -161,6 +161,7 @@
         class="back-to-top"
         color="primary"
         fab
+        small
         fixed
         bottom
         right
@@ -364,6 +365,10 @@ export default {
     },
   },
 
+  beforeMount() {
+    this.$store.dispatch('sistema/setShowBottomNav', false)
+  },
+
   mounted() {
     window.scrollTo(0, 0)
     this.setCountFilteredProducts(this.filteredItems?.length)
@@ -377,6 +382,7 @@ export default {
     // Limpiar event listeners
     window.removeEventListener('scroll', this.handleScroll)
     window.removeEventListener('resize', this.handleResize)
+    this.$store.dispatch('sistema/setShowBottomNav', true)
   },
 
   methods: {
