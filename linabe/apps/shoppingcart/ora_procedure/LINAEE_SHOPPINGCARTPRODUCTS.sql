@@ -14,9 +14,11 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
     P_INFUTURE_OPERATOR IN VARCHAR2 DEFAULT NULL,
     P_INFUTURE_VALUE IN NUMBER DEFAULT NULL,
     P_INFUTURE_VALUE_TO IN NUMBER DEFAULT NULL,
+    P_COLOR IN VARCHAR2 DEFAULT NULL,
+    P_ACABADO IN VARCHAR2 DEFAULT NULL,
     RESULTSET OUT SYS_REFCURSOR
 ) AS
-    query_str VARCHAR2(4000);
+    query_str VARCHAR2(8000);
     vPDEPTO VARCHAR2(100);
     is_PBRANDS NUMBER;
 
@@ -38,6 +40,10 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
     v_infuture_max NUMBER;
     v_infuture_exclude_active NUMBER := 0;
     v_infuture_exclude NUMBER;
+    v_color_active NUMBER := 0;
+    v_color_pattern VARCHAR2(200);
+    v_acabado_active NUMBER := 0;
+    v_acabado_pattern VARCHAR2(200);
 
     PROCEDURE normalize_filter(
         p_operator IN VARCHAR2,
@@ -109,6 +115,23 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
             p_max := p_value_to;
         END IF;
     END normalize_filter;
+
+    -- Escapes LIKE wildcards so user text is matched literally.
+    FUNCTION like_pattern(p_text IN VARCHAR2) RETURN VARCHAR2 IS
+        v_text VARCHAR2(100) := TRIM(p_text);
+    BEGIN
+        IF v_text IS NULL THEN
+            RETURN NULL;
+        END IF;
+
+        IF LENGTH(v_text) > 50 THEN
+            RAISE_APPLICATION_ERROR(-20006, 'Text filter is too long');
+        END IF;
+
+        RETURN '%'
+            || UPPER(REPLACE(REPLACE(REPLACE(v_text, '\', '\\'), '%', '\%'), '_', '\_'))
+            || '%';
+    END like_pattern;
 BEGIN
     vPDEPTO := CASE WHEN PDEPTO = '0' THEN '%' ELSE PDEPTO END;
     is_PBRANDS := LENGTH(TRIM(PBRANDS));
@@ -132,6 +155,16 @@ BEGIN
         v_infuture_exclude_active, v_infuture_exclude
     );
 
+    v_color_pattern := like_pattern(P_COLOR);
+    IF v_color_pattern IS NOT NULL THEN
+        v_color_active := 1;
+    END IF;
+
+    v_acabado_pattern := like_pattern(P_ACABADO);
+    IF v_acabado_pattern IS NOT NULL THEN
+        v_acabado_active := 1;
+    END IF;
+
     query_str :=
            'SELECT * FROM ( '
         || 'SELECT sku AS "id", '
@@ -152,11 +185,11 @@ BEGIN
         || '       store_reserved AS "store_reserved", '
         || '       store_reserved_future AS "store_reserved_future", '
         || '       instock AS "instock", '
-        || '       co_marca AS "brand" '
-        || '       colores AS "color" '
+        || '       co_marca AS "brand", '
+        || '       colores AS "color", '
         || '       cla1 AS "acabado" '
         || 'FROM ( '
-        || '    SELECT sku, descrip, precio, descrip_en, co_marca, colores, cla1'
+        || '    SELECT sku, descrip, precio, descrip_en, co_marca, colores, cla1, '
         || '           NVL(cant_fisica, 0) AS stock, '
         || '           NVL(cant_transito, 0) AS intransit_original, '
         || '           NVL(cant_transito_fut, 0) AS infuture_original, '
@@ -178,7 +211,9 @@ BEGIN
 
     query_str := query_str
         || ') ) '
-        || 'WHERE (:NOW_MIN_ACTIVE = 0 OR "instock" >= :NOW_MIN) '
+        || 'WHERE (:COLOR_ACTIVE = 0 OR UPPER("color") LIKE :COLOR_PATTERN ESCAPE ''\'') '
+        || '  AND (:ACABADO_ACTIVE = 0 OR UPPER("acabado") LIKE :ACABADO_PATTERN ESCAPE ''\'') '
+        || '  AND (:NOW_MIN_ACTIVE = 0 OR "instock" >= :NOW_MIN) '
         || '  AND (:NOW_MAX_ACTIVE = 0 OR "instock" <= :NOW_MAX) '
         || '  AND (:NOW_EXCLUDE_ACTIVE = 0 OR "instock" <> :NOW_EXCLUDE) '
         || '  AND (:TRAN_MIN_ACTIVE = 0 OR "intransit" >= :TRAN_MIN) '
@@ -191,6 +226,8 @@ BEGIN
 
     OPEN RESULTSET FOR query_str
         USING vPDEPTO, PCAT, PCAT, PSCAT, PSCAT,
+              v_color_active, v_color_pattern,
+              v_acabado_active, v_acabado_pattern,
               v_instock_min_active, v_instock_min,
               v_instock_max_active, v_instock_max,
               v_instock_exclude_active, v_instock_exclude,

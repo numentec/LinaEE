@@ -11,12 +11,19 @@ const IMAGES = [
   '/shoppingcart/VLCSMLORG.jpg',
 ]
 const STOCK_FILTER_FIELDS = ['instock', 'intransit', 'infuture']
+const TEXT_FILTER_FIELDS = ['color', 'acabado']
 
 function emptyStockFilters() {
-  return STOCK_FILTER_FIELDS.reduce((filters, field) => {
+  const filters = STOCK_FILTER_FIELDS.reduce((filters, field) => {
     filters[field] = { operator: '', value: '', valueTo: '' }
     return filters
   }, {})
+
+  TEXT_FILTER_FIELDS.forEach((field) => {
+    filters[field] = ''
+  })
+
+  return filters
 }
 
 function normalizeStockFilters(filters) {
@@ -37,6 +44,11 @@ function normalizeStockFilters(filters) {
     }
   })
 
+  TEXT_FILTER_FIELDS.forEach((field) => {
+    const value = filters && filters[field]
+    normalized[field] = typeof value === 'string' ? value.trim() : ''
+  })
+
   return normalized
 }
 
@@ -52,6 +64,10 @@ function stockFilterParams(filters) {
     if (criterion.operator === 'between') {
       params[`${field}_value_to`] = criterion.valueTo
     }
+  })
+
+  TEXT_FILTER_FIELDS.forEach((field) => {
+    if (filters[field]) params[field] = filters[field]
   })
 
   return params

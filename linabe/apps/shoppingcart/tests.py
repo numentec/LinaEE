@@ -4,7 +4,23 @@ from unittest.mock import Mock, patch
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from .views import parse_stock_filters
+from .views import parse_stock_filters, parse_text_filters
+
+
+class ParseTextFiltersTests(TestCase):
+	def test_text_filters_are_optional(self):
+		self.assertEqual(
+			parse_text_filters({}), {'color': None, 'acabado': None}
+		)
+
+	def test_trims_values_and_ignores_blank_text(self):
+		filters = parse_text_filters({'color': '  Negro ', 'acabado': '   '})
+
+		self.assertEqual(filters, {'color': 'Negro', 'acabado': None})
+
+	def test_rejects_overlong_text(self):
+		with self.assertRaisesRegex(ValueError, 'color: must have at most'):
+			parse_text_filters({'color': 'x' * 51})
 
 
 class ParseStockFiltersTests(TestCase):
@@ -85,6 +101,8 @@ class ProductsAPIViewStockFilterTests(TestCase):
 			{
 				'instock_operator': 'gte',
 				'instock_value': '5',
+				'color': ' rojo ',
+				'acabado': 'mate',
 				'page': '1',
 				'page_size': '1',
 			},
@@ -104,6 +122,7 @@ class ProductsAPIViewStockFilterTests(TestCase):
 				'gte', 5, None,
 				None, None, None,
 				None, None, None,
+				'rojo', 'mate',
 				ref_cursor,
 			],
 		)

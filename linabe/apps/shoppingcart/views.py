@@ -29,9 +29,26 @@ from .pagination_utils import paginate_stored_procedure_results
 
 
 STOCK_FILTER_FIELDS = ('instock', 'intransit', 'infuture')
+TEXT_FILTER_FIELDS = ('color', 'acabado')
+TEXT_FILTER_MAX_LENGTH = 50
 STOCK_FILTER_OPERATORS = {
     'eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between'
 }
+
+
+def parse_text_filters(query_params):
+    filters = {}
+
+    for field in TEXT_FILTER_FIELDS:
+        value = str(query_params.get(field, '')).strip()
+        if len(value) > TEXT_FILTER_MAX_LENGTH:
+            raise ValueError(
+                f'{field}: must have at most '
+                f'{TEXT_FILTER_MAX_LENGTH} characters'
+            )
+        filters[field] = value or None
+
+    return filters
 
 
 def parse_stock_filters(query_params):
@@ -135,7 +152,7 @@ class CategoryBrandListAPIView(APIView):
 
 class ProductsAPIView(APIView):
     """ Returns the list of products according to the filters passed as parameters.
-        Parameters: depto, cat, scat, brands, cia, stock filters, page, page_size
+        Parameters: depto, cat, scat, brands, cia, color, acabado, stock filters, page, page_size
         depto - Department
         cat - Category
         scat - Subcategory
@@ -175,18 +192,24 @@ class ProductsAPIView(APIView):
 
         try:
             stock_filters = parse_stock_filters(request.query_params)
+            text_filters = parse_text_filters(request.query_params)
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         pvals = p01 + p02 + p03 + p04 + p05
-        has_stock_filters = any(operator for operator, _, _ in stock_filters.values())
+        has_extra_filters = (
+            any(operator for operator, _, _ in stock_filters.values())
+            or any(text_filters.values())
+        )
 
-        if pvals == '00001' and not has_stock_filters:
+        if pvals == '00001' and not has_extra_filters:
             return Response([{"RESULT": "NO DATA"}], status=status.HTTP_200_OK)
 
         params = [p01, p02, p03, p04, p05]
         for field in STOCK_FILTER_FIELDS:
             params.extend(stock_filters[field])
+        for field in TEXT_FILTER_FIELDS:
+            params.append(text_filters[field])
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 

@@ -51,7 +51,7 @@
     <v-bottom-sheet v-model="stockFiltersOpen" inset>
       <v-sheet class="stock-filter-sheet mx-auto">
         <div class="stock-filter-heading">
-          <h2>Filter by stock</h2>
+          <h2>Filters</h2>
           <v-btn icon aria-label="Close filters" @click="closeStockFilters">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -59,6 +59,25 @@
         <v-alert v-if="stockFilterError" dense type="error">
           {{ stockFilterError }}
         </v-alert>
+        <v-row
+          v-for="textFilter in textFilterFields"
+          :key="textFilter.field"
+          dense
+          align="center"
+          class="stock-filter-row"
+        >
+          <v-col cols="12">
+            <v-text-field
+              v-model="stockFilterDraft[textFilter.field]"
+              :label="textFilter.label"
+              maxlength="50"
+              clearable
+              dense
+              hide-details
+              @keyup.enter="applyStockFilters"
+            />
+          </v-col>
+        </v-row>
         <v-row
           v-for="metric in stockFilterMetrics"
           :key="metric.field"
@@ -189,6 +208,11 @@ const STOCK_FILTER_METRICS = [
   { field: 'infuture', label: 'Fut' },
 ]
 
+const TEXT_FILTER_FIELDS = [
+  { field: 'color', label: 'Color' },
+  { field: 'acabado', label: 'Acabado' },
+]
+
 const STOCK_FILTER_OPERATORS = [
   { symbol: '=', label: 'Igual a', value: 'eq', icon: 'mdi-equal' },
   {
@@ -221,14 +245,20 @@ const STOCK_FILTER_OPERATORS = [
 const BACK_TO_TOP_THRESHOLD = 400
 
 function emptyStockFilters() {
-  return STOCK_FILTER_METRICS.reduce((filters, metric) => {
+  const filters = STOCK_FILTER_METRICS.reduce((filters, metric) => {
     filters[metric.field] = { operator: '', value: '', valueTo: '' }
     return filters
   }, {})
+
+  TEXT_FILTER_FIELDS.forEach((textFilter) => {
+    filters[textFilter.field] = ''
+  })
+
+  return filters
 }
 
 function cloneStockFilters(filters) {
-  return STOCK_FILTER_METRICS.reduce((copy, metric) => {
+  const copy = STOCK_FILTER_METRICS.reduce((copy, metric) => {
     const criterion = (filters && filters[metric.field]) || {}
     copy[metric.field] = {
       operator: criterion.operator || '',
@@ -243,6 +273,12 @@ function cloneStockFilters(filters) {
     }
     return copy
   }, {})
+
+  TEXT_FILTER_FIELDS.forEach((textFilter) => {
+    copy[textFilter.field] = (filters && filters[textFilter.field]) || ''
+  })
+
+  return copy
 }
 
 export default {
@@ -288,6 +324,7 @@ export default {
       stockFilterDraft: emptyStockFilters(),
       stockFilterError: '',
       stockFilterMetrics: STOCK_FILTER_METRICS,
+      textFilterFields: TEXT_FILTER_FIELDS,
       stockFilterOperators: STOCK_FILTER_OPERATORS,
       showBackToTop: false,
     }
@@ -322,9 +359,13 @@ export default {
     },
     activeStockFilterCount() {
       // Filter count for active stock filters
-      const fc = STOCK_FILTER_METRICS.filter(
-        (metric) => this.getStockFilters[metric.field].operator
-      ).length
+      const fc =
+        STOCK_FILTER_METRICS.filter(
+          (metric) => this.getStockFilters[metric.field].operator
+        ).length +
+        TEXT_FILTER_FIELDS.filter(
+          (textFilter) => this.getStockFilters[textFilter.field]
+        ).length
       this.$store.dispatch(
         'shoppingcart/products/setActiveStockFilterCount',
         fc
@@ -421,6 +462,12 @@ export default {
 
     async applyStockFilters() {
       const filters = {}
+
+      for (const textFilter of TEXT_FILTER_FIELDS) {
+        filters[textFilter.field] = String(
+          this.stockFilterDraft[textFilter.field] || ''
+        ).trim()
+      }
 
       for (const metric of STOCK_FILTER_METRICS) {
         const criterion = this.stockFilterDraft[metric.field]
