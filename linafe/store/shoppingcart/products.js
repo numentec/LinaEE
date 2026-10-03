@@ -102,6 +102,8 @@ export const state = () => ({
   allDataLoaded: false,
   stockFilters: emptyStockFilters(),
   productRequestId: 0,
+  showPanelFilters: false, // Nuevo estado para controlar la visibilidad del panel de filtros
+  activeStockFilterCount: 0,
 })
 
 export const mutations = {
@@ -169,6 +171,12 @@ export const mutations = {
   },
   SET_PAGE_SIZE(state, size) {
     state.pageSize = size
+  },
+  SET_SHOW_PANEL_FILTERS(state) {
+    state.showPanelFilters = !state.showPanelFilters
+  },
+  SET_ACTIVE_STOCK_FILTER_COUNT(state, count) {
+    state.activeStockFilterCount = count
   },
 }
 
@@ -330,6 +338,13 @@ export const actions = {
   setPageSize({ commit }, size) {
     commit('SET_PAGE_SIZE', size)
   },
+
+  setShowPanelFilters({ commit }) {
+    commit('SET_SHOW_PANEL_FILTERS')
+  },
+  setActiveStockFilterCount({ commit }, count) {
+    commit('SET_ACTIVE_STOCK_FILTER_COUNT', count)
+  },
 }
 
 export const getters = {
@@ -350,4 +365,5 @@ export const getters = {
   getAllDataLoaded: (state) => state.allDataLoaded,
   getPageSize: (state) => state.pageSize,
   getStockFilters: (state) => state.stockFilters,
+  getActiveStockFilterCount: (state) => state.activeStockFilterCount,
 }

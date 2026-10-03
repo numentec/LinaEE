@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="stock-filter-toolbar">
-      <v-btn outlined color="primary" @click="openStockFilters">
+      <v-btn v-show="false" outlined color="primary" @click="openStockFilters">
         <v-icon left>mdi-tune-variant</v-icon>
         Filter stock
         <v-chip v-if="activeStockFilterCount" x-small class="ml-2">
@@ -52,11 +52,7 @@
       <v-sheet class="stock-filter-sheet mx-auto">
         <div class="stock-filter-heading">
           <h2>Filter by stock</h2>
-          <v-btn
-            icon
-            aria-label="Close filters"
-            @click="stockFiltersOpen = false"
-          >
+          <v-btn icon aria-label="Close filters" @click="closeStockFilters">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </div>
@@ -170,7 +166,7 @@
         title="Back to top"
         @click="scrollToTop"
       >
-        <v-icon>mdi-arrow-up</v-icon>
+        <v-icon>mdi-chevron-double-up</v-icon>
       </v-btn>
     </v-fab-transition>
     <Slideshow
@@ -325,9 +321,15 @@ export default {
       return this.getIsLoading
     },
     activeStockFilterCount() {
-      return STOCK_FILTER_METRICS.filter(
+      // Filter count for active stock filters
+      const fc = STOCK_FILTER_METRICS.filter(
         (metric) => this.getStockFilters[metric.field].operator
       ).length
+      this.$store.dispatch(
+        'shoppingcart/products/setActiveStockFilterCount',
+        fc
+      )
+      return fc
     },
 
     filteredItems() {
@@ -357,11 +359,25 @@ export default {
         )
       })
     },
+
+    showPanelFilters() {
+      return this.$store.state.shoppingcart.products.showPanelFilters
+    },
   },
 
   watch: {
     filteredItems(newVal) {
       this.setCountFilteredProducts(newVal?.length)
+    },
+    showPanelFilters(newVal) {
+      if (newVal) {
+        this.openStockFilters()
+      }
+    },
+    stockFiltersOpen(newVal) {
+      if (!newVal && this.showPanelFilters) {
+        this.$store.dispatch('shoppingcart/products/setShowPanelFilters')
+      }
     },
   },
 
@@ -396,6 +412,11 @@ export default {
       this.stockFilterDraft = cloneStockFilters(this.getStockFilters)
       this.stockFilterError = ''
       this.stockFiltersOpen = true
+    },
+
+    closeStockFilters() {
+      this.stockFiltersOpen = false
+      // this.$store.dispatch('shoppingcart/products/setShowPanelFilters')
     },
 
     async applyStockFilters() {
@@ -441,6 +462,7 @@ export default {
       try {
         await this.fetchProducts({ page: 1, resetData: true, filters })
         this.stockFiltersOpen = false
+        // this.$store.dispatch('shoppingcart/products/setShowPanelFilters')
         window.scrollTo(0, 0)
         this.$nextTick(() => this.checkScrollPosition())
       } catch (error) {

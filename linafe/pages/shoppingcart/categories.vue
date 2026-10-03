@@ -40,7 +40,7 @@
           <v-text-field
             v-show="cur_child_view.includes('departments')"
             id="depatments"
-            v-model="search_department"
+            v-model="search_dep"
             solo
             flat
             hide-details
@@ -53,7 +53,7 @@
           <v-text-field
             v-show="cur_child_view.includes('categoriesmain')"
             id="categories"
-            v-model="search_category"
+            v-model="search_cat"
             solo
             flat
             hide-details
@@ -66,7 +66,7 @@
           <v-text-field
             v-show="cur_child_view.includes('categoriessub')"
             id="subcategories"
-            v-model="search_subcategory"
+            v-model="search_scat"
             solo
             flat
             hide-details
@@ -84,11 +84,20 @@
             flat
             hide-details
             prepend-inner-icon="mdi-magnify"
+            clear-icon="mdi-close-circle"
             label="Search"
             dense
             rounded
             clearable
-          ></v-text-field>
+            @click:clear="clearSearch"
+          >
+            <template v-slot:append>
+              <v-btn icon @click="showPanelFilters">
+                <v-icon> mdi-tune-variant </v-icon>
+                {{ getActiveStockFilterCount || '' }}
+              </v-btn>
+            </template>
+          </v-text-field>
           <v-btn
             v-show="!isMobile"
             class="ma-2"
@@ -230,9 +239,9 @@ export default {
     return {
       selected_brands: [],
       cur_child_view: '',
-      search_department: '',
-      search_category: '',
-      search_subcategory: '',
+      search_dep: '',
+      search_cat: '',
+      search_scat: '',
       search_product: '',
       snackbar: false,
     }
@@ -256,6 +265,7 @@ export default {
       'getSearchProduct',
       'getCountFilteredProducts',
       'getCountProds',
+      'getActiveStockFilterCount',
     ]),
     isMobile() {
       return this.$vuetify.breakpoint.mobile
@@ -364,13 +374,13 @@ export default {
     selected_brands(newVal) {
       this.setSelectedBrands(newVal)
     },
-    search_department(newVal) {
+    search_dep(newVal) {
       this.setSearchDepartment(newVal)
     },
-    search_category(newVal) {
+    search_cat(newVal) {
       this.setSearchCategory(newVal)
     },
-    search_subcategory(newVal) {
+    search_scat(newVal) {
       this.setSearchSubcategory(newVal)
     },
     search_product(newVal) {
@@ -402,6 +412,15 @@ export default {
     },
     toggleView() {
       this.setListView(!this.isListView)
+    },
+    clearSearch() {
+      if (this.cur_child_view.includes('departments')) this.search_dep = ''
+      if (this.cur_child_view.includes('categoriesmain')) this.search_cat = ''
+      if (this.cur_child_view.includes('categoriessub')) this.search_scat = ''
+      if (this.cur_child_view.includes('products')) this.search_product = ''
+    },
+    showPanelFilters() {
+      this.$store.dispatch('shoppingcart/products/setShowPanelFilters')
     },
   },
 }
