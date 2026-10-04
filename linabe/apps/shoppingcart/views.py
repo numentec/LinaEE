@@ -1,4 +1,6 @@
+import json
 import os
+import re
 from django.conf import settings
 from django.db import connections
 
@@ -31,6 +33,14 @@ from .pagination_utils import paginate_stored_procedure_results
 STOCK_FILTER_FIELDS = ('instock', 'intransit', 'infuture')
 TEXT_FILTER_FIELDS = ('color', 'acabado')
 TEXT_FILTER_MAX_LENGTH = 50
+# Sent to Oracle as one 4000-byte-limited string, hence the tight limits.
+DESCRIPTION_FILTER_DELIMITER = '\x1e'
+DESCRIPTION_FILTER_MAX_ITEMS = 30
+DESCRIPTION_FILTER_MAX_LENGTH = 100
+DESCRIPTION_FILTER_MAX_BYTES = 3500
+SUGGEST_MIN_LENGTH = 2
+SUGGEST_VISTA = 41
+BRANDS_LIST_PATTERN = re.compile(r'[\w\-]+(,[\w\-]+)*')
 STOCK_FILTER_OPERATORS = {
     'eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between'
 }
@@ -49,6 +59,55 @@ def parse_text_filters(query_params):
         filters[field] = value or None
 
     return filters
+
+
+def parse_description_text(query_params):
+    value = str(query_params.get('descrip_text', '')).strip()
+    if len(value) > TEXT_FILTER_MAX_LENGTH:
+        raise ValueError(
+            f'descrip_text: must have at most '
+            f'{TEXT_FILTER_MAX_LENGTH} characters'
+        )
+    return value or None
+
+
+def parse_description_filter(query_params):
+    raw = str(query_params.get('descrips', '')).strip()
+    if not raw:
+        return None
+
+    try:
+        values = json.loads(raw)
+    except ValueError:
+        raise ValueError('descrips: must be a JSON list of texts')
+    if not isinstance(values, list) or not all(
+        isinstance(value, str) for value in values
+    ):
+        raise ValueError('descrips: must be a JSON list of texts')
+
+    # Values are matched exactly, so they are kept as received.
+    descriptions = []
+    for value in values:
+        if value.strip() and value not in descriptions:
+            descriptions.append(value)
+
+    if len(descriptions) > DESCRIPTION_FILTER_MAX_ITEMS:
+        raise ValueError(
+            f'descrips: at most {DESCRIPTION_FILTER_MAX_ITEMS} '
+            'items are allowed'
+        )
+    if any(
+        len(value) > DESCRIPTION_FILTER_MAX_LENGTH
+        or DESCRIPTION_FILTER_DELIMITER in value
+        for value in descriptions
+    ):
+        raise ValueError('descrips: an item is invalid or too long')
+
+    joined = DESCRIPTION_FILTER_DELIMITER.join(descriptions)
+    if len(joined.encode('utf-8')) > DESCRIPTION_FILTER_MAX_BYTES:
+        raise ValueError('descrips: the selection is too long')
+
+    return joined or None
 
 
 def parse_stock_filters(query_params):
@@ -152,7 +211,7 @@ class CategoryBrandListAPIView(APIView):
 
 class ProductsAPIView(APIView):
     """ Returns the list of products according to the filters passed as parameters.
-        Parameters: depto, cat, scat, brands, cia, color, acabado, stock filters, page, page_size
+        Parameters: depto, cat, scat, brands, cia, descrips, descrip_text, color, acabado, stock filters, page, page_size
         depto - Department
         cat - Category
         scat - Subcategory
@@ -193,6 +252,10 @@ class ProductsAPIView(APIView):
         try:
             stock_filters = parse_stock_filters(request.query_params)
             text_filters = parse_text_filters(request.query_params)
+            descriptions_filter = parse_description_filter(
+                request.query_params
+            )
+            description_text = parse_description_text(request.query_params)
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -200,6 +263,8 @@ class ProductsAPIView(APIView):
         has_extra_filters = (
             any(operator for operator, _, _ in stock_filters.values())
             or any(text_filters.values())
+            or descriptions_filter is not None
+            or description_text is not None
         )
 
         if pvals == '00001' and not has_extra_filters:
@@ -210,6 +275,8 @@ class ProductsAPIView(APIView):
             params.extend(stock_filters[field])
         for field in TEXT_FILTER_FIELDS:
             params.append(text_filters[field])
+        params.append(descriptions_filter)
+        params.append(description_text)
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 
@@ -238,6 +305,58 @@ class ProductsAPIView(APIView):
         )
 
         return Response(paginated_result, status=status.HTTP_200_OK)
+
+
+class SuggestProductsAPIView(APIView):
+    """ Returns up to 20 {name, products} distinct description suggestions.
+        Parameters: q, depto, cat, scat, brands (comma-separated), cia
+        q - Text to look for in the description (min 2 characters)
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        q = str(request.query_params.get('q', '')).strip()
+        if len(q) < SUGGEST_MIN_LENGTH:
+            return Response([], status=status.HTTP_200_OK)
+        if len(q) > TEXT_FILTER_MAX_LENGTH:
+            return Response(
+                {'detail': f'q: must have at most {TEXT_FILTER_MAX_LENGTH} characters'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        p01 = str(request.query_params.get('depto', '0')).lower().strip()
+        p02 = str(request.query_params.get('cat', '0')).lower().strip()
+        p03 = str(request.query_params.get('scat', '0')).lower().strip()
+        p04 = str(request.query_params.get('brands', '')).replace(' ', '')
+        p05 = str(request.query_params.get('cia', '01')).lower().strip()
+
+        if p04 and not BRANDS_LIST_PATTERN.fullmatch(p04):
+            return Response(
+                {'detail': 'brands: invalid list'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        qrys = SQLQuery.objects.filter(vista=SUGGEST_VISTA)
+        if not qrys:
+            return Response(
+                {'detail': 'Suggestion query is not configured'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        params = [p01, p02, p03, p04 or None, p05, q]
+
+        with connections['extdb1'].cursor() as cursor:
+            refCursor = cursor.connection.cursor()
+
+            cursor.callproc(qrys[0].content, params + [refCursor])
+
+            descrip = refCursor.description
+            rows = refCursor.fetchall()
+
+            result = [dict(zip([column[0] for column in descrip], row)) for row in rows]
+
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class ItemImagesAPIView(APIView):

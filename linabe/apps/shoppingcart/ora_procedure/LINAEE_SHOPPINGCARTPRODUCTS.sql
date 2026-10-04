@@ -16,6 +16,8 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
     P_INFUTURE_VALUE_TO IN NUMBER DEFAULT NULL,
     P_COLOR IN VARCHAR2 DEFAULT NULL,
     P_ACABADO IN VARCHAR2 DEFAULT NULL,
+    P_DESCRIPS IN VARCHAR2 DEFAULT NULL,
+    P_DESCRIP_TEXT IN VARCHAR2 DEFAULT NULL,
     RESULTSET OUT SYS_REFCURSOR
 ) AS
     query_str VARCHAR2(8000);
@@ -44,6 +46,12 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
     v_color_pattern VARCHAR2(200);
     v_acabado_active NUMBER := 0;
     v_acabado_pattern VARCHAR2(200);
+    c_max_descrips CONSTANT NUMBER := 30;
+    -- Bound into SQL, so it must stay within the 4000-byte SQL VARCHAR2 limit.
+    v_descrips VARCHAR2(4000) := P_DESCRIPS;
+    v_descrips_active NUMBER := 0;
+    v_descrip_text_active NUMBER := 0;
+    v_descrip_text_pattern VARCHAR2(200);
 
     PROCEDURE normalize_filter(
         p_operator IN VARCHAR2,
@@ -165,6 +173,19 @@ BEGIN
         v_acabado_active := 1;
     END IF;
 
+    -- Descriptions arrive CHR(30)-delimited and are bound as a value, never concatenated.
+    IF v_descrips IS NOT NULL THEN
+        IF REGEXP_COUNT(v_descrips, '[^' || CHR(30) || ']+') > c_max_descrips THEN
+            RAISE_APPLICATION_ERROR(-20007, 'Too many descriptions selected');
+        END IF;
+        v_descrips_active := 1;
+    END IF;
+
+    v_descrip_text_pattern := like_pattern(P_DESCRIP_TEXT);
+    IF v_descrip_text_pattern IS NOT NULL THEN
+        v_descrip_text_active := 1;
+    END IF;
+
     query_str :=
            'SELECT * FROM ( '
         || 'SELECT sku AS "id", '
@@ -213,6 +234,11 @@ BEGIN
         || ') ) '
         || 'WHERE (:COLOR_ACTIVE = 0 OR UPPER("color") LIKE :COLOR_PATTERN ESCAPE ''\'') '
         || '  AND (:ACABADO_ACTIVE = 0 OR UPPER("acabado") LIKE :ACABADO_PATTERN ESCAPE ''\'') '
+        || '  AND (:DESC_ACTIVE = 0 OR "name" IN ( '
+        || '       SELECT REGEXP_SUBSTR(:DESC_LIST, ''[^' || CHR(30) || ']+'', 1, LEVEL) '
+        || '       FROM dual '
+        || '       CONNECT BY LEVEL <= REGEXP_COUNT(:DESC_COUNT, ''[^' || CHR(30) || ']+''))) '
+        || '  AND (:DTEXT_ACTIVE = 0 OR UPPER("name") LIKE :DTEXT_PATTERN ESCAPE ''\'') '
         || '  AND (:NOW_MIN_ACTIVE = 0 OR "instock" >= :NOW_MIN) '
         || '  AND (:NOW_MAX_ACTIVE = 0 OR "instock" <= :NOW_MAX) '
         || '  AND (:NOW_EXCLUDE_ACTIVE = 0 OR "instock" <> :NOW_EXCLUDE) '
@@ -228,6 +254,8 @@ BEGIN
         USING vPDEPTO, PCAT, PCAT, PSCAT, PSCAT,
               v_color_active, v_color_pattern,
               v_acabado_active, v_acabado_pattern,
+              v_descrips_active, v_descrips, v_descrips,
+              v_descrip_text_active, v_descrip_text_pattern,
               v_instock_min_active, v_instock_min,
               v_instock_max_active, v_instock_max,
               v_instock_exclude_active, v_instock_exclude,

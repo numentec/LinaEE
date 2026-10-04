@@ -59,6 +59,69 @@
         <v-alert v-if="stockFilterError" dense type="error">
           {{ stockFilterError }}
         </v-alert>
+        <v-row dense align="center" class="stock-filter-row">
+          <v-col cols="12">
+            <v-autocomplete
+              v-model="stockFilterDraft.descrips"
+              :items="descripOptions"
+              :search-input.sync="descripSearch"
+              :loading="descripLoading"
+              :no-data-text="descripNoDataText"
+              :menu-props="descripMenuProps"
+              item-text="name"
+              item-value="name"
+              label="Description"
+              placeholder="Type to search descriptions"
+              autocomplete="off"
+              multiple
+              no-filter
+              clearable
+              dense
+              :hint="descripHint"
+              persistent-hint
+              :hide-details="!descripHint"
+            >
+              <template v-slot:selection="{ item, index }">
+                <v-chip
+                  v-if="index < descripVisibleChips"
+                  small
+                  close
+                  @click:close="removeDescrip(item.name)"
+                >
+                  <span class="descrip-chip-text">{{ item.name }}</span>
+                </v-chip>
+                <span
+                  v-if="index === descripVisibleChips"
+                  class="grey--text text-caption"
+                >
+                  (+{{ stockFilterDraft.descrips.length - descripVisibleChips }}
+                  more)
+                </span>
+              </template>
+              <template v-slot:item="{ item, attrs, on }">
+                <v-list-item v-bind="attrs" v-on="on">
+                  <template v-slot:default="{ active }">
+                    <v-list-item-action class="mr-3">
+                      <v-checkbox
+                        :input-value="active"
+                        dense
+                        hide-details
+                        readonly
+                      />
+                    </v-list-item-action>
+                    <v-list-item-content>
+                      <v-list-item-title>{{ item.name }}</v-list-item-title>
+                      <v-list-item-subtitle v-if="item.products">
+                        {{ item.products }}
+                        {{ item.products === 1 ? 'product' : 'products' }}
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+          </v-col>
+        </v-row>
         <v-row
           v-for="textFilter in textFilterFields"
           :key="textFilter.field"
@@ -85,10 +148,10 @@
           align="center"
           class="stock-filter-row"
         >
-          <v-col cols="4" sm="2">
-            <strong>{{ metric.label }}</strong>
+          <v-col cols="1">
+            <small>{{ metric.label }}</small>
           </v-col>
-          <v-col cols="8" sm="3">
+          <v-col cols="3">
             <v-select
               v-model="stockFilterDraft[metric.field].operator"
               :items="stockFilterOperators"
@@ -120,9 +183,8 @@
           <v-col
             v-if="stockFilterDraft[metric.field].operator"
             :cols="
-              stockFilterDraft[metric.field].operator === 'between' ? 6 : 12
+              stockFilterDraft[metric.field].operator === 'between' ? 4 : 8
             "
-            :sm="stockFilterDraft[metric.field].operator === 'between' ? 3 : 7"
           >
             <v-text-field
               v-model.number="stockFilterDraft[metric.field].value"
@@ -140,8 +202,7 @@
           </v-col>
           <v-col
             v-if="stockFilterDraft[metric.field].operator === 'between'"
-            cols="6"
-            sm="4"
+            cols="4"
           >
             <v-text-field
               v-model.number="stockFilterDraft[metric.field].valueTo"
@@ -243,6 +304,10 @@ const STOCK_FILTER_OPERATORS = [
   },
 ]
 const BACK_TO_TOP_THRESHOLD = 400
+const DESCRIP_SEARCH_MIN_LENGTH = 2
+const DESCRIP_SEARCH_DELAY = 300
+const MAX_DESCRIP_FILTERS = 30
+const DESCRIP_TEXT_MAX_LENGTH = 50
 
 function emptyStockFilters() {
   const filters = STOCK_FILTER_METRICS.reduce((filters, metric) => {
@@ -253,6 +318,8 @@ function emptyStockFilters() {
   TEXT_FILTER_FIELDS.forEach((textFilter) => {
     filters[textFilter.field] = ''
   })
+
+  filters.descrips = []
 
   return filters
 }
@@ -277,6 +344,8 @@ function cloneStockFilters(filters) {
   TEXT_FILTER_FIELDS.forEach((textFilter) => {
     copy[textFilter.field] = (filters && filters[textFilter.field]) || ''
   })
+
+  copy.descrips = [...((filters && filters.descrips) || [])]
 
   return copy
 }
@@ -327,6 +396,12 @@ export default {
       textFilterFields: TEXT_FILTER_FIELDS,
       stockFilterOperators: STOCK_FILTER_OPERATORS,
       showBackToTop: false,
+      descripSearch: null,
+      descripResults: [],
+      descripLoading: false,
+      descripFailed: false,
+      descripRequestId: 0,
+      descripTimer: null,
     }
   },
 
@@ -365,7 +440,11 @@ export default {
         ).length +
         TEXT_FILTER_FIELDS.filter(
           (textFilter) => this.getStockFilters[textFilter.field]
-        ).length
+        ).length +
+        (this.getStockFilters.descrips.length > 0 ||
+        this.getStockFilters.descripText
+          ? 1
+          : 0)
       this.$store.dispatch(
         'shoppingcart/products/setActiveStockFilterCount',
         fc
@@ -404,6 +483,47 @@ export default {
     showPanelFilters() {
       return this.$store.state.shoppingcart.products.showPanelFilters
     },
+
+    descripOptions() {
+      // Selected texts stay in the list so their chips survive new searches.
+      const selected = this.stockFilterDraft.descrips
+      const selectedNames = new Set(selected)
+      const known = new Map(this.descripResults.map((d) => [d.name, d]))
+      return [
+        ...selected.map((name) => known.get(name) || { name }),
+        ...this.descripResults.filter((d) => !selectedNames.has(d.name)),
+      ]
+    },
+
+    descripNoDataText() {
+      const query = (this.descripSearch || '').trim()
+      if (query.length < DESCRIP_SEARCH_MIN_LENGTH) {
+        return `Type at least ${DESCRIP_SEARCH_MIN_LENGTH} characters`
+      }
+      if (this.descripLoading) return 'Searching...'
+      return this.descripFailed
+        ? 'Suggestions are unavailable'
+        : 'No matching descriptions'
+    },
+
+    descripHint() {
+      const text = (this.descripSearch || '').trim()
+      if (!text) return ''
+      return this.stockFilterDraft.descrips.length > 0
+        ? 'Typed text is ignored while items are selected'
+        : `Apply to match descriptions containing "${text}"`
+    },
+
+    descripMenuProps() {
+      return {
+        maxHeight: this.$vuetify.breakpoint.mobile ? 220 : 300,
+        closeOnContentClick: false,
+      }
+    },
+
+    descripVisibleChips() {
+      return this.$vuetify.breakpoint.mobile ? 1 : 2
+    },
   },
 
   watch: {
@@ -419,6 +539,9 @@ export default {
       if (!newVal && this.showPanelFilters) {
         this.$store.dispatch('shoppingcart/products/setShowPanelFilters')
       }
+    },
+    descripSearch(value) {
+      this.onDescripSearch(value)
     },
   },
 
@@ -439,6 +562,7 @@ export default {
     // Limpiar event listeners
     window.removeEventListener('scroll', this.handleScroll)
     window.removeEventListener('resize', this.handleResize)
+    clearTimeout(this.descripTimer)
     this.$store.dispatch('sistema/setShowBottomNav', true)
   },
 
@@ -447,12 +571,65 @@ export default {
       'setCountFilteredProducts',
       'loadMoreProducts',
       'fetchProducts',
+      'fetchProductSuggestions',
     ]),
 
     openStockFilters() {
       this.stockFilterDraft = cloneStockFilters(this.getStockFilters)
       this.stockFilterError = ''
+      this.descripSearch = this.getStockFilters.descripText || null
+      this.descripResults = []
+      this.descripFailed = false
       this.stockFiltersOpen = true
+    },
+
+    onDescripSearch(value) {
+      clearTimeout(this.descripTimer)
+      const query = (value || '').trim()
+
+      // Bumping the id invalidates any request still in flight.
+      if (query.length < DESCRIP_SEARCH_MIN_LENGTH) {
+        this.descripRequestId++
+        this.descripResults = []
+        this.descripLoading = false
+        this.descripFailed = false
+        return
+      }
+
+      this.descripLoading = true
+      this.descripTimer = setTimeout(
+        () => this.loadDescripSuggestions(query),
+        DESCRIP_SEARCH_DELAY
+      )
+    },
+
+    async loadDescripSuggestions(query) {
+      const requestId = ++this.descripRequestId
+      try {
+        const results = await this.fetchProductSuggestions(query)
+        if (requestId !== this.descripRequestId) return
+
+        this.descripFailed = false
+        this.descripResults = results
+          .filter((d) => d && d.name)
+          .map((d) => ({
+            name: String(d.name),
+            products: Number(d.products) || 0,
+          }))
+      } catch (error) {
+        if (requestId === this.descripRequestId) {
+          this.descripFailed = true
+          this.descripResults = []
+        }
+      } finally {
+        if (requestId === this.descripRequestId) this.descripLoading = false
+      }
+    },
+
+    removeDescrip(name) {
+      this.stockFilterDraft.descrips = this.stockFilterDraft.descrips.filter(
+        (text) => text !== name
+      )
     },
 
     closeStockFilters() {
@@ -461,7 +638,25 @@ export default {
     },
 
     async applyStockFilters() {
-      const filters = {}
+      if (this.stockFilterDraft.descrips.length > MAX_DESCRIP_FILTERS) {
+        this.stockFilterError = `Description: select at most ${MAX_DESCRIP_FILTERS} items.`
+        return
+      }
+
+      const typedText = (this.descripSearch || '').trim()
+      if (
+        !this.stockFilterDraft.descrips.length &&
+        typedText.length > DESCRIP_TEXT_MAX_LENGTH
+      ) {
+        this.stockFilterError = `Description: text must have at most ${DESCRIP_TEXT_MAX_LENGTH} characters.`
+        return
+      }
+
+      const filters = {
+        descrips: [...this.stockFilterDraft.descrips],
+        // Typed text only filters when nothing was selected.
+        descripText: this.stockFilterDraft.descrips.length ? '' : typedText,
+      }
 
       for (const textFilter of TEXT_FILTER_FIELDS) {
         filters[textFilter.field] = String(
@@ -519,6 +714,7 @@ export default {
 
     clearStockFilters() {
       this.stockFilterDraft = emptyStockFilters()
+      this.descripSearch = null
       this.stockFilterError = ''
       return this.applyStockFilters()
     },
@@ -635,6 +831,13 @@ export default {
   font-weight: 600;
   min-width: 2rem;
   text-align: center;
+}
+
+.descrip-chip-text {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .back-to-top {

@@ -13,6 +13,7 @@ from .views import (
     TaskStatus,
     CategoryBrandListAPIView,
     ProductsAPIView,
+    SuggestProductsAPIView,
 )
 
 app_name = "shoppingcart"
@@ -24,6 +25,7 @@ router.register(r'extorderonly', ExtOrderMasterOnlyViewSet, basename='extorderon
 urlpatterns = [
     path('catsbrands/', CategoryBrandListAPIView.as_view(), name='catsbrands'),
     path('products/', ProductsAPIView.as_view(), name='products'),
+    path('products/suggest/', SuggestProductsAPIView.as_view(), name='products-suggest'),
     path('itemimages/<str:subfolder>/', ItemImagesAPIView.as_view(), name='itemimages'),
     path('orders/<int:order_id>/preview/', OrderPDFPreview.as_view(), name='order-pdf-preview'),
     path('orders/<int:order_id>/pdf/', GenerateOrderPDF.as_view(), name='order-pdf'),

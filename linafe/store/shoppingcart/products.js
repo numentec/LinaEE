@@ -23,6 +23,9 @@ function emptyStockFilters() {
     filters[field] = ''
   })
 
+  filters.descrips = []
+  filters.descripText = ''
+
   return filters
 }
 
@@ -49,6 +52,16 @@ function normalizeStockFilters(filters) {
     normalized[field] = typeof value === 'string' ? value.trim() : ''
   })
 
+  normalized.descrips =
+    filters && Array.isArray(filters.descrips)
+      ? filters.descrips.filter((text) => typeof text === 'string' && text)
+      : []
+
+  normalized.descripText =
+    filters && typeof filters.descripText === 'string'
+      ? filters.descripText.trim()
+      : ''
+
   return normalized
 }
 
@@ -69,6 +82,12 @@ function stockFilterParams(filters) {
   TEXT_FILTER_FIELDS.forEach((field) => {
     if (filters[field]) params[field] = filters[field]
   })
+
+  if (filters.descrips.length > 0) {
+    params.descrips = JSON.stringify(filters.descrips)
+  }
+
+  if (filters.descripText) params.descrip_text = filters.descripText
 
   return params
 }
@@ -291,6 +310,24 @@ export const actions = {
       page: nextPage,
       resetData: false,
     })
+  },
+
+  async fetchProductSuggestions({ rootGetters }, query) {
+    const selectedBrands =
+      rootGetters['shoppingcart/categories/getSelectedBrands']
+    const selectProductsBy =
+      rootGetters['shoppingcart/categories/getSelectProductsBy']
+
+    const response = await this.$axios.get('shoppingcart/products/suggest/', {
+      params: {
+        ...selectProductsBy,
+        brands: selectedBrands.join(','),
+        cia: '01',
+        q: query,
+      },
+    })
+
+    return Array.isArray(response.data) ? response.data : []
   },
 
   // Función temporal para generar datos de prueba para los productos
