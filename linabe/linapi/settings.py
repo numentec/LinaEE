@@ -117,6 +117,8 @@ DATABASES = {
         'PORT': environ.get('EXTDB1_PORT'),
         # 'HOST': '192.168.1.4',
         # 'PORT': '1521',
+        # CONN_MAX_AGE can be set here if needed
+        'CONN_MAX_AGE': 60,
     },
 }
 
