@@ -26,16 +26,15 @@
               </v-row>
             </template>
             <v-btn
-              v-if="canEdit"
               icon
               absolute
               top
               right
               color="white"
               style="background-color: rgba(0, 0, 0, 0.45)"
-              @click.stop="showEditDialog = true"
+              @click.stop="snackbar = true"
             >
-              <v-icon>mdi-pencil</v-icon>
+              <v-icon>mdi-filter-variant</v-icon>
             </v-btn>
             <v-toolbar
               flat
@@ -52,6 +51,19 @@
               >
                 {{ category.name }}
               </v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-btn
+                v-if="canEdit"
+                icon
+                absolute
+                top
+                right
+                color="white"
+                style="background-color: rgba(0, 0, 0, 0.45)"
+                @click.stop="showEditDialog = true"
+              >
+                <v-icon small>mdi-pencil</v-icon>
+              </v-btn>
             </v-toolbar>
           </v-img>
           <v-overlay absolute :value="overlay">
@@ -66,6 +78,9 @@
       :category="category"
       @updated="$emit('category-updated', $event)"
     />
+    <v-snackbar v-model="snackbar" color="info" timeout="3000">
+      Coming soon!!!
+    </v-snackbar>
   </div>
 </template>
 
@@ -90,6 +105,7 @@ export default {
       loadingView: false,
       overlay: false,
       showEditDialog: false,
+      snackbar: false,
       imgSrc: this.category.img_full_path
         ? joinUrl(this.$config.publicURL, this.category.img_full_path)
         : joinUrl(this.$config.fotosURL, this.category.image),
