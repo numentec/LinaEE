@@ -32,6 +32,19 @@
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
       </v-list-item-action>
+      <v-list-item-action>
+        <v-btn
+          icon
+          absolute
+          top
+          right
+          color="white"
+          style="background-color: rgba(0, 0, 0, 0.45)"
+          @click.stop="snackbar = true"
+        >
+          <v-icon>mdi-filter-variant</v-icon>
+        </v-btn>
+      </v-list-item-action>
     </v-list-item>
     <v-overlay :value="overlay">
       <v-progress-circular indeterminate size="32"></v-progress-circular>
@@ -42,6 +55,9 @@
       :category="category"
       @updated="$emit('category-updated', $event)"
     />
+    <v-snackbar v-model="snackbar" color="info" timeout="3000">
+      Coming soon!!!
+    </v-snackbar>
   </div>
 </template>
 
@@ -72,6 +88,7 @@ export default {
         : joinUrl(this.$config.fotosURL, this.category.image),
       // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+      snackbar: false,
     }
   },
 
