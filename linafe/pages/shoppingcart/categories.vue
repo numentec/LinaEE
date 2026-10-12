@@ -99,6 +99,7 @@
             </template>
           </v-text-field>
           <v-btn
+            v-show="cur_child_view.includes('products')"
             class="ma-2"
             icon
             color="cyan lighten-1"
