@@ -122,6 +122,20 @@
             </v-autocomplete>
           </v-col>
         </v-row>
+        <v-row dense align="center" class="stock-filter-row">
+          <v-col cols="12">
+            <v-text-field
+              v-model="stockFilterDraft.skuPrefix"
+              label="SKU starts with"
+              placeholder="Enter the beginning of a SKU"
+              maxlength="50"
+              clearable
+              dense
+              hide-details
+              @keyup.enter="applyStockFilters"
+            />
+          </v-col>
+        </v-row>
         <v-row
           v-for="textFilter in textFilterFields"
           :key="textFilter.field"
@@ -320,6 +334,7 @@ function emptyStockFilters() {
   })
 
   filters.descrips = []
+  filters.skuPrefix = ''
 
   return filters
 }
@@ -346,6 +361,7 @@ function cloneStockFilters(filters) {
   })
 
   copy.descrips = [...((filters && filters.descrips) || [])]
+  copy.skuPrefix = (filters && filters.skuPrefix) || ''
 
   return copy
 }
@@ -444,7 +460,8 @@ export default {
         (this.getStockFilters.descrips.length > 0 ||
         this.getStockFilters.descripText
           ? 1
-          : 0)
+          : 0) +
+        (this.getStockFilters.skuPrefix ? 1 : 0)
       this.$store.dispatch(
         'shoppingcart/products/setActiveStockFilterCount',
         fc
@@ -651,11 +668,17 @@ export default {
         this.stockFilterError = `Description: text must have at most ${DESCRIP_TEXT_MAX_LENGTH} characters.`
         return
       }
+      const skuPrefix = String(this.stockFilterDraft.skuPrefix || '').trim()
+      if (skuPrefix.length > 50) {
+        this.stockFilterError = 'SKU prefix must have at most 50 characters.'
+        return
+      }
 
       const filters = {
         descrips: [...this.stockFilterDraft.descrips],
         // Typed text only filters when nothing was selected.
         descripText: this.stockFilterDraft.descrips.length ? '' : typedText,
+        skuPrefix,
       }
 
       for (const textFilter of TEXT_FILTER_FIELDS) {

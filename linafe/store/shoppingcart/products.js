@@ -25,6 +25,7 @@ function emptyStockFilters() {
 
   filters.descrips = []
   filters.descripText = ''
+  filters.skuPrefix = ''
 
   return filters
 }
@@ -61,6 +62,10 @@ function normalizeStockFilters(filters) {
     filters && typeof filters.descripText === 'string'
       ? filters.descripText.trim()
       : ''
+  normalized.skuPrefix =
+    filters && typeof filters.skuPrefix === 'string'
+      ? filters.skuPrefix.trim()
+      : ''
 
   return normalized
 }
@@ -88,6 +93,7 @@ function stockFilterParams(filters) {
   }
 
   if (filters.descripText) params.descrip_text = filters.descripText
+  if (filters.skuPrefix) params.sku_prefix = filters.skuPrefix
 
   return params
 }

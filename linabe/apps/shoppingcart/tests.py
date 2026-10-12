@@ -9,6 +9,7 @@ from .views import (
 	SuggestProductsAPIView,
 	parse_description_filter,
 	parse_description_text,
+	parse_sku_prefix,
 	parse_stock_filters,
 	parse_text_filters,
 )
@@ -64,6 +65,16 @@ class ParseDescriptionTextTests(TestCase):
 	def test_rejects_overlong_text(self):
 		with self.assertRaisesRegex(ValueError, 'at most 50'):
 			parse_description_text({'descrip_text': 'x' * 51})
+
+
+class ParseSkuPrefixTests(TestCase):
+	def test_sku_prefix_is_optional_and_trimmed(self):
+		self.assertIsNone(parse_sku_prefix({}))
+		self.assertEqual(parse_sku_prefix({'sku_prefix': '  ab-1 '}), 'ab-1')
+
+	def test_rejects_overlong_prefix(self):
+		with self.assertRaisesRegex(ValueError, 'at most 50'):
+			parse_sku_prefix({'sku_prefix': 'x' * 51})
 
 
 class ParseTextFiltersTests(TestCase):
@@ -164,6 +175,7 @@ class ProductsAPIViewStockFilterTests(TestCase):
 				'acabado': 'mate',
 				'descrips': json.dumps(['Mesa roble', 'Silla']),
 				'descrip_text': ' mesa ',
+				'sku_prefix': ' ab-1 ',
 				'page': '1',
 				'page_size': '1',
 			},
@@ -186,6 +198,7 @@ class ProductsAPIViewStockFilterTests(TestCase):
 				'rojo', 'mate',
 				'Mesa roble\x1eSilla',
 				'mesa',
+				'ab-1',
 				ref_cursor,
 			],
 		)
@@ -195,6 +208,47 @@ class ProductsAPIViewStockFilterTests(TestCase):
 			response.data['results'],
 			[{'id': 'SKU-1', 'instock': 5}],
 		)
+
+	@patch('apps.shoppingcart.views.connections')
+	@patch('apps.shoppingcart.views.SQLQuery')
+	def test_sku_prefix_alone_is_forwarded_as_a_filter(
+		self, sql_query, connections
+	):
+		sql_query.objects.filter.return_value = [
+			SimpleNamespace(content='TEST_SHOPPINGCART_PRODUCTS')
+		]
+		db_connection = connections.__getitem__.return_value
+		db_cursor = db_connection.cursor.return_value.__enter__.return_value
+		ref_cursor = Mock()
+		ref_cursor.description = [('id',)]
+		ref_cursor.fetchall.return_value = [('AB-123',)]
+		db_cursor.connection.cursor.return_value = ref_cursor
+
+		request = APIRequestFactory().get(
+			'/linapi/shoppingcart/products/', {'sku_prefix': ' ab- '}
+		)
+		force_authenticate(
+			request, user=SimpleNamespace(is_authenticated=True, pk=1)
+		)
+
+		from .views import ProductsAPIView
+
+		response = ProductsAPIView.as_view()(request)
+
+		db_cursor.callproc.assert_called_once_with(
+			'TEST_SHOPPINGCART_PRODUCTS',
+			[
+				'0', '0', '0', '', '01',
+				None, None, None,
+				None, None, None,
+				None, None, None,
+				None, None,
+				None, None,
+				'ab-',
+				ref_cursor,
+			],
+		)
+		self.assertEqual(response.status_code, 200)
 
 
 class SuggestProductsAPIViewTests(TestCase):

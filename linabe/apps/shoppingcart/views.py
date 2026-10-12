@@ -33,6 +33,7 @@ from .pagination_utils import paginate_stored_procedure_results
 STOCK_FILTER_FIELDS = ('instock', 'intransit', 'infuture')
 TEXT_FILTER_FIELDS = ('color', 'acabado')
 TEXT_FILTER_MAX_LENGTH = 50
+SKU_PREFIX_MAX_LENGTH = 50
 # Sent to Oracle as one 4000-byte-limited string, hence the tight limits.
 DESCRIPTION_FILTER_DELIMITER = '\x1e'
 DESCRIPTION_FILTER_MAX_ITEMS = 30
@@ -67,6 +68,16 @@ def parse_description_text(query_params):
         raise ValueError(
             f'descrip_text: must have at most '
             f'{TEXT_FILTER_MAX_LENGTH} characters'
+        )
+    return value or None
+
+
+def parse_sku_prefix(query_params):
+    value = str(query_params.get('sku_prefix', '')).strip()
+    if len(value) > SKU_PREFIX_MAX_LENGTH:
+        raise ValueError(
+            f'sku_prefix: must have at most '
+            f'{SKU_PREFIX_MAX_LENGTH} characters'
         )
     return value or None
 
@@ -211,7 +222,7 @@ class CategoryBrandListAPIView(APIView):
 
 class ProductsAPIView(APIView):
     """ Returns the list of products according to the filters passed as parameters.
-        Parameters: depto, cat, scat, brands, cia, descrips, descrip_text, color, acabado, stock filters, page, page_size
+        Parameters: depto, cat, scat, brands, cia, descrips, descrip_text, sku_prefix, color, acabado, stock filters, page, page_size
         depto - Department
         cat - Category
         scat - Subcategory
@@ -256,6 +267,7 @@ class ProductsAPIView(APIView):
                 request.query_params
             )
             description_text = parse_description_text(request.query_params)
+            sku_prefix = parse_sku_prefix(request.query_params)
         except ValueError as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -265,6 +277,7 @@ class ProductsAPIView(APIView):
             or any(text_filters.values())
             or descriptions_filter is not None
             or description_text is not None
+            or sku_prefix is not None
         )
 
         if pvals == '00001' and not has_extra_filters:
@@ -277,6 +290,7 @@ class ProductsAPIView(APIView):
             params.append(text_filters[field])
         params.append(descriptions_filter)
         params.append(description_text)
+        params.append(sku_prefix)
 
         qrys = SQLQuery.objects.filter(vista=idVista)
 

@@ -18,6 +18,7 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
     P_ACABADO IN VARCHAR2 DEFAULT NULL,
     P_DESCRIPS IN VARCHAR2 DEFAULT NULL,
     P_DESCRIP_TEXT IN VARCHAR2 DEFAULT NULL,
+    P_SKU_PREFIX IN VARCHAR2 DEFAULT NULL,
     RESULTSET OUT SYS_REFCURSOR
 ) AS
     query_str VARCHAR2(8000);
@@ -52,6 +53,8 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
     v_descrips_active NUMBER := 0;
     v_descrip_text_active NUMBER := 0;
     v_descrip_text_pattern VARCHAR2(200);
+    v_sku_prefix_active NUMBER := 0;
+    v_sku_prefix_pattern VARCHAR2(200);
 
     PROCEDURE normalize_filter(
         p_operator IN VARCHAR2,
@@ -140,6 +143,21 @@ create or replace PROCEDURE     LINAEE_SHOPPINGCARTPRODUCTS
             || UPPER(REPLACE(REPLACE(REPLACE(v_text, '\', '\\'), '%', '\%'), '_', '\_'))
             || '%';
     END like_pattern;
+
+    FUNCTION prefix_pattern(p_text IN VARCHAR2) RETURN VARCHAR2 IS
+        v_text VARCHAR2(100) := TRIM(p_text);
+    BEGIN
+        IF v_text IS NULL THEN
+            RETURN NULL;
+        END IF;
+
+        IF LENGTH(v_text) > 50 THEN
+            RAISE_APPLICATION_ERROR(-20008, 'SKU prefix is too long');
+        END IF;
+
+        RETURN UPPER(REPLACE(REPLACE(REPLACE(v_text, '\', '\\'), '%', '\%'), '_', '\_'))
+            || '%';
+    END prefix_pattern;
 BEGIN
     vPDEPTO := CASE WHEN PDEPTO = '0' THEN '%' ELSE PDEPTO END;
     is_PBRANDS := LENGTH(TRIM(PBRANDS));
@@ -184,6 +202,11 @@ BEGIN
     v_descrip_text_pattern := like_pattern(P_DESCRIP_TEXT);
     IF v_descrip_text_pattern IS NOT NULL THEN
         v_descrip_text_active := 1;
+    END IF;
+
+    v_sku_prefix_pattern := prefix_pattern(P_SKU_PREFIX);
+    IF v_sku_prefix_pattern IS NOT NULL THEN
+        v_sku_prefix_active := 1;
     END IF;
 
     query_str :=
@@ -239,6 +262,7 @@ BEGIN
         || '       FROM dual '
         || '       CONNECT BY LEVEL <= REGEXP_COUNT(:DESC_COUNT, ''[^' || CHR(30) || ']+''))) '
         || '  AND (:DTEXT_ACTIVE = 0 OR UPPER("name") LIKE :DTEXT_PATTERN ESCAPE ''\'') '
+        || '  AND (:SKU_PREFIX_ACTIVE = 0 OR UPPER(TO_CHAR("id")) LIKE :SKU_PREFIX_PATTERN ESCAPE ''\'') '
         || '  AND (:NOW_MIN_ACTIVE = 0 OR "instock" >= :NOW_MIN) '
         || '  AND (:NOW_MAX_ACTIVE = 0 OR "instock" <= :NOW_MAX) '
         || '  AND (:NOW_EXCLUDE_ACTIVE = 0 OR "instock" <> :NOW_EXCLUDE) '
@@ -256,6 +280,7 @@ BEGIN
               v_acabado_active, v_acabado_pattern,
               v_descrips_active, v_descrips, v_descrips,
               v_descrip_text_active, v_descrip_text_pattern,
+              v_sku_prefix_active, v_sku_prefix_pattern,
               v_instock_min_active, v_instock_min,
               v_instock_max_active, v_instock_max,
               v_instock_exclude_active, v_instock_exclude,
