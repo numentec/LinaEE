@@ -32,15 +32,12 @@
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
       </v-list-item-action>
-      <v-list-item-action>
+      <v-list-item-action v-if="canFilter">
         <v-btn
           icon
-          absolute
-          top
-          right
           color="white"
           style="background-color: rgba(0, 0, 0, 0.45)"
-          @click.stop="snackbar = true"
+          @click.stop="filterProducts"
         >
           <v-icon>mdi-filter-variant</v-icon>
         </v-btn>
@@ -55,9 +52,6 @@
       :category="category"
       @updated="$emit('category-updated', $event)"
     />
-    <v-snackbar v-model="snackbar" color="info" timeout="3000">
-      Coming soon!!!
-    </v-snackbar>
   </div>
 </template>
 
@@ -88,7 +82,6 @@ export default {
         : joinUrl(this.$config.fotosURL, this.category.image),
       // imgSrc: this.category.image,
       lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
-      snackbar: false,
     }
   },
 
@@ -99,6 +92,9 @@ export default {
     },
     canEdit() {
       return !this.isMobile && !!this.loggedInUser?.is_superuser
+    },
+    canFilter() {
+      return ['depto', 'cat'].includes(this.category.type)
     },
     sz() {
       // screen size
@@ -147,6 +143,30 @@ export default {
           query: { parent_id: this.category.id, category: catname },
         })
       }
+    },
+    async filterProducts() {
+      this.loadingView = true
+      this.overlay = true
+
+      await this.$store.dispatch(
+        'shoppingcart/categories/setSelectProductsByLevel',
+        {
+          key: this.category.type,
+          value: this.category?.ext_related_id
+            ? this.category.ext_related_id
+            : this.category.id,
+        }
+      )
+
+      let catname = this.category.name
+      if (this.isMobile) {
+        catname = this.category.abreviated_name ?? catname
+      }
+
+      this.$router.push({
+        path: '/shoppingcart/categories/products',
+        query: { parent_id: this.category.id, category: catname },
+      })
     },
     onImgError() {
       this.imgSrc = '/no_image.png'

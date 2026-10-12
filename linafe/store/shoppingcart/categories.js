@@ -402,6 +402,16 @@ export const actions = {
     // Recordar que esa acción era necesaria porque las categorías no respondían a gerarquía en la db del cliente Vértigo.
     commit('SET_PARENT_CATEGORY', value)
   },
+  setSelectProductsByLevel({ commit, state }, { key, value }) {
+    const levels = ['depto', 'cat', 'scat']
+    const selection = { ...state.select_products_by }
+    levels.forEach((level, i) => {
+      if (level === key) selection[level] = value
+      else if (i > levels.indexOf(key)) selection[level] = '0'
+    })
+    commit('SET_SELECT_PRODUCTS_BY', selection)
+    commit('SET_PARENT_CATEGORY', value)
+  },
   setParentCategory({ commit }, value) {
     commit('SET_PARENT_CATEGORY', value)
   },

@@ -77,7 +77,7 @@
             clearable
           ></v-text-field>
           <v-text-field
-            v-show="cur_child_view.includes('products')"
+            v-show="false"
             id="products"
             v-model="search_product"
             solo
@@ -98,6 +98,15 @@
               </v-btn>
             </template>
           </v-text-field>
+          <v-btn
+            class="ma-2"
+            icon
+            color="cyan lighten-1"
+            @click="showPanelFilters"
+          >
+            <v-icon> mdi-tune-variant </v-icon>
+            {{ getActiveStockFilterCount || '' }}
+          </v-btn>
           <v-btn
             v-show="!isMobile"
             class="ma-2"
