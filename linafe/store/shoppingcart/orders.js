@@ -1,3 +1,6 @@
+import JSZip from 'jszip'
+import saveAs from 'file-saver'
+
 export const namespaced = true
 
 function updateOrderState(orderstate) {
@@ -190,6 +193,57 @@ export const actions = {
       link.remove()
     } catch (error) {
       console.error('Error downloading PDF:', error)
+      throw error // Maneja el error según sea necesario
+    }
+  },
+
+  async imagesZipDownload({ rootGetters }, payload) {
+    const { orderid, items } = payload
+    const zip = new JSZip()
+    const usedNames = new Set()
+
+    // Descarga una imagen; devuelve null si falla para omitirla del zip
+    const downloadImage = async (url) => {
+      try {
+        const response = await fetch(url)
+        return response.ok ? await response.arrayBuffer() : null
+      } catch (error) {
+        return null
+      }
+    }
+
+    try {
+      const promises = (items || [])
+        .filter((item) => item.image)
+        .map(async (item) => {
+          const url =
+            rootGetters['shoppingcart/products/getImage'](item.id) ||
+            this.$config.fotosURL + item.image
+
+          const data = await downloadImage(url)
+          if (!data) return false
+
+          // Nombre del archivo dentro del zip (evita duplicados)
+          let filename = item.image.split('/').pop()
+          if (usedNames.has(filename)) {
+            filename = `${item.sku}_${filename}`
+          }
+          usedNames.add(filename)
+
+          zip.file(filename, data, { binary: true })
+          return true
+        })
+
+      const results = await Promise.all(promises)
+
+      if (!results.some(Boolean)) {
+        throw new Error('No images to download')
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' })
+      saveAs(content, `order_${orderid}_images.zip`)
+    } catch (error) {
+      console.error('Error downloading images:', error)
       throw error // Maneja el error según sea necesario
     }
   },

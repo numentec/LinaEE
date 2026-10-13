@@ -120,6 +120,12 @@
                     <v-icon>mdi-file-delimited-outline</v-icon>
                   </v-list-item-icon>
                 </v-list-item>
+                <v-list-item @click="imagesZipD">
+                  <v-list-item-title>Images (ZIP)</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-folder-zip-outline</v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
               </v-list-group>
 
               <v-list-item @click="printOrderPDF">
@@ -354,6 +360,7 @@ export default {
       'setFilterCriteria',
       'csvDownload',
       'pdfDownload',
+      'imagesZipDownload',
     ]),
     async goToProducts() {
       this.loading = true
@@ -474,6 +481,31 @@ export default {
         this.pdfDownload({ orderid: this.cOrderID, printImages })
       } catch (error) {
         console.error('Error downloading CSV:', error)
+        this.snackbarText = error.message
+        this.snackbarColor = 'error'
+        this.snackbar = true
+      }
+    },
+
+    // Download images (ZIP)
+    // This function is called when the user clicks on the Images (ZIP) download button
+    // It uses the imagesZipDownload method from the Vuex store to download a zip file
+    // with the images of the order items
+    // It also handles errors and shows a snackbar with the download status
+    async imagesZipD() {
+      this.vmenu = false
+
+      this.snackbarText = 'Downloading images'
+      this.snackbarColor = 'info'
+      this.snackbar = true
+
+      try {
+        await this.imagesZipDownload({
+          orderid: this.cOrderID,
+          items: this.curOrderItems,
+        })
+      } catch (error) {
+        console.error('Error downloading images:', error)
         this.snackbarText = error.message
         this.snackbarColor = 'error'
         this.snackbar = true
