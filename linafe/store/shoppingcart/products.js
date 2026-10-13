@@ -360,9 +360,11 @@ export const actions = {
         itemImages.push(src.imgSrc)
 
         commit('SET_ITEM_IMAGES', itemImages)
+        return itemImages.length
       })
       .catch(() => {
         commit('SET_ITEM_IMAGES', [src.imgSrc])
+        return 0
       })
   },
 

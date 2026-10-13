@@ -50,6 +50,18 @@
                         </v-progress-circular>
                       </v-row>
                     </template>
+                    <v-btn
+                      v-show="dS && dS.length > 1"
+                      fab
+                      absolute
+                      bottom
+                      right
+                      small
+                      class="mb-8"
+                      style="background-color: rgba(0, 0, 0, 0.45)"
+                    >
+                      + {{ dS.length }}
+                    </v-btn>
                   </v-img>
                 </v-carousel-item>
               </v-carousel>
