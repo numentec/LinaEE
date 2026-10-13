@@ -4,6 +4,7 @@ import CustomStore from 'devextreme/data/custom_store'
 export const namespaced = true
 
 function clearLocalStorage(prefix) {
+  if (typeof localStorage === 'undefined') return
   for (const key in localStorage) {
     if (key.startsWith(prefix)) {
       localStorage.removeItem(key)
@@ -28,9 +29,10 @@ export const mutations = {
     state.curuser = payload
     localStorage.setItem('lina_curuser', JSON.stringify(payload))
   },
-  USER_LOGOUT() {
+  USER_LOGOUT(state) {
     state.curuser = null
     clearLocalStorage('lina_')
+    clearLocalStorage('auth.')
     // localStorage.removeItem('lina_curuser')
     // location.reload()
   },

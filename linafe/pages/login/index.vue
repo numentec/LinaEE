@@ -33,8 +33,13 @@ export default {
   },
   mounted() {
     const curuser = localStorage.getItem('lina_curuser')
+    const hasAuthToken =
+      this.$auth && typeof this.$auth.getToken === 'function'
+        ? !!this.$auth.getToken('local')
+        : false
 
-    if (curuser) {
+    // Solo auto-redireccionar si además de lina_curuser el módulo auth tiene un token
+    if (curuser && hasAuthToken) {
       const cu = JSON.parse(curuser)
       this.$store.dispatch('sistema/setUserData', cu).then(() => {
         this.nuxtClientInit()
@@ -61,6 +66,10 @@ export default {
           this.$router.push('/')
         }
       })
+    } else if (curuser && !hasAuthToken) {
+      // Si hay datos residuales en localStorage pero no hay token de autenticación válido,
+      // purgamos los datos viejos para mostrar el cuadro de login limpio
+      this.$store.commit('sistema/USER_LOGOUT')
     }
   },
   methods: {

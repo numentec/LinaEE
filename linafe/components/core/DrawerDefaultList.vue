@@ -10,7 +10,7 @@
     </v-list-item>
     <v-list-group
       v-for="item in modulosDisponibles"
-      v-show="getCurUser.perms[item.perm]"
+      v-show="getCurUser && getCurUser.perms && getCurUser.perms[item.perm]"
       :key="item.title"
       :prepend-icon="item.icon"
       no-action
@@ -22,7 +22,9 @@
       </template>
       <v-list-item
         v-for="subitem in item.items"
-        v-show="getCurUser.perms[subitem.perm]"
+        v-show="
+          getCurUser && getCurUser.perms && getCurUser.perms[subitem.perm]
+        "
         :key="subitem.title"
         nuxt
         :to="subitem.to"
