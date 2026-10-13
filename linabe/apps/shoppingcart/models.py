@@ -18,6 +18,14 @@ class ExtOrderMaster(Common):
         ('clawiki', 'Clawiki'),
     ]
 
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processed', 'Processed'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+    ]
+
     ciaext = models.CharField("External cia", max_length=10, default='01')
     customer_id = models.CharField("Customer ID", max_length=25, default='0')
     customer_name = models.CharField("Customer Name", max_length=100, default='X customer', null=True)
@@ -35,7 +43,7 @@ class ExtOrderMaster(Common):
     discount = models.DecimalField("Discount", max_digits=10, decimal_places=2, default=0.00)
     tax = models.DecimalField("Tax", max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
-    status = models.CharField("Status", max_length=25, default='Pending')
+    status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='pending')
 
     def save(self, *args, **kwargs):
         if not self.sendto:  # Si sendto está vacío o es None
@@ -56,7 +64,7 @@ class ExtOrderMaster(Common):
         verbose_name = 'CartExtOrderMaster'
         verbose_name_plural = 'CartExtOrdersMasters'
 
-    def __str_(self):
+    def __str__(self):
         return "External order {} - {} - {}".format(self.id, self.created_at, self.created_by)
 
 
