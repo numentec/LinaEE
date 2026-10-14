@@ -11,7 +11,23 @@
                     ></v-img>
                     </v-list-item-avatar> -->
     <v-list-item-content>
-      <v-list-item-title>
+      <v-list-item-title :class="{ 'text--disabled': isCancelled }">
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              x-small
+              class="mr-1 status-dot"
+              :color="statusInfo.color"
+              :aria-label="statusInfo.text"
+              role="img"
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-circle
+            </v-icon>
+          </template>
+          <span>{{ statusInfo.text }}</span>
+        </v-tooltip>
         {{ `Order #: ${order.id}` }}
       </v-list-item-title>
       <v-list-item-subtitle>
@@ -38,6 +54,8 @@
 </template>
 
 <script>
+import { getOrderStatus } from '@/utils/orderStatus'
+
 export default {
   name: 'OrderListItem',
   props: {
@@ -61,6 +79,12 @@ export default {
       // screen size
       return this.$vuetify.breakpoint.name
     },
+    statusInfo() {
+      return getOrderStatus(this.order.status)
+    },
+    isCancelled() {
+      return this.order.status === 'cancelled'
+    },
   },
 
   activated() {
@@ -76,4 +100,8 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.status-dot {
+  vertical-align: middle;
+}
+</style>

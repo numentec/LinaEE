@@ -32,6 +32,13 @@ export const mutations = {
 
     updateOrderState(state.orders)
   },
+  UPDATE_ORDER_STATUS(state, { id, status }) {
+    const order = state.orders.find((order) => order.id === id)
+    if (order) {
+      order.status = status
+      updateOrderState(state.orders)
+    }
+  },
   SET_CURRENT_INDEX(state, index) {
     state.currentIndex = index
   },
@@ -141,6 +148,21 @@ export const actions = {
     } catch (error) {
       commit('SET_ISLOADING')
       // Lanzar la excepción para que pueda ser capturada en asyncData
+      throw error
+    }
+  },
+
+  async updateOrderStatus({ commit }, payload) {
+    const { id, status } = payload
+
+    try {
+      const response = await this.$axios.patch(
+        `shoppingcart/extorderonly/${id}/`,
+        { status }
+      )
+      commit('UPDATE_ORDER_STATUS', { id, status: response.data.status })
+    } catch (error) {
+      console.error('Error updating order status:', error)
       throw error
     }
   },

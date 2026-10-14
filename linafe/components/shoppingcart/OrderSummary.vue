@@ -60,7 +60,7 @@
               text
               :loading="loading"
               :disabled="loading"
-              @click="$emit('go-to-products')"
+              @click="$emit('go-to-cart')"
             >
               Keep selling
               <template v-slot:loader>
@@ -107,13 +107,7 @@ export default {
     },
   },
 
-  methods: {
-    async goToProducts() {
-      this.loading = true
-      await this.$emit('go-to-products')
-      this.loading = false
-    },
-  },
+  methods: {},
 }
 </script>
 

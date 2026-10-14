@@ -37,7 +37,13 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
             ExtOrderItem.objects.create(extorder=order, **item_data)
 
         return order
-    
+
+    def validate(self, attrs):
+        # Una orden cancelada no se puede modificar
+        if self.instance and self.instance.status == 'cancelled':
+            raise serializers.ValidationError('Cancelled orders cannot be modified.')
+        return attrs
+
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items')
 
@@ -59,6 +65,7 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
         instance.discount = validated_data.get('discount', instance.discount)
         instance.tax = validated_data.get('tax', instance.tax)
         instance.total = validated_data.get('total', instance.total)
+        instance.status = validated_data.get('status', instance.status)
         instance.save()
 
         # Clear existing items and create new ones
@@ -75,3 +82,9 @@ class ExtOrderMasterOnlySerializer(serializers.ModelSerializer):
         model = ExtOrderMaster
         fields = '__all__'
         read_only_fields = ('id', 'created_at', 'created_by')
+
+    def validate(self, attrs):
+        # Una orden cancelada no se puede modificar
+        if self.instance and self.instance.status == 'cancelled':
+            raise serializers.ValidationError('Cancelled orders cannot be modified.')
+        return attrs

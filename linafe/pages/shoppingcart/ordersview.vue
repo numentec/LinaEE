@@ -88,7 +88,7 @@
               </v-btn>
             </template>
             <v-list>
-              <v-list-item @click="goToProducts">
+              <v-list-item @click="goToCart">
                 <v-list-item-title>Go to Cart</v-list-item-title>
               </v-list-item>
               <v-list-item @click="changeView">
@@ -142,6 +142,32 @@
           <v-card v-show="!isListView">
             <v-toolbar dense flat rounded>
               <v-card-title>{{ `Order # ${cOrderID}` }}</v-card-title>
+              <v-select
+                v-model="orderStatus"
+                :items="statusOptions"
+                :disabled="isCancelled || statusSaving"
+                :loading="statusSaving"
+                label="Status"
+                dense
+                outlined
+                hide-details
+                class="ml-2"
+                style="max-width: 180px"
+                @change="onStatusChange"
+              >
+                <template v-slot:selection="{ item }">
+                  <v-icon x-small class="mr-2" :color="item.color">
+                    mdi-circle
+                  </v-icon>
+                  {{ item.text }}
+                </template>
+                <template v-slot:item="{ item }">
+                  <v-icon x-small class="mr-2" :color="item.color">
+                    mdi-circle
+                  </v-icon>
+                  {{ item.text }}
+                </template>
+              </v-select>
               <v-spacer></v-spacer>
 
               <v-btn
@@ -161,7 +187,7 @@
                 v-show="showSummary"
                 :cur-order="curOrder"
                 :outlined="true"
-                @go-to-products="goToProducts"
+                @go-to-cart="goToCart"
               />
             </v-expand-transition>
             <v-card-text>
@@ -206,11 +232,28 @@
             :cur-order="curOrder"
             :hide-controls="hideControls"
             class="sticky-summary"
-            @go-to-products="goToProducts"
+            @go-to-cart="goToCart"
           />
         </v-col>
       </v-row>
     </div>
+    <v-dialog v-model="cancelDialog" max-width="400" persistent>
+      <v-card>
+        <v-card-title>Cancel order</v-card-title>
+        <v-card-text>
+          {{
+            `Order # ${cOrderID} will be cancelled. Its status cannot be changed afterwards.`
+          }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="resetOrderStatus">Back</v-btn>
+          <v-btn color="error" text @click="saveOrderStatus('cancelled')">
+            Cancel order
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" timeout="3000" :color="snackbarColor" dark>
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -233,6 +276,7 @@ import OrderCard from '@/components/shoppingcart/OrderCard.vue'
 import OrderListItem from '@/components/shoppingcart/OrderListItem.vue'
 import OrderSummary from '@/components/shoppingcart/OrderSummary.vue'
 import html2pdf from 'html2pdf.js'
+import { ORDER_STATUSES } from '@/utils/orderStatus'
 
 function debounce(func, delay) {
   let timeout
@@ -293,6 +337,10 @@ export default {
       listKey: 0, // Agregar una clave dinámica para forzar la actualización de la lista
       hideControls: false,
       vmenu: false,
+      orderStatus: null,
+      statusSaving: false,
+      cancelDialog: false,
+      statusOptions: ORDER_STATUSES,
     }
   },
   computed: {
@@ -320,6 +368,9 @@ export default {
     returnBackMessage() {
       return this.isListView ? 'Back to previous view' : 'List view'
     },
+    isCancelled() {
+      return this.curOrder?.status === 'cancelled'
+    },
   },
 
   watch: {
@@ -335,6 +386,13 @@ export default {
       }
 
       this.setCurrentIndex(curIndex)
+    },
+    // Mantiene el select sincronizado con la orden actual
+    'curOrder.status': {
+      handler(status) {
+        this.orderStatus = status
+      },
+      immediate: true,
     },
     // filterOrdersBy() {
     //   this.listKey += 1 // Incrementar la clave dinámica cuando el filtro cambie
@@ -361,8 +419,44 @@ export default {
       'csvDownload',
       'pdfDownload',
       'imagesZipDownload',
+      'updateOrderStatus',
     ]),
-    async goToProducts() {
+    // Cambio de estado desde el select.
+    // "Cancelled" es definitivo, por lo que se pide confirmación antes de guardarlo.
+    onStatusChange(status) {
+      if (status === this.curOrder?.status) return
+
+      if (status === 'cancelled') {
+        this.cancelDialog = true
+        return
+      }
+
+      this.saveOrderStatus(status)
+    },
+    async saveOrderStatus(status) {
+      this.cancelDialog = false
+      this.statusSaving = true
+
+      try {
+        await this.updateOrderStatus({ id: this.curOrder.id, status })
+        this.snackbarText = 'Order status updated'
+        this.snackbarColor = 'success'
+      } catch (error) {
+        this.resetOrderStatus()
+        this.snackbarText =
+          error.response?.data?.non_field_errors?.[0] ||
+          'Error updating order status'
+        this.snackbarColor = 'error'
+      } finally {
+        this.statusSaving = false
+        this.snackbar = true
+      }
+    },
+    resetOrderStatus() {
+      this.cancelDialog = false
+      this.orderStatus = this.curOrder?.status
+    },
+    async goToCart() {
       this.loading = true
       await this.$router.push('/shoppingcart/categories/products')
       this.loading = false
