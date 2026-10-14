@@ -88,8 +88,11 @@
               </v-btn>
             </template>
             <v-list>
-              <v-list-item @click="goToCart">
-                <v-list-item-title>Go to Cart</v-list-item-title>
+              <v-list-item
+                v-show="curOrder.status === 'pending'"
+                @click="keepSelling"
+              >
+                <v-list-item-title>Keep selling</v-list-item-title>
               </v-list-item>
               <v-list-item @click="changeView">
                 <v-list-item-title>
@@ -187,7 +190,7 @@
                 v-show="showSummary"
                 :cur-order="curOrder"
                 :outlined="true"
-                @go-to-cart="goToCart"
+                @keep-selling="keepSelling"
               />
             </v-expand-transition>
             <v-card-text>
@@ -232,7 +235,7 @@
             :cur-order="curOrder"
             :hide-controls="hideControls"
             class="sticky-summary"
-            @go-to-cart="goToCart"
+            @keep-selling="keepSelling"
           />
         </v-col>
       </v-row>
@@ -251,6 +254,21 @@
           <v-btn color="error" text @click="saveOrderStatus('cancelled')">
             Cancel order
           </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="replaceCartDialog" max-width="400" persistent>
+      <v-card>
+        <v-card-title>Replace shopping cart</v-card-title>
+        <v-card-text>
+          {{
+            `The shopping cart is currently editing order # ${cartOrderId}. Its contents will be replaced with order # ${cOrderID}.`
+          }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="replaceCartDialog = false">Back</v-btn>
+          <v-btn color="warning" text @click="doKeepSelling">Replace</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -340,6 +358,7 @@ export default {
       orderStatus: null,
       statusSaving: false,
       cancelDialog: false,
+      replaceCartDialog: false,
       statusOptions: ORDER_STATUSES,
     }
   },
@@ -355,6 +374,7 @@ export default {
       getJustCreated: 'getJustCreated',
       orders: 'getOrders',
     }),
+    ...mapGetters('shoppingcart/cart', { cartOrderId: 'getCartOrderId' }),
     ...mapGetters('sistema', ['getCurCia']),
     curOrderItems() {
       return this.curOrder ? this.curOrder.items : []
@@ -421,6 +441,7 @@ export default {
       'imagesZipDownload',
       'updateOrderStatus',
     ]),
+    ...mapActions('shoppingcart/cart', ['loadFromOrder']),
     // Cambio de estado desde el select.
     // "Cancelled" es definitivo, por lo que se pide confirmación antes de guardarlo.
     onStatusChange(status) {
@@ -458,7 +479,7 @@ export default {
     },
     async goToCart() {
       this.loading = true
-      await this.$router.push('/shoppingcart/categories/products')
+      await this.$router.push('/shoppingcart/cart')
       this.loading = false
       this.vmenu = false
     },
@@ -604,6 +625,50 @@ export default {
         this.snackbarColor = 'error'
         this.snackbar = true
       }
+    },
+
+    // Keep selling
+    // This function is called when the user clicks on the "Keep selling" button
+    // Loads the current order into the shopping cart, linked to the order, so
+    // checkout updates it instead of creating a new one.
+    // - Cart already linked to this order: go to the cart keeping its edits
+    // - Cart linked to another order: ask before replacing it
+    // - Otherwise: previous cart items are merged into the order (see loadFromOrder)
+    keepSelling() {
+      this.vmenu = false
+
+      if (this.cartOrderId === this.curOrder.id) {
+        this.$router.push('/shoppingcart/cart')
+        return
+      }
+
+      if (this.cartOrderId) {
+        this.replaceCartDialog = true
+        return
+      }
+
+      this.doKeepSelling()
+    },
+    async doKeepSelling() {
+      this.replaceCartDialog = false
+
+      const { merged, customerReplaced } = await this.loadFromOrder(
+        this.curOrder
+      )
+
+      const messages = []
+      if (merged > 0) {
+        messages.push(`${merged} item(s) from the previous cart were added`)
+      }
+      if (customerReplaced) {
+        messages.push("cart customer replaced by the order's customer")
+      }
+
+      // El mensaje se muestra en la página del carrito
+      this.$router.push({
+        name: 'shoppingcart-cart',
+        params: { info: messages.join('; ') },
+      })
     },
   },
 }

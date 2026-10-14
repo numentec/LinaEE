@@ -4,14 +4,29 @@ function updateCartState(cartstate) {
   localStorage.setItem('lina_cart', JSON.stringify(cartstate))
 }
 
-const initCart = {
+// orderId: id de la orden que originó el carrito (Keep selling).
+// Si existe, el checkout actualiza esa orden en vez de crear una nueva.
+const initCart = () => ({
   cartCustomer: {},
   total: 0,
   items: [],
+  orderId: null,
+})
+
+// Convierte un item de orden (backend) al formato de item del carrito
+function orderItemToCartItem(item) {
+  return {
+    id: item.sku,
+    name: item.name,
+    description: '',
+    quantity: Number(item.quantity),
+    price: Number(item.price),
+    image: item.image,
+  }
 }
 
 export const state = () => ({
-  cart: initCart,
+  cart: initCart(),
 })
 
 /* El estado de cart se inicializa con los datos almacenados en localStorage.
@@ -65,12 +80,12 @@ export const mutations = {
     state.cart.items.splice(index, 1)
     updateCartState(state.cart)
   },
+  SET_ORDER_ID(state, id) {
+    state.cart = { ...state.cart, orderId: id }
+    updateCartState(state.cart)
+  },
   CLEAR_CART(state) {
-    state.cart = {
-      cartCustomer: {},
-      total: 0,
-      items: [],
-    }
+    state.cart = initCart()
     localStorage.removeItem('lina_cart')
   },
   DECREASE_QUANTITY(state, index) {
@@ -128,6 +143,49 @@ export const actions = {
   clearCart({ commit }) {
     commit('CLEAR_CART')
   },
+
+  // Keep selling: carga una orden en el carrito, ligándolo a ella.
+  // Si el carrito actual no está ligado a una orden, sus items se suman a los
+  // de la orden (mismo SKU: se suman cantidades y se conserva el precio de la orden).
+  // El cliente de la orden siempre prevalece.
+  // Devuelve { merged, customerReplaced } para informar al usuario.
+  loadFromOrder({ state, commit }, order) {
+    const items = (order.items || []).map(orderItemToCartItem)
+    const prevCart = state.cart || initCart()
+    let merged = 0
+
+    if (!prevCart.orderId) {
+      for (const cartItem of prevCart.items || []) {
+        const orderItem = items.find((item) => item.id === cartItem.id)
+        if (orderItem) {
+          orderItem.quantity += Number(cartItem.quantity)
+        } else {
+          items.push({ ...cartItem })
+        }
+        merged++
+      }
+    }
+
+    const prevCustomerId = prevCart.cartCustomer?.id
+    const customerReplaced =
+      !prevCart.orderId &&
+      !!prevCustomerId &&
+      String(prevCustomerId) !== String(order.customer_id)
+
+    commit('SET_CART', {
+      cartCustomer: {
+        id: order.customer_id,
+        name: order.customer_name,
+        email: order.customer_email,
+        tel: order.customer_cel,
+      },
+      total: 0,
+      items,
+      orderId: order.id,
+    })
+
+    return { merged, customerReplaced }
+  },
   decreaseQuantity({ commit }, index) {
     commit('DECREASE_QUANTITY', index)
   },
@@ -141,6 +199,7 @@ export const getters = {
     return state.cart.cartCustomer
   },
 
+  getCartOrderId: (state) => state.cart.orderId || null,
   getCartItems: (state) => state.cart.items || [],
   getCartItemCount: (state) => state.cart.items?.length || 0,
   getCartProductCount: (state) => {

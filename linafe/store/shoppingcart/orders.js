@@ -7,6 +7,25 @@ function updateOrderState(orderstate) {
   localStorage.setItem('lina_order', JSON.stringify(orderstate))
 }
 
+// Construye el payload de una orden a partir del carrito
+function buildOrderPayload(cart) {
+  return {
+    customer_id: cart.cartCustomer?.id || '0',
+    customer_name: cart.cartCustomer?.name || '',
+    customer_email: cart.cartCustomer?.email || '',
+    customer_cel: cart.cartCustomer?.tel || '',
+    total: cart.items
+      .reduce((acc, item) => acc + parseFloat(item.price * item.quantity), 0)
+      .toFixed(2),
+    items: cart.items.map((item) => ({
+      sku: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+  }
+}
+
 export const state = () => ({
   orders: [],
   currentIndex: 0,
@@ -26,6 +45,21 @@ export const mutations = {
     const curlength = state.orders.push(order)
 
     state.currentIndex = curlength - 1
+    state.currentID = order.id
+    state.lastCreatedID = order.id
+    state.justCreated = true
+
+    updateOrderState(state.orders)
+  },
+  // Reemplaza una orden existente y la marca para que ordersview se posicione en ella
+  REPLACE_ORDER(state, order) {
+    const index = state.orders.findIndex((o) => o.id === order.id)
+    if (index > -1) {
+      state.orders.splice(index, 1, order)
+    } else {
+      state.orders.push(order)
+    }
+
     state.currentID = order.id
     state.lastCreatedID = order.id
     state.justCreated = true
@@ -117,23 +151,7 @@ export const actions = {
   async createOrder({ commit, dispatch, rootState }) {
     commit('SET_ISLOADING')
 
-    const cart = rootState.shoppingcart.cart.cart
-
-    const newOrder = {
-      customer_id: cart.cartCustomer?.id || '0',
-      customer_name: cart.cartCustomer?.name || '',
-      customer_email: cart.cartCustomer?.email || '',
-      customer_cel: cart.cartCustomer?.tel || '',
-      total: cart.items
-        .reduce((acc, item) => acc + parseFloat(item.price * item.quantity), 0)
-        .toFixed(2),
-      items: cart.items.map((item) => ({
-        sku: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-      })),
-    }
+    const newOrder = buildOrderPayload(rootState.shoppingcart.cart.cart)
 
     try {
       const response = await this.$axios.post(
@@ -148,6 +166,28 @@ export const actions = {
     } catch (error) {
       commit('SET_ISLOADING')
       // Lanzar la excepción para que pueda ser capturada en asyncData
+      throw error
+    }
+  },
+
+  // Actualiza la orden ligada al carrito (Keep selling) con el contenido del carrito
+  async updateOrder({ commit, dispatch, rootState }) {
+    commit('SET_ISLOADING')
+
+    const cart = rootState.shoppingcart.cart.cart
+
+    try {
+      const response = await this.$axios.put(
+        `shoppingcart/extorder/${cart.orderId}/`,
+        buildOrderPayload(cart)
+      )
+
+      commit('REPLACE_ORDER', response.data)
+      await dispatch('shoppingcart/cart/clearCart', null, { root: true })
+
+      commit('SET_ISLOADING')
+    } catch (error) {
+      commit('SET_ISLOADING')
       throw error
     }
   },

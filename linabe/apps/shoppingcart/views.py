@@ -427,7 +427,10 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
         send_order_email.delay(order.id)
 
     def perform_update(self, serializer):
-        serializer.save(modified_by=self.request.user)
+        order = serializer.save(modified_by=self.request.user)
+
+        # Reenviar el correo con la orden actualizada
+        send_order_email.delay(order.id)
 
 
 class ExtOrderMasterOnlyViewSet(CommonViewSet):

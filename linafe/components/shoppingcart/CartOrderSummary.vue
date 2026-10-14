@@ -135,7 +135,7 @@
               :disabled="loading"
               @click="$emit('go-to-checkout')"
             >
-              Checkout
+              {{ getCartOrderId ? 'Update order' : 'Checkout' }}
               <template v-slot:loader>
                 <span class="custom-loader">
                   <v-icon light>mdi-cached</v-icon>
@@ -185,6 +185,7 @@ export default {
     ...mapGetters('shoppingcart/cart', [
       'getCartTotalPrice',
       'getCartCustomer',
+      'getCartOrderId',
     ]),
 
     cartCustomer: {
@@ -230,9 +231,10 @@ export default {
 
     editCustomer() {
       this.setCartCustomer({
-        ...this.cartCustomer.substring(0, 100),
-        email: this.editEmail.substring(0, 100),
-        tel: this.editTel.substring(0, 15),
+        ...this.cartCustomer,
+        name: (this.cartCustomer?.name || '').substring(0, 100),
+        email: (this.editEmail || '').substring(0, 100),
+        tel: (this.editTel || '').substring(0, 15),
       })
     },
 

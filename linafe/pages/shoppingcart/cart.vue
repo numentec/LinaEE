@@ -23,7 +23,21 @@
               </template>
               <span>Back to previous view</span>
             </v-tooltip>
-            <v-card-title>Shopping Cart</v-card-title>
+            <v-card-title>{{ cartTitle }}</v-card-title>
+            <v-tooltip v-if="getCartOrderId" bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  icon
+                  small
+                  v-bind="attrs"
+                  v-on="on"
+                  @click.stop="unlinkOrder"
+                >
+                  <v-icon>mdi-link-variant-off</v-icon>
+                </v-btn>
+              </template>
+              <span>Unlink order (checkout will create a new order)</span>
+            </v-tooltip>
             <v-spacer></v-spacer>
 
             <v-btn
@@ -150,8 +164,15 @@ export default {
       'getCartItems',
       'getCartTotalPrice',
       'getCartCustomer',
+      'getCartOrderId',
     ]),
     ...mapGetters('shoppingcart/categories', ['getCustomers']),
+
+    cartTitle() {
+      return this.getCartOrderId
+        ? `Editing order # ${this.getCartOrderId}`
+        : 'Shopping Cart'
+    },
     ...mapGetters('sistema', ['getCurCia']),
 
     customersList() {
@@ -166,9 +187,23 @@ export default {
     },
   },
 
+  // Mensaje enviado por otra vista al navegar al carrito (p.ej. Keep selling)
+  activated() {
+    const info = this.$route.params?.info
+    if (info) {
+      this.snackbarColor = 'info'
+      this.snackbarText = info
+      this.snackbarTimeout = 5000
+      this.snackbar = true
+    }
+  },
+
   methods: {
-    ...mapActions('shoppingcart/orders', ['createOrder']),
+    ...mapActions('shoppingcart/orders', ['createOrder', 'updateOrder']),
     ...mapActions('shoppingcart/cart', ['clearCart']),
+    unlinkOrder() {
+      this.$store.commit('shoppingcart/cart/SET_ORDER_ID', null)
+    },
     async goToCheckout() {
       this.snackbar = true
       if (this.getCartItems.length === 0) {
@@ -183,15 +218,23 @@ export default {
         return
       }
 
+      const isUpdate = !!this.getCartOrderId
+
       this.snackbarColor = 'info'
-      this.snackbarText = 'Creating order...'
+      this.snackbarText = isUpdate ? 'Updating order...' : 'Creating order...'
 
       this.loading = true
 
       try {
-        await this.createOrder()
+        if (isUpdate) {
+          await this.updateOrder()
+        } else {
+          await this.createOrder()
+        }
         this.snackbarColor = 'success'
-        this.snackbarText = 'Order created successfully'
+        this.snackbarText = isUpdate
+          ? 'Order updated successfully'
+          : 'Order created successfully'
         this.snackbarTimeout = 5000
 
         setTimeout(() => {
@@ -202,8 +245,10 @@ export default {
         this.loading = false
         this.snackbarColor = 'error'
         this.snackbarText =
-          'Failed to create order: ' +
-          (error.response?.data?.message || error.message)
+          `Failed to ${isUpdate ? 'update' : 'create'} order: ` +
+          (error.response?.data?.non_field_errors?.[0] ||
+            error.response?.data?.message ||
+            error.message)
         this.snackbarTimeout = 5000
       }
     },

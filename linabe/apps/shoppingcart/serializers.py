@@ -42,10 +42,13 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
         # Una orden cancelada no se puede modificar
         if self.instance and self.instance.status == 'cancelled':
             raise serializers.ValidationError('Cancelled orders cannot be modified.')
+        # Los items solo se pueden modificar mientras la orden esté pendiente
+        if self.instance and 'items' in attrs and self.instance.status != 'pending':
+            raise serializers.ValidationError('Only pending orders can be modified.')
         return attrs
 
     def update(self, instance, validated_data):
-        items_data = validated_data.pop('items')
+        items_data = validated_data.pop('items', None)
 
         # Update master data
         instance.ciaext = validated_data.get('ciaext', instance.ciaext)
@@ -69,9 +72,10 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
         instance.save()
 
         # Clear existing items and create new ones
-        instance.items.all().delete()
-        for item_data in items_data:
-            ExtOrderItem.objects.create(extorder=instance, **item_data)
+        if items_data is not None:
+            instance.items.all().delete()
+            for item_data in items_data:
+                ExtOrderItem.objects.create(extorder=instance, **item_data)
 
         return instance
 

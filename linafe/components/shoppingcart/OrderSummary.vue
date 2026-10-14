@@ -55,12 +55,12 @@
         <v-col cols="12">
           <v-row dense justify="center" align="center">
             <v-btn
-              v-show="!hideControls"
+              v-show="!hideControls && curOrder.status === 'pending'"
               color="green darken-1"
               text
               :loading="loading"
               :disabled="loading"
-              @click="$emit('go-to-cart')"
+              @click="$emit('keep-selling')"
             >
               Keep selling
               <template v-slot:loader>
