@@ -5,53 +5,56 @@
     </v-toolbar>
     <v-divider></v-divider>
     <v-card-text>
+      <!-- Cliente -->
+      <div class="d-flex align-start">
+        <v-avatar color="primary lighten-2" class="mr-4">
+          <v-icon large dark> mdi-account </v-icon>
+        </v-avatar>
+        <div class="customer-info">
+          <div class="text-subtitle-1 font-weight-bold text--primary">
+            {{ curOrder.customer_name || 'Customer' }}
+          </div>
+          <div v-if="curOrder.customer_email" class="d-flex align-center">
+            <v-icon small class="mr-1">mdi-email-outline</v-icon>
+            <span class="text-truncate">{{ curOrder.customer_email }}</span>
+          </div>
+          <div v-if="curOrder.customer_cel" class="d-flex align-center">
+            <v-icon small class="mr-1">mdi-phone-outline</v-icon>
+            <span>{{ curOrder.customer_cel }}</span>
+          </div>
+        </div>
+      </div>
+
+      <v-divider class="my-3"></v-divider>
+
+      <!-- Fechas -->
+      <div class="d-flex justify-space-between align-center mb-1">
+        <span>
+          <v-icon small class="mr-1">mdi-calendar-plus</v-icon>
+          Created
+        </span>
+        <span class="text--primary">{{ formatDate(curOrder.created_at) }}</span>
+      </div>
+      <div class="d-flex justify-space-between align-center">
+        <span>
+          <v-icon small class="mr-1">mdi-calendar-edit</v-icon>
+          Last modified
+        </span>
+        <span class="text--primary">
+          {{ formatDateTime(curOrder.modified_at) }}
+        </span>
+      </div>
+
+      <v-divider class="my-3"></v-divider>
+
+      <!-- Total -->
+      <div class="text-center">
+        <div class="text-overline">Total</div>
+        <div class="text-h5 font-weight-bold text--primary">
+          {{ formatedPrice }}
+        </div>
+      </div>
       <v-row dense no-gutters>
-        <v-col cols="12">
-          <v-row dense justify="start" align="start" class="ml-4 mb-0">
-            <v-col cols="2" align="start">
-              <div class="my-0">
-                <v-avatar color="primary lighten-2">
-                  <!-- <v-img
-                    src="https://cdn.vuetifyjs.com/images/john.jpg"
-                  ></v-img> -->
-                  <v-icon large dark> mdi-account </v-icon>
-                </v-avatar>
-              </div>
-            </v-col>
-            <v-col cols="10" align="start">
-              <div class="my-0">
-                <strong>{{ curOrder.customer_name }}</strong>
-              </div>
-              <div class="my-0">
-                <p>{{ curOrder.customer_email }}</p>
-              </div>
-            </v-col>
-          </v-row>
-          <v-row dense justify="start" align="start" class="ml-4 mb-4 mt-0">
-            <v-col cols="3" align="start">
-              <div class="my-0">
-                <strong>Date:</strong>
-              </div>
-            </v-col>
-            <v-col cols="9" align="start">
-              <div class="my-0">
-                {{ new Date(curOrder.created_at).toLocaleDateString() }}
-              </div>
-            </v-col>
-          </v-row>
-          <v-row dense justify="center" align="center">
-            <div style="text-align: center"><h3>Total</h3></div>
-          </v-row>
-          <v-row dense justify="center" align="center">
-            <div style="text-align: center">
-              <h3>
-                {{ formatedPrice }}
-              </h3>
-            </div>
-          </v-row>
-        </v-col>
-      </v-row>
-      <v-row dense no-gutteers>
         <v-col cols="12">
           <v-row dense justify="center" align="center">
             <v-btn
@@ -107,11 +110,26 @@ export default {
     },
   },
 
-  methods: {},
+  methods: {
+    formatDate(value) {
+      if (!value) return '—'
+      return new Date(value).toLocaleDateString()
+    },
+    formatDateTime(value) {
+      if (!value) return '—'
+      return new Date(value).toLocaleString([], {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      })
+    },
+  },
 }
 </script>
 
 <style scoped>
+.customer-info {
+  min-width: 0;
+}
 .custom-loader {
   animation: loader 1s infinite;
   display: flex;

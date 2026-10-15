@@ -17,7 +17,6 @@
                   :items="customersList"
                   item-text="name"
                   item-value="id"
-                  dense
                   background-color="#eafaff"
                   rounded
                   clearable
