@@ -207,7 +207,8 @@ export const actions = {
     let curMutation = ''
     let endpointParams = {}
 
-    const cia = rootState.core.getCurCia.id || '01'
+    // const cia = rootState.core.getCurCia.id || '01'
+    const cia = '01'
 
     switch (payload.name) {
       case 'Department':
