@@ -26,6 +26,16 @@ function buildOrderPayload(cart) {
   }
 }
 
+// Descarga un archivo generado por el backend para una orden
+async function downloadOrderFile(axios, { url, params, type, filename }) {
+  const response = await axios.get(url, {
+    responseType: 'blob', // Importante para manejar archivos binarios
+    params,
+  })
+
+  saveAs(new Blob([response.data], { type }), filename)
+}
+
 export const state = () => ({
   orders: [],
   currentIndex: 0,
@@ -208,21 +218,12 @@ export const actions = {
   },
 
   async csvDownload({ commit }, orderid) {
-    const url = `shoppingcart/orders/${orderid}/csv/` // Construye la URL del endpoint
-
     try {
-      const response = await this.$axios.get(url, {
-        responseType: 'blob', // Importante para manejar archivos binarios
+      await downloadOrderFile(this.$axios, {
+        url: `shoppingcart/orders/${orderid}/csv/`,
+        type: 'text/csv',
+        filename: `order_${orderid}.csv`,
       })
-
-      // Crear un enlace para descargar el archivo
-      const blob = new Blob([response.data], { type: 'text/csv' })
-      const link = document.createElement('a')
-      link.href = window.URL.createObjectURL(blob)
-      link.setAttribute('download', `order_${orderid}.csv`) // Nombre del archivo
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
     } catch (error) {
       console.error('Error downloading CSV:', error)
       throw error // Maneja el error según sea necesario
@@ -231,31 +232,35 @@ export const actions = {
 
   async pdfDownload({ commit }, payload) {
     const { orderid, printImages } = payload // Desestructura el orderid del payload
-    const url = `shoppingcart/orders/${orderid}/pdf/` // Construye la URL del endpoint
-
-    const params = {}
-
-    if (printImages === true) {
-      params.print_images = '1' // Agregar el parámetro print_images
-    }
 
     try {
-      const response = await this.$axios.get(url, {
-        responseType: 'blob', // Importante para manejar archivos binarios
-        params, // Agregar el parámetro print_images
+      await downloadOrderFile(this.$axios, {
+        url: `shoppingcart/orders/${orderid}/pdf/`,
+        params: printImages === true ? { print_images: '1' } : {},
+        type: 'application/pdf',
+        filename: `order_${orderid}.pdf`,
       })
-
-      // Crear un enlace para descargar el archivo
-      const blob = new Blob([response.data], { type: 'application/pdf' })
-      const link = document.createElement('a')
-      link.href = window.URL.createObjectURL(blob)
-      link.setAttribute('download', `order_${orderid}.pdf`) // Nombre del archivo
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
     } catch (error) {
       console.error('Error downloading PDF:', error)
       throw error // Maneja el error según sea necesario
+    }
+  },
+
+  // Excel con imágenes por defecto; printImages = false las omite
+  async xlsxDownload({ commit }, payload) {
+    const { orderid, printImages = true } = payload
+
+    try {
+      await downloadOrderFile(this.$axios, {
+        url: `shoppingcart/orders/${orderid}/xlsx/`,
+        params: printImages ? {} : { print_images: '0' },
+        type:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        filename: `order_${orderid}.xlsx`,
+      })
+    } catch (error) {
+      console.error('Error downloading Excel:', error)
+      throw error
     }
   },
 

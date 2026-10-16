@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import connections
 
 from django.http import HttpResponse
-from .utils import render_order_pdf, render_order_csv
+from .utils import render_order_pdf, render_order_csv, render_order_xlsx
 
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -533,6 +533,33 @@ class GenerateOrderCSV(APIView):
 
             response = HttpResponse(csv_file.getvalue(), content_type='text/csv')
             response['Content-Disposition'] = f'attachment; filename="Orden_{order.id}.csv"'
+            return response
+
+        except ExtOrderMaster.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class GenerateOrderXLSX(APIView):
+    """
+    Generate an Excel file for an order (with images by default).
+    Use ?print_images=0 to omit images.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, order_id):
+        print_images = str(request.query_params.get('print_images', '1')).strip().lower() != '0'
+
+        try:
+            order = ExtOrderMaster.objects.get(id=order_id)
+
+            xlsx_file = render_order_xlsx(order, print_images)
+
+            response = HttpResponse(
+                xlsx_file.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            )
+            response['Content-Disposition'] = f'attachment; filename="Order_{order.id}.xlsx"'
             return response
 
         except ExtOrderMaster.DoesNotExist:

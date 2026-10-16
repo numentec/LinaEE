@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 
 from .models import ExtOrderMaster
-from .utils import render_order_pdf, render_order_csv
+from .utils import render_order_pdf, render_order_csv, render_order_xlsx
 
 
 LinaUserModel = get_user_model()
@@ -52,15 +52,20 @@ def send_order_email(order_id, print_images='', file_type='pdf'):
             to=[order.sendto],
         )
 
-        # Generar el PDF o el CSV
-        if file_type == 'pdf':
-            pdf_file = render_order_pdf(order, print_images=print_images)
-            email.attach(f"Order_{order.id}.pdf", pdf_file.getvalue(), "application/pdf")
-        elif file_type == 'csv':
-            csv_file = render_order_csv(order)
-            email.attach(f"Order_{order.id}.csv", csv_file.getvalue(), "text/csv")
-        else:
-            raise ValueError("Invalid file type specified. Use 'pdf' or 'csv'.")
+        # Generar el archivo según el tipo solicitado
+        renderers = {
+            'pdf': (lambda: render_order_pdf(order, print_images=print_images), "application/pdf"),
+            'csv': (lambda: render_order_csv(order), "text/csv"),
+            'xlsx': (
+                lambda: render_order_xlsx(order, print_images=print_images != '0'),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
+        }
+        if file_type not in renderers:
+            raise ValueError(f"Invalid file type specified. Use one of: {', '.join(renderers)}.")
+
+        render, mimetype = renderers[file_type]
+        email.attach(f"Order_{order.id}.{file_type}", render().getvalue(), mimetype)
 
         # Enviar el correo
         email.send()
