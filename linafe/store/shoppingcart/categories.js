@@ -201,23 +201,25 @@ export const actions = {
     commit('SET_LOADING_STATUS')
   },
 
-  async fetchItems({ commit, state }, payload) {
+  async fetchItems({ commit, state, rootState }, payload) {
     commit('SET_LOADING_STATUS')
 
     let curMutation = ''
     let endpointParams = {}
 
+    const cia = rootState.core.getCurCia.id || '01'
+
     switch (payload.name) {
       case 'Department':
       case 'Catalog':
         curMutation = 'SET_DEPARTMENTS'
-        endpointParams = { type: 'DEPTO', cia: '01' }
+        endpointParams = { type: 'DEPTO', cia }
         break
       case 'Category':
         curMutation = 'SET_CATEGORIES'
         endpointParams = {
           type: 'CAT',
-          cia: '01',
+          cia,
           dep: state.select_products_by.depto || 'ALL',
         }
         break
@@ -225,22 +227,22 @@ export const actions = {
         curMutation = 'SET_SUBCATEGORIES'
         endpointParams = {
           type: 'SCAT',
-          cia: '01',
+          cia,
           dep: state.select_products_by.depto || 'ALL',
           cat: state.select_products_by.cat || 'ALL',
         }
         break
       case 'Product':
         curMutation = 'SET_PRODUCTS'
-        endpointParams = { type: 'PROD', cia: '01' }
+        endpointParams = { type: 'PROD', cia }
         break
       case 'Brand':
         curMutation = 'SET_BRANDS'
-        endpointParams = { type: 'BRAND', cia: '01' }
+        endpointParams = { type: 'BRAND', cia }
         break
       case 'Cliente':
         curMutation = 'SET_CUSTOMERS'
-        endpointParams = { type: 'CLI', cia: '01' }
+        endpointParams = { type: 'CLI', cia }
         break
     }
 
