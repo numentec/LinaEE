@@ -188,8 +188,21 @@ export default {
     ]),
 
     cartCustomer: {
+      // v-autocomplete compara item-value (id) de forma estricta. El cliente del
+      // carrito puede venir de una orden (customer_id es string) mientras que la
+      // lista viene de la BD externa (número o texto con espacios), por lo que se
+      // resuelve contra la lista comparando ids normalizados.
+      // Se conservan los datos del carrito (email/tel editados) sobre los de la lista.
       get() {
-        return this.getCartCustomer
+        const customer = this.getCartCustomer
+        if (!customer || customer.id == null) return customer
+
+        const normalize = (id) => String(id).trim()
+        const match = this.customersList.find(
+          (item) => normalize(item.id) === normalize(customer.id)
+        )
+
+        return match ? { ...match, ...customer, id: match.id } : customer
       },
       set(value) {
         this.setCartCustomer(value)
@@ -219,11 +232,11 @@ export default {
     },
   },
 
-  mounted() {
-    if (this.customersList.length > 0 && this.isCustomerCart) {
-      this.cartCustomer = this.customersList[0] // Establece el primer ítem como predeterminado
-    }
-  },
+  // mounted() {
+  //  if (this.customersList.length > 0 && this.isCustomerCart) {
+  //    this.cartCustomer = this.customersList[0] // Establece el primer ítem como predeterminado
+  //  }
+  // },
 
   methods: {
     ...mapActions('shoppingcart/cart', ['setCartCustomer']),
