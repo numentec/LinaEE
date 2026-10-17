@@ -147,7 +147,8 @@ class UserPermsSerializer(serializers.ModelSerializer):
             'core.acc_linabi_catalog',
             'core.acc_linabi_saledocs_master',
             'core.acc_linabi_saledocs_datail',
-            'core.acc_linabi_sales_detail'
+            'core.acc_linabi_sales_detail',
+            'core.acc_saleapp',
             ]
 
         all_permissions = LinaUserModel(is_superuser=True).get_all_permissions()

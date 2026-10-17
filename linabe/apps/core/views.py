@@ -171,7 +171,8 @@ class LinaAuthToken(ObtainAuthToken):
             'core.acc_linabi_storagexloc',
             'core.acc_linabi_listcli',
             'core.acc_linabi_panel',
-            'core.ext_acc'
+            'core.ext_acc',
+            'core.acc_saleapp',
             ]
 
         # all_permissions = User(is_superuser=True).get_all_permissions()
