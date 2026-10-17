@@ -45,9 +45,9 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
-import ProductCard from '~/components/shoppingcart/ProductCard.vue'
-import ProductListItem from '~/components/shoppingcart/ProductListItem.vue'
-import Slideshow from '~/components/shoppingcart/Slideshow'
+import ProductCard from '~/components/saleapp/ProductCard.vue'
+import ProductListItem from '~/components/saleapp/ProductListItem.vue'
+import Slideshow from '~/components/saleapp/Slideshow'
 
 export default {
   name: 'CustomShopping',
@@ -61,7 +61,7 @@ export default {
 
   async asyncData({ params, store, error }) {
     try {
-      // await store.dispatch('shoppingcart/products/fetchProducts')
+      // await store.dispatch('saleapp/products/fetchProducts')
       /* Dejaré comentado este código por si se necesita en un futuro.
       Mientras no se complete la paginación desde el backend, 
       se podría necesitar para pruebas en desarrollo.
@@ -95,12 +95,9 @@ export default {
   }),
 
   computed: {
-    ...mapGetters('shoppingcart/categories', [
-      'getSelectedBrands',
-      'isListView',
-    ]),
+    ...mapGetters('saleapp/categories', ['getSelectedBrands', 'isListView']),
 
-    ...mapGetters('shoppingcart/products', [
+    ...mapGetters('saleapp/products', [
       'getAllProducts',
       'getSearchProduct',
       'getItemImages',
@@ -173,13 +170,13 @@ export default {
   },
 
   methods: {
-    ...mapActions('shoppingcart/products', ['setCountFilteredProducts']),
+    ...mapActions('saleapp/products', ['setCountFilteredProducts']),
     ...mapActions('customshopping/customcatalog', [
       'setCustomCatalog',
       'setCustomer',
     ]),
     async loadSlideshow(src) {
-      await this.$store.dispatch('shoppingcart/products/fetchItemImages', src)
+      await this.$store.dispatch('saleapp/products/fetchItemImages', src)
       this.slideshow = true
     },
   },

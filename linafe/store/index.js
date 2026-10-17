@@ -37,15 +37,15 @@ export const actions = {
       }
 
       if (localStorage.getItem('lina_selProdsBy')) {
-        await dispatch('shoppingcart/categories/nuxtClientInit')
+        await dispatch('saleapp/categories/nuxtClientInit')
       }
 
       if (localStorage.getItem('lina_cart')) {
-        await dispatch('shoppingcart/cart/nuxtClientInit')
+        await dispatch('saleapp/cart/nuxtClientInit')
       }
 
       if (localStorage.getItem('lina_cartImages')) {
-        await dispatch('shoppingcart/products/nuxtClientInit')
+        await dispatch('saleapp/products/nuxtClientInit')
       }
     }
   },

@@ -34,8 +34,8 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
-import CategoryCard from '~/components/shoppingcart/CategoryCard.vue'
-import CategoryListItem from '~/components/shoppingcart/CategoryListItem.vue'
+import CategoryCard from '~/components/saleapp/CategoryCard.vue'
+import CategoryListItem from '~/components/saleapp/CategoryListItem.vue'
 
 export default {
   name: 'AllCustomCatalogs',

@@ -1,0 +1,187 @@
+<template>
+  <div>
+    <v-divider></v-divider>
+    <v-list-item class="ml-0 mr-2 pl-0 pr-1" @click="goToView">
+      <v-list-item-avatar rounded size="100" left class="mx-0 pl-0 pr-1">
+        <v-img
+          :src="imgSrc"
+          :height="imgHeight"
+          contain
+          :lazy-src="lazySrc"
+          @error="onImgError"
+        >
+          <template v-slot:placeholder>
+            <v-row class="fill-height ma-0" align="center" justify="center">
+              <v-progress-circular
+                indeterminate
+                color="grey lighten-5"
+              ></v-progress-circular>
+            </v-row>
+          </template>
+        </v-img>
+      </v-list-item-avatar>
+      <v-list-item-content>
+        <v-list-item-title
+          :class="isMobile ? 'toolbar-title--small' : 'toolbar-title'"
+        >
+          {{ category.name }}
+        </v-list-item-title>
+      </v-list-item-content>
+      <v-list-item-action v-if="canEdit">
+        <v-btn icon @click.stop="showEditDialog = true">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+      </v-list-item-action>
+      <v-list-item-action v-if="canFilter">
+        <v-btn
+          icon
+          color="white"
+          style="background-color: rgba(0, 0, 0, 0.45)"
+          @click.stop="filterProducts"
+        >
+          <v-icon>mdi-filter-variant</v-icon>
+        </v-btn>
+      </v-list-item-action>
+    </v-list-item>
+    <v-overlay :value="overlay">
+      <v-progress-circular indeterminate size="32"></v-progress-circular>
+    </v-overlay>
+    <CategoryEditDialog
+      v-if="canEdit"
+      v-model="showEditDialog"
+      :category="category"
+      @updated="$emit('category-updated', $event)"
+    />
+  </div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import CategoryEditDialog from '~/components/saleapp/CategoryEditDialog.vue'
+import { joinUrl } from '~/utils/urls'
+
+export default {
+  name: 'CategoryListItem',
+  components: {
+    CategoryEditDialog,
+  },
+  props: {
+    category: {
+      type: Object,
+      required: true,
+    },
+  },
+
+  data() {
+    return {
+      loadingView: false,
+      overlay: false,
+      showEditDialog: false,
+      imgSrc: this.category.img_full_path
+        ? joinUrl(this.$config.publicURL, this.category.img_full_path)
+        : joinUrl(this.$config.fotosURL, this.category.image),
+      // imgSrc: this.category.image,
+      lazySrc: this.$config.fotosURL + 'nophoto_sm.png',
+    }
+  },
+
+  computed: {
+    ...mapGetters(['loggedInUser']),
+    isMobile() {
+      return this.$vuetify.breakpoint.mobile
+    },
+    canEdit() {
+      return !this.isMobile && !!this.loggedInUser?.is_superuser
+    },
+    canFilter() {
+      return ['depto', 'cat'].includes(this.category.type)
+    },
+    sz() {
+      // screen size
+      return this.$vuetify.breakpoint.name
+    },
+
+    imgHeight() {
+      return this.isMobile ? '100px' : '200px'
+    },
+  },
+
+  activated() {
+    this.loadingView = false
+    this.overlay = false
+  },
+
+  methods: {
+    goToView() {
+      this.loadingView = true
+      this.overlay = true
+
+      this.$emit('card-clicked', {
+        key: this.category.type,
+        // Por lo pronto se utiliza el id externo si existe
+        // para mantener compatibilidad con el backend legacy
+        // en futuras versiones se debería estandarizar el uso del id interno
+        value: this.category?.ext_related_id
+          ? this.category.ext_related_id
+          : this.category.id,
+      })
+      if (
+        this.category.link === null ||
+        this.category.link === '' ||
+        this.category.link === undefined
+      ) {
+        this.$router.push('/saleapp/categories/departments')
+      } else {
+        let catname = this.category.name
+
+        if (this.isMobile) {
+          catname = this.category.abreviated_name ?? catname
+        }
+
+        this.$router.push({
+          path: this.category.link,
+          query: { parent_id: this.category.id, category: catname },
+        })
+      }
+    },
+    async filterProducts() {
+      this.loadingView = true
+      this.overlay = true
+
+      await this.$store.dispatch(
+        'saleapp/categories/setSelectProductsByLevel',
+        {
+          key: this.category.type,
+          value: this.category?.ext_related_id
+            ? this.category.ext_related_id
+            : this.category.id,
+        }
+      )
+
+      let catname = this.category.name
+      if (this.isMobile) {
+        catname = this.category.abreviated_name ?? catname
+      }
+
+      this.$router.push({
+        path: '/saleapp/categories/products',
+        query: { parent_id: this.category.id, category: catname },
+      })
+    },
+    onImgError() {
+      this.imgSrc = '/no_image.png'
+      this.$emit('no-image')
+    },
+  },
+}
+</script>
+
+<style scoped>
+.toolbar-title {
+  font-size: 1.25rem; /* Tamaño de fuente por defecto */
+}
+
+.toolbar-title--small {
+  font-size: 1rem; /* Tamaño de fuente más pequeño para dispositivos móviles */
+}
+</style>

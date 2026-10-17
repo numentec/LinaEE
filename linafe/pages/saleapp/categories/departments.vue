@@ -1,0 +1,155 @@
+<template>
+  <div>
+    <v-row>
+      <v-col cols="12">
+        <div v-if="isListView">
+          <v-list three-line class="mx-0">
+            <CategoryListItem
+              v-for="item in filteredItems"
+              :key="item.id"
+              :category="{
+                ...item,
+                type: 'depto',
+                link: setLink(),
+                img_full_path: item.image,
+              }"
+              @card-clicked="setSelectProductsByElement"
+              @category-updated="onCategoryUpdated"
+            />
+          </v-list>
+        </div>
+        <div v-else class="shopping-cart mt-4">
+          <CategoryCard
+            v-for="item in filteredItems"
+            :key="item.id"
+            :category="{
+              ...item,
+              type: 'depto',
+              link: setLink(),
+              img_full_path: item.image,
+            }"
+            @card-clicked="setSelectProductsByElement"
+            @category-updated="onCategoryUpdated"
+          />
+        </div>
+      </v-col>
+    </v-row>
+  </div>
+</template>
+
+<script>
+import { mapActions, mapGetters } from 'vuex'
+import CategoryCard from '~/components/saleapp/CategoryCard.vue'
+import CategoryListItem from '~/components/saleapp/CategoryListItem.vue'
+
+export default {
+  components: {
+    CategoryCard,
+    CategoryListItem,
+  },
+
+  async asyncData({ store, error }) {
+    try {
+      await store.dispatch('saleapp/categories/fetchTopCategories', {
+        name: 'Department',
+        company_id: '1',
+      })
+      // await store.dispatch('saleapp/categories/fetchItems', {
+      //   name: 'Department',
+      // })
+      // await store.dispatch('saleapp/categories/fetchData', {
+      //   name: 'Department',
+      //   link: '',
+      // })
+    } catch (err) {
+      if (err.response) {
+        error({
+          statusCode: err.response.status,
+          message: err.response.data.detail,
+        })
+      } else {
+        error({
+          statusCode: 503,
+          message: 'No se pudo cargar la lista. Intente luego',
+        })
+      }
+    }
+  },
+
+  data() {
+    return {
+      link: '/saleapp/categories/categoriesmain',
+    }
+  },
+
+  computed: {
+    ...mapGetters('saleapp/categories', [
+      'getSelectedBrands',
+      'getSearchDepartment',
+      'getAllDepartments',
+      'getViewConfElement',
+      'isListView',
+    ]),
+
+    filteredItems() {
+      return this.getAllDepartments.filter((item) => {
+        const selectedBrands = this.getSelectedBrands
+        let searchDepartment = this.getSearchDepartment
+
+        if (searchDepartment === null || searchDepartment === undefined) {
+          searchDepartment = ''
+        }
+
+        if (searchDepartment === '' && selectedBrands.length === 0) {
+          return true
+        }
+
+        if (selectedBrands.length > 0) {
+          return (
+            item.name.toLowerCase().includes(searchDepartment.toLowerCase()) &&
+            item.brands
+              .split(',')
+              .some((brand) => selectedBrands.includes(brand))
+          )
+        }
+        return item.name.toLowerCase().includes(searchDepartment.toLowerCase())
+      })
+    },
+  },
+
+  watch: {
+    filteredItems(newVal) {
+      this.setCountFilteredDep(newVal?.length)
+    },
+  },
+
+  mounted() {
+    window.scrollTo(0, 0)
+    this.setCountFilteredDep(this.filteredItems?.length)
+  },
+
+  methods: {
+    ...mapActions('saleapp/categories', [
+      'setSelectProductsByElement',
+      'setCountFilteredDep',
+    ]),
+    setLink() {
+      return this.getViewConfElement('link', 'configval1') ?? this.link
+    },
+    onCategoryUpdated() {
+      this.$store.dispatch('saleapp/categories/fetchTopCategories', {
+        name: 'Department',
+        company_id: '1',
+      })
+    },
+  },
+}
+</script>
+
+<style scoped>
+.shopping-cart {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+</style>

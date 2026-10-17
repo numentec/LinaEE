@@ -5,13 +5,13 @@ export const namespaced = true
 const BRANDSDATA = ['1', '2', '3', '4', '5', '187', '188', '189', '190', '191']
 const IMAGES = [
   'http://192.168.1.55:8001/media/images/bifavoritos/prev3.gif',
-  '/shoppingcart/H23100256A.jpg',
-  '/shoppingcart/H23100133A.jpg',
-  '/shoppingcart/H22200482A.jpg',
-  '/shoppingcart/W231013199.jpg',
-  '/shoppingcart/W231013210.jpg',
-  '/shoppingcart/HBS01401N-B.jpg',
-  '/shoppingcart/VLCSMLORG.jpg',
+  '/saleapp/H23100256A.jpg',
+  '/saleapp/H23100133A.jpg',
+  '/saleapp/H22200482A.jpg',
+  '/saleapp/W231013199.jpg',
+  '/saleapp/W231013210.jpg',
+  '/saleapp/HBS01401N-B.jpg',
+  '/saleapp/VLCSMLORG.jpg',
 ]
 
 function getRandomBrand() {
@@ -188,7 +188,7 @@ export const actions = {
 
       // Ejecutar acción de otro módulo Vuex
       if (catalogs.items) {
-        await dispatch('shoppingcart/products/setProducts', catalogs.items, {
+        await dispatch('saleapp/products/setProducts', catalogs.items, {
           root: true,
         })
       }

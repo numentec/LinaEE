@@ -132,10 +132,7 @@ export default {
     ...mapState('sistema', ['curuser']),
     ...mapGetters(['isAuthenticated', 'loggedInUser']),
     ...mapGetters('sistema', ['getUsers', 'getCias', 'getCurCia']),
-    ...mapGetters('shoppingcart/cart', [
-      'getCartItemCount',
-      'getCartProductCount',
-    ]),
+    ...mapGetters('saleapp/cart', ['getCartItemCount', 'getCartProductCount']),
     imgSrc() {
       if (!this.isAuthenticated) {
         return ''
@@ -179,7 +176,7 @@ export default {
       this.setDrawer(!this.drawer)
     },
     goToCart() {
-      this.$router.push('/shoppingcart/cart')
+      this.$router.push('/saleapp/cart')
     },
   },
 }

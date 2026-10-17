@@ -115,8 +115,8 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import CartCard from '@/components/shoppingcart/CartCard.vue'
-import CartOrderSummary from '@/components/shoppingcart/CartOrderSummary.vue'
+import CartCard from '@/components/saleapp/CartCard.vue'
+import CartOrderSummary from '@/components/saleapp/CartOrderSummary.vue'
 
 const sellersList = [
   { id: '1', name: 'Seller 1', email: 'seller1@numen.pa' },
@@ -155,7 +155,7 @@ export default {
       catalogToken: 'customshopping/customcatalog/getCustomCatalogToken',
     }),
 
-    ...mapGetters('shoppingcart/cart', [
+    ...mapGetters('saleapp/cart', [
       'getCartItems',
       'getCartTotalPrice',
       'getCartCustomer',
@@ -172,8 +172,8 @@ export default {
   },
 
   methods: {
-    ...mapActions('shoppingcart/orders', ['createOrder']),
-    ...mapActions('shoppingcart/cart', ['clearCart']),
+    ...mapActions('saleapp/orders', ['createOrder']),
+    ...mapActions('saleapp/cart', ['clearCart']),
     async goToCheckout() {
       this.snackbar = true
       if (this.getCartItems.length === 0) {
@@ -201,7 +201,7 @@ export default {
 
         setTimeout(() => {
           this.loading = false
-          this.$router.push('/shoppingcart/ordersview')
+          this.$router.push('/saleapp/ordersview')
         }, 2000)
       } catch (error) {
         this.loading = false

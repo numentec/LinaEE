@@ -46,15 +46,12 @@ export default {
   data: () => ({}),
 
   computed: {
-    ...mapGetters('shoppingcart/cart', [
-      'getCartItemCount',
-      'getCartProductCount',
-    ]),
+    ...mapGetters('saleapp/cart', ['getCartItemCount', 'getCartProductCount']),
   },
 
   methods: {
     goToCart() {
-      this.$router.push('/shoppingcart/cart')
+      this.$router.push('/saleapp/cart')
     },
   },
 }

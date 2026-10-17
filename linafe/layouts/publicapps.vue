@@ -64,10 +64,7 @@ export default {
 
   computed: {
     ...mapState('core', ['drawer', 'is_mini', 'is_expanded']),
-    ...mapGetters('shoppingcart/cart', [
-      'getCartItemCount',
-      'getCartProductCount',
-    ]),
+    ...mapGetters('saleapp/cart', ['getCartItemCount', 'getCartProductCount']),
     ...mapGetters({ customerId: 'customshopping/customcatalog/getCustomerId' }),
     useDrawer() {
       if (this.$vuetify.breakpoint.mobile) {
