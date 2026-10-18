@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 # from crum import get_current_user
-from ..core.models import Common
+from ..core.models import Common, Cia
 
 LinaUserModel = get_user_model()
 
@@ -44,6 +44,18 @@ class ExtOrderMaster(Common):
     tax = models.DecimalField("Tax", max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    # def process_new_order(order, settings):
+    #     if settings.email_policy == "auto":
+    #         schedule_order_email(order)
+
+    #     elif settings.email_policy == "ask":
+    #         # El frontend mostrará la opción de envío.
+    #         # No enviar automáticamente.
+    #         pass
+
+    #     elif settings.email_policy == "never":
+    #         pass
 
     def save(self, *args, **kwargs):
         if not self.sendto:  # Si sendto está vacío o es None
@@ -91,3 +103,28 @@ class ExtOrderItem(models.Model):
 
     def __str__(self):
         return "Items for order {} - Product {}".format(self.extorder.id, self.sku)
+
+
+class SaleAppSettings(Common):
+
+    class EmailPolicy(models.TextChoices):
+        AUTO = "auto", "Automatic send order"
+        ASK = "ask", "Ask before sending order"
+        NEVER = "never", "Do not send order"
+
+    company = models.OneToOneField(
+        Cia,
+        on_delete=models.CASCADE,
+        related_name="saleapp_settings",
+    )
+
+    email_policy = models.CharField(
+        max_length=10,
+        choices=EmailPolicy.choices,
+        default=EmailPolicy.ASK,
+    )
+
+    class Meta:
+        db_table = 'saleapp_settings'
+        verbose_name = 'SaleAppSettings'
+        verbose_name_plural = 'SaleAppSettings'
