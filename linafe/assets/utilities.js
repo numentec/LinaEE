@@ -159,8 +159,8 @@ export const modulos = [
       },
       {
         icon: 'mdi-cog-outline',
-        title: 'Tools',
-        to: '/saleapp/tools',
+        title: 'Settings',
+        to: '/saleapp/settings',
         perm: 'core.acc_saleapp',
       },
     ],
