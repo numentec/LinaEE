@@ -38,4 +38,6 @@ urlpatterns = [
     path('modul-actives/', views.ModulosActivosList.as_view(), name='modul-actives'),
     path('accviewconf-list/', views.VistaConfigAccList.as_view(), name='accviewconf-list'),
     path('usrextrel/', views.UsrExtRelListAPIView.as_view(), name='usrextrel'),
+    path('settings/email/', views.EmailSettingsView.as_view(), name='settings-email'),
+    path('settings/email/test/', views.EmailSettingsTestView.as_view(), name='settings-email-test'),
 ]

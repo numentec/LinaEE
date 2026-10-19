@@ -48,7 +48,6 @@ def send_order_email(order_id, print_images='', file_type='pdf'):
         email = EmailMessage(
             subject=f"Order #{order.id} Details",
             body=f"Dear {order.customer_name},\n\nPlease find attached the details of your order #{order.id}.",
-            from_email="no-reply@numen.pa",
             to=[order.sendto],
         )
 

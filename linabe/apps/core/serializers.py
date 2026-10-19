@@ -1,5 +1,6 @@
 from django.db.models import fields
 from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 # from django.contrib.auth.password_validation import validate_password
@@ -298,3 +299,50 @@ class CustomerSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = models.VistaElement
 #         fields = ('id', 'nombre', 'descrip', 'disponible', 'vista', 'acc_x_vistaelelemt')
+
+
+class EmailSettingsSerializer(serializers.ModelSerializer):
+    """Configuración global de correo. Los secretos nunca se devuelven."""
+
+    SECRET_FIELDS = ('password', 'ms_client_secret')
+
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    ms_client_secret = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    has_password = serializers.SerializerMethodField()
+    has_client_secret = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.EmailSettings
+        fields = (
+            'is_active', 'provider', 'from_email', 'from_name', 'reply_to',
+            'host', 'port', 'security', 'username', 'password', 'timeout',
+            'ms_tenant_id', 'ms_client_id', 'ms_client_secret',
+            'has_password', 'has_client_secret',
+            'last_test_at', 'last_test_ok', 'last_test_message', 'modified_at',
+        )
+        read_only_fields = ('last_test_at', 'last_test_ok', 'last_test_message', 'modified_at')
+
+    def get_has_password(self, obj):
+        return bool(obj.password)
+
+    def get_has_client_secret(self, obj):
+        return bool(obj.ms_client_secret)
+
+    def validate(self, attrs):
+        # Secreto vacío = conservar el valor guardado
+        for field in self.SECRET_FIELDS:
+            if not attrs.get(field):
+                attrs.pop(field, None)
+
+        instance = self.instance or models.EmailSettings()
+        for key, value in attrs.items():
+            setattr(instance, key, value)
+        try:
+            instance.clean()
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message_dict)
+
+        # clean() puede normalizar campos (p.ej. Gmail)
+        for key in ('host', 'port', 'security', 'username'):
+            attrs[key] = getattr(instance, key)
+        return attrs

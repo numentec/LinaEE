@@ -175,3 +175,20 @@ admin.site.register(models.VistaConfigUser, VistaConfigUserAdmin)
 admin.site.register(models.StakeHolder, StakeHolderAdmin)
 admin.site.register(models.DayOfWeek, DayOfWeekAdmin)
 admin.site.register(models.IpWhiteList, IpWhiteListAdmin)
+
+
+class EmailSettingsAdmin(admin.ModelAdmin):
+    """Configuración global de correo. Los secretos se editan desde el frontend."""
+
+    list_display = ('id', 'provider', 'from_email', 'is_active', 'last_test_ok', 'last_test_at')
+    exclude = ('password', 'ms_client_secret')
+    readonly_fields = ('last_test_at', 'last_test_ok', 'last_test_message', 'created_at', 'modified_at')
+
+    def has_add_permission(self, request):
+        return not models.EmailSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+admin.site.register(models.EmailSettings, EmailSettingsAdmin)

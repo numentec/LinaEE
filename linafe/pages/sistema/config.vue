@@ -1,29 +1,41 @@
 <template>
-  <v-row>
-    <v-col class="text-center">
-      <img src="/uc2.jpg" alt="***** En Construcción *****" class="mb-5" />
-      <blockquote class="blockquote">
-        <h5>{{ page_name }}</h5>
-        &#8220;En desarrollo por el equipo de NumenTec y Claude Coders.&#8221;
-        <footer>
-          <small>
-            <em>&mdash;www.numentec.com</em>
-          </small>
-        </footer>
-      </blockquote>
-    </v-col>
-  </v-row>
+  <div>
+    <MaterialCard class="mt-10">
+      <template v-slot:heading>
+        <v-toolbar dense color="secondary" class="mx-1" dark flat>
+          <v-spacer />
+          <v-toolbar-title>Opciones del sistema</v-toolbar-title>
+          <v-spacer />
+        </v-toolbar>
+      </template>
+      <v-tabs v-model="tab" color="secondary" class="mt-8">
+        <v-tab>
+          <v-icon left>mdi-email-outline</v-icon>
+          Correo
+        </v-tab>
+      </v-tabs>
+      <v-tabs-items v-model="tab">
+        <v-tab-item>
+          <v-card-text>
+            <EmailSettingsForm />
+          </v-card-text>
+        </v-tab-item>
+      </v-tabs-items>
+    </MaterialCard>
+  </div>
 </template>
 
 <script>
 export default {
+  components: {
+    MaterialCard: () => import('~/components/core/MaterialCard'),
+    EmailSettingsForm: () => import('~/components/sistema/EmailSettingsForm'),
+  },
+
   data() {
     return {
-      page_name: 'page',
+      tab: 0,
     }
-  },
-  created() {
-    this.page_name = this.$nuxt.$route.name.toUpperCase()
   },
 }
 </script>

@@ -189,23 +189,21 @@ REST_FRAMEWORK = {
 # }
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = environ.get("EMAIL_HOST")
-EMAIL_PORT = environ.get("EMAIL_PORT")
-EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD")
-EMAIL_USE_TLS = environ.get("EMAIL_USE_TLS", True) == '1'
-EMAIL_USE_SSL = environ.get("EMAIL_USE_SSL", False) == '1'
-DEFAULT_FROM_EMAIL = environ.get("DEFAULT_FROM_EMAIL")
+# La configuración global se administra desde el frontend (core.EmailSettings).
+# Mientras esté inactiva, se usan estas variables de entorno.
+EMAIL_BACKEND = 'apps.core.mail.backends.ConfigurableEmailBackend'
+EMAIL_HOST = environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(environ.get("EMAIL_PORT", 587))
+EMAIL_HOST_USER = environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = environ.get("EMAIL_USE_TLS", "1") == '1'
+EMAIL_USE_SSL = environ.get("EMAIL_USE_SSL", "0") == '1'
+EMAIL_TIMEOUT = int(environ.get("EMAIL_TIMEOUT", 20))
+DEFAULT_FROM_EMAIL = environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
 
-# Email settings for testing
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'galvanino@gmail.com'
-# EMAIL_HOST_PASSWORD = 'cwfuvrmkmtbrkjxn'
-# DEFAULT_FROM_EMAIL = 'Moisés Galván Niño <galvanino@gmail.com>'
+# Clave Fernet para cifrar secretos guardados en BD (contraseñas de correo, etc.)
+# SETTINGS_ENCRYPTION_KEY = environ.get("SETTINGS_ENCRYPTION_KEY")
+SETTINGS_ENCRYPTION_KEY=environ.get("SETTINGS_ENCRYPTION_KEY", "qpc68wvCuQLxSN1jllX2WWSLvzWOp3ncWz_kbX-pAyQ=")
 
 
 CHANNEL_LAYERS = {

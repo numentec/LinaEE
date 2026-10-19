@@ -27,3 +27,9 @@ class ValidExternalAccess(BasePermission):
             else:
                 # The client's IP address is private
                 return True
+
+class HasConfigAccess(BasePermission):
+    """Acceso al módulo de configuración (Ajustes)."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('core.acc_config')

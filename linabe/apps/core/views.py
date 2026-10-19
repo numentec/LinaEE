@@ -46,6 +46,12 @@ from socket import error as SocketError
 import errno
 
 from ipware import get_client_ip
+import smtplib
+import socket
+import requests
+from django.core.mail import EmailMessage
+from .mail.backends import build_backend as build_email_backend
+from .permissions import HasConfigAccess
 
 LinaUserModel = get_user_model()
 
@@ -620,3 +626,67 @@ class UsrExtRelListAPIView(APIView):
 #             .filter(vista_element__vista__id=idvista, group__id=idgroup)
 
 #         return acclist
+
+
+class EmailSettingsView(APIView):
+    """Consulta y actualiza la configuración global de correo"""
+    permission_classes = [permissions.IsAuthenticated, HasConfigAccess]
+
+    def get(self, request):
+        conf = models.EmailSettings.load()
+        return Response(serializers.EmailSettingsSerializer(conf).data)
+
+    def put(self, request):
+        conf = models.EmailSettings.load()
+        serializer = serializers.EmailSettingsSerializer(conf, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if not conf.created_by:
+            conf.created_by = request.user
+        serializer.save(modified_by=request.user)
+        return Response(serializer.data)
+
+
+class EmailSettingsTestView(APIView):
+    """Envía un correo de prueba con la configuración guardada"""
+    permission_classes = [permissions.IsAuthenticated, HasConfigAccess]
+
+    def post(self, request):
+        to = request.data.get('to') or request.user.email
+        if not to:
+            return Response({'to': ['Indique un destinatario']}, status=status.HTTP_400_BAD_REQUEST)
+
+        conf = models.EmailSettings.load()
+        if not conf.is_active:
+            return Response(
+                {'ok': False, 'message': 'Active la configuración y guárdela antes de probarla'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        message = EmailMessage(
+            subject='Correo de prueba - LinaEE',
+            body='Este es un correo de prueba enviado con la configuración de {} de LinaEE.'.format(
+                conf.get_provider_display()),
+            from_email=conf.formatted_from,
+            to=[to],
+            reply_to=[conf.reply_to] if conf.reply_to else None,
+            connection=build_email_backend(conf),
+        )
+        try:
+            message.send()
+            ok, text = True, 'Correo de prueba enviado a {}'.format(to)
+        except smtplib.SMTPAuthenticationError:
+            ok, text = False, 'Usuario o contraseña rechazados por el servidor SMTP'
+        except (socket.timeout, TimeoutError, requests.Timeout):
+            ok, text = False, 'Tiempo de espera agotado al conectar con el servidor'
+        except Exception as e:
+            ok, text = False, str(e) or e.__class__.__name__
+
+        conf.last_test_at = timezone.now()
+        conf.last_test_ok = ok
+        conf.last_test_message = text
+        conf.save(update_fields=['last_test_at', 'last_test_ok', 'last_test_message'])
+
+        return Response(
+            {'ok': ok, 'message': text, 'last_test_at': conf.last_test_at},
+            status=status.HTTP_200_OK if ok else status.HTTP_400_BAD_REQUEST,
+        )

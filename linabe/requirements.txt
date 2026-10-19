@@ -17,6 +17,10 @@ playwright==1.37.0
 # ULID support
 python-ulid==1.1.0
 
+# Cifrado de secretos y Microsoft Graph (email)
+cryptography>=42,<47
+requests>=2.31,<3
+
 # Celery and related tools
 celery>=5.2.0,<5.3.0
 watchfiles

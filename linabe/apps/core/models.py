@@ -14,6 +14,8 @@ from rest_framework.authtoken.models import Token
 from ulid import ULID
 
 from . import managers
+from .crypto import EncryptedTextField
+from django.core.exceptions import ValidationError
 
 def img_profile_path(instance, filename):
     """Guarda foto de perfil con nombre de usuario"""
@@ -596,3 +598,110 @@ class SQLQuery(Common):
         verbose_name = 'Consulta SQl por vista'
         verbose_name_plural = 'Consultas SQl por vista'
         ordering = ['vista', 'ordinal']
+
+
+# Clase abstracta para configuraciones globales (un único registro)
+class SingletonModel(Common):
+
+    SINGLETON_PK = 1
+
+    def save(self, *args, **kwargs):
+        self.pk = self.SINGLETON_PK
+        if self._state.adding:
+            # Una instancia nueva reemplaza al registro existente conservando su creación
+            existing = type(self).objects.filter(pk=self.pk).values('created_at', 'created_by').first()
+            if existing:
+                self.created_at = existing['created_at']
+                self.created_by_id = existing['created_by']
+                self._state.adding = False
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+        return obj
+
+    class Meta:
+        abstract = True
+
+
+# Configuración global de envío de correo
+class EmailSettings(SingletonModel):
+
+    class Provider(models.TextChoices):
+        SMTP = 'smtp', 'SMTP'
+        GMAIL = 'gmail', 'Gmail'
+        OFFICE365 = 'office365', 'Microsoft 365'
+
+    class Security(models.TextChoices):
+        NONE = 'none', 'Ninguna'
+        STARTTLS = 'starttls', 'STARTTLS'
+        SSL = 'ssl', 'SSL/TLS'
+
+    GMAIL_HOST = 'smtp.gmail.com'
+    GMAIL_PORT = 587
+
+    # Inactivo = se usa la configuración de variables de entorno (EMAIL_*)
+    is_active = models.BooleanField('Activo', default=False)
+
+    provider = models.CharField('Proveedor', max_length=10, choices=Provider.choices, default=Provider.SMTP)
+    from_email = models.EmailField('Remitente', max_length=254, blank=True)
+    from_name = models.CharField('Nombre remitente', max_length=100, blank=True)
+    reply_to = models.EmailField('Responder a', max_length=254, blank=True)
+
+    # SMTP / Gmail
+    host = models.CharField('Servidor SMTP', max_length=255, blank=True)
+    port = models.PositiveIntegerField('Puerto', default=587)
+    security = models.CharField('Seguridad', max_length=10, choices=Security.choices, default=Security.STARTTLS)
+    username = models.CharField('Usuario', max_length=254, blank=True)
+    password = EncryptedTextField('Contraseña', blank=True, default='')
+    timeout = models.PositiveIntegerField('Timeout (s)', default=20)
+
+    # Microsoft 365 (Graph API, client credentials)
+    ms_tenant_id = models.CharField('Tenant ID', max_length=100, blank=True)
+    ms_client_id = models.CharField('Client ID', max_length=100, blank=True)
+    ms_client_secret = EncryptedTextField('Client Secret', blank=True, default='')
+
+    # Diagnóstico
+    last_test_at = models.DateTimeField('Última prueba', null=True, blank=True, editable=False)
+    last_test_ok = models.BooleanField('Última prueba exitosa', null=True, editable=False)
+    last_test_message = models.TextField('Resultado última prueba', blank=True, editable=False)
+
+    def clean(self):
+        if self.provider == self.Provider.GMAIL:
+            self.host = self.GMAIL_HOST
+            self.port = self.GMAIL_PORT
+            self.security = self.Security.STARTTLS
+            self.username = self.from_email
+
+        if not self.is_active:
+            return
+
+        required = ['from_email']
+        if self.provider == self.Provider.SMTP:
+            required += ['host', 'port']
+        elif self.provider == self.Provider.GMAIL:
+            required += ['password']
+        elif self.provider == self.Provider.OFFICE365:
+            required += ['ms_tenant_id', 'ms_client_id', 'ms_client_secret']
+
+        errors = {f: 'Campo requerido' for f in required if not getattr(self, f)}
+        if errors:
+            raise ValidationError(errors)
+
+    @property
+    def formatted_from(self):
+        if self.from_name:
+            return '{} <{}>'.format(self.from_name, self.from_email)
+        return self.from_email
+
+    def __str__(self):
+        return 'Configuración de correo ({})'.format(self.get_provider_display())
+
+    class Meta:
+        db_table = 'core_email_settings'
+        verbose_name = 'Configuración de correo'
+        verbose_name_plural = 'Configuración de correo'
