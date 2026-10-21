@@ -109,6 +109,16 @@
           </v-btn>
         </template>
       </v-snackbar>
+      <SendOrderEmailDialog
+        v-model="emailDialog"
+        :order-id="emailOrder.id"
+        :send-to="emailOrder.sendto || emailOrder.customer_email || ''"
+        :attachments="emailConf.attachments"
+        :include-images="emailConf.include_images"
+        @sent="onEmailSent"
+        @skipped="finishCheckout"
+        @error="onEmailError"
+      />
     </v-container>
   </div>
 </template>
@@ -117,6 +127,7 @@
 import { mapGetters, mapActions } from 'vuex'
 import CartCard from '@/components/saleapp/CartCard.vue'
 import CartOrderSummary from '@/components/saleapp/CartOrderSummary.vue'
+import SendOrderEmailDialog from '@/components/saleapp/SendOrderEmailDialog.vue'
 
 const sellersList = [
   { id: '1', name: 'Seller 1', email: 'seller1@numen.pa' },
@@ -131,6 +142,7 @@ export default {
   components: {
     CartCard,
     CartOrderSummary,
+    SendOrderEmailDialog,
   },
 
   data() {
@@ -146,6 +158,9 @@ export default {
       dialog: false,
       showSummary: false,
       sellersList,
+      emailDialog: false,
+      emailOrder: {},
+      emailConf: { attachments: 'pdf', include_images: false },
     }
   },
 
@@ -194,15 +209,23 @@ export default {
       this.loading = true
 
       try {
-        await this.createOrder()
+        const { order, email } = await this.createOrder()
         this.snackbarColor = 'success'
         this.snackbarText = 'Order created successfully'
+        if (email?.action === 'sent') {
+          this.snackbarText += ' and emailed'
+        }
         this.snackbarTimeout = 5000
 
-        setTimeout(() => {
-          this.loading = false
-          this.$router.push('/saleapp/ordersview')
-        }, 2000)
+        // Política "ask": se pregunta antes de enviar el correo
+        if (email?.action === 'ask') {
+          this.emailOrder = order
+          this.emailConf = email
+          this.emailDialog = true
+          return
+        }
+
+        this.finishCheckout()
       } catch (error) {
         this.loading = false
         this.snackbarColor = 'error'
@@ -211,6 +234,28 @@ export default {
           (error.response?.data?.message || error.message)
         this.snackbarTimeout = 5000
       }
+    },
+    finishCheckout() {
+      setTimeout(() => {
+        this.loading = false
+        this.$router.push('/saleapp/ordersview')
+      }, 2000)
+    },
+    onEmailSent() {
+      this.snackbarColor = 'success'
+      this.snackbarText = `Order # ${this.emailOrder.id} is being emailed`
+      this.snackbar = true
+      this.finishCheckout()
+    },
+    onEmailError(error) {
+      this.snackbarColor = 'error'
+      this.snackbarText =
+        'Failed to email order: ' +
+        (error?.response?.data?.attachments?.[0] ||
+          error?.response?.data?.error ||
+          error?.message)
+      this.snackbar = true
+      this.finishCheckout()
     },
   },
   head() {

@@ -45,18 +45,6 @@ class ExtOrderMaster(Common):
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='pending')
 
-    # def process_new_order(order, settings):
-    #     if settings.email_policy == "auto":
-    #         schedule_order_email(order)
-
-    #     elif settings.email_policy == "ask":
-    #         # El frontend mostrará la opción de envío.
-    #         # No enviar automáticamente.
-    #         pass
-
-    #     elif settings.email_policy == "never":
-    #         pass
-
     def save(self, *args, **kwargs):
         if not self.sendto:  # Si sendto está vacío o es None
             self.sendto = self.customer_email
@@ -112,6 +100,11 @@ class SaleAppSettings(Common):
         ASK = "ask", "Ask before sending order"
         NEVER = "never", "Do not send order"
 
+    class EmailAttachments(models.TextChoices):
+        PDF = "pdf", "PDF only"
+        XLSX = "xlsx", "Excel only"
+        BOTH = "both", "PDF and Excel"
+
     company = models.OneToOneField(
         Cia,
         on_delete=models.CASCADE,
@@ -123,6 +116,44 @@ class SaleAppSettings(Common):
         choices=EmailPolicy.choices,
         default=EmailPolicy.ASK,
     )
+
+    email_attachments = models.CharField(
+        max_length=5,
+        choices=EmailAttachments.choices,
+        default=EmailAttachments.PDF,
+    )
+
+    email_include_images = models.BooleanField("Include images", default=False)
+
+    @staticmethod
+    def attachment_types_for(attachments):
+        """Tipos de archivo (renderers de send_order_email) para una opción de adjuntos"""
+        if attachments == SaleAppSettings.EmailAttachments.BOTH:
+            return ['pdf', 'xlsx']
+        return [attachments]
+
+    @property
+    def attachment_types(self):
+        return self.attachment_types_for(self.email_attachments)
+
+    @classmethod
+    def for_company(cls, cia):
+        obj, _ = cls.objects.get_or_create(company=cia)
+        return obj
+
+    @staticmethod
+    def resolve_company(cia_id=None, user=None):
+        """Cia indicada -> Cia del usuario -> Cia predeterminada"""
+        if cia_id and str(cia_id).isdigit():
+            cia = Cia.objects.filter(pk=cia_id).first()
+            if cia:
+                return cia
+        if user is not None and getattr(user, 'cia_id', None):
+            return user.cia
+        return Cia.objects.filter(default=True).first() or Cia.objects.get(pk=Cia.DEFAULT_PK)
+
+    def __str__(self):
+        return "SaleApp settings - {}".format(self.company)
 
     class Meta:
         db_table = 'saleapp_settings'

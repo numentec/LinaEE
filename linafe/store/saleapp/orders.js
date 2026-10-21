@@ -26,6 +26,12 @@ function buildOrderPayload(cart) {
   }
 }
 
+// Compañía actual: el backend la usa para resolver la configuración de SaleApp
+function ciaParams(rootState) {
+  const cia = rootState.sistema.curCia
+  return cia?.id ? { cia: cia.id } : {}
+}
+
 // Descarga un archivo generado por el backend para una orden
 async function downloadOrderFile(axios, { url, params, type, filename }) {
   const response = await axios.get(url, {
@@ -158,18 +164,25 @@ export const actions = {
     }
   },
 
+  // Devuelve { order, email }; email.action indica si se envió por correo (sent),
+  // si hay que preguntar (ask) o si no se envía (none)
   async createOrder({ commit, dispatch, rootState }) {
     commit('SET_ISLOADING')
 
     const newOrder = buildOrderPayload(rootState.saleapp.cart.cart)
 
     try {
-      const response = await this.$axios.post('saleapp/extorder/', newOrder)
+      const response = await this.$axios.post('saleapp/extorder/', newOrder, {
+        params: ciaParams(rootState),
+      })
 
-      commit('ADD_ORDER', response.data)
+      const { email, ...order } = response.data
+
+      commit('ADD_ORDER', order)
       await dispatch('saleapp/cart/clearCart', null, { root: true })
 
       commit('SET_ISLOADING')
+      return { order, email }
     } catch (error) {
       commit('SET_ISLOADING')
       // Lanzar la excepción para que pueda ser capturada en asyncData
@@ -177,7 +190,8 @@ export const actions = {
     }
   },
 
-  // Actualiza la orden ligada al carrito (Keep selling) con el contenido del carrito
+  // Actualiza la orden ligada al carrito (Keep selling) con el contenido del carrito.
+  // Devuelve { order, email } como createOrder
   async updateOrder({ commit, dispatch, rootState }) {
     commit('SET_ISLOADING')
 
@@ -186,13 +200,17 @@ export const actions = {
     try {
       const response = await this.$axios.put(
         `saleapp/extorder/${cart.orderId}/`,
-        buildOrderPayload(cart)
+        buildOrderPayload(cart),
+        { params: ciaParams(rootState) }
       )
 
-      commit('REPLACE_ORDER', response.data)
+      const { email, ...order } = response.data
+
+      commit('REPLACE_ORDER', order)
       await dispatch('saleapp/cart/clearCart', null, { root: true })
 
       commit('SET_ISLOADING')
+      return { order, email }
     } catch (error) {
       commit('SET_ISLOADING')
       throw error
@@ -211,6 +229,18 @@ export const actions = {
       console.error('Error updating order status:', error)
       throw error
     }
+  },
+
+  // Envía la orden por correo; attachments: pdf | xlsx | both
+  async sendOrderEmail({ rootState }, payload) {
+    const { orderid, attachments, includeImages } = payload
+
+    const response = await this.$axios.post(
+      `saleapp/orders/${orderid}/email/`,
+      { attachments, include_images: includeImages },
+      { params: ciaParams(rootState) }
+    )
+    return response.data
   },
 
   async csvDownload({ commit }, orderid) {

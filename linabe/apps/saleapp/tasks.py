@@ -34,12 +34,14 @@ def task_postrun_handler(task_id, **kwargs):
 
 
 @shared_task(name='high_priority:send_order_email')
-def send_order_email(order_id, print_images='', file_type='pdf'):
+def send_order_email(order_id, print_images='', file_type='pdf', file_types=None):
     """
     Tarea de Celery para enviar un correo electrónico con los detalles de la orden.
-    Esta tarea se ejecuta en segundo plano y genera un PDF y un CSV de la orden,
-    luego envía un correo electrónico al cliente con los archivos adjuntos.
+    Esta tarea se ejecuta en segundo plano, genera los archivos de la orden
+    (file_types, p.ej. ['pdf', 'xlsx'], o solo file_type) y los envía
+    al cliente adjuntos en un único correo.
     """
+    file_types = list(file_types or [file_type])
     try:
         # Obtener la orden
         order = ExtOrderMaster.objects.get(id=order_id)
@@ -51,7 +53,7 @@ def send_order_email(order_id, print_images='', file_type='pdf'):
             to=[order.sendto],
         )
 
-        # Generar el archivo según el tipo solicitado
+        # Generar los archivos según los tipos solicitados
         renderers = {
             'pdf': (lambda: render_order_pdf(order, print_images=print_images), "application/pdf"),
             'csv': (lambda: render_order_csv(order), "text/csv"),
@@ -60,11 +62,13 @@ def send_order_email(order_id, print_images='', file_type='pdf'):
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             ),
         }
-        if file_type not in renderers:
+        invalid = [t for t in file_types if t not in renderers]
+        if invalid:
             raise ValueError(f"Invalid file type specified. Use one of: {', '.join(renderers)}.")
 
-        render, mimetype = renderers[file_type]
-        email.attach(f"Order_{order.id}.{file_type}", render().getvalue(), mimetype)
+        for ftype in file_types:
+            render, mimetype = renderers[ftype]
+            email.attach(f"Order_{order.id}.{ftype}", render().getvalue(), mimetype)
 
         # Enviar el correo
         email.send()

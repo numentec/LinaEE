@@ -319,3 +319,120 @@ class SuggestProductsAPIViewTests(TestCase):
 
 		self.assertEqual(response.status_code, 503)
 		connections.__getitem__.assert_not_called()
+
+
+class SaleAppEmailSettingsTests(TestCase):
+	def setUp(self):
+		from django.contrib.auth import get_user_model
+		from rest_framework.test import APIClient
+
+		from ..core.models import Cia
+
+		self.cia = Cia.objects.create(codigo='T1', nombre='Test Cia', default=True)
+		self.user = get_user_model().objects.create_user('sale', 'sale@x.com', 'pw')
+		self.client = APIClient()
+		self.client.force_authenticate(self.user)
+
+	def set_conf(self, **fields):
+		from .models import SaleAppSettings
+
+		SaleAppSettings.objects.update_or_create(company=self.cia, defaults=fields)
+
+	def create_order(self):
+		return self.client.post(
+			'/linapi/saleapp/extorder/',
+			{
+				'customer_name': 'Cliente',
+				'customer_email': 'cli@x.com',
+				'items': [{'sku': 'A1', 'name': 'Mesa', 'quantity': 1, 'price': '10.00'}],
+			},
+			format='json',
+		)
+
+	def test_attachment_types(self):
+		from .models import SaleAppSettings
+
+		self.assertEqual(SaleAppSettings(email_attachments='pdf').attachment_types, ['pdf'])
+		self.assertEqual(SaleAppSettings(email_attachments='xlsx').attachment_types, ['xlsx'])
+		self.assertEqual(SaleAppSettings(email_attachments='both').attachment_types, ['pdf', 'xlsx'])
+
+	@patch('apps.saleapp.tasks.render_order_xlsx')
+	@patch('apps.saleapp.tasks.render_order_pdf')
+	def test_task_attaches_all_files_in_one_email(self, render_pdf, render_xlsx):
+		from django.core import mail
+
+		from .models import ExtOrderMaster
+		from .tasks import send_order_email
+
+		render_pdf.return_value = Mock(getvalue=Mock(return_value=b'pdf'))
+		render_xlsx.return_value = Mock(getvalue=Mock(return_value=b'xlsx'))
+		order = ExtOrderMaster.objects.create(customer_email='cli@x.com')
+
+		with self.settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+			send_order_email(order.id, print_images='1', file_types=['pdf', 'xlsx'])
+
+		self.assertEqual(len(mail.outbox), 1)
+		self.assertEqual(
+			[name for name, _, _ in mail.outbox[0].attachments],
+			[f'Order_{order.id}.pdf', f'Order_{order.id}.xlsx'],
+		)
+		render_pdf.assert_called_once_with(order, print_images='1')
+		render_xlsx.assert_called_once_with(order, print_images=True)
+
+	@patch('apps.saleapp.views.send_order_email')
+	def test_auto_policy_sends_configured_attachments(self, task):
+		self.set_conf(email_policy='auto', email_attachments='both', email_include_images=True)
+
+		response = self.create_order()
+
+		self.assertEqual(response.status_code, 201, response.data)
+		self.assertEqual(response.data['email']['action'], 'sent')
+		task.delay.assert_called_once_with(
+			response.data['id'], print_images='1', file_types=['pdf', 'xlsx']
+		)
+
+	@patch('apps.saleapp.views.send_order_email')
+	def test_ask_and_never_policies_do_not_send(self, task):
+		for policy, action in (('ask', 'ask'), ('never', 'none')):
+			self.set_conf(email_policy=policy, email_attachments='xlsx')
+
+			response = self.create_order()
+
+			self.assertEqual(response.data['email']['action'], action)
+			self.assertEqual(response.data['email']['attachments'], 'xlsx')
+		task.delay.assert_not_called()
+
+	def test_settings_put_requires_config_permission(self):
+		from django.contrib.auth.models import Permission
+
+		self.assertEqual(self.client.get('/linapi/saleapp/settings/').status_code, 200)
+		data = {'email_policy': 'auto', 'email_attachments': 'both'}
+		self.assertEqual(
+			self.client.put('/linapi/saleapp/settings/', data, format='json').status_code, 403
+		)
+
+		self.user.user_permissions.add(Permission.objects.get(codename='acc_config'))
+		# Recarga el usuario para descartar la caché de permisos
+		self.user = type(self.user).objects.get(pk=self.user.pk)
+		self.client.force_authenticate(self.user)
+		response = self.client.put('/linapi/saleapp/settings/', data, format='json')
+
+		self.assertEqual(response.status_code, 200, response.data)
+		self.assertEqual(response.data['email_attachments'], 'both')
+		self.assertEqual(self.cia.saleapp_settings.modified_by, self.user)
+
+	@patch('apps.saleapp.views.send_order_email')
+	def test_send_order_email_endpoint(self, task):
+		from .models import ExtOrderMaster
+
+		order = ExtOrderMaster.objects.create(customer_email='cli@x.com')
+		url = f'/linapi/saleapp/orders/{order.id}/email/'
+
+		response = self.client.post(url, {'attachments': 'zip'}, format='json')
+		self.assertEqual(response.status_code, 400)
+
+		response = self.client.post(
+			url, {'attachments': 'xlsx', 'include_images': False}, format='json'
+		)
+		self.assertEqual(response.status_code, 202)
+		task.delay.assert_called_once_with(order.id, print_images='0', file_types=['xlsx'])

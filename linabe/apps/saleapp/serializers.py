@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ExtOrderMaster, ExtOrderItem
+from .models import ExtOrderMaster, ExtOrderItem, SaleAppSettings
 
 
 class ExtOrderItemSerializer(serializers.ModelSerializer):
@@ -92,3 +92,18 @@ class ExtOrderMasterOnlySerializer(serializers.ModelSerializer):
         if self.instance and self.instance.status == 'cancelled':
             raise serializers.ValidationError('Cancelled orders cannot be modified.')
         return attrs
+
+
+class SaleAppSettingsSerializer(serializers.ModelSerializer):
+    """Configuración de SaleApp por compañía."""
+
+    company_name = serializers.CharField(source='company.nombre', read_only=True)
+
+    class Meta:
+        model = SaleAppSettings
+        fields = (
+            'company', 'company_name',
+            'email_policy', 'email_attachments', 'email_include_images',
+            'modified_at',
+        )
+        read_only_fields = ('company', 'modified_at')

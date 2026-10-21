@@ -15,8 +15,14 @@ from rest_framework import authentication, permissions
 from rest_framework.filters import SearchFilter, OrderingFilter
 from ..core.models import SQLQuery
 from ..core.views import CommonViewSet
-from .models import ExtOrderMaster, ExtOrderItem
-from .serializers import ExtOrderMasterSerializer, ExtOrderMasterOnlySerializer, ExtOrderItemSerializer
+from ..core.permissions import HasConfigAccess
+from .models import ExtOrderMaster, ExtOrderItem, SaleAppSettings
+from .serializers import (
+    ExtOrderMasterSerializer,
+    ExtOrderMasterOnlySerializer,
+    ExtOrderItemSerializer,
+    SaleAppSettingsSerializer,
+)
 
 from celery.result import AsyncResult
 from .tasks import task_send_welcome_email
@@ -26,7 +32,6 @@ from django.shortcuts import render
 from django.views import View
 
 from .tasks import send_order_email
-from .pagination_utils import paginate_stored_procedure_results
 from .pagination_utils import paginate_stored_procedure_results
 
 
@@ -161,6 +166,21 @@ def parse_stock_filters(query_params):
         filters[field] = (operator, value, value_to)
 
     return filters
+
+
+def get_saleapp_settings(request):
+    """Configuración de SaleApp de la compañía indicada (?cia=) o la del usuario"""
+    cia = SaleAppSettings.resolve_company(request.query_params.get('cia'), request.user)
+    return SaleAppSettings.for_company(cia)
+
+
+def queue_order_email(order_id, attachments, include_images):
+    """Encola el envío de la orden con los adjuntos indicados (pdf, xlsx o both)"""
+    return send_order_email.delay(
+        order_id,
+        print_images='1' if include_images else '0',
+        file_types=SaleAppSettings.attachment_types_for(attachments),
+    )
 
 
 class CategoryBrandListAPIView(APIView):
@@ -419,18 +439,44 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
 
     ordering = ['-created_at']
 
-    def perform_create(self, serializer):
-        # Crear la orden
-        order = serializer.save(created_by=self.request.user, modified_by=self.request.user)
+    # Acción de correo según SaleAppSettings.email_policy: sent | ask | none
+    EMAIL_ACTIONS = {
+        SaleAppSettings.EmailPolicy.AUTO: 'sent',
+        SaleAppSettings.EmailPolicy.ASK: 'ask',
+        SaleAppSettings.EmailPolicy.NEVER: 'none',
+    }
 
-        # Llamar a la tarea Celery para enviar el correo
-        send_order_email.delay(order.id)
+    def handle_order_email(self, order):
+        conf = get_saleapp_settings(self.request)
+        action = self.EMAIL_ACTIONS.get(conf.email_policy, 'none')
+
+        if action == 'sent':
+            queue_order_email(order.id, conf.email_attachments, conf.email_include_images)
+
+        # Informa al frontend qué se hizo (o si debe preguntar)
+        self.email_info = {
+            'action': action,
+            'attachments': conf.email_attachments,
+            'include_images': conf.email_include_images,
+        }
+
+    def perform_create(self, serializer):
+        order = serializer.save(created_by=self.request.user, modified_by=self.request.user)
+        self.handle_order_email(order)
 
     def perform_update(self, serializer):
         order = serializer.save(modified_by=self.request.user)
+        self.handle_order_email(order)
 
-        # Reenviar el correo con la orden actualizada
-        send_order_email.delay(order.id)
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        response.data['email'] = self.email_info
+        return response
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        response.data['email'] = self.email_info
+        return response
 
 
 class ExtOrderMasterOnlyViewSet(CommonViewSet):
@@ -595,6 +641,60 @@ class SendOrderCSVEmail(APIView):
         send_order_email.delay(order_id, file_type='csv')
 
         return Response({'message': f'CSV email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
+
+
+class SendOrderEmail(APIView):
+    """
+    Envía la orden por correo con los adjuntos indicados.
+    Body: attachments (pdf | xlsx | both), include_images (bool).
+    Lo que no se indique se toma de la configuración de SaleApp.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, order_id):
+        if not ExtOrderMaster.objects.filter(id=order_id).exists():
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        conf = get_saleapp_settings(request)
+        attachments = request.data.get('attachments') or conf.email_attachments
+        include_images = request.data.get('include_images', conf.email_include_images)
+
+        if attachments not in SaleAppSettings.EmailAttachments.values:
+            return Response(
+                {'attachments': [f"Use one of: {', '.join(SaleAppSettings.EmailAttachments.values)}"]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queue_order_email(order_id, attachments, bool(include_images))
+
+        return Response({'message': f'Email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
+
+
+class SaleAppSettingsView(APIView):
+    """
+    Consulta (usuarios autenticados) y actualiza (acceso a configuración)
+    la configuración de SaleApp de la compañía (?cia=).
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), HasConfigAccess()]
+
+    def get(self, request):
+        conf = get_saleapp_settings(request)
+        return Response(SaleAppSettingsSerializer(conf).data)
+
+    def put(self, request):
+        conf = get_saleapp_settings(request)
+        serializer = SaleAppSettingsSerializer(conf, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if not conf.created_by:
+            conf.created_by = request.user
+        serializer.save(modified_by=request.user)
+        return Response(serializer.data)
 
 
 class TaskStatus(APIView):
