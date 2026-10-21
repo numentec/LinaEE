@@ -105,10 +105,10 @@ services:
 
 
   celery_worker:
-    build:
-      context: ./linabe
-      dockerfile: Dockerfile
-    image: linabe_celery_worker
+    #build:
+    #  context: ./linabe
+    #  dockerfile: Dockerfile
+    image: ${IMAGE_BE}:${TAG}
     container_name: celeryworker
     command: /start-celeryworker
     networks: 
@@ -127,7 +127,7 @@ services:
     # build:
     #   context: ./linabe
     #   dockerfile: Dockerfile
-    image: linabe_celery_worker
+    image: ${IMAGE_BE}:${TAG}
     container_name: celeryflower
     command: /start-flower
     volumes:

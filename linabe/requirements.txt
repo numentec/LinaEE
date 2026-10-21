@@ -13,7 +13,7 @@ drf-dx-datagrid>=0.4.1,<1.0.1
 django-ipware>=3.0.2,<3.1.0
 weasyprint==52.5
 openpyxl>=3.0.10,<3.2.0
-playwright==1.37.0
+playwright==1.48.0
 # ULID support
 python-ulid==1.1.0
 
