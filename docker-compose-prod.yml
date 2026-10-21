@@ -26,7 +26,7 @@ services:
 
   # Django backend service
   be:
-    image: galvanino/linabe:0.0.2
+    image: galvanino/linabe:0.0.3
     container_name: linabe
     env_file:
       - ./.env
@@ -45,7 +45,7 @@ services:
 
   # Nuxt frontend service
   fe:
-    image: galvanino/linafe:0.0.2
+    image: galvanino/linafe:0.0.3
     container_name: linafe
     environment:
       HOST: 0.0.0.0
@@ -77,7 +77,7 @@ services:
 
 
   celery_worker:
-    image: galvanino/linabe:0.0.2
+    image: galvanino/linabe:0.0.3
     container_name: celeryworker
     command: /start-celeryworker
     networks:
@@ -92,7 +92,7 @@ services:
       - linadb
 
   flower:
-    image: galvanino/linabe:0.0.2
+    image: galvanino/linabe:0.0.3
     container_name: celeryflower
     command: /start-flower
     volumes:
