@@ -122,7 +122,7 @@ services:
       - URL=${DOMAIN_URL}
       - SUBDOMAINS=${SUBDOMAINS}
       - VALIDATION=dns
-      - DNSPLUGIN=cloudflare
+      - DNSPLUGIN=${DNSPLUGIN}
     volumes:
       - /home/numen/swag:/config
       - /home/numen/www/html:/var/www/html
