@@ -202,8 +202,7 @@ EMAIL_TIMEOUT = int(environ.get("EMAIL_TIMEOUT", 20))
 DEFAULT_FROM_EMAIL = environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
 
 # Clave Fernet para cifrar secretos guardados en BD (contraseñas de correo, etc.)
-# SETTINGS_ENCRYPTION_KEY = environ.get("SETTINGS_ENCRYPTION_KEY")
-SETTINGS_ENCRYPTION_KEY=environ.get("SETTINGS_ENCRYPTION_KEY", "qpc68wvCuQLxSN1jllX2WWSLvzWOp3ncWz_kbX-pAyQ=")
+SETTINGS_ENCRYPTION_KEY = environ.get("SETTINGS_ENCRYPTION_KEY")
 
 
 CHANNEL_LAYERS = {
