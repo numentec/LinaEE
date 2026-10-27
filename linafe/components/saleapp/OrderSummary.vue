@@ -2,6 +2,10 @@
   <v-card :outlined="outlined" :tile="outlined" class="mx-auto">
     <v-toolbar dense flat rounded>
       <v-card-title>Order Summary</v-card-title>
+      <v-spacer />
+      <v-btn icon @click.stop="$emit('resend-mail')">
+        <v-icon>mdi-share-variant-outline</v-icon>
+      </v-btn>
     </v-toolbar>
     <v-divider></v-divider>
     <v-card-text>
