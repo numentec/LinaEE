@@ -651,6 +651,8 @@ class EmailSettings(SingletonModel):
     from_email = models.EmailField('Remitente', max_length=254, blank=True)
     from_name = models.CharField('Nombre remitente', max_length=100, blank=True)
     reply_to = models.EmailField('Responder a', max_length=254, blank=True)
+    # Responder al usuario en sesión en lugar de reply_to (si el usuario tiene correo)
+    reply_to_user = models.BooleanField('Responder al usuario en sesión', default=False)
 
     # SMTP / Gmail
     host = models.CharField('Servidor SMTP', max_length=255, blank=True)
@@ -691,6 +693,17 @@ class EmailSettings(SingletonModel):
         errors = {f: 'Campo requerido' for f in required if not getattr(self, f)}
         if errors:
             raise ValidationError(errors)
+
+    def reply_to_for(self, user_email=None):
+        """
+        Destinatarios de respuesta de un correo enviado por el usuario con correo user_email:
+        el del usuario si así se configura, o reply_to. Configuración inactiva: ninguno.
+        """
+        if not self.is_active:
+            return []
+        if self.reply_to_user and user_email:
+            return [user_email]
+        return [self.reply_to] if self.reply_to else []
 
     @property
     def formatted_from(self):

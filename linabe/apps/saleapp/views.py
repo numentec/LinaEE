@@ -176,12 +176,15 @@ def get_saleapp_settings(request):
     return SaleAppSettings.for_company(cia)
 
 
-def queue_order_email(order_id, attachments, include_images, to=None):
+def queue_order_email(order_id, attachments, include_images, to=None, user_email=None):
     """
     Encola el envío de la orden con los adjuntos indicados (pdf, xlsx o both).
     to: lista de destinatarios; si no se indica se usa el sendto de la orden.
+    user_email: correo del usuario en sesión (Responder a, según EmailSettings).
     """
     extra = {'to': to} if to else {}
+    if user_email:
+        extra['user_email'] = user_email
     return send_order_email.delay(
         order_id,
         print_images='1' if include_images else '0',
@@ -458,7 +461,10 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
         action = self.EMAIL_ACTIONS.get(conf.email_policy, 'none')
 
         if action == 'sent':
-            queue_order_email(order.id, conf.email_attachments, conf.email_include_images)
+            queue_order_email(
+                order.id, conf.email_attachments, conf.email_include_images,
+                user_email=self.request.user.email,
+            )
 
         # Informa al frontend qué se hizo (o si debe preguntar)
         self.email_info = {
@@ -631,7 +637,9 @@ class SendOrderPDFEmail(APIView):
         print_images = request.query_params.get('print_images', '').strip().lower()
 
         # Llamar a la tarea de Celery para enviar el correo con el PDF
-        send_order_email.delay(order_id, print_images=print_images, file_type='pdf')
+        send_order_email.delay(
+            order_id, print_images=print_images, file_type='pdf', user_email=request.user.email
+        )
 
         return Response({'message': f'PDF email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
 
@@ -645,7 +653,7 @@ class SendOrderCSVEmail(APIView):
 
     def post(self, request, order_id):
         # Llamar a la tarea de Celery para enviar el correo con el CSV
-        send_order_email.delay(order_id, file_type='csv')
+        send_order_email.delay(order_id, file_type='csv', user_email=request.user.email)
 
         return Response({'message': f'CSV email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
 
@@ -684,7 +692,9 @@ class SendOrderEmail(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        queue_order_email(order_id, attachments, bool(include_images), to=to)
+        queue_order_email(
+            order_id, attachments, bool(include_images), to=to, user_email=request.user.email
+        )
 
         return Response({'message': f'Email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
 

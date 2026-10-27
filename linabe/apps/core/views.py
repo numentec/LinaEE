@@ -668,7 +668,7 @@ class EmailSettingsTestView(APIView):
                 conf.get_provider_display()),
             from_email=conf.formatted_from,
             to=[to],
-            reply_to=[conf.reply_to] if conf.reply_to else None,
+            reply_to=conf.reply_to_for(request.user.email),
             connection=build_email_backend(conf),
         )
         try:

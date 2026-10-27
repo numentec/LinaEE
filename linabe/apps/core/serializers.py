@@ -314,7 +314,7 @@ class EmailSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.EmailSettings
         fields = (
-            'is_active', 'provider', 'from_email', 'from_name', 'reply_to',
+            'is_active', 'provider', 'from_email', 'from_name', 'reply_to', 'reply_to_user',
             'host', 'port', 'security', 'username', 'password', 'timeout',
             'ms_tenant_id', 'ms_client_id', 'ms_client_secret',
             'has_password', 'has_client_secret',

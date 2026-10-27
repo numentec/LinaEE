@@ -379,6 +379,31 @@ class SaleAppEmailSettingsTests(TestCase):
 		render_pdf.assert_called_once_with(order, print_images='1')
 		render_xlsx.assert_called_once_with(order, print_images=True)
 
+	@patch('apps.saleapp.tasks.render_order_pdf')
+	def test_task_reply_to_session_user(self, render_pdf):
+		from django.core import mail
+
+		from ..core.models import EmailSettings
+		from .models import ExtOrderMaster
+		from .tasks import send_order_email
+
+		render_pdf.return_value = Mock(getvalue=Mock(return_value=b'pdf'))
+		order = ExtOrderMaster.objects.create(customer_email='cli@x.com')
+		conf = EmailSettings.load()
+		conf.is_active = True
+		conf.reply_to = 'info@x.com'
+		conf.save()
+
+		with self.settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+			send_order_email(order.id, user_email='sale@x.com')
+			conf.reply_to_user = True
+			conf.save()
+			send_order_email(order.id, user_email='sale@x.com')
+
+		self.assertEqual(
+			[m.reply_to for m in mail.outbox], [['info@x.com'], ['sale@x.com']]
+		)
+
 	@patch('apps.saleapp.views.send_order_email')
 	def test_auto_policy_sends_configured_attachments(self, task):
 		self.set_conf(email_policy='auto', email_attachments='both', email_include_images=True)
@@ -388,7 +413,8 @@ class SaleAppEmailSettingsTests(TestCase):
 		self.assertEqual(response.status_code, 201, response.data)
 		self.assertEqual(response.data['email']['action'], 'sent')
 		task.delay.assert_called_once_with(
-			response.data['id'], print_images='1', file_types=['pdf', 'xlsx']
+			response.data['id'], print_images='1', file_types=['pdf', 'xlsx'],
+			user_email='sale@x.com',
 		)
 
 	@patch('apps.saleapp.views.send_order_email')
@@ -435,7 +461,9 @@ class SaleAppEmailSettingsTests(TestCase):
 			url, {'attachments': 'xlsx', 'include_images': False}, format='json'
 		)
 		self.assertEqual(response.status_code, 202)
-		task.delay.assert_called_once_with(order.id, print_images='0', file_types=['xlsx'])
+		task.delay.assert_called_once_with(
+			order.id, print_images='0', file_types=['xlsx'], user_email='sale@x.com'
+		)
 
 		response = self.client.post(url, {'sendto': 'cli@x.com, bad'}, format='json')
 		self.assertEqual(response.status_code, 400)
@@ -446,5 +474,6 @@ class SaleAppEmailSettingsTests(TestCase):
 		)
 		self.assertEqual(response.status_code, 202)
 		task.delay.assert_called_once_with(
-			order.id, print_images='0', file_types=['pdf'], to=['a@x.com', 'b@x.com']
+			order.id, print_images='0', file_types=['pdf'], to=['a@x.com', 'b@x.com'],
+			user_email='sale@x.com',
 		)

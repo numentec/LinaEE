@@ -92,6 +92,18 @@ class BackendSelectionTests(TestCase):
         self.assertEqual(msg.from_email, 'Ventas <ventas@x.com>')
         self.assertEqual(msg.reply_to, ['info@x.com'])
 
+    def test_reply_to_for(self):
+        conf = EmailSettings(is_active=True, reply_to='info@x.com')
+        self.assertEqual(conf.reply_to_for('u@x.com'), ['info@x.com'])
+
+        conf.reply_to_user = True
+        self.assertEqual(conf.reply_to_for('u@x.com'), ['u@x.com'])
+        # Usuario sin correo: se usa reply_to
+        self.assertEqual(conf.reply_to_for(''), ['info@x.com'])
+
+        conf.is_active = False
+        self.assertEqual(conf.reply_to_for('u@x.com'), [])
+
 
 @override_settings(SETTINGS_ENCRYPTION_KEY=TEST_KEY)
 class SerializerTests(TestCase):

@@ -109,6 +109,17 @@
             :error-messages="errors.reply_to"
           />
         </v-col>
+        <v-col cols="12" class="pt-0">
+          <v-switch
+            v-model="conf.reply_to_user"
+            inset
+            class="mt-0"
+            label="Responder al usuario en sesión"
+            hint="Las respuestas se dirigen al correo del usuario que envía. Si no tiene correo, o el envío no lo hace un usuario, se usa Responder a."
+            persistent-hint
+            :error-messages="errors.reply_to_user"
+          />
+        </v-col>
       </v-row>
 
       <v-row v-if="conf.provider === 'smtp'">
@@ -345,6 +356,7 @@ export default {
         port: 587,
         timeout: 20,
         is_active: false,
+        reply_to_user: false,
       },
       errors: {},
       testDialog: false,
