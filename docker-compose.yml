@@ -72,26 +72,6 @@ services:
       - be
     restart: unless-stopped
 
-  # Perfil PROD como servicio separado, apuntando a la MISMA imagen
-  # fe_prod:
-  #   image: ${IMAGE_FE}:${TAG}         # misma imagen construida arriba
-  #   container_name: linafe_prod
-  #   environment:
-  #     HOST: 0.0.0.0
-  #     PORT: 3005
-  #     TZ: "${LOC_TZ}"
-  #     NODE_ENV: production
-  #   networks:
-  #     net:
-  #       ipv4_address: 192.168.15.13
-  #   ports:
-  #     - "3005:3005"
-  #   # Sin volúmenes: ejecuta lo que trae la imagen
-  #   command: ['./fe.sh']
-  #   depends_on:
-  #     - be
-  #   restart: unless-stopped
-
 
   # Redis service for Celery
   
