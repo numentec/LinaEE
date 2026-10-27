@@ -3,12 +3,18 @@
     <v-card>
       <v-card-title>Email order # {{ orderId }}</v-card-title>
       <v-card-text>
-        <p>
-          Send the order to the customer<span v-if="sendTo">
-            (<b>{{ sendTo }}</b
-            >)</span
-          >?
-        </p>
+        <v-form ref="form" @submit.prevent="send">
+          <v-text-field
+            v-model="selSendTo"
+            label="Send to"
+            prepend-inner-icon="mdi-email-outline"
+            hint="Separate multiple addresses with commas"
+            :rules="[rules.required, rules.emails]"
+            :disabled="sending"
+            outlined
+            dense
+          />
+        </v-form>
         <div class="text-subtitle-2 mb-2">Attachments</div>
         <v-btn-toggle v-model="selAttachments" mandatory color="secondary">
           <v-btn
@@ -31,7 +37,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn text :disabled="sending" @click="skip">Do not send</v-btn>
+        <v-btn text :disabled="sending" @click="skip">{{ skipText }}</v-btn>
         <v-btn color="secondary" :loading="sending" @click="send">
           <v-icon left>mdi-email-fast-outline</v-icon>
           Send
@@ -45,6 +51,16 @@
 import { mapActions } from 'vuex'
 import { EMAIL_ATTACHMENT_OPTIONS } from '@/utils/orderEmail'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Destinatarios separados por coma o punto y coma
+function splitEmails(value) {
+  return (value || '')
+    .split(/[,;]/)
+    .map((e) => e.trim())
+    .filter(Boolean)
+}
+
 export default {
   name: 'SendOrderEmailDialog',
   props: {
@@ -53,6 +69,7 @@ export default {
     attachments: { type: String, default: 'pdf' },
     includeImages: { type: Boolean, default: false },
     sendTo: { type: String, default: '' },
+    skipText: { type: String, default: 'Do not send' },
   },
 
   data() {
@@ -60,7 +77,14 @@ export default {
       sending: false,
       selAttachments: this.attachments,
       selIncludeImages: this.includeImages,
+      selSendTo: this.sendTo,
       attachmentOptions: EMAIL_ATTACHMENT_OPTIONS,
+      rules: {
+        required: (v) => splitEmails(v).length > 0 || 'Enter an email address',
+        emails: (v) =>
+          splitEmails(v).every((e) => EMAIL_RE.test(e)) ||
+          'Invalid email address',
+      },
     }
   },
 
@@ -70,6 +94,8 @@ export default {
       if (open) {
         this.selAttachments = this.attachments
         this.selIncludeImages = this.includeImages
+        this.selSendTo = this.sendTo
+        this.$nextTick(() => this.$refs.form?.resetValidation())
       }
     },
   },
@@ -78,12 +104,15 @@ export default {
     ...mapActions('saleapp/orders', ['sendOrderEmail']),
 
     async send() {
+      if (!this.$refs.form.validate()) return
+
       this.sending = true
       try {
         await this.sendOrderEmail({
           orderid: this.orderId,
           attachments: this.selAttachments,
           includeImages: this.selIncludeImages,
+          sendto: splitEmails(this.selSendTo).join(', '),
         })
         this.close('sent')
       } catch (error) {

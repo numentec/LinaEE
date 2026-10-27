@@ -3,6 +3,8 @@ import os
 import re
 from django.conf import settings
 from django.db import connections
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 from django.http import HttpResponse
 from .utils import render_order_pdf, render_order_csv, render_order_xlsx
@@ -174,12 +176,17 @@ def get_saleapp_settings(request):
     return SaleAppSettings.for_company(cia)
 
 
-def queue_order_email(order_id, attachments, include_images):
-    """Encola el envío de la orden con los adjuntos indicados (pdf, xlsx o both)"""
+def queue_order_email(order_id, attachments, include_images, to=None):
+    """
+    Encola el envío de la orden con los adjuntos indicados (pdf, xlsx o both).
+    to: lista de destinatarios; si no se indica se usa el sendto de la orden.
+    """
+    extra = {'to': to} if to else {}
     return send_order_email.delay(
         order_id,
         print_images='1' if include_images else '0',
         file_types=SaleAppSettings.attachment_types_for(attachments),
+        **extra,
     )
 
 
@@ -646,7 +653,8 @@ class SendOrderCSVEmail(APIView):
 class SendOrderEmail(APIView):
     """
     Envía la orden por correo con los adjuntos indicados.
-    Body: attachments (pdf | xlsx | both), include_images (bool).
+    Body: attachments (pdf | xlsx | both), include_images (bool),
+    sendto (destinatarios separados por coma; si no se indica, el de la orden).
     Lo que no se indique se toma de la configuración de SaleApp.
     """
     authentication_classes = [authentication.TokenAuthentication]
@@ -666,7 +674,17 @@ class SendOrderEmail(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        queue_order_email(order_id, attachments, bool(include_images))
+        to = [e.strip() for e in re.split(r'[,;]', request.data.get('sendto') or '') if e.strip()]
+        try:
+            for addr in to:
+                validate_email(addr)
+        except ValidationError:
+            return Response(
+                {'sendto': [f'Invalid email address: {addr}']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queue_order_email(order_id, attachments, bool(include_images), to=to)
 
         return Response({'message': f'Email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
 

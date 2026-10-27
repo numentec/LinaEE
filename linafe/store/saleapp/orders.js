@@ -232,14 +232,23 @@ export const actions = {
   },
 
   // Envía la orden por correo; attachments: pdf | xlsx | both
+  // sendto: destinatarios separados por coma (vacío: el de la orden)
   async sendOrderEmail({ rootState }, payload) {
-    const { orderid, attachments, includeImages } = payload
+    const { orderid, attachments, includeImages, sendto } = payload
 
     const response = await this.$axios.post(
       `saleapp/orders/${orderid}/email/`,
-      { attachments, include_images: includeImages },
+      { attachments, include_images: includeImages, sendto },
       { params: ciaParams(rootState) }
     )
+    return response.data
+  },
+
+  // Configuración de SaleApp de la compañía actual (adjuntos del correo, etc.)
+  async fetchSaleAppSettings({ rootState }) {
+    const response = await this.$axios.get('saleapp/settings/', {
+      params: ciaParams(rootState),
+    })
     return response.data
   },
 

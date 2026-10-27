@@ -197,6 +197,7 @@
                 :cur-order="curOrder"
                 :outlined="true"
                 @keep-selling="keepSelling"
+                @resend-mail="openEmailDialog"
               />
             </v-expand-transition>
             <v-card-text>
@@ -230,7 +231,7 @@
                 :key="order.id"
                 ref="selectedOrder"
                 :order="order"
-                @resend-mail="snackbar = true"
+                @resend-mail="openEmailDialog"
                 @order-clicked="goToOrder"
               />
             </v-list-item-group>
@@ -242,6 +243,7 @@
             :hide-controls="hideControls"
             class="sticky-summary"
             @keep-selling="keepSelling"
+            @resend-mail="openEmailDialog"
           />
         </v-col>
       </v-row>
@@ -278,6 +280,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <SendOrderEmailDialog
+      v-model="emailDialog"
+      :order-id="emailOrder.id"
+      :send-to="emailOrder.sendto || emailOrder.customer_email || ''"
+      :attachments="emailConf.attachments"
+      :include-images="emailConf.include_images"
+      skip-text="Cancel"
+      @sent="onEmailSent"
+      @error="onEmailError"
+    />
     <v-snackbar v-model="snackbar" timeout="3000" :color="snackbarColor" dark>
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -299,6 +311,7 @@ import { mapGetters, mapActions } from 'vuex'
 import OrderCard from '@/components/saleapp/OrderCard.vue'
 import OrderListItem from '@/components/saleapp/OrderListItem.vue'
 import OrderSummary from '@/components/saleapp/OrderSummary.vue'
+import SendOrderEmailDialog from '@/components/saleapp/SendOrderEmailDialog.vue'
 import html2pdf from 'html2pdf.js'
 import { ORDER_STATUSES } from '@/utils/orderStatus'
 
@@ -328,6 +341,7 @@ export default {
     OrderCard,
     OrderSummary,
     OrderListItem,
+    SendOrderEmailDialog,
   },
 
   async asyncData({ store, error }) {
@@ -366,6 +380,9 @@ export default {
       cancelDialog: false,
       replaceCartDialog: false,
       statusOptions: ORDER_STATUSES,
+      emailDialog: false,
+      emailOrder: {},
+      emailConf: { attachments: 'pdf', include_images: false },
     }
   },
   computed: {
@@ -439,6 +456,7 @@ export default {
       'xlsxDownload',
       'imagesZipDownload',
       'updateOrderStatus',
+      'fetchSaleAppSettings',
     ]),
     ...mapActions('saleapp/cart', ['loadFromOrder']),
     // Cambio de estado desde el select.
@@ -643,6 +661,41 @@ export default {
         this.snackbarColor = 'error'
         this.snackbar = true
       }
+    },
+
+    // Resend the order by email
+    // Opens the email dialog with the attachments configured in SaleApp;
+    // the recipient and attachments can be changed before sending
+    async openEmailDialog(order) {
+      if (!order?.id) return
+
+      try {
+        const conf = await this.fetchSaleAppSettings()
+        this.emailConf = {
+          attachments: conf.email_attachments,
+          include_images: conf.email_include_images,
+        }
+      } catch (error) {
+        console.error('Error loading SaleApp settings:', error)
+      }
+
+      this.emailOrder = order
+      this.emailDialog = true
+    },
+    onEmailSent() {
+      this.snackbarColor = 'success'
+      this.snackbarText = `Order # ${this.emailOrder.id} is being emailed`
+      this.snackbar = true
+    },
+    onEmailError(error) {
+      this.snackbarColor = 'error'
+      this.snackbarText =
+        'Failed to email order: ' +
+        (error?.response?.data?.sendto?.[0] ||
+          error?.response?.data?.attachments?.[0] ||
+          error?.response?.data?.error ||
+          error?.message)
+      this.snackbar = true
     },
 
     // Keep selling

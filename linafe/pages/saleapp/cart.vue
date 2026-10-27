@@ -287,7 +287,8 @@ export default {
       this.snackbarColor = 'error'
       this.snackbarText =
         'Failed to email order: ' +
-        (error?.response?.data?.attachments?.[0] ||
+        (error?.response?.data?.sendto?.[0] ||
+          error?.response?.data?.attachments?.[0] ||
           error?.response?.data?.error ||
           error?.message)
       this.snackbar = true

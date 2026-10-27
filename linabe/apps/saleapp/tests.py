@@ -436,3 +436,15 @@ class SaleAppEmailSettingsTests(TestCase):
 		)
 		self.assertEqual(response.status_code, 202)
 		task.delay.assert_called_once_with(order.id, print_images='0', file_types=['xlsx'])
+
+		response = self.client.post(url, {'sendto': 'cli@x.com, bad'}, format='json')
+		self.assertEqual(response.status_code, 400)
+
+		task.reset_mock()
+		response = self.client.post(
+			url, {'attachments': 'pdf', 'sendto': 'a@x.com; b@x.com'}, format='json'
+		)
+		self.assertEqual(response.status_code, 202)
+		task.delay.assert_called_once_with(
+			order.id, print_images='0', file_types=['pdf'], to=['a@x.com', 'b@x.com']
+		)

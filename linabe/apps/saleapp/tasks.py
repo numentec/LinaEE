@@ -34,12 +34,13 @@ def task_postrun_handler(task_id, **kwargs):
 
 
 @shared_task(name='high_priority:send_order_email')
-def send_order_email(order_id, print_images='', file_type='pdf', file_types=None):
+def send_order_email(order_id, print_images='', file_type='pdf', file_types=None, to=None):
     """
     Tarea de Celery para enviar un correo electrónico con los detalles de la orden.
     Esta tarea se ejecuta en segundo plano, genera los archivos de la orden
     (file_types, p.ej. ['pdf', 'xlsx'], o solo file_type) y los envía
-    al cliente adjuntos en un único correo.
+    adjuntos en un único correo a los destinatarios indicados (to)
+    o, si no se indican, al sendto de la orden.
     """
     file_types = list(file_types or [file_type])
     try:
@@ -50,7 +51,7 @@ def send_order_email(order_id, print_images='', file_type='pdf', file_types=None
         email = EmailMessage(
             subject=f"Order #{order.id} Details",
             body=f"Dear {order.customer_name},\n\nPlease find attached the details of your order #{order.id}.",
-            to=[order.sendto],
+            to=list(to or [order.sendto]),
         )
 
         # Generar los archivos según los tipos solicitados

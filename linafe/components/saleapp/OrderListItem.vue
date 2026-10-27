@@ -46,7 +46,7 @@
       <v-list-item-action-text>
         {{ new Date(order.created_at).toISOString().split('T')[0] }}
       </v-list-item-action-text>
-      <v-btn icon @click.stop="$emit('resend-mail')">
+      <v-btn icon @click.stop="resendMail">
         <v-icon>mdi-share-variant-outline</v-icon>
       </v-btn>
     </v-list-item-action>
@@ -93,8 +93,7 @@ export default {
 
   methods: {
     resendMail() {
-      this.loadingView = true
-      this.$emit('resend-mail', this.order.id)
+      this.$emit('resend-mail', this.order)
     },
   },
 }
