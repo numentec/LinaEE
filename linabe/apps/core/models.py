@@ -169,10 +169,8 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
 
         if not self.nombre_corto:
-            if self.get_short_name():
-                self.nombre_corto = self.get_short_name()
-            else:
-                self.nombre_corto = self.get_username()
+            max_length = self._meta.get_field('nombre_corto').max_length
+            self.nombre_corto = (self.get_short_name() or self.get_username())[:max_length]
 
         super(User, self).save(*args, **kwargs)
 
@@ -581,7 +579,7 @@ class SQLQuery(Common):
         ('MSSQL', 'MS SQL Server'),
     ]
 
-    name  = models.CharField('Nombre', max_length=25, default='SQL')
+    name  = models.CharField('Nombre', max_length=50, default='SQL')
     content = models.TextField('Contenido', blank=True, default='')
     ordinal = models.IntegerField('Ordinal', default=1)
     dbtype = models.CharField('DB Type', max_length=6, choices=DB_CHOICES, default='MARIDB')
