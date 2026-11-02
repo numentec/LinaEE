@@ -8,6 +8,15 @@
         size: Letter;
         margin: 0.5cm;
     }
+    /* Excluye las fuentes emoji del stack de Bootstrap: WeasyPrint/Pango usa
+       "Noto Color Emoji" para los dígitos y "#" y los rasteriza como bitmap. */
+    :root {
+        --bs-font-sans-serif: "Liberation Sans", Arial, "Helvetica Neue", sans-serif;
+        --bs-body-font-family: var(--bs-font-sans-serif);
+    }
+    body {
+        font-family: "Liberation Sans", Arial, "Helvetica Neue", sans-serif;
+    }
 </style>
 {% endblock %}
 
@@ -46,7 +55,8 @@
                 <p><strong>Phone:</strong> {{ order.customer_cel }}</p>
             </div>
             <div class="col-6">
-                <p style="margin-bottom: 4px;"><strong>Payment method:</strong> CREDIT</p>
+                <p style="margin-bottom: 4px;"><strong>Delivery to:</strong> {{ order.delivery_to }}</p>
+                <p style="margin-bottom: 4px;"><strong>Carrier tag:</strong> {{ order.carrier_tag }}</p>
                 <p style="margin-bottom: 4px;"><strong>Saller:</strong> {{ created_by_name }}</p>
             </div>
         </div>

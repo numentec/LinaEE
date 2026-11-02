@@ -34,7 +34,7 @@ def render_order_pdf(order, print_images=''):
     # Renderizar la plantilla HTML con los datos de la orden
     html_string = render_to_string('saleapp/order_pdf.html', {
         'order': order,
-        'order_date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        'order_date': order.modified_at.strftime('%Y-%m-%d %H:%M:%S'),
         'items': items,
         'logo_url': logo_url,
         'print_images': print_images,
@@ -65,7 +65,7 @@ def render_order_csv(order, mode="short"):
         for item in order.items.all():
             writer.writerow([
                 order.id,
-                order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                order.modified_at.strftime('%Y-%m-%d %H:%M:%S'),
                 item.sku,
                 item.name,
                 item.quantity,
@@ -134,7 +134,7 @@ def render_order_xlsx(order, print_images=True):
     created_by = order.created_by
     info = [
         ('Order #', order.id),
-        ('Date', order.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+        ('Date', order.modified_at.strftime('%Y-%m-%d %H:%M:%S')),
         ('Customer', f'{order.customer_id} {order.customer_name or ""}'.strip()),
         ('e-mail', order.sendto),
         ('Phone', order.customer_cel),
