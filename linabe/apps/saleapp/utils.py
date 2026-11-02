@@ -121,6 +121,30 @@ def _xlsx_image(sku):
         return None
 
 
+# Alto del logo (px) y filas (20px c/u por defecto) que se reservan para él
+XLSX_LOGO_HEIGHT = 70
+XLSX_LOGO_ROWS = 4
+
+
+def _xlsx_logo():
+    """Devuelve el logo de la empresa como imagen de openpyxl, o None si no está disponible."""
+    path = os.path.join(settings.STATICFILES_DIRS[0], 'images', 'logo.png')
+
+    if not os.path.isfile(path):
+        return None
+
+    try:
+        with PILImage.open(path) as img:
+            img = img.convert('RGBA')
+            img.thumbnail((XLSX_LOGO_HEIGHT * 4, XLSX_LOGO_HEIGHT))
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+        buffer.seek(0)
+        return XLImage(buffer)
+    except Exception:
+        return None
+
+
 def render_order_xlsx(order, print_images=True):
     wb = Workbook()
     ws = wb.active
@@ -129,6 +153,13 @@ def render_order_xlsx(order, print_images=True):
     bold = Font(bold=True)
     header_fill = PatternFill('solid', fgColor='A6EFFE')
     money = '#,##0.00'
+
+    # Logo en la parte superior (se reservan filas para que no tape el encabezado)
+    logo = _xlsx_logo()
+    if logo:
+        ws.add_image(logo, 'A1')
+        for _ in range(XLSX_LOGO_ROWS):
+            ws.append([])
 
     # Encabezado de la orden
     created_by = order.created_by
@@ -140,6 +171,8 @@ def render_order_xlsx(order, print_images=True):
         ('Phone', order.customer_cel),
         ('Seller', created_by.get_full_name() if created_by else ''),
         ('Status', order.get_status_display()),
+        ('Delivery To', order.delivery_to),
+        ('Carrier Tag', order.carrier_tag),
     ]
     for label, value in info:
         ws.append([label, value])
