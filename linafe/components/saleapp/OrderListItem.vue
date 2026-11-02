@@ -11,7 +11,10 @@
                     ></v-img>
                     </v-list-item-avatar> -->
     <v-list-item-content>
-      <v-list-item-title :class="{ 'text--disabled': isCancelled }">
+      <v-list-item-title
+        class="order-title"
+        :class="{ 'text--disabled': isCancelled }"
+      >
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
             <v-icon
@@ -28,7 +31,14 @@
           </template>
           <span>{{ statusInfo.text }}</span>
         </v-tooltip>
-        {{ `Order #: ${order.id}` }}
+        <span class="order-id">{{ `Order #: ${order.id}` }}</span>
+        <span
+          v-if="order.name"
+          class="order-name text-truncate text--secondary"
+          :title="order.name"
+        >
+          {{ order.name }}
+        </span>
       </v-list-item-title>
       <v-list-item-subtitle>
         {{ order.customer_name }}
@@ -44,7 +54,7 @@
     </v-list-item-content>
     <v-list-item-action>
       <v-list-item-action-text>
-        {{ new Date(order.created_at).toISOString().split('T')[0] }}
+        {{ new Date(order.modified_at).toISOString().split('T')[0] }}
       </v-list-item-action-text>
       <v-btn icon @click.stop="resendMail">
         <v-icon>mdi-share-variant-outline</v-icon>
@@ -102,5 +112,20 @@ export default {
 <style scoped>
 .status-dot {
   vertical-align: middle;
+}
+/* Una sola línea: el nombre se trunca con "…" y el número de orden no se encoge */
+.order-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.order-id {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.order-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
 }
 </style>

@@ -29,6 +29,36 @@
         </div>
       </div>
 
+      <template
+        v-if="curOrder.name || curOrder.delivery_to || curOrder.carrier_tag"
+      >
+        <v-divider class="my-3"></v-divider>
+
+        <!-- Detalles de la orden -->
+        <div v-if="curOrder.name" class="d-flex align-start mb-1">
+          <v-icon small class="mr-1">mdi-tag-outline</v-icon>
+          <span class="mr-2">Order name</span>
+          <v-spacer />
+          <span class="text--primary text-right">{{ curOrder.name }}</span>
+        </div>
+        <div v-if="curOrder.delivery_to" class="d-flex align-start mb-1">
+          <v-icon small class="mr-1">mdi-map-marker-outline</v-icon>
+          <span class="mr-2">Delivery To</span>
+          <v-spacer />
+          <span class="text--primary text-right">
+            {{ curOrder.delivery_to }}
+          </span>
+        </div>
+        <div v-if="curOrder.carrier_tag" class="d-flex align-start">
+          <v-icon small class="mr-1">mdi-truck-outline</v-icon>
+          <span class="mr-2">Carrier Tag</span>
+          <v-spacer />
+          <span class="text--primary text-right">
+            {{ curOrder.carrier_tag }}
+          </span>
+        </div>
+      </template>
+
       <v-divider class="my-3"></v-divider>
 
       <!-- Fechas -->

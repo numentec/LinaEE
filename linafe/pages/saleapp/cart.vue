@@ -67,6 +67,7 @@
               :loading="loading"
               :outlined="true"
               @go-to-checkout="goToCheckout"
+              @edit-order-details="detailsDialog = true"
             />
           </v-expand-transition>
           <v-card-text>
@@ -92,6 +93,7 @@
           :customers-list="customersList"
           :loading="loading"
           @go-to-checkout="goToCheckout"
+          @edit-order-details="detailsDialog = true"
         />
       </v-col>
     </v-row>
@@ -112,6 +114,7 @@
         </v-btn>
       </template>
     </v-snackbar>
+    <OrderDetailsDialog v-model="detailsDialog" />
     <SendOrderEmailDialog
       v-model="emailDialog"
       :order-id="emailOrder.id"
@@ -129,6 +132,7 @@
 import { mapGetters, mapActions } from 'vuex'
 import CartCard from '@/components/saleapp/CartCard.vue'
 import CartOrderSummary from '@/components/saleapp/CartOrderSummary.vue'
+import OrderDetailsDialog from '@/components/saleapp/OrderDetailsDialog.vue'
 import SendOrderEmailDialog from '@/components/saleapp/SendOrderEmailDialog.vue'
 
 export default {
@@ -136,6 +140,7 @@ export default {
   components: {
     CartCard,
     CartOrderSummary,
+    OrderDetailsDialog,
     SendOrderEmailDialog,
   },
   async fetch() {
@@ -166,6 +171,7 @@ export default {
       loading: false,
       dialog: false,
       showSummary: false,
+      detailsDialog: false,
       emailDialog: false,
       emailOrder: {},
       emailConf: { attachments: 'pdf', include_images: false },

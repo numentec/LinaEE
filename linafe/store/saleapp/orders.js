@@ -10,6 +10,9 @@ function updateOrderState(orderstate) {
 // Construye el payload de una orden a partir del carrito
 function buildOrderPayload(cart) {
   return {
+    name: cart.orderDetails?.name || '',
+    delivery_to: cart.orderDetails?.delivery_to || '',
+    carrier_tag: cart.orderDetails?.carrier_tag || '',
     customer_id: cart.cartCustomer?.id || '0',
     customer_name: cart.cartCustomer?.name || '',
     customer_email: cart.cartCustomer?.email || '',

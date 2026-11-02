@@ -11,6 +11,7 @@ const initCart = () => ({
   total: 0,
   items: [],
   orderId: null,
+  orderDetails: { name: '', delivery_to: '', carrier_tag: '' },
 })
 
 // Convierte un item de orden (backend) al formato de item del carrito
@@ -78,6 +79,17 @@ export const mutations = {
 
   REMOVE_ITEM_INDEX(state, index) {
     state.cart.items.splice(index, 1)
+    updateCartState(state.cart)
+  },
+  SET_ORDER_DETAILS(state, details) {
+    state.cart = {
+      ...state.cart,
+      orderDetails: {
+        name: details?.name || '',
+        delivery_to: details?.delivery_to || '',
+        carrier_tag: details?.carrier_tag || '',
+      },
+    }
     updateCartState(state.cart)
   },
   SET_ORDER_ID(state, id) {
@@ -182,6 +194,11 @@ export const actions = {
       total: 0,
       items,
       orderId: order.id,
+      orderDetails: {
+        name: order.name || '',
+        delivery_to: order.delivery_to || '',
+        carrier_tag: order.carrier_tag || '',
+      },
     })
 
     return { merged, customerReplaced }
@@ -199,6 +216,8 @@ export const getters = {
     return state.cart.cartCustomer
   },
 
+  getCartOrderDetails: (state) =>
+    state.cart.orderDetails || { name: '', delivery_to: '', carrier_tag: '' },
   getCartOrderId: (state) => state.cart.orderId || null,
   getCartItems: (state) => state.cart.items || [],
   getCartItemCount: (state) => state.cart.items?.length || 0,

@@ -26,6 +26,7 @@ class ExtOrderMaster(Common):
         ('cancelled', 'Cancelled'),
     ]
 
+    name = models.CharField("Order Name", max_length=100, blank=True, null=True)
     ciaext = models.CharField("External cia", max_length=10, default='01')
     customer_id = models.CharField("Customer ID", max_length=25, default='0')
     customer_name = models.CharField("Customer Name", max_length=100, default='X customer', null=True)
@@ -35,6 +36,8 @@ class ExtOrderMaster(Common):
     sendcc = models.CharField("With cc", max_length=300, blank=True, null=True)
     subject = models.CharField("Subject", max_length=100, default='Order')
     saleref = models.CharField("Seller Ref", max_length=100, blank=True, null=True)
+    delivery_to = models.CharField("Delivery To", max_length=300, blank=True, null=True)
+    carrier_tag = models.CharField("Carrier Tag", max_length=100, blank=True, null=True)
     link = models.CharField("Link", max_length=200, default='/', null=True)
     perm = models.CharField("Permiso", max_length=50, blank = True, help_text='Permiso de acceso relacionado')
     source = models.CharField('Source', max_length=7, choices=SOURCE_CHOICES, default='cart')
@@ -44,6 +47,7 @@ class ExtOrderMaster(Common):
     tax = models.DecimalField("Tax", max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='pending')
+    notes = models.TextField("Notes", blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.sendto:  # Si sendto está vacío o es None

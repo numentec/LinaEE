@@ -51,6 +51,9 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items', None)
 
         # Update master data
+        instance.name = validated_data.get('name', instance.name)
+        instance.delivery_to = validated_data.get('delivery_to', instance.delivery_to)
+        instance.carrier_tag = validated_data.get('carrier_tag', instance.carrier_tag)
         instance.ciaext = validated_data.get('ciaext', instance.ciaext)
         instance.customer_id = validated_data.get('customer_id', instance.customer_id)
         instance.customer_name = validated_data.get('customer_name', instance.customer_name)
