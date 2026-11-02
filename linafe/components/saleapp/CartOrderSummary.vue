@@ -113,6 +113,36 @@
               {{ customerTel }}
             </div>
           </v-row>
+          <div v-if="hasOrderDetails" class="mx-2 mb-4">
+            <v-divider class="mb-3"></v-divider>
+            <div v-if="orderDetails.name" class="d-flex align-start mb-1">
+              <v-icon small class="mr-1">mdi-tag-outline</v-icon>
+              <span class="mr-2">Order name</span>
+              <v-spacer />
+              <span class="text--primary text-right">
+                {{ orderDetails.name }}
+              </span>
+            </div>
+            <div
+              v-if="orderDetails.delivery_to"
+              class="d-flex align-start mb-1"
+            >
+              <v-icon small class="mr-1">mdi-map-marker-outline</v-icon>
+              <span class="mr-2">Delivery To</span>
+              <v-spacer />
+              <span class="text--primary text-right">
+                {{ orderDetails.delivery_to }}
+              </span>
+            </div>
+            <div v-if="orderDetails.carrier_tag" class="d-flex align-start">
+              <v-icon small class="mr-1">mdi-truck-outline</v-icon>
+              <span class="mr-2">Carrier Tag</span>
+              <v-spacer />
+              <span class="text--primary text-right">
+                {{ orderDetails.carrier_tag }}
+              </span>
+            </div>
+          </div>
           <v-row justify="center" align="center">
             <h3>Total</h3>
           </v-row>
@@ -189,7 +219,16 @@ export default {
       'getCartTotalPrice',
       'getCartCustomer',
       'getCartOrderId',
+      'getCartOrderDetails',
     ]),
+
+    orderDetails() {
+      return this.getCartOrderDetails || {}
+    },
+    hasOrderDetails() {
+      const d = this.orderDetails
+      return !!(d.name || d.delivery_to || d.carrier_tag)
+    },
 
     cartCustomer: {
       // v-autocomplete compara item-value (id) de forma estricta. El cliente del
