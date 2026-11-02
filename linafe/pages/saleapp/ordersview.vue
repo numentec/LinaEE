@@ -94,6 +94,12 @@
               >
                 <v-list-item-title>Keep selling</v-list-item-title>
               </v-list-item>
+              <v-list-item
+                v-show="curOrder.status !== 'pending'"
+                @click="cloneOrder"
+              >
+                <v-list-item-title>Clone order</v-list-item-title>
+              </v-list-item>
               <v-list-item @click="changeView">
                 <v-list-item-title>
                   {{ isListView ? 'Grid view' : 'List view' }}
@@ -197,6 +203,7 @@
                 :cur-order="curOrder"
                 :outlined="true"
                 @keep-selling="keepSelling"
+                @clone-order="cloneOrder"
                 @resend-mail="openEmailDialog"
               />
             </v-expand-transition>
@@ -243,6 +250,7 @@
             :hide-controls="hideControls"
             class="sticky-summary"
             @keep-selling="keepSelling"
+            @clone-order="cloneOrder"
             @resend-mail="openEmailDialog"
           />
         </v-col>
@@ -277,6 +285,21 @@
           <v-spacer></v-spacer>
           <v-btn text @click="replaceCartDialog = false">Back</v-btn>
           <v-btn color="warning" text @click="doKeepSelling">Replace</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="cloneCartDialog" max-width="400" persistent>
+      <v-card>
+        <v-card-title>Replace shopping cart</v-card-title>
+        <v-card-text>
+          {{
+            `The current shopping cart will be replaced with a copy of order # ${cOrderID}.`
+          }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="cloneCartDialog = false">Back</v-btn>
+          <v-btn color="warning" text @click="doCloneOrder">Replace</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -379,6 +402,7 @@ export default {
       statusSaving: false,
       cancelDialog: false,
       replaceCartDialog: false,
+      cloneCartDialog: false,
       statusOptions: ORDER_STATUSES,
       emailDialog: false,
       emailOrder: {},
@@ -397,7 +421,10 @@ export default {
       getJustCreated: 'getJustCreated',
       orders: 'getOrders',
     }),
-    ...mapGetters('saleapp/cart', { cartOrderId: 'getCartOrderId' }),
+    ...mapGetters('saleapp/cart', {
+      cartOrderId: 'getCartOrderId',
+      cartItemCount: 'getCartItemCount',
+    }),
     ...mapGetters('sistema', ['getCurCia']),
     curOrderItems() {
       return this.curOrder ? this.curOrder.items : []
@@ -458,7 +485,7 @@ export default {
       'updateOrderStatus',
       'fetchSaleAppSettings',
     ]),
-    ...mapActions('saleapp/cart', ['loadFromOrder']),
+    ...mapActions('saleapp/cart', ['loadFromOrder', 'cloneFromOrder']),
     // Cambio de estado desde el select.
     // "Cancelled" es definitivo, por lo que se pide confirmación antes de guardarlo.
     onStatusChange(status) {
@@ -719,6 +746,28 @@ export default {
       }
 
       this.doKeepSelling()
+    },
+    // Clone order: starts a new cart from a copy of the current order
+    // (any status but pending). Asks first if the cart already has content.
+    cloneOrder() {
+      this.vmenu = false
+
+      if (this.cartOrderId || this.cartItemCount > 0) {
+        this.cloneCartDialog = true
+        return
+      }
+
+      this.doCloneOrder()
+    },
+    async doCloneOrder() {
+      this.cloneCartDialog = false
+
+      await this.cloneFromOrder(this.curOrder)
+
+      this.$router.push({
+        name: 'saleapp-cart',
+        params: { info: `New cart created from order # ${this.cOrderID}` },
+      })
     },
     async doKeepSelling() {
       this.replaceCartDialog = false

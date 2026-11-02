@@ -203,6 +203,27 @@ export const actions = {
 
     return { merged, customerReplaced }
   },
+  // Clone order: reemplaza el carrito con una copia de la orden, sin ligarlo
+  // a ella (orderId null), de modo que el checkout genere una orden nueva.
+  // El nombre de la orden no se copia.
+  cloneFromOrder({ commit }, order) {
+    commit('SET_CART', {
+      cartCustomer: {
+        id: order.customer_id,
+        name: order.customer_name,
+        email: order.customer_email,
+        tel: order.customer_cel,
+      },
+      total: 0,
+      items: (order.items || []).map(orderItemToCartItem),
+      orderId: null,
+      orderDetails: {
+        name: '',
+        delivery_to: order.delivery_to || '',
+        carrier_tag: order.carrier_tag || '',
+      },
+    })
+  },
   decreaseQuantity({ commit }, index) {
     commit('DECREASE_QUANTITY', index)
   },

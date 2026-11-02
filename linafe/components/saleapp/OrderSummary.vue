@@ -106,6 +106,15 @@
                 </span>
               </template>
             </v-btn>
+            <v-btn
+              v-show="!hideControls && curOrder.status !== 'pending'"
+              color="primary"
+              text
+              @click="$emit('clone-order')"
+            >
+              <v-icon left small>mdi-content-copy</v-icon>
+              Clone order
+            </v-btn>
           </v-row>
         </v-col>
       </v-row>
