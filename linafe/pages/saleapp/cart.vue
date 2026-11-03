@@ -44,7 +44,7 @@
               v-show="getCartItems.length > 0"
               icon
               small
-              @click.stop="clearCart()"
+              @click.stop="clearCartDialog = true"
             >
               <v-icon>mdi-cart-remove</v-icon>
             </v-btn>
@@ -114,6 +114,20 @@
         </v-btn>
       </template>
     </v-snackbar>
+    <v-dialog v-model="clearCartDialog" max-width="400" persistent>
+      <v-card>
+        <v-card-title>Clear shopping cart</v-card-title>
+        <v-card-text>
+          All items will be removed from the shopping cart. Do you want to
+          continue?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="clearCartDialog = false">Cancel</v-btn>
+          <v-btn color="error" text @click="doClearCart">Clear cart</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <OrderDetailsDialog v-model="detailsDialog" />
     <SendOrderEmailDialog
       v-model="emailDialog"
@@ -172,6 +186,7 @@ export default {
       dialog: false,
       showSummary: false,
       detailsDialog: false,
+      clearCartDialog: false,
       emailDialog: false,
       emailOrder: {},
       emailConf: { attachments: 'pdf', include_images: false },
@@ -219,6 +234,10 @@ export default {
   methods: {
     ...mapActions('saleapp/orders', ['createOrder', 'updateOrder']),
     ...mapActions('saleapp/cart', ['clearCart']),
+    doClearCart() {
+      this.clearCartDialog = false
+      this.clearCart()
+    },
     unlinkOrder() {
       this.$store.commit('saleapp/cart/SET_ORDER_ID', null)
     },
