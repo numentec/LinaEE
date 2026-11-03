@@ -27,6 +27,7 @@
                 v-model="curItem"
                 :hide-delimiters="!isMobile"
                 :show-arrows="!isMobile"
+                :continuous="false"
               >
                 <v-carousel-item v-for="(item, i) in dS" :key="i">
                   <v-img
