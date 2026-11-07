@@ -129,6 +129,8 @@ class SaleAppSettings(Common):
 
     email_include_images = models.BooleanField("Include images", default=False)
 
+    show_package_info = models.BooleanField("Show package info", default=False)
+
     @staticmethod
     def attachment_types_for(attachments):
         """Tipos de archivo (renderers de send_order_email) para una opción de adjuntos"""

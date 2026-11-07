@@ -67,6 +67,21 @@
         </v-col>
       </v-row>
 
+      <v-row>
+        <v-col cols="12">
+          <div class="text-subtitle-2">Product catalog</div>
+          <v-switch
+            v-model="conf.show_package_info"
+            inset
+            color="secondary"
+            label="Show package info"
+            hint="Displays the product package below its name in the catalog."
+            persistent-hint
+            :error-messages="errors.show_package_info"
+          />
+        </v-col>
+      </v-row>
+
       <v-row v-if="conf.modified_at" dense>
         <v-col cols="12" class="text-caption text--secondary">
           {{ conf.company_name }} · Last modified
@@ -125,6 +140,7 @@ export default {
         email_policy: 'ask',
         email_attachments: 'pdf',
         email_include_images: false,
+        show_package_info: false,
       },
       errors: {},
       snackbar: { show: false, text: '', color: '' },
@@ -190,6 +206,7 @@ export default {
             email_policy: this.conf.email_policy,
             email_attachments: this.conf.email_attachments,
             email_include_images: this.conf.email_include_images,
+            show_package_info: this.conf.show_package_info,
           },
           { params: this.ciaParams }
         )

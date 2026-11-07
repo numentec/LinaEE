@@ -107,6 +107,7 @@ class SaleAppSettingsSerializer(serializers.ModelSerializer):
         fields = (
             'company', 'company_name',
             'email_policy', 'email_attachments', 'email_include_images',
+            'show_package_info',
             'modified_at',
         )
         read_only_fields = ('company', 'modified_at')

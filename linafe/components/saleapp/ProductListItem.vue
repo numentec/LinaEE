@@ -30,6 +30,13 @@
       <v-list-item-content>
         <v-list-item-title>{{ product.id }}</v-list-item-title>
         <v-list-item-subtitle>{{ product.name }}</v-list-item-subtitle>
+        <div
+          v-if="hasPackageInfo"
+          class="package-info text--secondary"
+          :title="`Package: ${product.package}`"
+        >
+          Package: {{ product.package }}
+        </div>
         <div class="price-stock-row">
           <v-row justify="space-between" align="center" class="mx-1">
             <div class="green--text">{{ formatedPrice }}</div>
@@ -154,6 +161,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    showPackageInfo: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   data() {
@@ -191,6 +202,10 @@ export default {
     },
     cardWidth() {
       return this.isMobile ? 140 : 225
+    },
+
+    hasPackageInfo() {
+      return this.showPackageInfo && !!this.product.package
     },
 
     addedQuantity() {
@@ -318,6 +333,14 @@ export default {
 /* Vuetify sets overflow: hidden on the content wrapper, which can clip the two-line stock breakdown on iOS Safari */
 .v-list-item :deep(.v-list-item__content) {
   overflow: visible;
+}
+.package-info {
+  flex: 1 1 100%;
+  font-size: 11px;
+  line-height: 1.2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .stock-breakdown {
   display: grid;

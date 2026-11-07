@@ -51,8 +51,20 @@
               </v-chip>
             </v-row>
             <v-row dense>
-              <p class="mt-0 ml-2 product-name" :title="product.name">
+              <p
+                class="mt-0 ml-2 product-name"
+                :class="{ 'mb-0': hasPackageInfo }"
+                :title="product.name"
+              >
                 {{ product.name }}
+              </p>
+            </v-row>
+            <v-row v-if="hasPackageInfo" dense>
+              <p
+                class="mt-0 mb-0 ml-2 package-info"
+                :title="`Package: ${product.package}`"
+              >
+                Package: {{ product.package }}
               </p>
             </v-row>
           </v-card-text>
@@ -184,6 +196,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    showPackageInfo: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -222,6 +238,9 @@ export default {
       return this.isMobile ? 140 : 225
     },
 
+    hasPackageInfo() {
+      return this.showPackageInfo && !!this.product.package
+    },
     addedQuantity() {
       return this.getItemQuantityById(this.product.id)
     },
@@ -342,6 +361,15 @@ export default {
   text-align: center;
 }
 .product-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Ocupa los 16px del margin-bottom que se le quita a product-name: el card no crece */
+.package-info {
+  font-size: 11px;
+  height: 16px;
+  line-height: 16px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

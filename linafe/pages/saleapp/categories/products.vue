@@ -17,6 +17,7 @@
               v-for="item in filteredItems"
               :key="item.id"
               :product="item"
+              :show-package-info="showPackageInfo"
               @click="loadSlideshow"
             />
           </v-list>
@@ -26,6 +27,7 @@
             v-for="item in filteredItems"
             :key="item.id"
             :product="item"
+            :show-package-info="showPackageInfo"
             @click="loadSlideshow"
           />
 
@@ -418,6 +420,7 @@ export default {
       descripFailed: false,
       descripRequestId: 0,
       descripTimer: null,
+      showPackageInfo: false,
     }
   },
 
@@ -567,6 +570,8 @@ export default {
     // Agregar event listener para infinite scroll
     window.addEventListener('scroll', this.handleScroll)
     window.addEventListener('resize', this.handleResize)
+
+    this.loadSaleAppSettings()
   },
 
   beforeDestroy() {
@@ -584,6 +589,17 @@ export default {
       'fetchProducts',
       'fetchProductSuggestions',
     ]),
+
+    async loadSaleAppSettings() {
+      try {
+        const conf = await this.$store.dispatch(
+          'saleapp/orders/fetchSaleAppSettings'
+        )
+        this.showPackageInfo = !!conf.show_package_info
+      } catch (error) {
+        console.error('Error loading SaleApp settings:', error)
+      }
+    },
 
     openStockFilters() {
       this.stockFilterDraft = cloneStockFilters(this.getStockFilters)

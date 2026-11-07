@@ -9,7 +9,7 @@ class ExtOrderItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'extorder', 'sku', 'name', 'quantity', 'price', 'total')
 
 class SaleAppSettingsAdmin(admin.ModelAdmin):
-    list_display = ('company', 'email_policy', 'email_attachments', 'email_include_images', 'modified_at')
+    list_display = ('company', 'email_policy', 'email_attachments', 'email_include_images', 'show_package_info', 'modified_at')
 
 
 admin.site.register(models.ExtOrderMaster, ExtOrderMasterAdmin)
