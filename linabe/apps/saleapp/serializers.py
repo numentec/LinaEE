@@ -118,12 +118,25 @@ class PublicOrderSerializer(serializers.ModelSerializer):
     No expone datos de contacto del cliente ni campos internos.
     """
     items = PublicOrderItemSerializer(many=True, read_only=True)
+    seller = serializers.SerializerMethodField()
 
     class Meta:
         model = ExtOrderMaster
         fields = ['id', 'name', 'customer_name', 'delivery_to', 'carrier_tag', 'status',
-                  'total', 'created_at', 'modified_at', 'public_token_expires_at', 'items']
+                  'total', 'created_at', 'modified_at', 'public_token_expires_at', 'items',
+                  'seller']
         read_only_fields = fields
+
+    def get_seller(self, obj):
+        """Contacto del vendedor (nombre, email y teléfono), o None si no hay."""
+        user = obj.created_by
+        if user is None:
+            return None
+        return {
+            'name': user.get_full_name() or user.username,
+            'email': user.email or '',
+            'phone': getattr(user, 'tel1', '') or '',
+        }
 
 
 class SaleAppSettingsSerializer(serializers.ModelSerializer):

@@ -78,7 +78,14 @@
 
       <v-row>
         <v-col cols="12" md="4" order-md="2">
-          <OrderSummary :cur-order="order" hide-controls outlined />
+          <OrderSummary
+            :cur-order="order"
+            hide-controls
+            public-view
+            outlined
+            @copied="notify('Copiado al portapapeles', 'success')"
+            @copy-error="notify('No se pudo copiar', 'error')"
+          />
         </v-col>
         <v-col cols="12" md="8" order-md="1">
           <OrderCard v-for="item in order.items" :key="item.id" :item="item" />

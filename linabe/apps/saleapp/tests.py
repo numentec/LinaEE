@@ -492,7 +492,7 @@ class PublicOrderLinkTests(TestCase):
 		cache.clear()  # contadores del throttle
 		Cia.objects.create(codigo='T1', nombre='Test Cia', default=True)
 		self.user = get_user_model().objects.create_user(
-			'sale', 'sale@x.com', 'pw', first_name='Ana', last_name='Venta'
+			'sale', 'sale@x.com', 'pw', first_name='Ana', last_name='Venta', tel1='555-1234'
 		)
 		self.client = APIClient()
 		self.client.force_authenticate(self.user)
@@ -583,8 +583,9 @@ class PublicOrderLinkTests(TestCase):
 		self.assertIn('noindex', response['X-Robots-Tag'])
 		self.assertEqual(set(response.data), {
 			'id', 'name', 'customer_name', 'delivery_to', 'carrier_tag', 'status',
-			'total', 'created_at', 'modified_at', 'public_token_expires_at', 'items',
+			'total', 'created_at', 'modified_at', 'public_token_expires_at', 'items', 'seller',
 		})
+		self.assertEqual(response.data['seller'], {'name': 'Ana Venta', 'email': 'sale@x.com', 'phone': '555-1234'})
 		self.assertEqual(set(response.data['items'][0]), {'id', 'sku', 'name', 'quantity', 'price', 'image'})
 		self.assertNotIn('secret', json.dumps(response.data, default=str).lower())
 
@@ -655,6 +656,7 @@ class PublicOrderLinkTests(TestCase):
 		order = self.create_order()
 		order.created_by = None
 		order.save()
+		self.assertIsNone(self.anon.get(self.public_url(order)).data['seller'])
 		response = self.anon.get(self.public_url(order, 'pdf/'))
 		self.assertEqual(response.status_code, 200)
 		self.assertTrue(response.content.startswith(b'%PDF'))

@@ -65,8 +65,11 @@
 
       <v-divider class="my-3"></v-divider>
 
-      <!-- Fechas -->
-      <div class="d-flex justify-space-between align-center mb-1">
+      <!-- Fechas (en la vista pública solo la fecha de modificación) -->
+      <div
+        v-if="!publicView"
+        class="d-flex justify-space-between align-center mb-1"
+      >
         <span>
           <v-icon small class="mr-1">mdi-calendar-plus</v-icon>
           Created
@@ -75,8 +78,10 @@
       </div>
       <div class="d-flex justify-space-between align-center">
         <span>
-          <v-icon small class="mr-1">mdi-calendar-edit</v-icon>
-          Last modified
+          <v-icon small class="mr-1">
+            {{ publicView ? 'mdi-calendar' : 'mdi-calendar-edit' }}
+          </v-icon>
+          {{ publicView ? 'Date' : 'Last modified' }}
         </span>
         <span class="text--primary">
           {{ formatDateTime(curOrder.modified_at) }}
@@ -122,6 +127,65 @@
           </v-row>
         </v-col>
       </v-row>
+
+      <!-- Vendedor (vista pública): datos de contacto en un globo -->
+      <template v-if="publicView && seller">
+        <v-divider class="my-3"></v-divider>
+        <div class="d-flex justify-space-between align-center">
+          <span>
+            <v-icon small class="mr-1">mdi-account-tie-outline</v-icon>
+            Seller
+          </span>
+          <v-menu
+            v-model="sellerMenu"
+            :close-on-content-click="false"
+            offset-y
+            left
+            max-width="320"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <span class="seller-name text--primary" v-bind="attrs" v-on="on">
+                {{ seller.name }}
+                <v-icon small color="primary" class="ml-1">
+                  mdi-information-outline
+                </v-icon>
+              </span>
+            </template>
+            <v-card>
+              <v-list dense>
+                <v-subheader>{{ seller.name }}</v-subheader>
+                <v-list-item v-for="row in sellerContacts" :key="row.key">
+                  <v-list-item-icon class="mr-3">
+                    <v-icon small>{{ row.icon }}</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-content>
+                    <v-list-item-title>{{ row.value }}</v-list-item-title>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-btn
+                      icon
+                      small
+                      :title="`Copy ${row.label}`"
+                      @click="copy(row)"
+                    >
+                      <v-icon small>
+                        {{
+                          copied === row.key ? 'mdi-check' : 'mdi-content-copy'
+                        }}
+                      </v-icon>
+                    </v-btn>
+                  </v-list-item-action>
+                </v-list-item>
+                <v-list-item v-if="!sellerContacts.length">
+                  <v-list-item-content class="text--secondary">
+                    No contact information available.
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card>
+          </v-menu>
+        </div>
+      </template>
     </v-card-text>
   </v-card>
 </template>
@@ -141,14 +205,41 @@ export default {
       type: Boolean,
       default: false,
     },
+    // Vista pública (enlace compartido): solo fecha de modificación y contacto del vendedor
+    publicView: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       loading: false,
+      sellerMenu: false,
+      copied: '',
     }
   },
 
   computed: {
+    seller() {
+      return this.curOrder.seller || null
+    },
+    sellerContacts() {
+      if (!this.seller) return []
+      return [
+        {
+          key: 'email',
+          label: 'email',
+          icon: 'mdi-email-outline',
+          value: this.seller.email,
+        },
+        {
+          key: 'phone',
+          label: 'phone',
+          icon: 'mdi-phone-outline',
+          value: this.seller.phone,
+        },
+      ].filter((row) => row.value)
+    },
     formatedPrice() {
       return Number(this.curOrder.total).toLocaleString('es-US', {
         style: 'currency',
@@ -158,6 +249,18 @@ export default {
   },
 
   methods: {
+    async copy(row) {
+      try {
+        await navigator.clipboard.writeText(row.value)
+        this.copied = row.key
+        setTimeout(() => {
+          if (this.copied === row.key) this.copied = ''
+        }, 1500)
+        this.$emit('copied', row.label)
+      } catch (error) {
+        this.$emit('copy-error', row.label)
+      }
+    },
     formatDate(value) {
       if (!value) return '—'
       return new Date(value).toLocaleDateString()
@@ -176,6 +279,11 @@ export default {
 <style scoped>
 .customer-info {
   min-width: 0;
+}
+.seller-name {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 }
 .custom-loader {
   animation: loader 1s infinite;
