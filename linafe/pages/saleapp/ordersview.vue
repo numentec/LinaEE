@@ -143,6 +143,13 @@
                 </v-list-item>
               </v-list-group>
 
+              <v-list-item v-show="!isListView" @click="openPublicLinkDialog">
+                <v-list-item-title>Public link</v-list-item-title>
+                <v-list-item-icon>
+                  <v-icon>mdi-link-variant</v-icon>
+                </v-list-item-icon>
+              </v-list-item>
+
               <v-list-item @click="printOrderPDF">
                 <v-list-item-title>Print</v-list-item-title>
               </v-list-item>
@@ -313,6 +320,11 @@
       @sent="onEmailSent"
       @error="onEmailError"
     />
+    <OrderPublicLinkDialog
+      v-model="publicLinkDialog"
+      :order="curOrder || {}"
+      @notify="notify"
+    />
     <v-snackbar v-model="snackbar" timeout="3000" :color="snackbarColor" dark>
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -335,6 +347,7 @@ import OrderCard from '@/components/saleapp/OrderCard.vue'
 import OrderListItem from '@/components/saleapp/OrderListItem.vue'
 import OrderSummary from '@/components/saleapp/OrderSummary.vue'
 import SendOrderEmailDialog from '@/components/saleapp/SendOrderEmailDialog.vue'
+import OrderPublicLinkDialog from '@/components/saleapp/OrderPublicLinkDialog.vue'
 import html2pdf from 'html2pdf.js'
 import { ORDER_STATUSES } from '@/utils/orderStatus'
 
@@ -365,6 +378,7 @@ export default {
     OrderSummary,
     OrderListItem,
     SendOrderEmailDialog,
+    OrderPublicLinkDialog,
   },
 
   async asyncData({ store, error }) {
@@ -407,6 +421,7 @@ export default {
       emailDialog: false,
       emailOrder: {},
       emailConf: { attachments: 'pdf', include_images: false },
+      publicLinkDialog: false,
     }
   },
   computed: {
@@ -708,6 +723,17 @@ export default {
 
       this.emailOrder = order
       this.emailDialog = true
+    },
+    // Enlace público de solo lectura de la orden actual
+    openPublicLinkDialog() {
+      this.vmenu = false
+      if (!this.curOrder?.id) return
+      this.publicLinkDialog = true
+    },
+    notify(text, color = 'info') {
+      this.snackbarText = text
+      this.snackbarColor = color
+      this.snackbar = true
     },
     onEmailSent() {
       this.snackbarColor = 'success'

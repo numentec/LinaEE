@@ -85,6 +85,15 @@ export const mutations = {
 
     updateOrderState(state.orders)
   },
+  // Actualiza los datos del enlace público de una orden cargada
+  UPDATE_ORDER_PUBLIC_LINK(state, { id, link }) {
+    const order = state.orders.find((order) => order.id === id)
+    if (order) {
+      order.public_token = link.public_token
+      order.public_token_expires_at = link.public_token_expires_at
+      updateOrderState(state.orders)
+    }
+  },
   UPDATE_ORDER_STATUS(state, { id, status }) {
     const order = state.orders.find((order) => order.id === id)
     if (order) {
@@ -218,6 +227,41 @@ export const actions = {
       commit('SET_ISLOADING')
       throw error
     }
+  },
+
+  // Crea el enlace público de la orden o renueva su vigencia
+  async issuePublicLink({ commit }, orderid) {
+    const link = await this.$axios.$post(
+      `saleapp/extorder/${orderid}/public-link/`
+    )
+    commit('UPDATE_ORDER_PUBLIC_LINK', { id: orderid, link })
+    return link
+  },
+
+  // Revoca el enlace público de la orden
+  async revokePublicLink({ commit }, orderid) {
+    const link = await this.$axios.$delete(
+      `saleapp/extorder/${orderid}/public-link/`
+    )
+    commit('UPDATE_ORDER_PUBLIC_LINK', { id: orderid, link })
+    return link
+  },
+
+  // Descargas del enlace público (sin login). No modifican el estado del store.
+  async publicPdfDownload(_, { token, orderid }) {
+    await downloadOrderFile(this.$axios, {
+      url: `saleapp/public/orders/${token}/pdf/`,
+      type: 'application/pdf',
+      filename: `order_${orderid}.pdf`,
+    })
+  },
+
+  async publicXlsxDownload(_, { token, orderid }) {
+    await downloadOrderFile(this.$axios, {
+      url: `saleapp/public/orders/${token}/xlsx/`,
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      filename: `order_${orderid}.xlsx`,
+    })
   },
 
   async updateOrderStatus({ commit }, payload) {

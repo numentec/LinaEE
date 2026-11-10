@@ -154,7 +154,10 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
-        'user': '1000/day'
+        'user': '1000/day',
+        # Enlace público de órdenes (sin login)
+        'public_order': '120/hour',
+        'public_order_download': '30/hour',
     },
     'DEFAULT_PAGINATION_CLASS': 'apps.core.pagination.HeaderLimitOffsetPagination',
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
@@ -241,6 +244,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 FRONTEND_BASE_URL = environ.get("FRONTEND_BASE_URL", "http://linafe:3001/")
 BACKEND_BASE_URL = environ.get("BACKEND_BASE_URL", "http://linabe:8001/")
 BACKEND_PUBLIC_URL = environ.get("BACKEND_PUBLIC_URL", "http://localhost:8001/")
+
+# Vigencia (días) del enlace público de una orden
+SALEAPP_PUBLIC_LINK_TTL_DAYS = int(environ.get("SALEAPP_PUBLIC_LINK_TTL_DAYS", 15))
 
 # IPWARE_META_PRECEDENCE_ORDER = (
 #     'HTTP_X_FORWARDED_FOR', 'X_FORWARDED_FOR',  # <client>, <proxy1>, <proxy2>

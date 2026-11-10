@@ -10,7 +10,7 @@
           contain
           :lazy-src="lazySrc"
           @error="onImgError"
-          @load="addImage({ id: item.id, url: imgSrc })"
+          @load="onImgLoad"
         ></v-img>
       </v-col>
       <v-col sm="8" md="6" align-self="stretch">
@@ -147,6 +147,12 @@ export default {
 
   methods: {
     ...mapActions('saleapp/products', ['addImage']),
+
+    // Solo se guarda en caché la foto real, no el marcador de "sin imagen"
+    onImgLoad() {
+      if (this.imgError) return
+      this.addImage({ id: this.item.id, url: this.imgSrc })
+    },
 
     onImgError() {
       this.imgError = true

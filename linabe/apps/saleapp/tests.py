@@ -477,3 +477,204 @@ class SaleAppEmailSettingsTests(TestCase):
 			order.id, print_images='0', file_types=['pdf'], to=['a@x.com', 'b@x.com'],
 			user_email='sale@x.com',
 		)
+
+
+class PublicOrderLinkTests(TestCase):
+	"""Enlace público de solo lectura de una orden."""
+
+	def setUp(self):
+		from django.contrib.auth import get_user_model
+		from django.core.cache import cache
+		from rest_framework.test import APIClient
+
+		from ..core.models import Cia
+
+		cache.clear()  # contadores del throttle
+		Cia.objects.create(codigo='T1', nombre='Test Cia', default=True)
+		self.user = get_user_model().objects.create_user(
+			'sale', 'sale@x.com', 'pw', first_name='Ana', last_name='Venta'
+		)
+		self.client = APIClient()
+		self.client.force_authenticate(self.user)
+		self.anon = APIClient()
+
+	def create_order(self, **extra):
+		payload = {
+			'customer_id': 'CID-777',
+			'customer_name': 'Cliente',
+			'customer_email': 'cli@secret.com',
+			'customer_cel': '555-SECRET',
+			'items': [{'sku': 'A1', 'name': 'Mesa', 'quantity': 2, 'price': '10.00'}],
+		}
+		payload.update(extra)
+		response = self.client.post('/linapi/saleapp/extorder/', payload, format='json')
+		self.assertEqual(response.status_code, 201, response.data)
+		from .models import ExtOrderMaster
+		return ExtOrderMaster.objects.get(pk=response.data['id'])
+
+	def public_url(self, order, suffix=''):
+		return f'/linapi/saleapp/public/orders/{order.public_token}/{suffix}'
+
+	def test_token_issued_on_create_with_ttl(self):
+		from datetime import timedelta
+		from django.utils import timezone
+		from .models import ExtOrderMaster
+
+		order = self.create_order(public_token='hacked', public_token_expires_at='2099-01-01T00:00:00Z')
+		self.assertTrue(order.public_token)
+		self.assertNotEqual(order.public_token, 'hacked')
+		delta = order.public_token_expires_at - timezone.now()
+		self.assertTrue(timedelta(days=14, hours=23) < delta <= timedelta(days=15))
+
+		response = self.client.post('/linapi/saleapp/extorderonly/', {'customer_name': 'X'}, format='json')
+		self.assertEqual(response.status_code, 201)
+		self.assertTrue(ExtOrderMaster.objects.get(pk=response.data['id']).public_token)
+
+	def test_client_cannot_overwrite_token(self):
+		order = self.create_order()
+		token = order.public_token
+		self.client.patch(
+			f'/linapi/saleapp/extorderonly/{order.id}/', {'public_token': 'x', 'name': 'N'}, format='json'
+		)
+		order.refresh_from_db()
+		self.assertEqual(order.public_token, token)
+		self.assertEqual(order.name, 'N')
+
+	def test_revoke_survives_later_save_and_renew_rotates(self):
+		order = self.create_order()
+		url = f'/linapi/saleapp/extorder/{order.id}/public-link/'
+		old_token = order.public_token
+
+		self.assertEqual(self.client.delete(url).status_code, 200)
+		order.refresh_from_db()
+		order.save()
+		order.refresh_from_db()
+		self.assertIsNone(order.public_token)
+		self.assertEqual(self.anon.get(f'/linapi/saleapp/public/orders/{old_token}/').status_code, 404)
+
+		response = self.client.post(url)
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(response.data['public_token'])
+		self.assertNotEqual(response.data['public_token'], old_token)
+
+	def test_renew_keeps_token_and_extends_expiry(self):
+		from datetime import timedelta
+		from django.utils import timezone
+
+		order = self.create_order()
+		order.public_token_expires_at = timezone.now() - timedelta(days=1)
+		order.save()
+		response = self.client.post(f'/linapi/saleapp/extorder/{order.id}/public-link/')
+		self.assertEqual(response.data['public_token'], order.public_token)
+		self.assertGreater(response.data['public_token_expires_at'], timezone.now() + timedelta(days=14))
+
+	def test_link_management_requires_login(self):
+		order = self.create_order()
+		response = self.anon.post(f'/linapi/saleapp/extorder/{order.id}/public-link/')
+		self.assertEqual(response.status_code, 401)
+
+	def test_public_view_with_stale_auth_header(self):
+		order = self.create_order()
+		self.anon.credentials(HTTP_AUTHORIZATION='Token stale-invalid-token')
+		response = self.anon.get(self.public_url(order))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response['Cache-Control'], 'no-store')
+		self.assertIn('noindex', response['X-Robots-Tag'])
+		self.assertEqual(set(response.data), {
+			'id', 'name', 'customer_name', 'delivery_to', 'carrier_tag', 'status',
+			'total', 'created_at', 'modified_at', 'public_token_expires_at', 'items',
+		})
+		self.assertEqual(set(response.data['items'][0]), {'id', 'sku', 'name', 'quantity', 'price', 'image'})
+		self.assertNotIn('secret', json.dumps(response.data, default=str).lower())
+
+	def test_unknown_inactive_expired_and_cancelled(self):
+		from datetime import timedelta
+		from django.utils import timezone
+
+		self.assertEqual(self.anon.get('/linapi/saleapp/public/orders/nope/').status_code, 404)
+
+		order = self.create_order()
+		self.assertEqual(self.anon.get(self.public_url(order).upper()).status_code, 404)
+
+		order.is_active = False
+		order.save()
+		self.assertEqual(self.anon.get(self.public_url(order)).status_code, 404)
+
+		order.is_active = True
+		order.public_token_expires_at = timezone.now() - timedelta(seconds=1)
+		order.save()
+		response = self.anon.get(self.public_url(order))
+		self.assertEqual(response.status_code, 410)
+		self.assertEqual(response.data['code'], 'expired')
+
+		order.public_token_expires_at = timezone.now() + timedelta(days=1)
+		order.status = 'cancelled'
+		order.save()
+		for suffix in ('', 'pdf/', 'xlsx/'):
+			response = self.anon.get(self.public_url(order, suffix))
+			self.assertEqual(response.status_code, 410)
+			self.assertEqual(response.data['code'], 'cancelled')
+
+		response = self.client.post(f'/linapi/saleapp/extorder/{order.id}/public-link/')
+		self.assertEqual(response.status_code, 400)
+
+	def test_throttle(self):
+		from rest_framework.throttling import ScopedRateThrottle
+
+		order = self.create_order()
+		rates = dict(ScopedRateThrottle.THROTTLE_RATES, public_order='2/min')
+		with patch.object(ScopedRateThrottle, 'THROTTLE_RATES', rates):
+			codes = [self.anon.get(self.public_url(order)).status_code for _ in range(3)]
+		self.assertEqual(codes, [200, 200, 429])
+
+	@patch('apps.saleapp.utils.HTML')
+	def test_public_pdf_hides_contact_and_ignores_print_images(self, html):
+		order = self.create_order()
+		response = self.anon.get(self.public_url(order, 'pdf/') + '?print_images=file:///etc')
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response['Content-Type'], 'application/pdf')
+		rendered = html.call_args.kwargs['string']
+		for secret in ('cli@secret.com', '555-SECRET', 'CID-777', '/etc', 'img src'):
+			self.assertNotIn(secret, rendered)
+		self.assertIn('Cliente', rendered)
+		self.assertIn('sale@x.com', rendered)
+
+	@patch('apps.saleapp.utils.HTML')
+	def test_private_pdf_only_accepts_print_images_flag(self, html):
+		from .utils import render_order_pdf
+
+		order = self.create_order()
+		render_order_pdf(order, print_images='http://evil/x')
+		self.assertNotIn('evil', html.call_args.kwargs['string'])
+		render_order_pdf(order, print_images='1')
+		self.assertIn('fotos/A1.jpg', html.call_args.kwargs['string'])
+
+	def test_real_pdf_with_null_seller(self):
+		order = self.create_order()
+		order.created_by = None
+		order.save()
+		response = self.anon.get(self.public_url(order, 'pdf/'))
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(response.content.startswith(b'%PDF'))
+
+	def test_public_xlsx_hides_contact(self):
+		from io import BytesIO
+		from openpyxl import load_workbook
+
+		order = self.create_order()
+		response = self.anon.get(self.public_url(order, 'xlsx/'))
+		self.assertEqual(response.status_code, 200)
+
+		ws = load_workbook(BytesIO(response.content)).active
+		values = {str(c.value) for row in ws.iter_rows() for c in row if c.value is not None}
+		self.assertIn('Cliente', values)
+		self.assertIn('Mesa', values)
+		for secret in ('cli@secret.com', '555-SECRET', 'CID-777 Cliente'):
+			self.assertNotIn(secret, values)
+
+	def test_preview_route_removed(self):
+		order = self.create_order()
+		response = self.anon.get(f'/linapi/saleapp/orders/{order.id}/preview/')
+		self.assertEqual(response.status_code, 404)

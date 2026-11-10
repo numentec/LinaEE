@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import secrets
 from django.conf import settings
 from django.db import connections
 from django.core.exceptions import ValidationError
@@ -15,6 +16,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import authentication, permissions
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.decorators import action
+from rest_framework.throttling import ScopedRateThrottle
 from ..core.models import SQLQuery
 from ..core.views import CommonViewSet
 from ..core.permissions import HasConfigAccess
@@ -24,14 +27,12 @@ from .serializers import (
     ExtOrderMasterOnlySerializer,
     ExtOrderItemSerializer,
     SaleAppSettingsSerializer,
+    PublicOrderSerializer,
 )
 
 from celery.result import AsyncResult
 from .tasks import task_send_welcome_email
 from django.http import JsonResponse # (Replace with APIView)
-
-from django.shortcuts import render
-from django.views import View
 
 from .tasks import send_order_email
 from .pagination_utils import paginate_stored_procedure_results
@@ -491,6 +492,29 @@ class ExtOrderMasterViewSet(viewsets.ModelViewSet):
         response.data['email'] = self.email_info
         return response
 
+    @action(detail=True, methods=['post', 'delete'], url_path='public-link')
+    def public_link(self, request, pk=None):
+        """
+        POST: crea el enlace público o renueva su vigencia.
+        DELETE: revoca el enlace (un POST posterior genera un token nuevo).
+        """
+        order = self.get_object()
+
+        if request.method == 'DELETE':
+            order.revoke_public_link()
+        else:
+            if order.status == 'cancelled':
+                return Response(
+                    {'error': 'Cancelled orders cannot be shared.', 'code': 'cancelled'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            order.issue_public_link()
+
+        return Response({
+            'public_token': order.public_token,
+            'public_token_expires_at': order.public_token_expires_at,
+        })
+
 
 class ExtOrderMasterOnlyViewSet(CommonViewSet):
     """
@@ -539,44 +563,6 @@ class GenerateOrderPDF(APIView):
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class OrderPDFPreview(View):
-    """
-    Render the order_pdf.html template in the browser for preview purposes.
-    """
-    def get(self, request, order_id):
-        # Obtener el parámetro de consulta 'print_images'
-        print_images = request.GET.get('print_images', '').strip().lower()
-
-        if print_images == '1':
-            print_images = settings.MEDIA_URL + '/fotos'
-
-        try:
-            # Obtener la orden y sus ítems
-            order = ExtOrderMaster.objects.get(id=order_id)
-
-            # Preparar los datos para la plantilla
-            items = []
-            for item in order.items.all():
-                item.line_total = round(item.quantity * item.price, 2)
-                items.append(item)
-
-            context = {
-                'order': order,
-                'order_date': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                'items': items,
-                'logo_url': '/static/images/logo.png',  # Ruta estática del logo
-                'print_images': print_images,  # Pasar el valor de print_images al contexto
-                'created_by_name': order.created_by.get_full_name() if order.created_by else "Unknown",
-                'created_by_email': order.created_by.email if order.created_by else "Unknown",
-            }
-
-            # Renderizar la plantilla en el navegador
-            return render(request, 'saleapp/order_pdf.html', context)
-
-        except ExtOrderMaster.DoesNotExist:
-            return render(request, 'saleapp/order_not_found.html', {'order_id': order_id})
-
-
 class GenerateOrderCSV(APIView):
     """
     Generate a csv for an order.
@@ -623,6 +609,96 @@ class GenerateOrderXLSX(APIView):
 
         except ExtOrderMaster.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class PublicOrderBaseView(APIView):
+    """
+    Base para el enlace público de una orden (sin login).
+    - Sin autenticación: un token de sesión vencido en el navegador no debe provocar un 401.
+    - Throttle propio por IP.
+    - 404 si el token no existe o la orden está inactiva; 410 si el enlace venció
+      o la orden fue cancelada.
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'public_order'
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        response['Cache-Control'] = 'no-store'
+        response['X-Robots-Tag'] = 'noindex, nofollow'
+        response['Referrer-Policy'] = 'no-referrer'
+        return response
+
+    def get_public_order(self, token):
+        """Devuelve (orden, None) o (None, Response de error)."""
+        not_found = Response({'error': 'Order not found', 'code': 'not_found'},
+                             status=status.HTTP_404_NOT_FOUND)
+
+        order = (
+            ExtOrderMaster.objects
+            .filter(public_token=token, is_active=True)
+            .prefetch_related('items')
+            .select_related('created_by')
+            .first()
+        )
+        # La comparación de la BD puede ignorar mayúsculas según la collation
+        if order is None or not secrets.compare_digest(order.public_token, token):
+            return None, not_found
+
+        if order.status == 'cancelled':
+            return None, Response({'error': 'Order cancelled', 'code': 'cancelled'},
+                                  status=status.HTTP_410_GONE)
+
+        if order.public_link_expired:
+            return None, Response({'error': 'Link expired', 'code': 'expired'},
+                                  status=status.HTTP_410_GONE)
+
+        return order, None
+
+
+class PublicOrderView(PublicOrderBaseView):
+    """Orden en solo lectura por su token público."""
+
+    def get(self, request, token):
+        order, error = self.get_public_order(token)
+        if error:
+            return error
+        return Response(PublicOrderSerializer(order).data)
+
+
+class PublicOrderPDF(PublicOrderBaseView):
+    """PDF público de la orden (sin imágenes y sin datos de contacto del cliente)."""
+    throttle_scope = 'public_order_download'
+
+    def get(self, request, token):
+        order, error = self.get_public_order(token)
+        if error:
+            return error
+
+        pdf_file = render_order_pdf(order, print_images='', public=True)
+        response = HttpResponse(pdf_file.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="Order_{order.id}.pdf"'
+        return response
+
+
+class PublicOrderXLSX(PublicOrderBaseView):
+    """Excel público de la orden (con miniaturas y sin datos de contacto del cliente)."""
+    throttle_scope = 'public_order_download'
+
+    def get(self, request, token):
+        order, error = self.get_public_order(token)
+        if error:
+            return error
+
+        xlsx_file = render_order_xlsx(order, print_images=True, public=True)
+        response = HttpResponse(
+            xlsx_file.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="Order_{order.id}.xlsx"'
+        return response
 
 
 class SendOrderPDFEmail(APIView):

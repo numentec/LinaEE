@@ -27,7 +27,8 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtOrderMaster
         fields = '__all__'
-        read_only_fields = ('id', 'created_at', 'created_by', 'modified_by')
+        read_only_fields = ('id', 'created_at', 'created_by', 'modified_by',
+                            'public_token', 'public_token_expires_at')
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
@@ -88,13 +89,41 @@ class ExtOrderMasterOnlySerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtOrderMaster
         fields = '__all__'
-        read_only_fields = ('id', 'created_at', 'created_by')
+        read_only_fields = ('id', 'created_at', 'created_by',
+                            'public_token', 'public_token_expires_at')
 
     def validate(self, attrs):
         # Una orden cancelada no se puede modificar
         if self.instance and self.instance.status == 'cancelled':
             raise serializers.ValidationError('Cancelled orders cannot be modified.')
         return attrs
+
+
+class PublicOrderItemSerializer(serializers.ModelSerializer):
+    """Items de una orden para el enlace público (lista explícita de campos)."""
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExtOrderItem
+        fields = ['id', 'sku', 'name', 'quantity', 'price', 'image']
+        read_only_fields = fields
+
+    def get_image(self, obj):
+        return f"{obj.sku}.jpg"
+
+
+class PublicOrderSerializer(serializers.ModelSerializer):
+    """
+    Orden para el enlace público (sin login).
+    No expone datos de contacto del cliente ni campos internos.
+    """
+    items = PublicOrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ExtOrderMaster
+        fields = ['id', 'name', 'customer_name', 'delivery_to', 'carrier_tag', 'status',
+                  'total', 'created_at', 'modified_at', 'public_token_expires_at', 'items']
+        read_only_fields = fields
 
 
 class SaleAppSettingsSerializer(serializers.ModelSerializer):

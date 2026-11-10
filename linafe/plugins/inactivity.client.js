@@ -4,6 +4,8 @@
 const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000 // 60 minutos de inactividad
 const CHECK_INTERVAL_MS = 60 * 1000 // Comprobación cada 1 minuto
 const ACTIVITY_STORAGE_KEY = 'lina_last_activity'
+// Páginas públicas: se cierra la sesión pero no se redirige al login
+const NO_REDIRECT_PATHS = ['/portal/shared-order']
 
 export default (context) => {
   if (!process.client) return
@@ -65,7 +67,12 @@ export default (context) => {
       (window.location && window.location.pathname) ||
       '/'
 
-    if (!currentPath.startsWith('/login')) {
+    const livePath = (window.location && window.location.pathname) || ''
+    const isPublicPage = NO_REDIRECT_PATHS.some((prefix) =>
+      livePath.startsWith(prefix)
+    )
+
+    if (!currentPath.startsWith('/login') && !isPublicPage) {
       if (typeof redirect === 'function') {
         redirect(`/login?redirect=${encodeURIComponent(currentPath)}`)
       } else if (window.location) {

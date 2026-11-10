@@ -40,6 +40,11 @@ export default function ({ $axios }, inject) {
     getPublicCatalog(token) {
       return $axios.$get(`catalog/api/public/catalogs/${token}/`)
     },
+
+    // retrive one order (read only) by its public token
+    getPublicOrder(token) {
+      return $axios.$get(`saleapp/public/orders/${token}/`)
+    },
   }
 
   inject('api', api)

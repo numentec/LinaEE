@@ -3,7 +3,8 @@ from apps.saleapp import models
 
 # Register your models here.
 class ExtOrderMasterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'created_at', 'created_by', 'source', 'customer_name', 'total')
+    list_display = ('id', 'created_at', 'created_by', 'source', 'customer_name', 'total', 'public_token_expires_at')
+    readonly_fields = ('public_token', 'public_token_expires_at')
 
 class ExtOrderItemAdmin(admin.ModelAdmin):
     list_display = ('id', 'extorder', 'sku', 'name', 'quantity', 'price', 'total')

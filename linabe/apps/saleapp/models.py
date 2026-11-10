@@ -1,5 +1,10 @@
+import secrets
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 # from crum import get_current_user
 from ..core.models import Common, Cia
 
@@ -49,10 +54,44 @@ class ExtOrderMaster(Common):
     status = models.CharField("Status", max_length=10, choices=STATUS_CHOICES, default='pending')
     notes = models.TextField("Notes", blank=True, null=True)
 
+    # Enlace público de solo lectura (token secreto + fecha de vencimiento)
+    public_token = models.CharField(
+        "Public token", max_length=64, null=True, blank=True, unique=True, editable=False
+    )
+    public_token_expires_at = models.DateTimeField(
+        "Public token expires at", null=True, blank=True, editable=False
+    )
+
     def save(self, *args, **kwargs):
         if not self.sendto:  # Si sendto está vacío o es None
             self.sendto = self.customer_email
+        # Solo al crear: así un guardado posterior no deshace una revocación
+        if self._state.adding and not self.public_token:
+            self._set_public_link()
         super(ExtOrderMaster, self).save(*args, **kwargs)
+
+    @staticmethod
+    def public_link_ttl():
+        return timedelta(days=getattr(settings, 'SALEAPP_PUBLIC_LINK_TTL_DAYS', 15))
+
+    def _set_public_link(self):
+        if not self.public_token:
+            self.public_token = secrets.token_urlsafe(32)
+        self.public_token_expires_at = timezone.now() + self.public_link_ttl()
+
+    def issue_public_link(self):
+        """Crea el enlace público o renueva su vigencia (conserva el token si existe)."""
+        self._set_public_link()
+        self.save(update_fields=['public_token', 'public_token_expires_at'])
+
+    def revoke_public_link(self):
+        self.public_token = None
+        self.public_token_expires_at = None
+        self.save(update_fields=['public_token', 'public_token_expires_at'])
+
+    @property
+    def public_link_expired(self):
+        return bool(self.public_token_expires_at and self.public_token_expires_at <= timezone.now())
 
     # def save(self, *args, **kwargs):
     #     user = get_current_user()

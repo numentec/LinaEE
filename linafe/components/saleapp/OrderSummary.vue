@@ -3,7 +3,11 @@
     <v-toolbar dense flat rounded>
       <v-card-title>Order Summary</v-card-title>
       <v-spacer />
-      <v-btn icon @click.stop="$emit('resend-mail', curOrder)">
+      <v-btn
+        v-if="!hideControls"
+        icon
+        @click.stop="$emit('resend-mail', curOrder)"
+      >
         <v-icon>mdi-share-variant-outline</v-icon>
       </v-btn>
     </v-toolbar>

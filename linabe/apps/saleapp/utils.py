@@ -10,17 +10,20 @@ from PIL import Image as PILImage
 import os
 import csv
 
-def render_order_pdf(order, print_images=''):
+def render_order_pdf(order, print_images='', public=False):
+    """
+    Genera el PDF de la orden.
+    print_images: solo '1' incluye las fotos (leídas del disco); cualquier otro valor las omite.
+    public: omite los datos de contacto del cliente (enlace público).
+    """
     logo_path = os.path.join(settings.STATICFILES_DIRS[0], 'images', 'logo.png')
     logo_url = f'file://{logo_path}'
 
-    # print('***** ORDER ****')
-    # for attr, value in vars(order).items():
-    #     print(f'{attr}: {value}')
-
-    if print_images == '1':
-        print_images = os.path.join(settings.MEDIA_ROOT, 'fotos')
-        print_images = f'file://{print_images}'
+    # Nunca se usa el valor recibido como ruta: evita que WeasyPrint lea URLs arbitrarias
+    if str(print_images).strip() == '1':
+        print_images = f"file://{os.path.join(settings.MEDIA_ROOT, 'fotos')}"
+    else:
+        print_images = ''
 
     styles = CSS(settings.STATICFILES_DIRS[0] + '/css/bootstrap.min.css')
 
@@ -31,6 +34,8 @@ def render_order_pdf(order, print_images=''):
 
         items.append(item)
 
+    created_by = order.created_by
+
     # Renderizar la plantilla HTML con los datos de la orden
     html_string = render_to_string('saleapp/order_pdf.html', {
         'order': order,
@@ -38,9 +43,10 @@ def render_order_pdf(order, print_images=''):
         'items': items,
         'logo_url': logo_url,
         'print_images': print_images,
-        'created_by_name': order.created_by.get_full_name(),
-        'created_by_email': order.created_by.email,
-    }) #.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+        'public': public,
+        'created_by_name': created_by.get_full_name() if created_by else '',
+        'created_by_email': created_by.email if created_by else '',
+    })
 
     # Crear un objeto BytesIO para almacenar el PDF
     pdf_file = BytesIO()
@@ -145,7 +151,8 @@ def _xlsx_logo():
         return None
 
 
-def render_order_xlsx(order, print_images=True):
+def render_order_xlsx(order, print_images=True, public=False):
+    """public: omite los datos de contacto del cliente (enlace público)."""
     wb = Workbook()
     ws = wb.active
     ws.title = f'Order {order.id}'
@@ -166,9 +173,15 @@ def render_order_xlsx(order, print_images=True):
     info = [
         ('Order #', order.id),
         ('Date', order.modified_at.strftime('%Y-%m-%d %H:%M:%S')),
-        ('Customer', f'{order.customer_id} {order.customer_name or ""}'.strip()),
-        ('e-mail', order.sendto),
-        ('Phone', order.customer_cel),
+        ('Customer', (order.customer_name or '') if public
+            else f'{order.customer_id} {order.customer_name or ""}'.strip()),
+    ]
+    if not public:
+        info += [
+            ('e-mail', order.sendto),
+            ('Phone', order.customer_cel),
+        ]
+    info += [
         ('Seller', created_by.get_full_name() if created_by else ''),
         ('Status', order.get_status_display()),
         ('Delivery To', order.delivery_to),

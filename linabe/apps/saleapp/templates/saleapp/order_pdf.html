@@ -49,10 +49,14 @@
     <section>
         <div class="row">
             <div class="col-6">
+                {% if public %}
+                <p style="margin-bottom: 4px;"><strong>Customer:</strong> {{ order.customer_name }}</p>
+                {% else %}
                 <p style="margin-bottom: 4px;"><strong>Customer:</strong> {{ order.customer_id }} {{ order.customer_name }}</p>
                 <!-- <p style="margin-bottom: 4px;"><strong>Address:</strong> Carr. Norte, Managua, Nicaragua</p> -->
                 <p style="margin-bottom: 4px;"><strong>e-mail:</strong> {{ order.sendto }}</p>
                 <p><strong>Phone:</strong> {{ order.customer_cel }}</p>
+                {% endif %}
             </div>
             <div class="col-6">
                 <p style="margin-bottom: 4px;"><strong>Delivery to:</strong> {{ order.delivery_to }}</p>
@@ -108,9 +112,11 @@
                 <div class="row">
                     <div class="col">
                         <p>Total items: {{ items|length }}</p>
+                        {% if created_by_email %}
                         <p style="font-size: 12px;">
                             For questions, please contact your salesperson at {{ created_by_email }}
                         </p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
