@@ -8,6 +8,7 @@ from celery.signals import task_postrun
 from .consumers import notify_channel_layer
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
+from django.utils import timezone
 
 from apps.core.models import EmailSettings
 from .models import ExtOrderMaster
@@ -34,9 +35,25 @@ def task_postrun_handler(task_id, **kwargs):
     notify_channel_layer(task_id)
 
 
+def order_email_body(order, has_attachments, link_url=None):
+    """Cuerpo del correo de la orden: adjuntos y/o enlace público"""
+    lines = [f"Dear {order.customer_name},", ""]
+    if has_attachments:
+        lines.append(f"Please find attached the details of your order #{order.id}.")
+    if link_url:
+        if has_attachments:
+            lines.append("")
+        lines.append(f"You can view and download your order #{order.id} online at:")
+        lines.append(link_url)
+        if order.public_token_expires_at:
+            expires = timezone.localtime(order.public_token_expires_at)
+            lines.append(f"This link is valid until {expires:%Y-%m-%d %H:%M}.")
+    return "\n".join(lines)
+
+
 @shared_task(name='high_priority:send_order_email')
 def send_order_email(order_id, print_images='', file_type='pdf', file_types=None, to=None,
-                     user_email=None):
+                     user_email=None, link_url=None):
     """
     Tarea de Celery para enviar un correo electrónico con los detalles de la orden.
     Esta tarea se ejecuta en segundo plano, genera los archivos de la orden
@@ -44,8 +61,10 @@ def send_order_email(order_id, print_images='', file_type='pdf', file_types=None
     adjuntos en un único correo a los destinatarios indicados (to)
     o, si no se indican, al sendto de la orden.
     user_email: correo del usuario que solicita el envío (Responder a, según EmailSettings).
+    link_url: enlace público de la orden; si se indica se incluye en el cuerpo.
+    file_types puede ir vacío ([]) cuando solo se envía el enlace.
     """
-    file_types = list(file_types or [file_type])
+    file_types = list(file_types if file_types is not None else [file_type])
     try:
         # Obtener la orden
         order = ExtOrderMaster.objects.get(id=order_id)
@@ -53,7 +72,7 @@ def send_order_email(order_id, print_images='', file_type='pdf', file_types=None
         # Crear el correo electrónico
         email = EmailMessage(
             subject=f"Order #{order.id} Details",
-            body=f"Dear {order.customer_name},\n\nPlease find attached the details of your order #{order.id}.",
+            body=order_email_body(order, bool(file_types), link_url),
             to=list(to or [order.sendto]),
             reply_to=EmailSettings.load().reply_to_for(user_email),
         )

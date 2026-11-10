@@ -281,11 +281,16 @@ export const actions = {
   // Envía la orden por correo; attachments: pdf | xlsx | both
   // sendto: destinatarios separados por coma (vacío: el de la orden)
   async sendOrderEmail({ rootState }, payload) {
-    const { orderid, attachments, includeImages, sendto } = payload
+    const { orderid, attachments, includeImages, includeLink, sendto } = payload
 
     const response = await this.$axios.post(
       `saleapp/orders/${orderid}/email/`,
-      { attachments, include_images: includeImages, sendto },
+      {
+        attachments,
+        include_images: includeImages,
+        include_link: Boolean(includeLink),
+        sendto,
+      },
       { params: ciaParams(rootState) }
     )
     return response.data

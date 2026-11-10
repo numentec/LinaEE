@@ -479,6 +479,95 @@ class SaleAppEmailSettingsTests(TestCase):
 		)
 
 
+	@patch('apps.saleapp.views.send_order_email')
+	def test_send_order_email_toggles_and_link(self, task):
+		from datetime import timedelta
+
+		from django.utils import timezone
+
+		from .models import ExtOrderMaster
+
+		order = ExtOrderMaster.objects.create(customer_email='cli@x.com')
+		url = f'/linapi/saleapp/orders/{order.id}/email/'
+		origin = {'HTTP_ORIGIN': 'https://shop.x.com'}
+
+		# Lista de adjuntos (toggles)
+		response = self.client.post(url, {'attachments': ['pdf', 'xlsx']}, format='json')
+		self.assertEqual(response.status_code, 202)
+		task.delay.assert_called_once_with(
+			order.id, print_images='0', file_types=['pdf', 'xlsx'], user_email='sale@x.com'
+		)
+
+		# Tipo inválido en la lista / nada seleccionado
+		response = self.client.post(url, {'attachments': ['pdf', 'both']}, format='json')
+		self.assertEqual(response.status_code, 400)
+		response = self.client.post(url, {'attachments': []}, format='json')
+		self.assertEqual(response.status_code, 400)
+
+		# Solo el enlace público (la orden nace con enlace vigente)
+		task.reset_mock()
+		response = self.client.post(
+			url, {'attachments': [], 'include_link': True}, format='json', **origin
+		)
+		self.assertEqual(response.status_code, 202, response.data)
+		task.delay.assert_called_once_with(
+			order.id, print_images='0', file_types=[], user_email='sale@x.com',
+			link_url=f'https://shop.x.com/portal/shared-order/{order.public_token}',
+		)
+
+		# FRONTEND_PUBLIC_URL tiene prioridad sobre el Origin
+		task.reset_mock()
+		with self.settings(FRONTEND_PUBLIC_URL='https://lina.x.com/'):
+			response = self.client.post(
+				url, {'attachments': ['pdf'], 'include_link': True}, format='json', **origin
+			)
+		self.assertEqual(response.status_code, 202)
+		self.assertEqual(
+			task.delay.call_args.kwargs['link_url'],
+			f'https://lina.x.com/portal/shared-order/{order.public_token}',
+		)
+
+		# Sin forma de construir la URL
+		response = self.client.post(url, {'include_link': True, 'attachments': []}, format='json')
+		self.assertEqual(response.status_code, 400)
+
+		# Enlace vencido o revocado
+		order.public_token_expires_at = timezone.now() - timedelta(minutes=1)
+		order.save()
+		response = self.client.post(
+			url, {'attachments': [], 'include_link': True}, format='json', **origin
+		)
+		self.assertEqual(response.status_code, 400)
+		order.revoke_public_link()
+		response = self.client.post(
+			url, {'attachments': ['pdf'], 'include_link': True}, format='json', **origin
+		)
+		self.assertEqual(response.status_code, 400)
+
+	@patch('apps.saleapp.tasks.render_order_pdf')
+	def test_task_link_in_body(self, render_pdf):
+		from django.core import mail
+
+		from .models import ExtOrderMaster
+		from .tasks import send_order_email
+
+		render_pdf.return_value = Mock(getvalue=Mock(return_value=b'pdf'))
+		order = ExtOrderMaster.objects.create(customer_name='Cliente', customer_email='cli@x.com')
+		link = f'https://shop.x.com/portal/shared-order/{order.public_token}'
+
+		with self.settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+			send_order_email(order.id, file_types=[], link_url=link)
+			send_order_email(order.id, file_types=['pdf'], link_url=link)
+
+		only_link, both = mail.outbox
+		self.assertEqual(only_link.attachments, [])
+		self.assertIn(link, only_link.body)
+		self.assertIn('valid until', only_link.body)
+		self.assertNotIn('attached', only_link.body)
+		self.assertEqual(len(both.attachments), 1)
+		self.assertIn('attached', both.body)
+		self.assertIn(link, both.body)
+
 class PublicOrderLinkTests(TestCase):
 	"""Enlace público de solo lectura de una orden."""
 

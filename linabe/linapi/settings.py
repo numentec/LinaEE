@@ -250,6 +250,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 FRONTEND_BASE_URL = environ.get("FRONTEND_BASE_URL", "http://linafe:3001/")
 BACKEND_BASE_URL = environ.get("BACKEND_BASE_URL", "http://linabe:8001/")
 BACKEND_PUBLIC_URL = environ.get("BACKEND_PUBLIC_URL", "http://localhost:8001/")
+# URL pública del frontend (enlaces enviados por correo). Si está vacía se usa
+# el Origin de la petición.
+FRONTEND_PUBLIC_URL = environ.get("FRONTEND_PUBLIC_URL", "")
 
 # Vigencia (días) del enlace público de una orden
 SALEAPP_PUBLIC_LINK_TTL_DAYS = int(environ.get("SALEAPP_PUBLIC_LINK_TTL_DAYS", 15))

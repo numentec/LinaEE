@@ -177,21 +177,41 @@ def get_saleapp_settings(request):
     return SaleAppSettings.for_company(cia)
 
 
-def queue_order_email(order_id, attachments, include_images, to=None, user_email=None):
+def queue_order_email(order_id, attachments, include_images, to=None, user_email=None,
+                      link_url=None):
     """
-    Encola el envío de la orden con los adjuntos indicados (pdf, xlsx o both).
+    Encola el envío de la orden con los adjuntos indicados: una opción de
+    SaleAppSettings (pdf, xlsx o both) o una lista de tipos (p.ej. ['pdf', 'xlsx']).
     to: lista de destinatarios; si no se indica se usa el sendto de la orden.
     user_email: correo del usuario en sesión (Responder a, según EmailSettings).
+    link_url: enlace público de la orden a incluir en el cuerpo del correo.
     """
+    file_types = (
+        list(attachments) if isinstance(attachments, (list, tuple))
+        else SaleAppSettings.attachment_types_for(attachments)
+    )
     extra = {'to': to} if to else {}
     if user_email:
         extra['user_email'] = user_email
+    if link_url:
+        extra['link_url'] = link_url
     return send_order_email.delay(
         order_id,
         print_images='1' if include_images else '0',
-        file_types=SaleAppSettings.attachment_types_for(attachments),
+        file_types=file_types,
         **extra,
     )
+
+
+def public_order_url(request, order):
+    """
+    URL pública (frontend) de la orden. La base se toma de FRONTEND_PUBLIC_URL
+    o, si no está configurada, del Origin de la petición (lo fija el navegador).
+    """
+    base = getattr(settings, 'FRONTEND_PUBLIC_URL', '') or request.headers.get('Origin', '')
+    if not base:
+        return None
+    return f"{base.rstrip('/')}/portal/shared-order/{order.public_token}"
 
 
 class CategoryBrandListAPIView(APIView):
@@ -737,26 +757,60 @@ class SendOrderCSVEmail(APIView):
 class SendOrderEmail(APIView):
     """
     Envía la orden por correo con los adjuntos indicados.
-    Body: attachments (pdf | xlsx | both), include_images (bool),
-    sendto (destinatarios separados por coma; si no se indica, el de la orden).
+    Body: attachments (lista de pdf | xlsx, puede ir vacía; o bien pdf | xlsx | both),
+    include_images (bool), include_link (bool: incluye el enlace público vigente
+    en el cuerpo), sendto (destinatarios separados por coma; si no se indica,
+    el de la orden).
     Lo que no se indique se toma de la configuración de SaleApp.
     """
+    FILE_TYPES = ('pdf', 'xlsx')
+
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, order_id):
-        if not ExtOrderMaster.objects.filter(id=order_id).exists():
+        order = ExtOrderMaster.objects.filter(id=order_id).first()
+        if order is None:
             return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
         conf = get_saleapp_settings(request)
-        attachments = request.data.get('attachments') or conf.email_attachments
+        attachments = request.data.get('attachments', conf.email_attachments)
         include_images = request.data.get('include_images', conf.email_include_images)
+        include_link = bool(request.data.get('include_link', False))
 
-        if attachments not in SaleAppSettings.EmailAttachments.values:
+        if isinstance(attachments, list):
+            if any(a not in self.FILE_TYPES for a in attachments):
+                return Response(
+                    {'attachments': [f"Use any of: {', '.join(self.FILE_TYPES)}"]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            attachments = list(dict.fromkeys(attachments))
+        elif attachments not in SaleAppSettings.EmailAttachments.values:
             return Response(
                 {'attachments': [f"Use one of: {', '.join(SaleAppSettings.EmailAttachments.values)}"]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        if not attachments and not include_link:
+            return Response(
+                {'attachments': ['Select at least one attachment or the public link']},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        link_url = None
+        if include_link:
+            if (order.status == 'cancelled' or not order.public_token
+                    or order.public_link_expired):
+                return Response(
+                    {'error': 'The order has no active public link.', 'code': 'no_link'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            link_url = public_order_url(request, order)
+            if not link_url:
+                return Response(
+                    {'error': 'Public link URL could not be determined.', 'code': 'no_link_url'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         to = [e.strip() for e in re.split(r'[,;]', request.data.get('sendto') or '') if e.strip()]
         try:
@@ -769,7 +823,8 @@ class SendOrderEmail(APIView):
             )
 
         queue_order_email(
-            order_id, attachments, bool(include_images), to=to, user_email=request.user.email
+            order_id, attachments, bool(include_images), to=to, user_email=request.user.email,
+            link_url=link_url,
         )
 
         return Response({'message': f'Email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)

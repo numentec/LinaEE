@@ -29,30 +29,40 @@
                 dense
               />
             </v-form>
-            <div class="text-subtitle-2 mb-2">Attachments</div>
-            <v-btn-toggle v-model="selAttachments" mandatory color="secondary">
+            <div class="text-subtitle-2 mb-2">Send</div>
+            <v-btn-toggle v-model="selContent" multiple color="secondary">
               <v-btn
-                v-for="a in attachmentOptions"
-                :key="a.value"
-                :value="a.value"
+                v-for="c in contentOptions"
+                :key="c.value"
+                :value="c.value"
+                :disabled="sending || (c.value === 'link' && !linkActive)"
                 small
               >
-                <v-icon left small>{{ a.icon }}</v-icon>
-                {{ a.text }}
+                <v-icon left small>{{ c.icon }}</v-icon>
+                {{ c.text }}
               </v-btn>
             </v-btn-toggle>
+            <div v-if="!linkActive" class="text-caption text--secondary mt-1">
+              Link requires an active public link (see the Public link tab).
+            </div>
             <v-switch
               v-model="selIncludeImages"
               inset
               color="secondary"
               label="Include product images"
+              :disabled="sending || !selFiles.length"
               hide-details
             />
           </v-card-text>
           <v-card-actions>
             <v-spacer />
             <v-btn text :disabled="busy" @click="skip">{{ skipText }}</v-btn>
-            <v-btn color="secondary" :loading="sending" @click="send">
+            <v-btn
+              color="secondary"
+              :loading="sending"
+              :disabled="!selContent.length"
+              @click="send"
+            >
               <v-icon left>mdi-email-fast-outline</v-icon>
               Send
             </v-btn>
@@ -140,7 +150,7 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { EMAIL_ATTACHMENT_OPTIONS } from '@/utils/orderEmail'
+import { EMAIL_CONTENT_OPTIONS, attachmentTypes } from '@/utils/orderEmail'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -186,10 +196,11 @@ export default {
       // Copia local del enlace: la orden puede no estar en el store
       // (p. ej. recién creada en el checkout)
       link: linkFromOrder(this.order),
-      selAttachments: this.attachments,
+      // Contenido a enviar: 'pdf', 'xlsx' y/o 'link'
+      selContent: attachmentTypes(this.attachments),
       selIncludeImages: this.includeImages,
       selSendTo: this.sendTo,
-      attachmentOptions: EMAIL_ATTACHMENT_OPTIONS,
+      contentOptions: EMAIL_CONTENT_OPTIONS,
       rules: {
         required: (v) => splitEmails(v).length > 0 || 'Enter an email address',
         emails: (v) =>
@@ -209,6 +220,14 @@ export default {
     isCancelled() {
       return this.order.status === 'cancelled'
     },
+    // Enlace que se puede enviar por correo
+    linkActive() {
+      return this.hasLink && !this.isExpired && !this.isCancelled
+    },
+    // Archivos adjuntos seleccionados (sin el enlace)
+    selFiles() {
+      return this.selContent.filter((c) => c !== 'link')
+    },
     isExpired() {
       const expires = this.link.public_token_expires_at
       return Boolean(expires) && new Date(expires).getTime() <= this.now
@@ -220,11 +239,15 @@ export default {
   },
 
   watch: {
+    // Si el enlace se revoca o vence, deja de poder enviarse
+    linkActive(active) {
+      if (!active) this.selContent = this.selContent.filter((c) => c !== 'link')
+    },
     // Al abrir, parte de la configuración de SaleApp y del estado de la orden
     value(open) {
       if (!open) return
       this.selTab = this.tab
-      this.selAttachments = this.attachments
+      this.selContent = attachmentTypes(this.attachments)
       this.selIncludeImages = this.includeImages
       this.selSendTo = this.sendTo
       this.link = linkFromOrder(this.order)
@@ -242,14 +265,21 @@ export default {
 
     // ---- Correo ----
     async send() {
-      if (!this.$refs.form.validate()) return
+      if (!this.selContent.length || !this.$refs.form.validate()) return
+      // Revisa la vigencia al momento de enviar
+      this.now = Date.now()
+      if (this.selContent.includes('link') && !this.linkActive) {
+        this.$emit('notify', 'The public link is no longer active', 'warning')
+        return
+      }
 
       this.sending = true
       try {
         await this.sendOrderEmail({
           orderid: this.order.id,
-          attachments: this.selAttachments,
+          attachments: this.selFiles,
           includeImages: this.selIncludeImages,
+          includeLink: this.selContent.includes('link'),
           sendto: splitEmails(this.selSendTo).join(', '),
         })
         this.close('sent')
