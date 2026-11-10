@@ -112,15 +112,16 @@
         </template>
       </v-snackbar>
       <OrderDetailsDialog v-model="detailsDialog" />
-      <SendOrderEmailDialog
+      <OrderShareDialog
         v-model="emailDialog"
-        :order-id="emailOrder.id"
+        :order="emailOrder"
         :send-to="emailOrder.sendto || emailOrder.customer_email || ''"
         :attachments="emailConf.attachments"
         :include-images="emailConf.include_images"
         @sent="onEmailSent"
         @skipped="finishCheckout"
         @error="onEmailError"
+        @notify="notify"
       />
     </v-container>
   </div>
@@ -131,7 +132,7 @@ import { mapGetters, mapActions } from 'vuex'
 import CartCard from '@/components/saleapp/CartCard.vue'
 import CartOrderSummary from '@/components/saleapp/CartOrderSummary.vue'
 import OrderDetailsDialog from '@/components/saleapp/OrderDetailsDialog.vue'
-import SendOrderEmailDialog from '@/components/saleapp/SendOrderEmailDialog.vue'
+import OrderShareDialog from '@/components/saleapp/OrderShareDialog.vue'
 
 const sellersList = [
   { id: '1', name: 'Seller 1', email: 'seller1@numen.pa' },
@@ -147,7 +148,7 @@ export default {
     CartCard,
     CartOrderSummary,
     OrderDetailsDialog,
-    SendOrderEmailDialog,
+    OrderShareDialog,
   },
 
   data() {
@@ -246,6 +247,11 @@ export default {
         this.loading = false
         this.$router.push('/saleapp/ordersview')
       }, 2000)
+    },
+    notify(text, color = 'info') {
+      this.snackbarText = text
+      this.snackbarColor = color
+      this.snackbar = true
     },
     onEmailSent() {
       this.snackbarColor = 'success'

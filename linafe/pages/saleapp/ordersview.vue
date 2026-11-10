@@ -310,19 +310,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <SendOrderEmailDialog
-      v-model="emailDialog"
-      :order-id="emailOrder.id"
-      :send-to="emailOrder.sendto || emailOrder.customer_email || ''"
+    <OrderShareDialog
+      v-model="shareDialog"
+      :order="shareOrder"
+      :tab="shareTab"
+      :send-to="shareOrder.sendto || shareOrder.customer_email || ''"
       :attachments="emailConf.attachments"
       :include-images="emailConf.include_images"
       skip-text="Cancel"
       @sent="onEmailSent"
       @error="onEmailError"
-    />
-    <OrderPublicLinkDialog
-      v-model="publicLinkDialog"
-      :order="curOrder || {}"
       @notify="notify"
     />
     <v-snackbar v-model="snackbar" timeout="3000" :color="snackbarColor" dark>
@@ -346,8 +343,7 @@ import { mapGetters, mapActions } from 'vuex'
 import OrderCard from '@/components/saleapp/OrderCard.vue'
 import OrderListItem from '@/components/saleapp/OrderListItem.vue'
 import OrderSummary from '@/components/saleapp/OrderSummary.vue'
-import SendOrderEmailDialog from '@/components/saleapp/SendOrderEmailDialog.vue'
-import OrderPublicLinkDialog from '@/components/saleapp/OrderPublicLinkDialog.vue'
+import OrderShareDialog from '@/components/saleapp/OrderShareDialog.vue'
 import html2pdf from 'html2pdf.js'
 import { ORDER_STATUSES } from '@/utils/orderStatus'
 
@@ -377,8 +373,7 @@ export default {
     OrderCard,
     OrderSummary,
     OrderListItem,
-    SendOrderEmailDialog,
-    OrderPublicLinkDialog,
+    OrderShareDialog,
   },
 
   async asyncData({ store, error }) {
@@ -418,10 +413,10 @@ export default {
       replaceCartDialog: false,
       cloneCartDialog: false,
       statusOptions: ORDER_STATUSES,
-      emailDialog: false,
-      emailOrder: {},
+      shareDialog: false,
+      shareOrder: {},
+      shareTab: 'email',
       emailConf: { attachments: 'pdf', include_images: false },
-      publicLinkDialog: false,
     }
   },
   computed: {
@@ -706,9 +701,18 @@ export default {
     },
 
     // Resend the order by email
-    // Opens the email dialog with the attachments configured in SaleApp;
-    // the recipient and attachments can be changed before sending
-    async openEmailDialog(order) {
+    // Opens the share dialog on the email tab, with the attachments
+    // configured in SaleApp; recipient and attachments can be changed
+    openEmailDialog(order) {
+      this.openShareDialog(order, 'email')
+    },
+    // Enlace público de solo lectura de la orden actual
+    openPublicLinkDialog() {
+      this.vmenu = false
+      this.openShareDialog(this.curOrder, 'link')
+    },
+    // Diálogo para compartir (correo / enlace público) en la pestaña indicada
+    async openShareDialog(order, tab) {
       if (!order?.id) return
 
       try {
@@ -721,14 +725,9 @@ export default {
         console.error('Error loading SaleApp settings:', error)
       }
 
-      this.emailOrder = order
-      this.emailDialog = true
-    },
-    // Enlace público de solo lectura de la orden actual
-    openPublicLinkDialog() {
-      this.vmenu = false
-      if (!this.curOrder?.id) return
-      this.publicLinkDialog = true
+      this.shareOrder = order
+      this.shareTab = tab
+      this.shareDialog = true
     },
     notify(text, color = 'info') {
       this.snackbarText = text
@@ -737,7 +736,7 @@ export default {
     },
     onEmailSent() {
       this.snackbarColor = 'success'
-      this.snackbarText = `Order # ${this.emailOrder.id} is being emailed`
+      this.snackbarText = `Order # ${this.shareOrder.id} is being emailed`
       this.snackbar = true
     },
     onEmailError(error) {
