@@ -14,8 +14,8 @@ import os
 from pathlib import Path
 from os import environ
 from datetime import timedelta
-# from .permissions import CustomDjangoModelPermissions
 from kombu import Queue
+# from .permissions import CustomDjangoModelPermissions
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,6 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = environ.get("SECRET_KEY")
 
 DEBUG = (environ.get("APP_DEBUG", True) == '1')
+IS_PRODUCTION = environ.get('IS_PRODUCTION', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 CORS_ALLOW_ALL_ORIGINS = True
@@ -163,6 +164,7 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
     # 'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+    'NUM_PROXIES': None,
 }
 
 # SIMPLE_JWT = {
@@ -190,6 +192,10 @@ REST_FRAMEWORK = {
 #     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=45),
 #     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 # }
+
+if IS_PRODUCTION:
+    REST_FRAMEWORK['NUM_PROXIES'] = 1
+
 
 # Email settings
 # La configuración global se administra desde el frontend (core.EmailSettings).
