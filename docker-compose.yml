@@ -58,6 +58,7 @@ services:
       HOST: 0.0.0.0
       PORT: 3001
       TZ: "${LOC_TZ}"
+      NODE_OPTIONS: --max_old_space_size=4096
       NODE_ENV: development
     networks: 
       net:

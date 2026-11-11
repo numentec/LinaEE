@@ -7,6 +7,9 @@
         <v-tab href="#email" :disabled="busy">
           <v-icon left small>mdi-email-outline</v-icon> Email
         </v-tab>
+        <v-tab href="#whatsapp" :disabled="busy">
+          <v-icon left small>mdi-whatsapp</v-icon> WhatsApp
+        </v-tab>
         <v-tab href="#link" :disabled="busy">
           <v-icon left small>mdi-link-variant</v-icon> Public link
         </v-tab>
@@ -65,6 +68,73 @@
             >
               <v-icon left>mdi-email-fast-outline</v-icon>
               Send
+            </v-btn>
+          </v-card-actions>
+        </v-tab-item>
+
+        <!-- WhatsApp -->
+        <v-tab-item value="whatsapp">
+          <v-card-text class="pt-5">
+            <v-text-field
+              v-model="selPhone"
+              label="Phone (optional)"
+              prepend-inner-icon="mdi-whatsapp"
+              hint="With country code, e.g. 5215512345678. Leave empty to pick the contact in WhatsApp"
+              persistent-hint
+              type="tel"
+              :disabled="waBusy"
+              outlined
+              dense
+            />
+            <div class="text-subtitle-2 mb-2 mt-2">Share</div>
+            <v-btn-toggle v-model="selContent" multiple color="secondary">
+              <v-btn
+                v-for="c in contentOptions"
+                :key="c.value"
+                :value="c.value"
+                :disabled="waBusy || (c.value === 'link' && !linkActive)"
+                small
+              >
+                <v-icon left small>{{ c.icon }}</v-icon>
+                {{ c.text }}
+              </v-btn>
+            </v-btn-toggle>
+            <div v-if="!linkActive" class="text-caption text--secondary mt-1">
+              Link requires an active public link (see the Public link tab).
+            </div>
+            <v-switch
+              v-model="selIncludeImages"
+              inset
+              color="secondary"
+              label="Include product images"
+              :disabled="waBusy || !selFiles.length"
+              hide-details
+            />
+            <div
+              v-if="selFiles.length"
+              class="text-caption text--secondary mt-4"
+            >
+              <template v-if="filesShareable">
+                Files are shared through your device's share sheet: choose
+                WhatsApp and the contact there.
+              </template>
+              <template v-else>
+                This browser cannot share files directly: they will be
+                downloaded so you can attach them in WhatsApp.
+              </template>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn text :disabled="busy" @click="skip">{{ skipText }}</v-btn>
+            <v-btn
+              color="secondary"
+              :loading="waBusy"
+              :disabled="!selContent.length"
+              @click="shareWhatsapp"
+            >
+              <v-icon left>mdi-whatsapp</v-icon>
+              {{ waFiles.length ? 'Open WhatsApp' : 'Share' }}
             </v-btn>
           </v-card-actions>
         </v-tab-item>
@@ -150,7 +220,13 @@
 
 <script>
 import { mapActions } from 'vuex'
+import saveAs from 'file-saver'
 import { EMAIL_CONTENT_OPTIONS, attachmentTypes } from '@/utils/orderEmail'
+import {
+  canShareFileTypes,
+  orderMessage,
+  whatsappUrl,
+} from '@/utils/orderWhatsapp'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -169,17 +245,18 @@ function linkFromOrder(order) {
   }
 }
 
-// Diálogo para compartir una orden: envío por correo y enlace público.
+// Diálogo para compartir una orden: correo, WhatsApp y enlace público.
 // Eventos:
 //   sent / error  -> resultado del envío de correo (el diálogo se cierra)
 //   skipped       -> se cerró sin enviar correo
-//   notify        -> (texto, color) mensajes de la pestaña de enlace
+//   notify        -> (texto, color) mensajes de las pestañas de WhatsApp
+//                    y de enlace
 export default {
   name: 'OrderShareDialog',
   props: {
     value: { type: Boolean, default: false },
     order: { type: Object, default: () => ({}) },
-    // Pestaña inicial al abrir: 'email' | 'link'
+    // Pestaña inicial al abrir: 'email' | 'whatsapp' | 'link'
     tab: { type: String, default: 'email' },
     attachments: { type: String, default: 'pdf' },
     includeImages: { type: Boolean, default: false },
@@ -200,6 +277,10 @@ export default {
       selContent: attachmentTypes(this.attachments),
       selIncludeImages: this.includeImages,
       selSendTo: this.sendTo,
+      // WhatsApp: teléfono destino y archivos ya preparados para compartir
+      selPhone: this.order?.customer_cel || '',
+      waBusy: false,
+      waFiles: [],
       contentOptions: EMAIL_CONTENT_OPTIONS,
       rules: {
         required: (v) => splitEmails(v).length > 0 || 'Enter an email address',
@@ -212,7 +293,11 @@ export default {
 
   computed: {
     busy() {
-      return this.sending || Boolean(this.linkBusy)
+      return this.sending || this.waBusy || Boolean(this.linkBusy)
+    },
+    // El navegador puede compartir los archivos seleccionados (Web Share API)
+    filesShareable() {
+      return canShareFileTypes(this.selFiles)
     },
     hasLink() {
       return Boolean(this.link.public_token)
@@ -243,6 +328,13 @@ export default {
     linkActive(active) {
       if (!active) this.selContent = this.selContent.filter((c) => c !== 'link')
     },
+    // Los archivos preparados dejan de valer si cambia la selección
+    selContent() {
+      this.waFiles = []
+    },
+    selIncludeImages() {
+      this.waFiles = []
+    },
     // Al abrir, parte de la configuración de SaleApp y del estado de la orden
     value(open) {
       if (!open) return
@@ -250,6 +342,8 @@ export default {
       this.selContent = attachmentTypes(this.attachments)
       this.selIncludeImages = this.includeImages
       this.selSendTo = this.sendTo
+      this.selPhone = this.order?.customer_cel || ''
+      this.waFiles = []
       this.link = linkFromOrder(this.order)
       this.now = Date.now()
       this.$nextTick(() => this.$refs.form?.resetValidation())
@@ -259,6 +353,7 @@ export default {
   methods: {
     ...mapActions('saleapp/orders', [
       'sendOrderEmail',
+      'fetchOrderFiles',
       'issuePublicLink',
       'revokePublicLink',
     ]),
@@ -297,6 +392,83 @@ export default {
     close(event, payload) {
       this.$emit('input', false)
       this.$emit(event, payload)
+    },
+
+    // ---- WhatsApp ----
+    // Solo enlace: abre el chat con el mensaje escrito (wa.me).
+    // Con archivos: hoja de compartir del sistema; si el navegador no la
+    // soporta, se descargan y se abre WhatsApp para adjuntarlos a mano.
+    async shareWhatsapp() {
+      if (!this.selContent.length) return
+      // Revisa la vigencia al momento de compartir
+      this.now = Date.now()
+      const withLink = this.selContent.includes('link')
+      if (withLink && !this.linkActive) {
+        this.$emit('notify', 'The public link is no longer active', 'warning')
+        return
+      }
+
+      const text = orderMessage(this.order, withLink ? this.publicLink : '')
+      const shareable = this.selFiles.length && this.filesShareable
+
+      // wa.me se abre antes de cualquier espera: después el navegador
+      // bloquearía la ventana emergente
+      if (!shareable) {
+        window.open(whatsappUrl(this.selPhone, text), '_blank', 'noopener')
+        if (!this.selFiles.length) return
+      }
+
+      if (!this.waFiles.length) {
+        this.waBusy = true
+        try {
+          this.waFiles = await this.fetchOrderFiles({
+            orderid: this.order.id,
+            types: this.selFiles,
+            includeImages: this.selIncludeImages,
+          })
+        } catch (error) {
+          const detail = error?.response?.data?.error || error.message
+          this.$emit(
+            'notify',
+            `Could not get the order files: ${detail}`,
+            'error'
+          )
+          return
+        } finally {
+          this.waBusy = false
+        }
+      }
+
+      if (!shareable) {
+        this.waFiles.forEach((file) => saveAs(file, file.name))
+        this.waFiles = []
+        this.$emit(
+          'notify',
+          'Files downloaded: attach them in the WhatsApp chat',
+          'info'
+        )
+        return
+      }
+
+      try {
+        await navigator.share({ files: this.waFiles, text })
+        this.waFiles = []
+      } catch (error) {
+        // El usuario cerró la hoja de compartir
+        if (error.name === 'AbortError') return
+        // La descarga tardó y el navegador ya no considera vigente el toque:
+        // los archivos quedan listos y el siguiente toque comparte al instante
+        if (error.name === 'NotAllowedError') {
+          this.$emit(
+            'notify',
+            'Files ready: tap "Open WhatsApp" to share them',
+            'info'
+          )
+          return
+        }
+        this.waFiles = []
+        this.$emit('notify', `Could not share: ${error.message}`, 'error')
+      }
     },
 
     // ---- Enlace público ----

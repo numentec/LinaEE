@@ -35,14 +35,22 @@ function ciaParams(rootState) {
   return cia?.id ? { cia: cia.id } : {}
 }
 
-// Descarga un archivo generado por el backend para una orden
-async function downloadOrderFile(axios, { url, params, type, filename }) {
+const XLSX_TYPE =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+// Obtiene (sin guardarlo) un archivo generado por el backend para una orden
+async function fetchOrderFile(axios, { url, params, type, filename }) {
   const response = await axios.get(url, {
     responseType: 'blob', // Importante para manejar archivos binarios
     params,
   })
 
-  saveAs(new Blob([response.data], { type }), filename)
+  return new File([response.data], filename, { type })
+}
+
+// Descarga un archivo generado por el backend para una orden
+async function downloadOrderFile(axios, options) {
+  saveAs(await fetchOrderFile(axios, options), options.filename)
 }
 
 export const state = () => ({
@@ -349,6 +357,31 @@ export const actions = {
       console.error('Error downloading Excel:', error)
       throw error
     }
+  },
+
+  // Archivos de la orden como File[] (sin descargarlos), para compartirlos.
+  // types: lista con 'pdf' y/o 'xlsx'
+  fetchOrderFiles(_, { orderid, types, includeImages }) {
+    const requests = {
+      pdf: {
+        url: `saleapp/orders/${orderid}/pdf/`,
+        params: includeImages ? { print_images: '1' } : {},
+        type: 'application/pdf',
+        filename: `order_${orderid}.pdf`,
+      },
+      xlsx: {
+        url: `saleapp/orders/${orderid}/xlsx/`,
+        params: includeImages ? {} : { print_images: '0' },
+        type: XLSX_TYPE,
+        filename: `order_${orderid}.xlsx`,
+      },
+    }
+
+    return Promise.all(
+      types
+        .filter((t) => requests[t])
+        .map((t) => fetchOrderFile(this.$axios, requests[t]))
+    )
   },
 
   async imagesZipDownload({ rootGetters }, payload) {

@@ -143,6 +143,13 @@
                 </v-list-item>
               </v-list-group>
 
+              <v-list-item v-show="!isListView" @click="openWhatsappDialog">
+                <v-list-item-title>WhatsApp</v-list-item-title>
+                <v-list-item-icon>
+                  <v-icon>mdi-whatsapp</v-icon>
+                </v-list-item-icon>
+              </v-list-item>
+
               <v-list-item v-show="!isListView" @click="openPublicLinkDialog">
                 <v-list-item-title>Public link</v-list-item-title>
                 <v-list-item-icon>
@@ -706,12 +713,18 @@ export default {
     openEmailDialog(order) {
       this.openShareDialog(order, 'email')
     },
+    // Compartir la orden actual por WhatsApp
+    openWhatsappDialog() {
+      this.vmenu = false
+      this.openShareDialog(this.curOrder, 'whatsapp')
+    },
     // Enlace público de solo lectura de la orden actual
     openPublicLinkDialog() {
       this.vmenu = false
       this.openShareDialog(this.curOrder, 'link')
     },
-    // Diálogo para compartir (correo / enlace público) en la pestaña indicada
+    // Diálogo para compartir (correo / WhatsApp / enlace público) en la
+    // pestaña indicada
     async openShareDialog(order, tab) {
       if (!order?.id) return
 
