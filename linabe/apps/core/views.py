@@ -179,6 +179,7 @@ class LinaAuthToken(ObtainAuthToken):
             'core.acc_linabi_panel',
             'core.ext_acc',
             'core.acc_saleapp',
+            'saleapp.revert_order_to_pending',
             ]
 
         # all_permissions = User(is_superuser=True).get_all_permissions()

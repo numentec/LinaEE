@@ -1,5 +1,18 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from .models import ExtOrderMaster, ExtOrderItem, SaleAppSettings
+
+REVERT_TO_PENDING_PERM = 'saleapp.revert_order_to_pending'
+
+
+def check_revert_to_pending(serializer, attrs):
+    """Devolver una orden a 'pending' requiere permiso (o ser superuser)."""
+    instance = serializer.instance
+    if instance and attrs.get('status') == 'pending' and instance.status != 'pending':
+        request = serializer.context.get('request')
+        user = getattr(request, 'user', None)
+        if user is None or not user.has_perm(REVERT_TO_PENDING_PERM):
+            raise PermissionDenied('You are not allowed to revert an order to Pending.')
 
 
 class ExtOrderItemSerializer(serializers.ModelSerializer):
@@ -46,6 +59,7 @@ class ExtOrderMasterSerializer(serializers.ModelSerializer):
         # Los items solo se pueden modificar mientras la orden esté pendiente
         if self.instance and 'items' in attrs and self.instance.status != 'pending':
             raise serializers.ValidationError('Only pending orders can be modified.')
+        check_revert_to_pending(self, attrs)
         return attrs
 
     def update(self, instance, validated_data):
@@ -96,6 +110,7 @@ class ExtOrderMasterOnlySerializer(serializers.ModelSerializer):
         # Una orden cancelada no se puede modificar
         if self.instance and self.instance.status == 'cancelled':
             raise serializers.ValidationError('Cancelled orders cannot be modified.')
+        check_revert_to_pending(self, attrs)
         return attrs
 
 

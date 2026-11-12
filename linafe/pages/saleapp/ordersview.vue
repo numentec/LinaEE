@@ -419,7 +419,6 @@ export default {
       cancelDialog: false,
       replaceCartDialog: false,
       cloneCartDialog: false,
-      statusOptions: ORDER_STATUSES,
       shareDialog: false,
       shareOrder: {},
       shareTab: 'email',
@@ -457,6 +456,22 @@ export default {
     },
     isCancelled() {
       return this.curOrder?.status === 'cancelled'
+    },
+    // Volver una orden a "Pending" requiere permiso (o ser superuser)
+    canRevertToPending() {
+      const user = this.$store.getters.loggedInUser
+      return Boolean(
+        user?.is_superuser || user?.perms?.['saleapp.revert_order_to_pending']
+      )
+    },
+    statusOptions() {
+      const lockPending =
+        !this.canRevertToPending && this.curOrder?.status !== 'pending'
+
+      return ORDER_STATUSES.map((status) => ({
+        ...status,
+        disabled: lockPending && status.value === 'pending',
+      }))
     },
   },
 
@@ -527,6 +542,7 @@ export default {
         this.resetOrderStatus()
         this.snackbarText =
           error.response?.data?.non_field_errors?.[0] ||
+          error.response?.data?.detail ||
           'Error updating order status'
         this.snackbarColor = 'error'
       } finally {

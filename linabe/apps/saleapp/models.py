@@ -106,6 +106,9 @@ class ExtOrderMaster(Common):
         db_table = 'cart_extorder_master'
         verbose_name = 'CartExtOrderMaster'
         verbose_name_plural = 'CartExtOrdersMasters'
+        permissions = [
+            ("revert_order_to_pending", "Can revert order to Pending status"),
+        ]
 
     def __str__(self):
         return "External order {} - {} - {}".format(self.id, self.created_at, self.created_by)

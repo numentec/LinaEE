@@ -769,3 +769,89 @@ class PublicOrderLinkTests(TestCase):
 		order = self.create_order()
 		response = self.anon.get(f'/linapi/saleapp/orders/{order.id}/preview/')
 		self.assertEqual(response.status_code, 404)
+
+
+class RevertOrderToPendingTests(TestCase):
+	"""Volver una orden a 'pending' requiere permiso o ser superuser."""
+
+	def setUp(self):
+		from django.contrib.auth import get_user_model
+		from rest_framework.test import APIClient
+
+		from ..core.models import Cia
+
+		Cia.objects.create(codigo='T1', nombre='Test Cia', default=True)
+		self.user = get_user_model().objects.create_user('sale', 'sale@x.com', 'pw')
+		self.client = APIClient()
+		self.client.force_authenticate(self.user)
+
+	def create_order(self, status='processed'):
+		from .models import ExtOrderMaster
+
+		response = self.client.post(
+			'/linapi/saleapp/extorder/',
+			{
+				'customer_name': 'Cliente',
+				'customer_email': 'cli@x.com',
+				'items': [{'sku': 'A1', 'name': 'Mesa', 'quantity': 1, 'price': '10.00'}],
+			},
+			format='json',
+		)
+		self.assertEqual(response.status_code, 201, response.data)
+		order = ExtOrderMaster.objects.get(pk=response.data['id'])
+		if status != 'pending':
+			ExtOrderMaster.objects.filter(pk=order.pk).update(status=status)
+			order.refresh_from_db()
+		return order
+
+	def set_status(self, order, status, route='extorderonly'):
+		return self.client.patch(
+			f'/linapi/saleapp/{route}/{order.pk}/', {'status': status}, format='json'
+		)
+
+	def grant_via_group(self):
+		from django.contrib.auth import get_user_model
+		from django.contrib.auth.models import Group, Permission
+
+		group = Group.objects.create(name='reopeners')
+		group.permissions.add(Permission.objects.get(codename='revert_order_to_pending'))
+		self.user.groups.add(group)
+		# Usuario recargado: descarta la caché de permisos de la instancia
+		self.user = get_user_model().objects.get(pk=self.user.pk)
+		self.client.force_authenticate(self.user)
+
+	def test_denied_without_permission_on_both_routes(self):
+		for route in ('extorderonly', 'extorder'):
+			order = self.create_order()
+			response = self.set_status(order, 'pending', route)
+			self.assertEqual(response.status_code, 403, response.data)
+			order.refresh_from_db()
+			self.assertEqual(order.status, 'processed')
+
+	def test_other_transitions_do_not_need_permission(self):
+		order = self.create_order(status='pending')
+		self.assertEqual(self.set_status(order, 'pending').status_code, 200)
+		self.assertEqual(self.set_status(order, 'processed').status_code, 200)
+		self.assertEqual(self.set_status(order, 'shipped').status_code, 200)
+
+	def test_allowed_with_group_permission(self):
+		self.grant_via_group()
+		for route in ('extorderonly', 'extorder'):
+			order = self.create_order()
+			response = self.set_status(order, 'pending', route)
+			self.assertEqual(response.status_code, 200, response.data)
+			order.refresh_from_db()
+			self.assertEqual(order.status, 'pending')
+
+	def test_allowed_for_superuser(self):
+		from django.contrib.auth import get_user_model
+
+		admin = get_user_model().objects.create_superuser('boss', 'boss@x.com', 'pw')
+		order = self.create_order()
+		self.client.force_authenticate(admin)
+		self.assertEqual(self.set_status(order, 'pending').status_code, 200)
+
+	def test_perm_is_exposed_to_frontend(self):
+		response = self.client.get('/linapi/user_perms/cur/')
+		self.assertEqual(response.status_code, 200)
+		self.assertIs(response.data['perms']['saleapp.revert_order_to_pending'], False)

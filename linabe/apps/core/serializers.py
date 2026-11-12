@@ -150,6 +150,7 @@ class UserPermsSerializer(serializers.ModelSerializer):
             'core.acc_linabi_saledocs_datail',
             'core.acc_linabi_sales_detail',
             'core.acc_saleapp',
+            'saleapp.revert_order_to_pending',
             ]
 
         all_permissions = LinaUserModel(is_superuser=True).get_all_permissions()
