@@ -23,6 +23,9 @@ function orderItemToCartItem(item) {
     quantity: Number(item.quantity),
     price: Number(item.price),
     image: item.image,
+    package: item.package,
+    volume: item.volume,
+    weight: item.weight,
   }
 }
 

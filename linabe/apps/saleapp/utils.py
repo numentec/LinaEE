@@ -198,7 +198,7 @@ def render_order_xlsx(order, print_images=True, public=False):
     ws.append([])
 
     # Tabla de items
-    columns = ['Image', 'SKU', 'Description', 'Qty', 'Price', 'Amount']
+    columns = ['Image', 'SKU', 'Description', 'Package', 'Volume', 'Weight', 'Qty', 'Price', 'Amount']
     if not print_images:
         columns = columns[1:]
 
@@ -213,15 +213,17 @@ def render_order_xlsx(order, print_images=True, public=False):
     first_row = header_row + 1
 
     for item in order.items.all():
-        values = [item.sku, item.name, item.quantity, item.price,
-                  round(item.quantity * item.price, 2)]
+        values = [item.sku, item.name, item.package, item.volume, item.weight,
+                  item.quantity, item.price, round(item.quantity * item.price, 2)]
         ws.append([None] * offset + values)
         row = ws.max_row
 
         for col in range(1, len(columns) + 1):
             ws.cell(row=row, column=col).alignment = Alignment(vertical='center', wrap_text=True)
-        ws.cell(row=row, column=offset + 4).number_format = money
+        ws.cell(row=row, column=offset + 4).number_format = '#,##0.0000'
         ws.cell(row=row, column=offset + 5).number_format = money
+        ws.cell(row=row, column=offset + 7).number_format = money
+        ws.cell(row=row, column=offset + 8).number_format = money
 
         if print_images:
             img = _xlsx_image(item.sku)
@@ -234,14 +236,14 @@ def render_order_xlsx(order, print_images=True, public=False):
 
     # Total
     ws.append([])
-    ws.append([None] * (offset + 3) + ['Total', order.total])
+    ws.append([None] * (offset + 6) + ['Total', order.total])
     total_row = ws.max_row
-    ws.cell(row=total_row, column=offset + 4).font = bold
-    ws.cell(row=total_row, column=offset + 5).font = bold
-    ws.cell(row=total_row, column=offset + 5).number_format = money
+    ws.cell(row=total_row, column=offset + 7).font = bold
+    ws.cell(row=total_row, column=offset + 8).font = bold
+    ws.cell(row=total_row, column=offset + 8).number_format = money
 
     # Formato de hoja
-    widths = [18, 45, 8, 12, 14]
+    widths = [18, 45, 10, 12, 12, 8, 12, 14]
     if print_images:
         widths = [XLSX_IMG_SIZE[0] / 7 + 2] + widths  # ancho en caracteres (~7px c/u)
     for idx, width in enumerate(widths, start=1):

@@ -22,7 +22,8 @@ class ExtOrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExtOrderItem
-        fields = ['id', 'sku', 'name', 'quantity', 'price', 'discount_percentage', 'discount', 'tax', 'total', 'image']
+        fields = ['id', 'sku', 'name', 'quantity', 'price', 'discount_percentage', 'discount', 'tax', 'total',
+                  'package', 'volume', 'weight', 'image']
         read_only_fields = ('id',)
 
     def get_image(self, obj):

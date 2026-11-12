@@ -318,7 +318,16 @@ export default {
     },
     addProdToCart() {
       if (this.cartquantity > 0) {
-        const { id, name, description, instock, brand } = this.product
+        const {
+          id,
+          name,
+          description,
+          instock,
+          brand,
+          package: pkg,
+          volume,
+          weight,
+        } = this.product
 
         this.addToCart({
           id,
@@ -328,6 +337,9 @@ export default {
           quantity: Number(this.cartquantity, 10),
           price: this.cartprice,
           brand,
+          package: pkg,
+          volume,
+          weight,
         })
         this.dialog = false
       }

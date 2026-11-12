@@ -129,6 +129,10 @@ class ExtOrderItem(models.Model):
     discount = models.DecimalField("Discount", max_digits=10, decimal_places=2, default=0.00)
     tax = models.DecimalField("Tax", max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField("Total", max_digits=10, decimal_places=2, default=0.00)
+    # Datos logísticos del producto al momento de la orden (null: no informado)
+    package = models.PositiveIntegerField("Package", null=True, blank=True)
+    volume = models.DecimalField("Volume", max_digits=12, decimal_places=4, null=True, blank=True)
+    weight = models.DecimalField("Weight", max_digits=10, decimal_places=2, null=True, blank=True)
 
     class Meta:
         db_table = 'cart_extorder_item'

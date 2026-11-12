@@ -7,6 +7,13 @@ function updateOrderState(orderstate) {
   localStorage.setItem('lina_order', JSON.stringify(orderstate))
 }
 
+// Valor numérico del producto para el backend; null si no viene informado
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === '') return null
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
+}
+
 // Construye el payload de una orden a partir del carrito
 function buildOrderPayload(cart) {
   return {
@@ -25,6 +32,9 @@ function buildOrderPayload(cart) {
       name: item.name,
       price: item.price,
       quantity: item.quantity,
+      package: numberOrNull(item.package),
+      volume: numberOrNull(item.volume),
+      weight: numberOrNull(item.weight),
     })),
   }
 }
