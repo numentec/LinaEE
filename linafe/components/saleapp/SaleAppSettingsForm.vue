@@ -82,6 +82,23 @@
         </v-col>
       </v-row>
 
+      <v-row>
+        <v-col cols="12" md="6">
+          <div class="text-subtitle-2 mb-2">CSV file encoding</div>
+          <v-select
+            v-model="conf.csv_encoding"
+            :items="csvEncodings"
+            outlined
+            dense
+            color="secondary"
+            item-color="secondary"
+            hint="Use UTF-8 with BOM or Windows-1252 if accents look wrong in Excel."
+            persistent-hint
+            :error-messages="errors.csv_encoding"
+          />
+        </v-col>
+      </v-row>
+
       <v-row v-if="conf.modified_at" dense>
         <v-col cols="12" class="text-caption text--secondary">
           {{ conf.company_name }} · Last modified
@@ -141,6 +158,7 @@ export default {
         email_attachments: 'pdf',
         email_include_images: false,
         show_package_info: false,
+        csv_encoding: 'utf-8',
       },
       errors: {},
       snackbar: { show: false, text: '', color: '' },
@@ -165,6 +183,12 @@ export default {
         },
       ],
       attachmentOptions: EMAIL_ATTACHMENT_OPTIONS,
+      // Valores de SaleAppSettings.CsvEncoding
+      csvEncodings: [
+        { value: 'utf-8', text: 'UTF-8' },
+        { value: 'utf-8-sig', text: 'UTF-8 with BOM' },
+        { value: 'cp1252', text: 'Windows-1252 (ANSI)' },
+      ],
     }
   },
 
@@ -207,6 +231,7 @@ export default {
             email_attachments: this.conf.email_attachments,
             email_include_images: this.conf.email_include_images,
             show_package_info: this.conf.show_package_info,
+            csv_encoding: this.conf.csv_encoding,
           },
           { params: this.ciaParams }
         )

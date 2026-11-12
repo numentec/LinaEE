@@ -53,7 +53,7 @@ def order_email_body(order, has_attachments, link_url=None):
 
 @shared_task(name='high_priority:send_order_email')
 def send_order_email(order_id, print_images='', file_type='pdf', file_types=None, to=None,
-                     user_email=None, link_url=None):
+                     user_email=None, link_url=None, csv_encoding='utf-8'):
     """
     Tarea de Celery para enviar un correo electrónico con los detalles de la orden.
     Esta tarea se ejecuta en segundo plano, genera los archivos de la orden
@@ -63,6 +63,7 @@ def send_order_email(order_id, print_images='', file_type='pdf', file_types=None
     user_email: correo del usuario que solicita el envío (Responder a, según EmailSettings).
     link_url: enlace público de la orden; si se indica se incluye en el cuerpo.
     file_types puede ir vacío ([]) cuando solo se envía el enlace.
+    csv_encoding: codificación del CSV adjunto (SaleAppSettings.csv_encoding).
     """
     file_types = list(file_types if file_types is not None else [file_type])
     try:
@@ -80,7 +81,7 @@ def send_order_email(order_id, print_images='', file_type='pdf', file_types=None
         # Generar los archivos según los tipos solicitados
         renderers = {
             'pdf': (lambda: render_order_pdf(order, print_images=print_images), "application/pdf"),
-            'csv': (lambda: render_order_csv(order), "text/csv"),
+            'csv': (lambda: render_order_csv(order, encoding=csv_encoding), "text/csv"),
             'xlsx': (
                 lambda: render_order_xlsx(order, print_images=print_images != '0'),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

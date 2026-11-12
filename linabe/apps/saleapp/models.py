@@ -151,6 +151,12 @@ class SaleAppSettings(Common):
         XLSX = "xlsx", "Excel only"
         BOTH = "both", "PDF and Excel"
 
+    class CsvEncoding(models.TextChoices):
+        # Los valores son nombres de codec de Python
+        UTF8 = "utf-8", "UTF-8"
+        UTF8_BOM = "utf-8-sig", "UTF-8 with BOM"
+        CP1252 = "cp1252", "Windows-1252 (ANSI)"
+
     company = models.OneToOneField(
         Cia,
         on_delete=models.CASCADE,
@@ -172,6 +178,18 @@ class SaleAppSettings(Common):
     email_include_images = models.BooleanField("Include images", default=False)
 
     show_package_info = models.BooleanField("Show package info", default=False)
+
+    csv_encoding = models.CharField(
+        "CSV encoding",
+        max_length=10,
+        choices=CsvEncoding.choices,
+        default=CsvEncoding.UTF8,
+    )
+
+    @property
+    def csv_charset(self):
+        """Charset (Content-Type) correspondiente a csv_encoding"""
+        return 'windows-1252' if self.csv_encoding == self.CsvEncoding.CP1252 else 'utf-8'
 
     @staticmethod
     def attachment_types_for(attachments):

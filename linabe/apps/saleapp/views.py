@@ -594,9 +594,12 @@ class GenerateOrderCSV(APIView):
         try:
             order = ExtOrderMaster.objects.get(id=order_id)
 
-            csv_file = render_order_csv(order)
+            conf = get_saleapp_settings(request)
+            csv_file = render_order_csv(order, encoding=conf.csv_encoding)
 
-            response = HttpResponse(csv_file.getvalue(), content_type='text/csv')
+            response = HttpResponse(
+                csv_file.getvalue(), content_type=f'text/csv; charset={conf.csv_charset}'
+            )
             response['Content-Disposition'] = f'attachment; filename="Orden_{order.id}.csv"'
             return response
 
@@ -749,7 +752,10 @@ class SendOrderCSVEmail(APIView):
 
     def post(self, request, order_id):
         # Llamar a la tarea de Celery para enviar el correo con el CSV
-        send_order_email.delay(order_id, file_type='csv', user_email=request.user.email)
+        send_order_email.delay(
+            order_id, file_type='csv', user_email=request.user.email,
+            csv_encoding=get_saleapp_settings(request).csv_encoding,
+        )
 
         return Response({'message': f'CSV email task initiated for order {order_id}'}, status=status.HTTP_202_ACCEPTED)
 

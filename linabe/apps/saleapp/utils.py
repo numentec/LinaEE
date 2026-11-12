@@ -59,7 +59,11 @@ def render_order_pdf(order, print_images='', public=False):
     return pdf_file
 
 
-def render_order_csv(order, mode="short"):
+def render_order_csv(order, mode="short", encoding="utf-8"):
+    """
+    encoding: codec de Python (SaleAppSettings.CsvEncoding): utf-8, utf-8-sig (con BOM) o cp1252.
+    Los caracteres que no existen en la codificación elegida se sustituyen por '?'.
+    """
     buffer = StringIO()
     writer = csv.writer(buffer)
 
@@ -95,7 +99,7 @@ def render_order_csv(order, mode="short"):
             ])
 
     # Convertir a BytesIO para descargar o enviar por email
-    csv_bytes = BytesIO(buffer.getvalue().encode('utf-8'))
+    csv_bytes = BytesIO(buffer.getvalue().encode(encoding, errors='replace'))
     buffer.close()
     csv_bytes.seek(0)
     return csv_bytes

@@ -855,3 +855,89 @@ class RevertOrderToPendingTests(TestCase):
 		response = self.client.get('/linapi/user_perms/cur/')
 		self.assertEqual(response.status_code, 200)
 		self.assertIs(response.data['perms']['saleapp.revert_order_to_pending'], False)
+
+
+class SaleAppCsvEncodingTests(TestCase):
+	def setUp(self):
+		from django.contrib.auth import get_user_model
+		from rest_framework.test import APIClient
+
+		from ..core.models import Cia
+		from .models import ExtOrderMaster
+
+		self.cia = Cia.objects.create(codigo='T1', nombre='Test Cia', default=True)
+		self.user = get_user_model().objects.create_user('sale', 'sale@x.com', 'pw')
+		self.client = APIClient()
+		self.client.force_authenticate(self.user)
+		response = self.client.post(
+			'/linapi/saleapp/extorder/',
+			{
+				'customer_name': 'Cliente',
+				'customer_email': 'cli@x.com',
+				'items': [{'sku': 'ÑA1', 'name': 'Mesa', 'quantity': 1, 'price': '10.00'}],
+			},
+			format='json',
+		)
+		self.order = ExtOrderMaster.objects.get(pk=response.data['id'])
+
+	def set_encoding(self, encoding):
+		from .models import SaleAppSettings
+
+		SaleAppSettings.objects.update_or_create(
+			company=self.cia, defaults={'csv_encoding': encoding}
+		)
+
+	def test_render_order_csv_encodings(self):
+		from .utils import render_order_csv
+
+		bom = b'\xef\xbb\xbf'
+		self.assertTrue(render_order_csv(self.order).getvalue().startswith('ÑA1'.encode('utf-8')))
+		self.assertTrue(
+			render_order_csv(self.order, encoding='utf-8-sig').getvalue().startswith(bom + 'ÑA1'.encode('utf-8'))
+		)
+		self.assertTrue(render_order_csv(self.order, encoding='cp1252').getvalue().startswith(b'\xd1A1'))
+
+	def test_unencodable_chars_are_replaced_in_cp1252(self):
+		from .utils import render_order_csv
+
+		self.order.items.update(sku='A→1')
+		self.assertTrue(render_order_csv(self.order, encoding='cp1252').getvalue().startswith(b'A?1'))
+
+	def test_download_uses_company_setting(self):
+		url = f'/linapi/saleapp/orders/{self.order.id}/csv/'
+
+		response = self.client.get(url)
+		self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+		self.assertTrue(response.content.startswith('ÑA1'.encode('utf-8')))
+
+		self.set_encoding('utf-8-sig')
+		response = self.client.get(url, {'cia': self.cia.id})
+		self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+		self.assertTrue(response.content.startswith(b'\xef\xbb\xbf'))
+
+		self.set_encoding('cp1252')
+		response = self.client.get(url)
+		self.assertEqual(response['Content-Type'], 'text/csv; charset=windows-1252')
+		self.assertTrue(response.content.startswith(b'\xd1A1'))
+
+	def test_settings_validate_csv_encoding(self):
+		from django.contrib.auth.models import Permission
+
+		self.user.user_permissions.add(Permission.objects.get(codename='acc_config'))
+		self.user = type(self.user).objects.get(pk=self.user.pk)
+		self.client.force_authenticate(self.user)
+
+		self.assertEqual(self.client.get('/linapi/saleapp/settings/').data['csv_encoding'], 'utf-8')
+		for encoding in ('utf-8', 'utf-8-sig', 'cp1252'):
+			response = self.client.put('/linapi/saleapp/settings/', {'csv_encoding': encoding}, format='json')
+			self.assertEqual(response.status_code, 200, response.data)
+			self.assertEqual(response.data['csv_encoding'], encoding)
+		response = self.client.put('/linapi/saleapp/settings/', {'csv_encoding': 'latin-9'}, format='json')
+		self.assertEqual(response.status_code, 400)
+
+	@patch('apps.saleapp.views.send_order_email')
+	def test_csv_email_uses_company_setting(self, task):
+		self.set_encoding('cp1252')
+		response = self.client.post(f'/linapi/saleapp/orders/{self.order.id}/email-csv/')
+		self.assertEqual(response.status_code, 202)
+		self.assertEqual(task.delay.call_args.kwargs['csv_encoding'], 'cp1252')

@@ -312,10 +312,12 @@ export const actions = {
     return response.data
   },
 
-  async csvDownload({ commit }, orderid) {
+  // La codificación del CSV depende de la configuración de la compañía actual
+  async csvDownload({ rootState }, orderid) {
     try {
       await downloadOrderFile(this.$axios, {
         url: `saleapp/orders/${orderid}/csv/`,
+        params: ciaParams(rootState),
         type: 'text/csv',
         filename: `order_${orderid}.csv`,
       })
